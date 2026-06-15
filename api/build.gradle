@@ -1,0 +1,32 @@
+plugins {
+    id 'java-library'
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(java_version)
+    withSourcesJar()
+    withJavadocJar()
+}
+
+javadoc {
+    options.addStringOption('Xdoclint:-missing', '-quiet')
+}
+
+group = 'ziggfreed'
+version = api_version
+
+base {
+    archivesName = 'kweebec-nightmare-api'
+}
+
+repositories {
+    mavenCentral()
+}
+
+def hytaleServerJar = new File("${hytaleHome}/${patchline}/package/game/${game_build}/Server/HytaleServer.jar")
+
+dependencies {
+    api 'com.google.code.findbugs:jsr305:3.0.2'
+
+    compileOnly(files(hytaleServerJar))
+}
