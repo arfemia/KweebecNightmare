@@ -10,6 +10,7 @@ import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.asset.type.entityeffect.config.EntityEffect;
 import com.hypixel.hytale.server.core.entity.effect.EffectControllerComponent;
+import com.hypixel.hytale.server.core.modules.entity.damage.DeathComponent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
@@ -26,10 +27,9 @@ import com.ziggfreed.kweebec.round.RoundInstance;
  * {@link CocoonOnDeathSystem} suppresses the vanilla respawn menu and routes here:
  * the player is held dead-in-place (the engine never auto-respawns and corpse
  * culling excludes players), marked cocooned, and made rescuable by a teammate
- * until their bleed-out deadline. Revive re-adds the player to the instance world
- * via {@code Universe.resetPlayer} (this build's engine has no
- * {@code DeathComponent.respawn}); the re-add yields a fresh living entity at the
- * instance spawn provider.
+ * until their bleed-out deadline. Revive uses {@code DeathComponent.respawn} (the
+ * world's RespawnController = the instance spawn provider), which removes the
+ * {@link DeathComponent} on completion.
  *
  * <p>All methods run on the instance world thread.
  */
@@ -90,16 +90,15 @@ public final class CocoonService {
             return;
         }
 
-        // Clear effects, then re-add the player to the instance world (the engine
-        // has no DeathComponent.respawn in this build). The 1-arg resetPlayer loads a
-        // FRESH holder internally (pr.getHolder() is null while the player is still in
-        // world) and re-adds them as a living entity at the instance spawn provider.
+        // Clear effects, then respawn via DeathComponent.respawn, which runs the
+        // world's RespawnController (the instance spawn provider) and removes the
+        // DeathComponent on completion.
         clearCocoonEffect(ref, store);
         try {
-            Universe.get().resetPlayer(pr).whenComplete((newRef, err) -> {
+            DeathComponent.respawn(store, ref).whenComplete((v, err) -> {
                 if (err != null) {
                     KweebecNightmarePlugin.LOGGER.atWarning().log(
-                            "[Kweebec] revive resetPlayer failed for " + uuid + ": " + err.getMessage());
+                            "[Kweebec] revive respawn failed for " + uuid + ": " + err.getMessage());
                     return;
                 }
                 world.execute(() -> {

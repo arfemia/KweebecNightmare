@@ -7,11 +7,12 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.joml.Vector3d;
+
 import com.hypixel.hytale.component.RemoveReason;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.math.vector.Vector3d;
-import com.hypixel.hytale.math.vector.Vector3f;
+import com.hypixel.hytale.math.vector.Rotation3f;
 import com.hypixel.hytale.protocol.GameMode;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
@@ -78,7 +79,7 @@ public final class AiHunterController implements HunterController {
         for (int i = 0; i < count; i++) {
             double offset = (i - (count - 1) / 2.0) * 2.0;
             Vector3d pos = new Vector3d(den.x() + offset, den.y(), den.z());
-            Vector3f rot = new Vector3f(0f, den.yaw(), 0f);
+            Rotation3f rot = new Rotation3f(0f, den.yaw(), 0f);
             try {
                 var spawned = npc.spawnEntity(store, roleIndex, pos, rot, null,
                         (npcEntity, npcRef, st) -> lockNearest(round, world, st, npcRef, npcEntity));
@@ -176,8 +177,8 @@ public final class AiHunterController implements HunterController {
             if (ref == null || p == null) {
                 continue;
             }
-            double dx = p.x - from.x;
-            double dz = p.z - from.z;
+            double dx = p.x() - from.x();
+            double dz = p.z() - from.z();
             double sq = dx * dx + dz * dz;
             if (sq < bestSq) {
                 bestSq = sq;
@@ -201,7 +202,7 @@ public final class AiHunterController implements HunterController {
             if (p == null) {
                 continue;
             }
-            double sq = gate.horizontalDistanceSq(p.x, p.z);
+            double sq = gate.horizontalDistanceSq(p.x(), p.z());
             if (sq < bestSq) {
                 bestSq = sq;
                 best = st.playerId();

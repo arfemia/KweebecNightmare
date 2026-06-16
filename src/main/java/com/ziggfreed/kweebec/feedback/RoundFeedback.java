@@ -57,7 +57,7 @@ public final class RoundFeedback {
             }
             HudManager hud = player.getHudManager();
             NightmareHud nightmareHud = new NightmareHud(playerRef);
-            hud.setCustomHud(playerRef, nightmareHud);
+            hud.addCustomHud(playerRef, nightmareHud);
             hud.setVisibleHudComponents(playerRef, KEPT_HUD);
             return nightmareHud;
         } catch (Throwable t) {

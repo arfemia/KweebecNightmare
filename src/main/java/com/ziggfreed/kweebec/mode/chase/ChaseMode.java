@@ -5,9 +5,10 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.joml.Vector3d;
+
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.protocol.GameMode;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
@@ -213,7 +214,7 @@ public final class ChaseMode {
                 continue;
             }
             UUID rescuer = activeSurvivorNear(round, store, worldUuid,
-                    new Anchor(downedPos.x, downedPos.y, downedPos.z), ArenaLayout.INTERACT_RADIUS_SQ);
+                    new Anchor(downedPos.x(), downedPos.y(), downedPos.z()), ArenaLayout.INTERACT_RADIUS_SQ);
             if (rescuer != null && !rescuer.equals(st.playerId())) {
                 st.addRescueProgress(perTick);
                 if (st.rescueProgress() >= 1.0) {
@@ -256,7 +257,7 @@ public final class ChaseMode {
             if (pos == null) {
                 continue;
             }
-            if (ArenaLayout.ESCAPE.horizontalDistanceSq(pos.x, pos.z) <= ArenaLayout.ESCAPE_RADIUS_SQ) {
+            if (ArenaLayout.ESCAPE.horizontalDistanceSq(pos.x(), pos.z()) <= ArenaLayout.ESCAPE_RADIUS_SQ) {
                 st.setEscaped(true);
             }
         }
@@ -327,7 +328,7 @@ public final class ChaseMode {
             if (pos == null) {
                 continue;
             }
-            if (at.horizontalDistanceSq(pos.x, pos.z) <= radiusSq) {
+            if (at.horizontalDistanceSq(pos.x(), pos.z()) <= radiusSq) {
                 return st.playerId();
             }
         }

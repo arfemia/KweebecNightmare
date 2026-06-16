@@ -19,8 +19,10 @@ import com.ziggfreed.kweebec.round.ChasePhase;
  */
 public final class NightmareHud extends CustomUIHud {
 
+    public static final String HUD_KEY = "kweebecnightmare.hud";
+
     public NightmareHud(@Nonnull PlayerRef playerRef) {
-        super(playerRef);
+        super(playerRef, HUD_KEY);
     }
 
     @Override
