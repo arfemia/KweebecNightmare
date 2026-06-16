@@ -36,27 +36,40 @@ src/main/resources/manifest.json                       Group:Ziggfreed, ServerVe
 src/main/resources/Server/                             the asset pack: HytaleGenerator/ (Biomes/WorldStructure/Density worldgen),
                                                         Instances/ (per-mode instance.bson), Models / NPC Roles / Weathers /
                                                         Environments / AmbienceFX / Particles / PortalTypes / Prefabs / Languages
-src/main/java/com/ziggfreed/kweebec/
-  KweebecNightmarePlugin.java                          JavaPlugin entry (setup/shutdown), native-event dispatch
-  round/                                               round state machine + RuleSet + instance lifecycle + cocoon/revive (shared)
-  mode/                                                chase + survival mode rules (thin leaves over round/)
-  hunter/                                              HunterController seam (AI now, human-driven post-jam) + spawn + marked-target + speed ramp
-  camera/                                              ServerCameraService (top-down apply/reset; survival mode)
-  feedback/                                            camera shake, 3D-pulse heartbeat, title cards, custom HUD
-  ui/                                                  entry triggers (command now; shrine block / void-rift pad / guide NPC designed-for)
+src/main/java/com/ziggfreed/kweebec/         (nearly every package carries a nested CLAUDE.md router - see Architecture)
+  KweebecNightmarePlugin.java                          JavaPlugin entry (setup/shutdown), wires the death system + command + round service
+  round/                                               round state machine + RuleSet + instance lifecycle (shared)
+  mode/chase/                                          the Chase loop (thin leaf over round/); survival mode reserved
+  hunter/                                              HunterController seam (AI now, human-driven post-jam) + spawn + marked-target
+  arena/                                               ArenaLayout anchors + ArenaBuilder prefab stamping
+  death/                                               cocoon-on-death system + revive
+  atmosphere/                                          frozen dark-midnight + forced weather
+  camera/                                              ServerCameraService (top-down apply/reset; survival mode, reserved)
+  feedback/                                            custom HUD + 3D-pulse heartbeat + title cards + toasts
+  i18n/                                                Lang key registry (the .lang prefix contract)
+  command/                                             /kweebec start|exit|endall (the first entry trigger; pad/block/NPC designed-for)
   event/                                               native event POJOs fired on the engine bus
 ```
 
-## Architecture (verified - see the parent techspec for exact call sequences + file:line)
+## Architecture (per-package routers carry the working detail)
 
-- **Arena = Path A engine instances + WorldGen V2 (`HytaleGenerator`), hybrid.** Each mode is its own pack-authored instance (`Server/Instances/<mode>/instance.bson`) referencing a pack-authored `HytaleGenerator` WorldStructure/Biome/Density (node-editor authored, `Server/HytaleGenerator/**`). Spawn per round via `InstancesPlugin.get().spawnInstance(name, world, returnPoint)` (engine gives free isolation, return-point restore, off-thread cleanup, zero-Java entry/exit). The procedural grove is the base; authored beats (shrines, gate, hiding spots, lanes) are runtime `PrefabUtil.paste` (on `world.execute`) + code mob spawns. **The `instance.bson` MUST author `RemovalConditions:[WorldEmpty,Timeout]` + `DeleteOnRemove=true`** or worlds leak. Ship `instance.bson` as plain JSON - the engine LOADS it as JSON (`WorldConfig.load` -> `RawJsonReader.readSync` -> `codec.decodeJson`); BSON is only what the in-game `/instances edit save` writes, NOT a load requirement. So the instance config + the `HytaleGenerator` worldgen are hand-authorable JSON in the pack; the in-game node editor / `/instances edit` are conveniences. (Confirm live that a JSON-content `instance.bson` loads + generates.)
-- **Hunter:** `NPCPlugin.spawnNPC` + a pack hostile Kweebec role (clone `Template_Kweebec_Razorleaf`, `DefaultPlayerAttitude:Hostile`, **drop the Target sensor's Attitude filter + Range**); `((NPCEntity)pair.second()).getRole().setMarkedTarget("LockedTarget", survivorRef)` re-asserted each tick (works only for ADVENTURE-mode survivors); recover via `BodyMotion:Teleport`. Multiple hunters, noise/proximity targeting. Behind a `HunterController` seam.
-- **Death -> cocoon:** a custom `OnDeathSystem` (`RefChangeSystem` on `DeathComponent`, query-matched to Player, ordered BEFORE `PlayerDeathScreen`, `setShowDeathMenu(false)`); engine never auto-respawns, so hold-dead-in-place is free; rescue via `DeathComponent.respawn` at an in-arena point. NOT `DrainPlayerFromWorldEvent`.
-- **Atmosphere:** `WorldTimeResource.setDayTime(0.0, world, store)` + `setGameTimePaused(true)`; whole-world `WeatherResource.setForcedWeather(validatedId)` (pack dark `Weather`, no custom `ScreenEffect` strings - they fail validation).
-- **Camera (survival):** `camera/ServerCameraService` sends `SetServerCamera` (packet 280) via `writeNoCache`; top-down preset (Custom, isLocked, dist 20, pitch -PI/2); reset `SetServerCamera(Custom,false,null)`. Always reset on death/disconnect/round-end. No FOV/orthographic.
-- **Feedback:** `HudManager.addCustomHud` + strip native HUD; `EventTitleUtil` titles; `NotificationUtil` Danger toasts; server-pulsed one-shot 3D `SoundUtil.playSoundEvent3d` heartbeat (no `StopSound` exists - loop bed is a data-driven `Looping` asset).
-- **Reskin:** extend `Kweebec_Sapling` (`"Parent"` + dark texture + Void-glow `ModelParticle[]` on real bones `Chest` / `L-Eye-Attachment` / `R-Eye-Attachment`); no new mesh.
-- **Threading (load-bearing):** off-thread scheduler -> `world.execute` hop -> all Store/Ref/Sound/HUD/camera/weather on the world thread; packet writes are thread-safe; `spawnInstance`/`removeWorld` never `.join()` on a world tick thread.
+Every domain package under `src/main/java/com/ziggfreed/kweebec/` has a nested `CLAUDE.md` router that loads when you touch that subtree; the parent techspec (linked above) is the deep authority for exact call sequences + file:line. One line each:
+
+- **[`round/`](src/main/java/com/ziggfreed/kweebec/round/CLAUDE.md)** - the round engine: `RoundService` (spawn/resolve/exit authority), `RoundStateMachine` (1 Hz off-thread -> `world.execute`), `InstanceLifecycle` (Path-A spawn/teleport/remove), `RuleSet`/presets, `RoundInstance`/`PlayerRoundState`.
+- **[`mode/chase/`](src/main/java/com/ziggfreed/kweebec/mode/chase/CLAUDE.md)** - the PREP -> RITUAL -> ESCAPE loop, per-entry Adventure normalization, `ChaseState` corruption.
+- **[`hunter/`](src/main/java/com/ziggfreed/kweebec/hunter/CLAUDE.md)** - the `HunterController` seam + per-tick marked-target re-assert (Adventure-only; no live speed setter in 0.5.3).
+- **[`arena/`](src/main/java/com/ziggfreed/kweebec/arena/CLAUDE.md)** - `ArenaLayout` anchors, the `Default_Flat` floor-Y contract, `ArenaBuilder` prefab stamping.
+- **[`death/`](src/main/java/com/ziggfreed/kweebec/death/CLAUDE.md)** - `CocoonOnDeathSystem` (before `PlayerDeathScreen`, `setShowDeathMenu(false)`) + `CocoonService` hold-in-place / `DeathComponent.respawn`.
+- **[`feedback/`](src/main/java/com/ziggfreed/kweebec/feedback/CLAUDE.md)** - `RoundFeedback` fan-out, `NightmareHud` (element-id contract vs the `.ui`), 3D heartbeat.
+- **[`atmosphere/`](src/main/java/com/ziggfreed/kweebec/atmosphere/CLAUDE.md)** - frozen midnight + validated forced weather.
+- **[`i18n/`](src/main/java/com/ziggfreed/kweebec/i18n/CLAUDE.md)** - `Lang` key registry + the `.lang` filename-prefix contract.
+- **[`camera/`](src/main/java/com/ziggfreed/kweebec/camera/CLAUDE.md)** - `ServerCameraService` (`SetServerCamera` packet 280, top-down locked preset; survival mode, reserved).
+- **[`event/`](src/main/java/com/ziggfreed/kweebec/event/CLAUDE.md)** - `RoundEvents` outbound native `IEvent<Void>` POJOs (the entire MMO integration surface; see below).
+- **[`command/`](src/main/java/com/ziggfreed/kweebec/command/CLAUDE.md)** - `/kweebec start|exit|endall [preset]` (the first entry trigger).
+
+**Instance + reskin authoring (asset JSON, no router):** each mode is a pack instance `Server/Instances/<mode>/instance.bson` shipped as plain JSON (the engine LOADS JSON via `WorldConfig.load` -> `RawJsonReader.readSync`; BSON is only what `/instances edit save` writes, never a load requirement). It MUST author `RemovalConditions` (`WorldEmpty`/timeout) + `DeleteOnRemove=true` or worlds leak, and `SpawnPoint.Y` MUST match the worldgen floor (see [`arena/`](src/main/java/com/ziggfreed/kweebec/arena/CLAUDE.md)). The hunter role clones `Template_Kweebec_Razorleaf` (`DefaultPlayerAttitude:Hostile`, drop the Target sensor's Attitude filter + Range). Reskin = extend `Kweebec_Sapling` (`Parent` + dark texture + Void-glow `ModelParticle[]` on bones `Chest`/`L-Eye-Attachment`/`R-Eye-Attachment`), no new mesh.
+
+**Threading (load-bearing, every package):** off-thread scheduler -> `world.execute` hop -> all Store/Ref/Sound/HUD/camera/weather on the world thread; packet writes are thread-safe; `spawnInstance`/`removeWorld` never `.join()` on a world tick thread.
 
 ## MMO Skill Tree integration (optional, outbound events - NO dependency)
 
@@ -69,3 +82,9 @@ Per-version public release notes in `patch-notes/<version>.md`, same paradigm as
 ## Conventions
 
 PascalCase asset filenames; codec JSON keys start upper-case. `@Nonnull`/`@Nullable` on params; `KweebecNightmarePlugin.LOGGER` for logging. Localize all player-facing text via `Message`/lang keys from day 1 (no raw display strings); en-US complete. Package root `com.ziggfreed.kweebec`. As a submodule, the order is fixed: commit + push HERE first, verify the SHA is on the remote, THEN bump the gitlink in the parent hyMMO repo.
+
+## Gotchas (each was a shipped 0.2.0 bug; the full detail lives in the package router)
+
+- **`.lang` keys are unprefixed - the FILENAME is the namespace.** Prefixing them doubles the key and shows raw keys on screen. See [`i18n/`](src/main/java/com/ziggfreed/kweebec/i18n/CLAUDE.md).
+- **Spawn/arena Y must match the worldgen floor** (`Default_Flat` `Base`=80 -> Y=80; the old Y=65 buried players in terrain). See [`arena/`](src/main/java/com/ziggfreed/kweebec/arena/CLAUDE.md).
+- **Survivor game mode is set to Adventure ONCE on entry, never per-tick** (per-tick forcing fought a Creative admin). See [`mode/chase/`](src/main/java/com/ziggfreed/kweebec/mode/chase/CLAUDE.md) + [`hunter/`](src/main/java/com/ziggfreed/kweebec/hunter/CLAUDE.md).

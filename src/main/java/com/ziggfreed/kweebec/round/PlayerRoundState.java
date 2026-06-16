@@ -24,6 +24,8 @@ public final class PlayerRoundState {
     private double rescueProgress;
     /** Consecutive ticks this player was not resolvable in the instance world (disconnect detection). */
     private int missedTicks;
+    /** Whether the round's entry game-mode (Adventure) has been applied once for this player. */
+    private boolean gameModeApplied;
 
     public PlayerRoundState(@Nonnull UUID playerId) {
         this.playerId = playerId;
@@ -96,6 +98,14 @@ public final class PlayerRoundState {
 
     public void resetMissedTicks() {
         this.missedTicks = 0;
+    }
+
+    public boolean isGameModeApplied() {
+        return gameModeApplied;
+    }
+
+    public void setGameModeApplied(boolean gameModeApplied) {
+        this.gameModeApplied = gameModeApplied;
     }
 
     /**

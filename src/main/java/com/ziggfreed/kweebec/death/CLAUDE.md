@@ -1,0 +1,6 @@
+# death/ - cocoon-on-death + teammate revive
+
+Router for `death/`. A verified Hytale death-interception seam that touches ONLY in-round players, so the mod never alters normal death anywhere else on the server.
+
+- **[`CocoonOnDeathSystem`](CocoonOnDeathSystem.java) intercepts player death** (`DeathSystems.OnDeathSystem`, query-matched to `Player`, ordered `BEFORE` `DeathSystems.PlayerDeathScreen` so `setShowDeathMenu(false)` is observed before the respawn page would open). Not in a Kweebec round -> return, the vanilla death flow runs untouched. Registered in [`../KweebecNightmarePlugin`](../KweebecNightmarePlugin.java)`.setup`.
+- **[`CocoonService`](CocoonService.java) holds dead-in-place + revives.** On death: increment downs, mark cocooned, set the bleed-out deadline, apply the `KweebecNightmare_Cocoon` entity effect (validated index), fire `PlayerCocooned`, toast the victim + party. The engine never auto-respawns and corpse culling excludes players, so hold-in-place is free. Revive = `DeathComponent.respawn` (runs the world RespawnController = the instance spawn provider, removes the `DeathComponent` on completion), then clear cocoon state on the world thread + fire `PlayerRescued`. `canRescue` gates on cocooned AND `isReviveAllowed(rules)` AND not past bleed-out.

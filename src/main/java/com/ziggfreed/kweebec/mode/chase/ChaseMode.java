@@ -135,14 +135,23 @@ public final class ChaseMode {
                 continue;
             }
             st.resetMissedTicks();
-            // Keep survivors in Adventure so the hunter's marked target survives.
-            try {
-                Player p = store.getComponent(ref, Player.getComponentType());
-                if (p != null && p.getGameMode() != GameMode.Adventure) {
-                    Player.setGameMode(ref, GameMode.Adventure, store);
+            // Normalize each survivor to Adventure ONCE on first arrival so the
+            // hunter's marked target can lock on (the engine only honors a marked
+            // PLAYER target in Adventure mode). Applied once, never re-asserted each
+            // tick, so an admin can switch to Creative to debug without it snapping
+            // back a second later. Retried next tick if the component is not ready.
+            if (!st.isGameModeApplied()) {
+                try {
+                    Player p = store.getComponent(ref, Player.getComponentType());
+                    if (p != null) {
+                        if (p.getGameMode() != GameMode.Adventure) {
+                            Player.setGameMode(ref, GameMode.Adventure, store);
+                        }
+                        st.setGameModeApplied(true);
+                    }
+                } catch (Throwable ignored) {
+                    // best effort
                 }
-            } catch (Throwable ignored) {
-                // best effort
             }
             // Install the HUD once.
             if (round.hud(uuid) == null) {

@@ -13,8 +13,6 @@ import com.hypixel.hytale.component.RemoveReason;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.vector.Rotation3f;
-import com.hypixel.hytale.protocol.GameMode;
-import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
@@ -35,9 +33,11 @@ import com.ziggfreed.kweebec.round.RoundInstance;
  * AI-driven hunter: spawns the pack's hostile Blighted-Kweebec role and keeps it
  * locked onto a survivor by re-asserting the marked target every tick (the engine
  * clears a marked player target each frame unless the target is an Adventure-mode
- * survivor - we keep survivors in Adventure and re-assert). During RITUAL each
- * hunter chases the nearest active survivor; the gate alert hard-locks every
- * hunter onto the single nearest survivor.
+ * survivor). Survivors are normalized to Adventure once on entry by
+ * {@code ChaseMode}, so the hunter here only re-asserts the marked target and does
+ * not fight a player's game mode (an admin in Creative simply self-excludes from
+ * the lock). During RITUAL each hunter chases the nearest active survivor; the
+ * gate alert hard-locks every hunter onto the single nearest survivor.
  *
  * <p>The live walk-speed ramp has no runtime setter in 0.5.3 (speed is baked on
  * the role's Walk controller), so corruption-scaled speed is left as an
@@ -113,7 +113,6 @@ public final class AiHunterController implements HunterController {
             if (targetRef == null || !targetRef.isValid()) {
                 continue;
             }
-            ensureAdventure(targetRef, store);
             Role role = npc.getRole();
             if (role != null) {
                 role.setMarkedTarget(TARGET_SLOT, targetRef);
@@ -154,7 +153,6 @@ public final class AiHunterController implements HunterController {
         Ref<EntityStore> target = nearestSurvivorRef(round, world, store, npcRef);
         Role role = npcEntity.getRole();
         if (role != null && target != null && target.isValid()) {
-            ensureAdventure(target, store);
             role.setMarkedTarget(TARGET_SLOT, target);
         }
     }
@@ -240,17 +238,6 @@ public final class AiHunterController implements HunterController {
         }
         TransformComponent tc = store.getComponent(ref, TransformComponent.getComponentType());
         return tc == null ? null : tc.getPosition();
-    }
-
-    private static void ensureAdventure(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
-        try {
-            Player p = store.getComponent(ref, Player.getComponentType());
-            if (p != null && p.getGameMode() != GameMode.Adventure) {
-                Player.setGameMode(ref, GameMode.Adventure, store);
-            }
-        } catch (Throwable ignored) {
-            // best effort - a Creative tester silently drops the lock
-        }
     }
 
     /** Unused parameter kept for the chase-state seam (corruption-scaled difficulty hook). */

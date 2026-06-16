@@ -13,15 +13,17 @@ import javax.annotation.Nonnull;
  *
  * <p>All anchors are arena-local world coordinates. The instance spawn provider
  * in {@code Server/Instances/KweebecNightmare_Chase/instance.bson} must agree
- * with {@link #SPAWN}. The floor is generated flat by the pack worldgen at
- * {@link #FLOOR_Y}.
+ * with {@link #SPAWN}. The floor is generated flat by the {@code Default_Flat}
+ * worldgen, whose {@code Base} height is 80, so the walkable surface top sits at
+ * world Y=80 ({@link #STAND_Y}) over a top solid block at Y=79 ({@link #FLOOR_Y}).
+ * Spawning below that (the original Y=65) buried players inside solid terrain.
  */
 public final class ArenaLayout {
 
-    /** Flat floor surface Y produced by the pack HytaleGenerator worldgen. */
-    public static final double FLOOR_Y = 64.0;
+    /** Top solid floor-block Y for the {@code Default_Flat} worldgen (surface top is one above, at Y=80). */
+    public static final double FLOOR_Y = 79.0;
 
-    /** Standing Y (one block above the floor). */
+    /** Standing/walkable surface Y (one above the floor block). Matches instance.bson spawn + the Default_Flat gym. */
     public static final double STAND_Y = FLOOR_Y + 1.0;
 
     /** Where players (and the lobby return fallback) spawn in. Matches instance.bson. */

@@ -13,9 +13,9 @@ import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 
 /**
  * Locks a round world into a frozen, dark midnight under a forced dark weather.
- * Midnight ({@code dayTime ~= 0.5}) + paused clock so the night never advances,
- * plus a whole-world forced weather (validated first; an unknown id would blank
- * the sky). All calls are world-thread-only and self-hop via {@code world.execute}.
+ * Midnight ({@code dayTime == 0.0}, the darkest point) + paused clock so the night
+ * never advances, plus a whole-world forced weather (validated first; an unknown id
+ * would blank the sky). All calls are world-thread-only and self-hop via {@code world.execute}.
  */
 public final class AtmosphereService {
 

@@ -1,0 +1,6 @@
+# event/ - outbound native events (the entire MMO integration surface)
+
+Router for `event/`. The mod-root `CLAUDE.md` "MMO Skill Tree integration" section is the wider context. This package is the ONLY integration seam: the mod fires its own events and has ZERO compile/runtime dependency on MMO Skill Tree.
+
+- **[`RoundEvents`](RoundEvents.java) fires the `api/` `IEvent<Void>` POJOs** (`RoundStarted`/`RoundCompleted`/`PlayerCocooned`/`PlayerRescued`) on the shared Hytale bus: resolve the dispatcher, guard on `hasListener()` (silent no-op with zero listeners), dispatch synchronously on the calling thread, whole body try-guarded. Fire from a WORLD-thread context so a listener can resolve a player then hop via `world.execute`.
+- **A consumer (MMO) subscribes via the reflective `registerGlobal` adapter** - it loads these event classes from THIS mod's classloader so `Class` identity matches across the jar boundary (the `AnglersAlmanacAdapter` pattern). When MMO is absent the mod self-contains its own rewards. The event POJOs live in the separate `api/` Gradle module (bundled into the jar minus its `META-INF/services` so the engine does not double-register); never bundle the MMO api jar back the other way.
