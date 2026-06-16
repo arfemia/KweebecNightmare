@@ -11,7 +11,6 @@ import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.OptionalArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
-import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.ziggfreed.kweebec.i18n.Lang;
@@ -58,7 +57,7 @@ public final class KweebecCommand extends CommandBase {
     }
 
     private void start(@Nonnull CommandContext ctx) {
-        if (!(ctx.sender() instanceof Player player)) {
+        if (!(ctx.sender() instanceof PlayerRef player)) {
             ctx.sendMessage(Lang.msg(Lang.CMD_PLAYERS_ONLY));
             return;
         }
@@ -89,7 +88,7 @@ public final class KweebecCommand extends CommandBase {
     }
 
     private void exit(@Nonnull CommandContext ctx) {
-        if (!(ctx.sender() instanceof Player player)) {
+        if (!(ctx.sender() instanceof PlayerRef player)) {
             ctx.sendMessage(Lang.msg(Lang.CMD_PLAYERS_ONLY));
             return;
         }

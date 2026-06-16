@@ -1,62 +1,51 @@
-# Kweebec Nightmare - en-US (authoritative). No em-dashes anywhere.
+kweebecnightmare.lobby.name = Kweebec Nightmare
+kweebecnightmare.mode.chase.name = Relight and Escape
+kweebecnightmare.mode.survival.name = Last Light Till Dawn
+kweebecnightmare.preset.amateur.name = Amateur
+kweebecnightmare.preset.nightmare.name = Nightmare
+kweebecnightmare.preset.hardcore.name = Hardcore
 
-# Lobby / mode / preset display
-kweebecnightmare.lobby.name=Kweebec Nightmare
-kweebecnightmare.mode.chase.name=Relight and Escape
-kweebecnightmare.mode.survival.name=Last Light Till Dawn
-kweebecnightmare.preset.amateur.name=Amateur
-kweebecnightmare.preset.nightmare.name=Nightmare
-kweebecnightmare.preset.hardcore.name=Hardcore
+kweebecnightmare.instance.chase.title = The Blighted Grove
+kweebecnightmare.instance.chase.subtitle = Relight the shrines. Do not let it catch you.
 
-# Instance entry card (Discovery)
-kweebecnightmare.instance.chase.title=The Blighted Grove
-kweebecnightmare.instance.chase.subtitle=Relight the shrines. Do not let it catch you.
+kweebecnightmare.npc.blight.name = Blighted Kweebec
 
-# Hunter NPC
-kweebecnightmare.npc.blight.name=Blighted Kweebec
+kweebecnightmare.title.hunt_begins = The Hunt Begins
+kweebecnightmare.title.hunt_begins.sub = Relight the grove shrines
+kweebecnightmare.title.gate_open = The Heartwood Gate Opens
+kweebecnightmare.title.gate_open.sub = Run for the light
+kweebecnightmare.title.you_survived = You Escaped
+kweebecnightmare.title.you_survived.sub = The grove releases you
+kweebecnightmare.title.caught = The Grove Claims You
+kweebecnightmare.title.caught.sub = All survivors were cocooned
+kweebecnightmare.title.night_falls = The Night Wins
+kweebecnightmare.title.night_falls.sub = Dawn never came
 
-# Event-title banners
-kweebecnightmare.title.hunt_begins=The Hunt Begins
-kweebecnightmare.title.hunt_begins.sub=Relight the grove shrines
-kweebecnightmare.title.gate_open=The Heartwood Gate Opens
-kweebecnightmare.title.gate_open.sub=Run for the light
-kweebecnightmare.title.you_survived=You Escaped
-kweebecnightmare.title.you_survived.sub=The grove releases you
-kweebecnightmare.title.caught=The Grove Claims You
-kweebecnightmare.title.caught.sub=All survivors were cocooned
-kweebecnightmare.title.night_falls=The Night Wins
-kweebecnightmare.title.night_falls.sub=Dawn never came
+kweebecnightmare.toast.shrine_lit = A shrine flares to life
+kweebecnightmare.toast.shrine_progress = Keep channelling the shrine
+kweebecnightmare.toast.cocooned = Roots drag you under. Wait for a teammate.
+kweebecnightmare.toast.rescued = You are free. Run.
+kweebecnightmare.toast.teammate_down = A teammate has been cocooned
+kweebecnightmare.toast.hunter_locked = It has your scent
+kweebecnightmare.toast.time_low = The night is almost over
 
-# Status toasts
-kweebecnightmare.toast.shrine_lit=A shrine flares to life
-kweebecnightmare.toast.shrine_progress=Keep channelling the shrine
-kweebecnightmare.toast.cocooned=Roots drag you under. Wait for a teammate.
-kweebecnightmare.toast.rescued=You are free. Run.
-kweebecnightmare.toast.teammate_down=A teammate has been cocooned
-kweebecnightmare.toast.hunter_locked=It has your scent
-kweebecnightmare.toast.time_low=The night is almost over
+kweebecnightmare.hud.timer = Time {0}
+kweebecnightmare.hud.shrines = Shrines {0}/{1}
+kweebecnightmare.hud.alive = Alive {0}
+kweebecnightmare.hud.corruption = Corruption {0}%
+kweebecnightmare.hud.objective.ritual = Relight the grove shrines
+kweebecnightmare.hud.objective.escape = Flee through the Heartwood Gate
 
-# Custom HUD
-kweebecnightmare.hud.timer=Time {0}
-kweebecnightmare.hud.shrines=Shrines {0}/{1}
-kweebecnightmare.hud.alive=Alive {0}
-kweebecnightmare.hud.corruption=Corruption {0}%
-kweebecnightmare.hud.objective.ritual=Relight the grove shrines
-kweebecnightmare.hud.objective.escape=Flee through the Heartwood Gate
-
-# Command + system feedback
-kweebecnightmare.cmd.players_only=Only players can run this.
-kweebecnightmare.cmd.already_in_round=You are already in a round.
-kweebecnightmare.cmd.not_in_round=You are not in a round.
-kweebecnightmare.cmd.starting=Descending into the Blighted Grove...
-kweebecnightmare.cmd.start_failed=Could not start the round. Try again.
-kweebecnightmare.cmd.leaving=Leaving the grove...
-kweebecnightmare.cmd.unknown_preset=Unknown preset. Use amateur, nightmare, or hardcore.
-kweebecnightmare.cmd.no_active_rounds=No active rounds.
-kweebecnightmare.cmd.ended=Ended all active rounds.
-kweebecnightmare.cmd.usage=Usage: /kweebec [start|exit|endall] [preset]
-
-# Command + argument descriptions (the engine resolves these as keys)
-kweebecnightmare.cmd.kweebec.desc=Start, leave, or end a Kweebec Nightmare round
-kweebecnightmare.cmd.arg.sub=start | exit | endall
-kweebecnightmare.cmd.arg.preset=amateur | nightmare | hardcore
+kweebecnightmare.cmd.players_only = Only players can run this.
+kweebecnightmare.cmd.already_in_round = You are already in a round.
+kweebecnightmare.cmd.not_in_round = You are not in a round.
+kweebecnightmare.cmd.starting = Descending into the Blighted Grove...
+kweebecnightmare.cmd.start_failed = Could not start the round. Try again.
+kweebecnightmare.cmd.leaving = Leaving the grove...
+kweebecnightmare.cmd.unknown_preset = Unknown preset. Use amateur, nightmare, or hardcore.
+kweebecnightmare.cmd.no_active_rounds = No active rounds.
+kweebecnightmare.cmd.ended = Ended all active rounds.
+kweebecnightmare.cmd.usage = Usage: /kweebec [start|exit|endall] [preset]
+kweebecnightmare.cmd.kweebec.desc = Start, leave, or end a Kweebec Nightmare round
+kweebecnightmare.cmd.arg.sub = start | exit | endall
+kweebecnightmare.cmd.arg.preset = amateur | nightmare | hardcore
