@@ -7,7 +7,7 @@ A standalone co-op horror minigame for Hytale, set in a Void-blighted Emerald Gr
 
 1-4 player co-op, or solo against the AI.
 
-> **Status: in development (mod-jam build).** This is a v0.1.0 scaffold - the plugin loads and the asset pack is wired, but the round loops are still being built. See [the changelog](CHANGELOG.md) and [patch notes](patch-notes/) for what is actually live.
+> **Status: in development (mod-jam build).** The Chase round ("Relight & Escape") is built end to end and the server build is green; it has not been playtested in a live server yet. The top-down survival mode is next. See [the changelog](CHANGELOG.md) and [patch notes](patch-notes/) for what is live.
 
 ## The chase loop (Relight & Escape)
 
