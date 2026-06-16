@@ -1,0 +1,45 @@
+// Kweebec Nightmare round HUD: countdown, objective, shrines, alive, corruption.
+// Texture-free (colour-only) so it cannot red-X on a missing asset. Element ids
+// (#Timer/#Objective/#Shrines/#Alive/#Corruption) are the contract NightmareHud
+// pushes partial updates against.
+
+@KnTitleStyle = (FontSize: 18, TextColor: #c8b0ff, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
+@KnLineStyle  = (FontSize: 14, TextColor: #9fc6d0, RenderBold: false, HorizontalAlignment: Center, VerticalAlignment: Start);
+@KnWarnStyle  = (FontSize: 14, TextColor: #ff6a6a, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
+
+Group {
+  Group #KweebecHud {
+    Anchor: (Top: 24, Width: 360, Height: 120, Horizontal: 0);
+    LayoutMode: Top;
+
+    Label #Timer {
+      Text: "Time 9:00";
+      Anchor: (Height: 24);
+      Style: @KnTitleStyle;
+    }
+
+    Label #Objective {
+      Text: "Relight the grove shrines";
+      Anchor: (Height: 20);
+      Style: @KnLineStyle;
+    }
+
+    Label #Shrines {
+      Text: "Shrines 0/3";
+      Anchor: (Height: 20);
+      Style: @KnLineStyle;
+    }
+
+    Label #Alive {
+      Text: "Alive 1";
+      Anchor: (Height: 20);
+      Style: @KnLineStyle;
+    }
+
+    Label #Corruption {
+      Text: "Corruption 0%";
+      Anchor: (Height: 20);
+      Style: @KnWarnStyle;
+    }
+  }
+}

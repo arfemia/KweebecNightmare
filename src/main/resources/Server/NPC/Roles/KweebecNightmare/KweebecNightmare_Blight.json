@@ -1,0 +1,43 @@
+{
+  "Type": "Variant",
+  "Reference": "Template_Kweebec_Razorleaf",
+  "Modify": {
+    "DefaultPlayerAttitude": "Hostile",
+    "DefaultNPCAttitude": "Ignore",
+    "Appearance": "Kweebec_Sapling_Razorleaf",
+    "DropList": "Drop_Kweebec_Sapling_Razorleaf",
+    "MaxHealth": 400,
+    "IsMemory": false,
+    "NameTranslationKey": { "Compute": "NameTranslationKey" }
+  },
+  "Parameters": {
+    "MaxSpeed": {
+      "Value": 7.5,
+      "Description": "Blighted hunter chase speed (faster than survivor walk)"
+    },
+    "ViewRange": {
+      "Value": 60,
+      "Description": "Hunter sees survivors across the grove"
+    },
+    "AlertedRange": {
+      "Value": 90,
+      "Description": "Hunter pursues across the whole arena once alerted"
+    },
+    "HearingRange": {
+      "Value": 60,
+      "Description": "Hunter hears shrine-channelling noise from afar"
+    },
+    "ViewSector": {
+      "Value": 360,
+      "Description": "Blighted - sees in every direction"
+    },
+    "WanderRadius": {
+      "Value": 8,
+      "Description": "Tight den wander before the hunt"
+    },
+    "NameTranslationKey": {
+      "Value": "kweebecnightmare.npc.blight.name",
+      "Description": "Translation key for the Blighted Kweebec name"
+    }
+  }
+}
