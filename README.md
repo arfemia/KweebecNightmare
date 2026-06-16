@@ -1,10 +1,15 @@
 # Kweebec Nightmare
 
-A standalone co-op horror chase minigame for Hytale. You and up to three friends are Kweebec saplings trapped in a Void-blighted Emerald Grove at perpetual midnight. Relight the corrupted grove-shrines to open the Heartwood Gate, but each shrine you light draws the **Blighted Kweebec** that hunts you closer, and lighting the last one wakes it for the final chase to the exit.
+A standalone co-op horror minigame for Hytale, set in a Void-blighted Emerald Grove at perpetual midnight where the gentle Kweebec tree-folk have been twisted into something that hunts. One mod, **two modes** (each its own instanced world):
 
-> **Status: in development (mod-jam build).** This is a v0.1.0 scaffold - the plugin loads and the asset pack is wired, but the round loop is still being built. See [the changelog](CHANGELOG.md) and [patch notes](patch-notes/) for what is actually live.
+- **Relight & Escape** (chase) - relight the corrupted grove-shrines to open the Heartwood Gate before the **Blighted Kweebec** runs you down.
+- **Last Light Till Dawn** (top-down survival) - hold a heart-sapling against escalating waves until dawn, played from a locked overhead camera.
 
-## The loop
+1-4 player co-op, or solo against the AI.
+
+> **Status: in development (mod-jam build).** This is a v0.1.0 scaffold - the plugin loads and the asset pack is wired, but the round loops are still being built. See [the changelog](CHANGELOG.md) and [patch notes](patch-notes/) for what is actually live.
+
+## The chase loop (Relight & Escape)
 
 1. **Nightfall** - spawn into a dim grove, scout, and claim a hiding spot (hollow logs and bushes hide tree-folk well).
 2. **The ritual** - relight the grove-shrines. Each is a hold-in-place ritual that pins you in place and makes noise the hunter can hear. The longer the night runs and the more shrines you light, the faster and darker it gets.
@@ -28,6 +33,6 @@ Drop `KweebecNightmare-<version>.jar` into your server `Mods/` folder. Requires 
 ```
 Java 25. The Hytale server jar path is configured in `gradle.properties`. Set `HYTALE_MODS_DIR` once to auto-install on build. See [CLAUDE.md](CLAUDE.md) for the developer guide.
 
-## Sibling
+## The survival loop (Last Light Till Dawn)
 
-A top-down survival variant (hold the grove until dawn against escalating waves) lives in `KweebecNightmare2D`.
+A top-down survival mode: defend a heart-sapling and relight wards in a clearing while escalating corrupted-Kweebec waves close in from spawn lanes. Light pushes back the dark; corruption ramps to a final pre-dawn surge. Survive until dawn to win. Played from a locked overhead camera; downed players are revivable.
