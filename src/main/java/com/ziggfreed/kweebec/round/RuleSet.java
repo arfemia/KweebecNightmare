@@ -23,6 +23,7 @@ public final class RuleSet {
     private final double hunterSpeedMax;
     private final int shrineBase;
     private final int shrinePerPlayer;
+    private final int caveShrineCount;
     private final int roundCapSeconds;
     private final double corruptionPerSecond;
     private final double corruptionPerShrine;
@@ -38,6 +39,7 @@ public final class RuleSet {
         this.hunterSpeedMax = b.hunterSpeedMax;
         this.shrineBase = b.shrineBase;
         this.shrinePerPlayer = b.shrinePerPlayer;
+        this.caveShrineCount = b.caveShrineCount;
         this.roundCapSeconds = b.roundCapSeconds;
         this.corruptionPerSecond = b.corruptionPerSecond;
         this.corruptionPerShrine = b.corruptionPerShrine;
@@ -101,9 +103,18 @@ public final class RuleSet {
         return shrineRelightSeconds;
     }
 
-    /** Total shrines to relight for a given party size: {@code shrineBase + shrinePerPlayer * partySize}. */
+    /** Surface (ring) shrines to relight for a given party size: {@code shrineBase + shrinePerPlayer * partySize}. */
     public int shrineCount(int partySize) {
         return shrineBase + shrinePerPlayer * Math.max(1, partySize);
+    }
+
+    /**
+     * Number of UNDERGROUND relight shrines added on top of the surface ring (capped to the predefined
+     * cave anchors). Each is a descend-and-return objective; {@code ArenaBuilder} alternates the descent
+     * style (spiral staircase / ladder). 0 = a pure-surface round.
+     */
+    public int caveShrineCount() {
+        return caveShrineCount;
     }
 
     @Nonnull
@@ -122,6 +133,7 @@ public final class RuleSet {
         private double hunterSpeedMax = 1.35;
         private int shrineBase = 2;
         private int shrinePerPlayer = 1;
+        private int caveShrineCount = 2;
         private int roundCapSeconds = 900;
         private double corruptionPerSecond = 0.0014;
         private double corruptionPerShrine = 0.12;
@@ -137,6 +149,7 @@ public final class RuleSet {
         @Nonnull public Builder hunterCount(int v) { this.hunterCount = v; return this; }
         @Nonnull public Builder hunterSpeed(double base, double max) { this.hunterSpeedBase = base; this.hunterSpeedMax = max; return this; }
         @Nonnull public Builder shrines(int base, int perPlayer) { this.shrineBase = base; this.shrinePerPlayer = perPlayer; return this; }
+        @Nonnull public Builder caveShrineCount(int v) { this.caveShrineCount = v; return this; }
         @Nonnull public Builder roundCapSeconds(int v) { this.roundCapSeconds = v; return this; }
         @Nonnull public Builder corruptionPerSecond(double v) { this.corruptionPerSecond = v; return this; }
         @Nonnull public Builder corruptionPerShrine(double v) { this.corruptionPerShrine = v; return this; }

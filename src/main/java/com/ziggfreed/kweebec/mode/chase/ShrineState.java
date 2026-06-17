@@ -23,6 +23,8 @@ public final class ShrineState {
     private double progress;
     @Nullable
     private UUID channeller;
+    /** Ritual feedback stage already announced this channel attempt: 0 idle, 1 started, 2 flared. */
+    private int feedbackStage;
 
     public ShrineState(int index, @Nonnull Anchor anchor) {
         this.index = index;
@@ -48,6 +50,15 @@ public final class ShrineState {
             this.progress = 1.0;
             this.channeller = null;
         }
+    }
+
+    /** Ritual feedback stage already announced this channel attempt (0 idle, 1 started, 2 flared). */
+    public int feedbackStage() {
+        return feedbackStage;
+    }
+
+    public void setFeedbackStage(int feedbackStage) {
+        this.feedbackStage = feedbackStage;
     }
 
     public double progress() {

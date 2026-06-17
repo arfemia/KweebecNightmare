@@ -29,6 +29,8 @@ public final class Lang {
     // Danger / status toasts.
     public static final String TOAST_SHRINE_LIT = "kweebecnightmare.toast.shrine_lit";
     public static final String TOAST_SHRINE_PROGRESS = "kweebecnightmare.toast.shrine_progress";
+    public static final String TOAST_SHRINE_CHANNEL = "kweebecnightmare.toast.shrine_channel";
+    public static final String TOAST_SHRINE_FLARE = "kweebecnightmare.toast.shrine_flare";
     public static final String TOAST_COCOONED = "kweebecnightmare.toast.cocooned";
     public static final String TOAST_RESCUED = "kweebecnightmare.toast.rescued";
     public static final String TOAST_TEAMMATE_DOWN = "kweebecnightmare.toast.teammate_down";

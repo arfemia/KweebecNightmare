@@ -28,6 +28,12 @@ dependencies {
 
     compileOnly 'org.slf4j:slf4j-api:2.0.9'
 
+    // Perfect Utils (hard runtime dep, manifest Dependencies): compileOnly so AggroAPI
+    // (com.narwhals.perfectutils.api.AggroAPI) compiles. The server provides the jar at
+    // runtime (loaded first), so we NEVER bundle it - bundling would double-load AggroAPI
+    // under two classloaders. Path in gradle.properties (perfectUtilsJar).
+    compileOnly files(perfectUtilsJar)
+
     // Phase 4 (soft-dep integration): compileOnly the MMOSkillTree api jar - NEVER bundle it
     // (bundling double-loads its event types under two classloaders -> ClassCastException).
     // compileOnly files("${rootDir}/../../api/build/libs/mmoskilltree-api-1.3.2.jar")

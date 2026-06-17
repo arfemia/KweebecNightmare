@@ -1,0 +1,8 @@
+{
+  "ApplicationEffects": {
+    "HorizontalSpeedMultiplier": 1.4
+  },
+  "Infinite": true,
+  "OverlapBehavior": "Overwrite",
+  "Debuff": false
+}

@@ -1,8 +1,11 @@
 package com.ziggfreed.kweebec.mode.chase;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.ziggfreed.kweebec.arena.Anchor;
 import com.ziggfreed.kweebec.arena.ArenaLayout;
@@ -25,8 +28,13 @@ public final class ChaseState {
     /** Epoch ms when PREP ends and the ritual (and hunter) begins. */
     private volatile long prepEndsAtMs;
 
-    public ChaseState(int shrineCount) {
-        List<Anchor> anchors = ArenaLayout.shrineAnchors(shrineCount);
+    public ChaseState(int surfaceShrineCount, int caveShrineCount) {
+        // The surface ring shrines, then the underground cave shrines appended last, so allShrinesLit()
+        // naturally requires descending into every cave (and returning) before the gate logic fires.
+        // Each cave shrine's visual + the carved chamber ship as a Relight_Shaft(_Ladder) prefab; only
+        // its anchor (at the chamber stand-Y) drives the gameplay here.
+        List<Anchor> anchors = new ArrayList<>(ArenaLayout.shrineAnchors(surfaceShrineCount));
+        anchors.addAll(ArenaLayout.caveShrineAnchors(caveShrineCount));
         ShrineState[] arr = new ShrineState[anchors.size()];
         for (int i = 0; i < anchors.size(); i++) {
             arr[i] = new ShrineState(i, anchors.get(i));
@@ -55,6 +63,28 @@ public final class ChaseState {
 
     public boolean allShrinesLit() {
         return litShrines() >= totalShrines();
+    }
+
+    /**
+     * The survivor channelling the unlit shrine with the most progress (the "loudest"
+     * ritual noise), or {@code null} if nobody is channelling. The hunter prioritizes
+     * this survivor - channelling a shrine draws the hunter toward you.
+     */
+    @Nullable
+    public UUID loudestChanneller() {
+        UUID best = null;
+        double bestProgress = 0.0;
+        for (ShrineState s : shrines) {
+            if (s.isLit()) {
+                continue;
+            }
+            UUID ch = s.channeller();
+            if (ch != null && s.progress() > bestProgress) {
+                bestProgress = s.progress();
+                best = ch;
+            }
+        }
+        return best;
     }
 
     @Nonnull

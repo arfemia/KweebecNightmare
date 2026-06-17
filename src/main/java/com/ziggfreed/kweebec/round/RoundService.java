@@ -13,6 +13,7 @@ import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.vector.Transform;
 import com.hypixel.hytale.server.core.HytaleServer;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
+import com.hypixel.hytale.server.core.modules.entity.damage.DeathComponent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
@@ -21,6 +22,7 @@ import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
 import com.ziggfreed.kweebec.arena.ArenaBuilder;
 import com.ziggfreed.kweebec.atmosphere.AtmosphereService;
+import com.ziggfreed.kweebec.atmosphere.MusicBedService;
 import com.ziggfreed.kweebec.event.RoundEvents;
 import com.ziggfreed.kweebec.feedback.HeartbeatService;
 import com.ziggfreed.kweebec.feedback.RoundFeedback;
@@ -244,6 +246,7 @@ public final class RoundService {
                 || outcome == RoundCompletedEvent.Outcome.SURVIVED;
         round.setState(win ? InstanceState.WON : InstanceState.LOST);
         HeartbeatService.stop(round.roundId());
+        MusicBedService.clear(round);
 
         ChaseState chase = round.chaseState();
         int progress = chase != null ? chase.litShrines() : 0;
@@ -329,7 +332,7 @@ public final class RoundService {
                     }
                     Ref<EntityStore> ref = pr.getReference();
                     if (ref != null && ref.isValid()) {
-                        InstanceLifecycle.exit(ref, store);
+                        reviveThenExit(world, store, ref);
                     }
                 }
                 round.setState(InstanceState.EVICTING);
@@ -339,6 +342,48 @@ public final class RoundService {
                 KweebecNightmarePlugin.LOGGER.atWarning().log("[Kweebec] eject failed: " + t.getMessage());
             }
         });
+    }
+
+    /**
+     * Restore a player to ALIVE (remove their {@link DeathComponent} via the engine
+     * respawn path) and THEN teleport them out of the instance, so a cocooned
+     * (dead-in-place) player never arrives in the overworld with a lingering death
+     * state - which the engine PlayerAddedSystem turns into a respawn/death menu (and a
+     * SEVERE "wasn't alive but didn't have a pending death message").
+     *
+     * <p>For an already-alive player (escapee or never cocooned) the respawn future
+     * completes immediately with no DeathComponent, so this degrades to a plain exit.
+     * Runs on the instance world thread; the post-respawn exit re-hops via
+     * {@code world.execute} so it always lands back on the world thread.
+     */
+    private void reviveThenExit(@Nonnull World world, @Nonnull Store<EntityStore> store,
+                               @Nonnull Ref<EntityStore> ref) {
+        try {
+            DeathComponent.respawn(store, ref).whenComplete((v, err) -> {
+                if (err != null) {
+                    KweebecNightmarePlugin.LOGGER.atWarning().log(
+                            "[Kweebec] revive-before-exit respawn failed: " + err.getMessage());
+                }
+                world.execute(() -> {
+                    try {
+                        Store<EntityStore> ws = world.getEntityStore().getStore();
+                        if (ref.isValid()) {
+                            InstanceLifecycle.exit(ref, ws);
+                        }
+                    } catch (Throwable t) {
+                        KweebecNightmarePlugin.LOGGER.atWarning().log(
+                                "[Kweebec] exit-after-revive failed: " + t.getMessage());
+                    }
+                });
+            });
+        } catch (Throwable t) {
+            // Last-resort: if the respawn call itself throws, still get the player out.
+            KweebecNightmarePlugin.LOGGER.atWarning().log(
+                    "[Kweebec] reviveThenExit failed, exiting directly: " + t.getMessage());
+            if (ref.isValid()) {
+                InstanceLifecycle.exit(ref, store);
+            }
+        }
     }
 
     // --- voluntary exit ---
@@ -362,7 +407,7 @@ public final class RoundService {
                 Ref<EntityStore> ref = pr.getReference();
                 if (ref != null && ref.isValid()) {
                     RoundFeedback.restoreHud(store, ref);
-                    InstanceLifecycle.exit(ref, store);
+                    reviveThenExit(world, store, ref);
                 }
                 round.removeHud(uuid);
             } catch (Throwable t) {

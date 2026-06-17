@@ -16,8 +16,11 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
+import com.ziggfreed.kweebec.atmosphere.MusicBedService;
 import com.ziggfreed.kweebec.arena.Anchor;
+import com.ziggfreed.kweebec.arena.ArenaBuilder;
 import com.ziggfreed.kweebec.arena.ArenaLayout;
 import com.ziggfreed.kweebec.death.CocoonService;
 import com.ziggfreed.kweebec.feedback.HeartbeatService;
@@ -54,7 +57,8 @@ public final class ChaseMode {
 
     /** Build chase state for a freshly-spawned round. Pure state; no world work. */
     public static void onStart(@Nonnull RoundInstance round) {
-        ChaseState chase = new ChaseState(round.ruleSet().shrineCount(round.partySize()));
+        ChaseState chase = new ChaseState(round.ruleSet().shrineCount(round.partySize()),
+                round.ruleSet().caveShrineCount());
         chase.setPhase(ChasePhase.PREP);
         chase.setPrepEndsAtMs(System.currentTimeMillis() + PREP_SECONDS * 1000L);
         round.setChaseState(chase);
@@ -160,6 +164,15 @@ public final class ChaseMode {
                     round.putHud(uuid, hud);
                 }
             }
+            // Force the dread music bed once on first confirmed arrival. The engine
+            // ForcedMusicTracker is ensured by now (the player has fully joined this
+            // world), so the set is picked up by the audio tick; a pre-join one-shot
+            // raced the async teleport and was clobbered.
+            if (!st.isMusicApplied()) {
+                if (MusicBedService.applyFor(store, ref)) {
+                    st.setMusicApplied(true);
+                }
+            }
         }
     }
 
@@ -181,6 +194,18 @@ public final class ChaseMode {
 
     // --- shrines ---
 
+    /** Progress at which the shrine "flares" - the surge of light + noise that turns the hunter. */
+    private static final double SHRINE_FLARE_AT = 0.5;
+
+    /**
+     * The shrine ritual. A survivor channels by holding position within
+     * {@link ArenaLayout#INTERACT_RADIUS} of a shrine; progress climbs while they channel and
+     * decays (slowly) when they leave. The ritual is a deliberate RISK, not a safe chore:
+     * while you channel you are the {@link ChaseState#loudestChanneller()}, so the hunter
+     * prioritizes you (the noise draws it - see {@code AiHunterController.chooseTarget}). The
+     * feedback escalates per attempt: a start cue, a "flare" danger cue at the half-way surge,
+     * and a grove-wide success on completion.
+     */
     private static void handleShrines(@Nonnull RoundInstance round, @Nonnull World world,
                                       @Nonnull Store<EntityStore> store, @Nonnull ChaseState chase) {
         double perTick = 1.0 / Math.max(1.0, round.ruleSet().shrineRelightSeconds());
@@ -191,17 +216,43 @@ public final class ChaseMode {
             }
             UUID channeller = activeSurvivorNear(round, store, worldUuid, shrine.anchor(), ArenaLayout.INTERACT_RADIUS_SQ);
             if (channeller != null) {
+                double before = shrine.progress();
                 shrine.setChanneller(channeller);
-                shrine.setProgress(shrine.progress() + perTick);
+                shrine.setProgress(before + perTick);
+                // Start cue: the moment a survivor begins the ritual, warn them they are exposed.
+                if (shrine.feedbackStage() < 1) {
+                    shrine.setFeedbackStage(1);
+                    toastTo(channeller, pr -> RoundFeedback.warningToast(pr, Lang.TOAST_SHRINE_CHANNEL));
+                }
+                // Half-way flare: the shrine surges and the hunter turns toward the noise.
+                if (before < SHRINE_FLARE_AT && shrine.progress() >= SHRINE_FLARE_AT && shrine.feedbackStage() < 2) {
+                    shrine.setFeedbackStage(2);
+                    toastTo(channeller, pr -> RoundFeedback.dangerToast(pr, Lang.TOAST_SHRINE_FLARE));
+                }
                 if (shrine.progress() >= 1.0) {
                     shrine.setLit(true);
                     chase.addCorruption(round.ruleSet().corruptionPerShrine());
+                    KweebecNightmarePlugin.LOGGER.atInfo().log(
+                            "[Kweebec][win] shrine " + shrine.index() + " LIT ("
+                                    + chase.litShrines() + "/" + chase.totalShrines() + ")");
                     forEachPresent(round, pr -> RoundFeedback.successToast(pr, Lang.TOAST_SHRINE_LIT));
                 }
             } else {
                 shrine.setChanneller(null);
                 shrine.setProgress(shrine.progress() - perTick * 0.5);
+                // Reset the feedback ladder once the ritual fully lapses, so a fresh attempt re-cues.
+                if (shrine.progress() <= 0.0 && shrine.feedbackStage() != 0) {
+                    shrine.setFeedbackStage(0);
+                }
             }
+        }
+    }
+
+    /** Run an action for one player by UUID if they are online (used for channeller-only cues). */
+    private static void toastTo(@Nonnull UUID uuid, @Nonnull java.util.function.Consumer<PlayerRef> action) {
+        PlayerRef pr = Universe.get().getPlayer(uuid);
+        if (pr != null) {
+            action.accept(pr);
         }
     }
 
@@ -244,6 +295,14 @@ public final class ChaseMode {
         chase.setPhase(ChasePhase.ESCAPE);
         chase.setAlertFired(true);
         chase.setCorruption(1.0);
+        KweebecNightmarePlugin.LOGGER.atInfo().log(
+                "[Kweebec][win] all shrines lit (" + chase.litShrines() + "/" + chase.totalShrines()
+                        + "); GATE OPEN, phase -> ESCAPE. Reach ESCAPE z=" + ArenaLayout.ESCAPE.z()
+                        + " within " + ArenaLayout.ESCAPE_RADIUS + " to win.");
+        // The Heartwood Gate did NOT exist during the round; reveal it now (the dramatic "the gate
+        // opens" beat). The escape win is pure-anchor logic (checkEscapes crossing GATE.z), so this
+        // prefab is purely cosmetic - the win works with or without it.
+        ArenaBuilder.pasteGate(world);
         HunterController hunter = round.hunterController();
         if (hunter != null) {
             hunter.onAlert(round, world, store);
@@ -257,6 +316,8 @@ public final class ChaseMode {
     private static void checkEscapes(@Nonnull RoundInstance round, @Nonnull World world,
                                      @Nonnull Store<EntityStore> store) {
         UUID worldUuid = world.getWorldConfig().getUuid();
+        double nearestSq = Double.MAX_VALUE;
+        UUID nearest = null;
         for (PlayerRoundState st : round.playerStates()) {
             if (!st.isActive()) {
                 continue;
@@ -266,10 +327,37 @@ public final class ChaseMode {
             if (pos == null) {
                 continue;
             }
-            if (ArenaLayout.ESCAPE.horizontalDistanceSq(pos.x(), pos.z()) <= ArenaLayout.ESCAPE_RADIUS_SQ) {
+            double distSq = ArenaLayout.ESCAPE.horizontalDistanceSq(pos.x(), pos.z());
+            if (distSq < nearestSq) {
+                nearestSq = distSq;
+                nearest = st.playerId();
+            }
+            // Win on EITHER reaching the exit pad OR simply crossing north past the Heartwood Gate
+            // (z below the gate). The second is the robust trigger: once a survivor is through the
+            // open gate they have escaped, even if the distant exit pad is hard to reach in the dark.
+            boolean pastGate = pos.z() <= ArenaLayout.GATE.z() - 2.0;
+            if (distSq <= ArenaLayout.ESCAPE_RADIUS_SQ || pastGate) {
                 st.setEscaped(true);
+                KweebecNightmarePlugin.LOGGER.atInfo().log(
+                        "[Kweebec][win] survivor " + shortId(st.playerId()) + " ESCAPED (distSq="
+                                + fmt(distSq) + ", z=" + fmt(pos.z()) + ", pastGate=" + pastGate + ")");
             }
         }
+        // Diagnostic: while the gate is open, log how close the nearest survivor is to the exit
+        // so a "reached the exit but no win" report is decisively explained next playtest.
+        if (nearest != null && nearestSq > ArenaLayout.ESCAPE_RADIUS_SQ) {
+            KweebecNightmarePlugin.LOGGER.atInfo().log(
+                    "[Kweebec][win] ESCAPE phase: nearest survivor " + shortId(nearest)
+                            + " distSq=" + fmt(nearestSq) + " (need <= " + ArenaLayout.ESCAPE_RADIUS_SQ + ")");
+        }
+    }
+
+    private static String shortId(@Nonnull UUID uuid) {
+        return uuid.toString().substring(0, 8);
+    }
+
+    private static String fmt(double v) {
+        return String.format(java.util.Locale.ROOT, "%.1f", v);
     }
 
     // --- HUD ---
@@ -325,9 +413,21 @@ public final class ChaseMode {
         }
     }
 
+    /**
+     * Vertical tolerance (blocks) for the proximity test against a SUB-SURFACE anchor (the cave
+     * shrine). Surface anchors keep their original XZ-only behavior; an underground anchor also
+     * requires the player to be within this band of the anchor's Y, so the cave shrine can only be
+     * channelled from inside the chamber - never from the surface directly above it (the XZ-only
+     * {@code horizontalDistanceSq} would otherwise relight it from the surface).
+     */
+    private static final double UNDERGROUND_Y_BAND = 3.0;
+
     @Nullable
     private static UUID activeSurvivorNear(@Nonnull RoundInstance round, @Nonnull Store<EntityStore> store,
                                            @Nonnull UUID worldUuid, @Nonnull Anchor at, double radiusSq) {
+        // Only constrain Y for a sub-surface anchor; surface anchors (ring shrines, rescues) keep
+        // their exact XZ-only proximity so this change cannot regress them.
+        boolean underground = at.y() < ArenaLayout.STAND_Y - 1.0;
         for (PlayerRoundState st : round.playerStates()) {
             if (!st.isActive()) {
                 continue;
@@ -337,7 +437,8 @@ public final class ChaseMode {
             if (pos == null) {
                 continue;
             }
-            if (at.horizontalDistanceSq(pos.x(), pos.z()) <= radiusSq) {
+            if (at.horizontalDistanceSq(pos.x(), pos.z()) <= radiusSq
+                    && (!underground || Math.abs(pos.y() - at.y()) <= UNDERGROUND_Y_BAND)) {
                 return st.playerId();
             }
         }

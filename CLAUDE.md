@@ -26,6 +26,8 @@ cd 'D:\dev\business\hyMMO\additional-mods\kweebec-nightmare'; .\build.ps1
 ```
 Produces `build/libs/KweebecNightmare-<version>.jar` and copies the runtime jar (never `-sources`/`-javadoc`) into the Hytale `Mods/` folder when `HYTALE_MODS_DIR` is set. `.\gradlew.bat build` works too.
 
+**Perfect Utils is a HARD dependency.** `manifest.json` `Dependencies` lists `"narwhals:Perfect Utils": "*"`, and `build.gradle` adds it `compileOnly files(perfectUtilsJar)` (path in `gradle.properties` `perfectUtilsJar`, the installed jar) so `com.narwhals.perfectutils.api.AggroAPI` compiles. The server provides the jar at runtime; it is the override-only aggro layer used to steer the hunter. Its source is the **Developer-Utils** repo (`D:/dev/business/hytale-clients/Developer-Utils`).
+
 ## Layout
 
 ```
@@ -88,3 +90,4 @@ PascalCase asset filenames; codec JSON keys start upper-case. `@Nonnull`/`@Nulla
 - **`.lang` keys are unprefixed - the FILENAME is the namespace.** Prefixing them doubles the key and shows raw keys on screen. See [`i18n/`](src/main/java/com/ziggfreed/kweebec/i18n/CLAUDE.md).
 - **Spawn/arena Y must match the worldgen floor** (`Default_Flat` `Base`=80 -> Y=80; the old Y=65 buried players in terrain). See [`arena/`](src/main/java/com/ziggfreed/kweebec/arena/CLAUDE.md).
 - **Survivor game mode is set to Adventure ONCE on entry, never per-tick** (per-tick forcing fought a Creative admin). See [`mode/chase/`](src/main/java/com/ziggfreed/kweebec/mode/chase/CLAUDE.md) + [`hunter/`](src/main/java/com/ziggfreed/kweebec/hunter/CLAUDE.md).
+- **Perfect Utils (`narwhals:Perfect Utils`) is a HARD manifest dependency** - its `AggroAPI` is the override-only hunter aggro layer; missing the jar at runtime fails the load. Compile path lives in `gradle.properties` (`perfectUtilsJar`); source is the Developer-Utils repo (see Build).

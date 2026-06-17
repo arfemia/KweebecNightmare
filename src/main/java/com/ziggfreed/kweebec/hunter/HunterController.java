@@ -22,9 +22,9 @@ public interface HunterController {
     void spawn(@Nonnull RoundInstance round, @Nonnull World world, @Nonnull Store<EntityStore> store);
 
     /**
-     * Per-tick update: re-assert the marked target on the chosen survivor(s) (the
-     * engine clears a marked player target each tick unless re-asserted) and apply
-     * the corruption-scaled speed ramp.
+     * Per-tick update: drive the hunter toward the chosen survivor (the gate-alert lock, else
+     * the loudest shrine channeller, else the nearest active survivor) and apply the
+     * corruption-scaled speed ramp. The AI implementation lures via Perfect Utils' aggro API.
      */
     void tick(@Nonnull RoundInstance round, @Nonnull World world, @Nonnull Store<EntityStore> store);
 

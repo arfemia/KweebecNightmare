@@ -15,7 +15,7 @@
   },
   "WorldGen": {
     "Type": "HytaleGenerator",
-    "WorldStructure": "Default_Flat"
+    "WorldStructure": "KweebecNightmare_Grove"
   },
   "ChunkStorage": {
     "Type": "Hytale"

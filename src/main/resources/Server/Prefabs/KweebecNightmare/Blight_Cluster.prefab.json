@@ -1,0 +1,14 @@
+{
+  "version": 8,
+  "blockIdVersion": 11,
+  "anchorX": 1,
+  "anchorY": 0,
+  "anchorZ": 1,
+  "blocks": [
+    { "x": 1, "y": 1, "z": 1, "name": "Plant_Bush_Dead_Twisted" },
+    { "x": 0, "y": 1, "z": 1, "name": "Plant_Fern_Forest" },
+    { "x": 2, "y": 1, "z": 1, "name": "Plant_Fern_Forest" },
+    { "x": 1, "y": 1, "z": 0, "name": "Plant_Bramble_Dead_Twisted" },
+    { "x": 1, "y": 1, "z": 2, "name": "Plant_Crop_Mushroom_Glowing_Violet" }
+  ]
+}

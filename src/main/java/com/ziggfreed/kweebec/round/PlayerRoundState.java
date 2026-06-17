@@ -26,6 +26,8 @@ public final class PlayerRoundState {
     private int missedTicks;
     /** Whether the round's entry game-mode (Adventure) has been applied once for this player. */
     private boolean gameModeApplied;
+    /** Whether the dread music bed (ForcedMusicTracker index) has been pushed once for this player. */
+    private boolean musicApplied;
 
     public PlayerRoundState(@Nonnull UUID playerId) {
         this.playerId = playerId;
@@ -106,6 +108,14 @@ public final class PlayerRoundState {
 
     public void setGameModeApplied(boolean gameModeApplied) {
         this.gameModeApplied = gameModeApplied;
+    }
+
+    public boolean isMusicApplied() {
+        return musicApplied;
+    }
+
+    public void setMusicApplied(boolean musicApplied) {
+        this.musicApplied = musicApplied;
     }
 
     /**

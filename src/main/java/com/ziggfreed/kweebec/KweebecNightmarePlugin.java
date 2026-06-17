@@ -5,6 +5,7 @@ import javax.annotation.Nonnull;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
+import com.narwhals.perfectutils.api.AggroAPI;
 import com.ziggfreed.kweebec.command.KweebecCommand;
 import com.ziggfreed.kweebec.death.CocoonOnDeathSystem;
 import com.ziggfreed.kweebec.round.RoundService;
@@ -45,6 +46,15 @@ public class KweebecNightmarePlugin extends JavaPlugin {
 
         // Round engine: 1 Hz state machine + cleanup ticker.
         RoundService.getInstance().startup();
+
+        // Perfect Utils is a hard dependency (loads first); confirm the aggro API resolved so a
+        // missing/older jar is obvious in the log rather than a silent fall-back to natural sensors.
+        if (AggroAPI.get() != null) {
+            LOGGER.atInfo().log("[Kweebec] Perfect Utils AggroAPI present; hunter will use dynamic aggro.");
+        } else {
+            LOGGER.atWarning().log(
+                    "[Kweebec] Perfect Utils AggroAPI NOT present at setup; hunter will fall back to natural sensors.");
+        }
 
         LOGGER.atInfo().log("KweebecNightmare setup complete (Chase MVP, in dev).");
     }

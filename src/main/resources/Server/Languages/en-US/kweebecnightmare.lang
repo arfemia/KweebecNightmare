@@ -28,6 +28,8 @@ title.night_falls.sub = Dawn never came
 
 toast.shrine_lit = A shrine flares to life
 toast.shrine_progress = Keep channelling the shrine
+toast.shrine_channel = You channel the shrine. It hears you.
+toast.shrine_flare = The shrine flares - it turns toward you
 toast.cocooned = Roots drag you under. Wait for a teammate.
 toast.rescued = You are free. Run.
 toast.teammate_down = A teammate has been cocooned

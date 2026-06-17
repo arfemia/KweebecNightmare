@@ -1,0 +1,14 @@
+{
+  "version": 8,
+  "blockIdVersion": 11,
+  "anchorX": 1,
+  "anchorY": 0,
+  "anchorZ": 1,
+  "blocks": [
+    { "x": 1, "y": 0, "z": 1, "name": "Wood_Ash_Roots" },
+    { "x": 1, "y": 1, "z": 1, "name": "Wood_Ash_Trunk_Full" },
+    { "x": 1, "y": 2, "z": 1, "name": "Wood_Ash_Trunk_Full" },
+    { "x": 0, "y": 1, "z": 1, "name": "Plant_Crop_Mushroom_Glowing_Purple" },
+    { "x": 1, "y": 3, "z": 1, "name": "Plant_Leaves_Dead" }
+  ]
+}

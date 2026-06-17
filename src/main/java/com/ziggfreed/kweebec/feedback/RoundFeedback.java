@@ -33,6 +33,7 @@ public final class RoundFeedback {
             HudComponent.Hotbar,
             HudComponent.Health,
             HudComponent.Mana,
+            HudComponent.Stamina,
             HudComponent.Reticle,
             HudComponent.StatusIcons,
             HudComponent.Notifications,
