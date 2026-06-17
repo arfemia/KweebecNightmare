@@ -7,7 +7,7 @@
     "Density": {
       "Type": "Sum",
       "Skip": false,
-      "$Comment": "All-additive + fail-safe: any optional Multiplier term degrading to 0 just drops that feature; the disc never airs out. Hand-traced top-solid Y79 at center.",
+      "$Comment": "NATURAL ROLLING TERRAIN (1C): the two flat-core Cylinder masks (r70) are REMOVED so hills + caves apply across the whole footprint; only the r112 edge-cliff Cylinder remains (the finite-world boundary the design keeps). All-additive + fail-safe: any optional term degrading to ConstantValueDensity(0.0) just drops that feature; no top-level Min/Max, so the ground never airs out. Sign law: density >0 SOLID, <=0 (incl 0.0) AIR; surface = zero-crossing. HAND-TRACE (any x,z): density = wideRamp(y) + hillNoise(x,z) + caveCarve + edgeCliff. wideRamp = CurveMapper[In:-40->1, In:40->-1] over (y-80), slope -0.025/blk, crosses 0 at y=80 (top-solid y=79, stand y=80), clamps to +1 below y=40 and -1 above y=120. hillNoise in [-0.20,+0.20] shifts the zero-crossing by noise/slope = +-8 blocks, so the surface rolls between ~y=72 (valley) and ~y=88 (hilltop). +-0.20 << the ramp's 1.0 clamp so density stays negative above the surface (NO solid-to-sky flood) and positive below (no floating gaps). Caves carve only y<66 (depthMask) where |noise3D|<0.15 (pocketMask), 6+ blocks below the lowest valley surface so they never breach the walkable floor. Beyond r112 the edge term adds -100000 = sheer cliff into the void. EXPECTED SURFACE Y RANGE: ~72..88 across the footprint (mean 80).",
       "Inputs": [
         {
           "Type": "CurveMapper",
@@ -37,14 +37,15 @@
         {
           "Type": "Multiplier",
           "Skip": false,
+          "$Comment": "Hill noise applied EVERYWHERE except a SMALL r6 spawn clearing (the ruined courtyard) so the player spawns on flat, deterministic ground at y80 matching instance SpawnPoint.Y - this is a tiny clearing, NOT the old r70 flat disc. The Cylinder is 0 inside r6 and ramps to full hills by r12 (smooth courtyard edge); origin-centered, which is exactly where spawn is. +-0.20 amplitude -> +-8 block hills under the -0.025/blk ramp slope; well under the ramp's 1.0 clamp so no solid-to-sky flood. A Multiplier degrading to 0 -> flat ground, never an air-out.",
           "Inputs": [
             {
               "Type": "Normalizer",
               "Skip": false,
               "FromMin": -1,
               "FromMax": 1,
-              "ToMin": -0.18,
-              "ToMax": 0.18,
+              "ToMin": -0.20,
+              "ToMax": 0.20,
               "Inputs": [
                 {
                   "Type": "SimplexNoise2D",
@@ -61,34 +62,15 @@
               "Type": "Cylinder",
               "Skip": false,
               "Spin": 0,
-              "NewYAxis": {
-                "X": 0,
-                "Y": 1,
-                "Z": 0
-              },
-              "AxialCurve": {
-                "Type": "Constant",
-                "Value": 1.0
-              },
+              "NewYAxis": { "X": 0, "Y": 1, "Z": 0 },
+              "AxialCurve": { "Type": "Constant", "Value": 1.0 },
               "RadialCurve": {
                 "Type": "Manual",
                 "Points": [
-                  {
-                    "In": 0,
-                    "Out": 0
-                  },
-                  {
-                    "In": 70,
-                    "Out": 0
-                  },
-                  {
-                    "In": 110,
-                    "Out": 1
-                  },
-                  {
-                    "In": 2000,
-                    "Out": 1
-                  }
+                  { "In": 0, "Out": 0 },
+                  { "In": 6, "Out": 0 },
+                  { "In": 12, "Out": 1 },
+                  { "In": 4000, "Out": 1 }
                 ]
               }
             }
@@ -97,42 +79,8 @@
         {
           "Type": "Multiplier",
           "Skip": false,
+          "$Comment": "Procedural caves carved EVERYWHERE under the footprint (the r70 flat-core Cylinder mask is gone). Gated to deep + pocketed: depthMask is 1 only at y<=60 ramping to 0 by y=66 (so the lowest valley surface ~y=72 keeps a 6+ block buffer; caves never breach the walkable floor), pocketMask is 1 where |noise3D|<0.10 ramping to 0 by 0.15. Where both are 1 it subtracts -8 (air pocket); any mask 0 short-circuits the Multiplier to 0 = no carve.",
           "Inputs": [
-            {
-              "Type": "Cylinder",
-              "Skip": false,
-              "Spin": 0,
-              "NewYAxis": {
-                "X": 0,
-                "Y": 1,
-                "Z": 0
-              },
-              "AxialCurve": {
-                "Type": "Constant",
-                "Value": 1.0
-              },
-              "RadialCurve": {
-                "Type": "Manual",
-                "Points": [
-                  {
-                    "In": 0,
-                    "Out": 0
-                  },
-                  {
-                    "In": 70,
-                    "Out": 0
-                  },
-                  {
-                    "In": 90,
-                    "Out": 1
-                  },
-                  {
-                    "In": 2000,
-                    "Out": 1
-                  }
-                ]
-              }
-            },
             {
               "Type": "CurveMapper",
               "Skip": false,
@@ -140,11 +88,11 @@
                 "Type": "Manual",
                 "Points": [
                   {
-                    "In": -16,
+                    "In": -20,
                     "Out": 1
                   },
                   {
-                    "In": -10,
+                    "In": -14,
                     "Out": 0
                   }
                 ]
@@ -344,6 +292,84 @@
     {
       "Skip": false,
       "Runtime": 0,
+      "$Comment": "1C: ambient blight trees scattered by WORLDGEN (replaces the runtime ArenaBuilder foliage ring, per the design's 'trees from worldgen, not manual paste'). A sparse Mesh2D grid of weighted native dead/poisoned tree prefabs, floor-snapped to the rolling surface by the ColumnLinear scanner; BlockMask.DontReplace keeps trunks from gouging the soil. A malformed Prefab prop fails the WHOLE biome decode (= all air), so this mirrors the proven vanilla Example_Prop 'Hills' Prefab-prop shape exactly. Validate in-game (the biome JSON is not gradle-compiled).",
+      "Positions": {
+        "Type": "Mesh2D",
+        "Skip": false,
+        "PointsY": 0,
+        "PointGenerator": {
+          "Type": "Mesh",
+          "Jitter": 0.5,
+          "ScaleX": 16,
+          "ScaleY": 16,
+          "ScaleZ": 16,
+          "Seed": "KN_Trees"
+        }
+      },
+      "Assignments": {
+        "Type": "Weighted",
+        "SkipChance": 0.55,
+        "Seed": "KN_TreesW",
+        "WeightedAssignments": [
+          {
+            "Weight": 1,
+            "Assignments": {
+              "Type": "Constant",
+              "Prop": {
+                "Type": "Prefab",
+                "Skip": false,
+                "WeightedPrefabPaths": [
+                  { "Path": "Trees/Ash_twisted", "Weight": 3 },
+                  { "Path": "Trees/Poisoned/Stage_1", "Weight": 2 },
+                  { "Path": "Trees/Petrified_Dead/Stage_1", "Weight": 2 },
+                  { "Path": "Trees/Dry_Dead", "Weight": 2 },
+                  { "Path": "Trees/Ash_Dead/Stage_2", "Weight": 1 }
+                ],
+                "LegacyPath": false,
+                "LoadEntities": true,
+                "Directionality": {
+                  "Type": "Random",
+                  "Seed": "KN_TreeRot",
+                  "Pattern": {
+                    "Type": "And",
+                    "Skip": false,
+                    "Patterns": [
+                      {
+                        "Type": "Floor",
+                        "Skip": false,
+                        "Origin": { "Type": "BlockSet", "Skip": false, "BlockSet": { "Inclusive": true, "Materials": [ { "Solid": "Empty" } ] } },
+                        "Floor": { "Type": "BlockSet", "Skip": false, "BlockSet": { "Inclusive": true, "Materials": [ { "Solid": "Soil_Grass_Dry" } ] } }
+                      },
+                      {
+                        "Type": "Offset",
+                        "Skip": false,
+                        "Pattern": { "Type": "BlockSet", "Skip": false, "BlockSet": { "Inclusive": true, "Materials": [ { "Solid": "Empty" } ] } },
+                        "Offset": { "X": 0, "Y": 8, "Z": 0 }
+                      }
+                    ]
+                  }
+                },
+                "Scanner": {
+                  "Type": "ColumnLinear",
+                  "Skip": false,
+                  "MaxY": 40,
+                  "MinY": -20,
+                  "RelativeToPosition": false,
+                  "BaseHeightName": "Base",
+                  "TopDownOrder": true,
+                  "ResultCap": 1
+                },
+                "MoldingDirection": "None",
+                "MoldingChildren": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "Skip": false,
+      "Runtime": 0,
       "Positions": {
         "Type": "Mesh2D",
         "Skip": false,
@@ -417,8 +443,8 @@
                       "Scanner": {
                         "Type": "ColumnLinear",
                         "Skip": false,
-                        "MaxY": 60,
-                        "MinY": -40,
+                        "MaxY": 80,
+                        "MinY": -60,
                         "RelativeToPosition": false,
                         "BaseHeightName": "Base",
                         "TopDownOrder": true,
@@ -467,8 +493,8 @@
                       "Scanner": {
                         "Type": "ColumnLinear",
                         "Skip": false,
-                        "MaxY": 60,
-                        "MinY": -40,
+                        "MaxY": 80,
+                        "MinY": -60,
                         "RelativeToPosition": false,
                         "BaseHeightName": "Base",
                         "TopDownOrder": true,

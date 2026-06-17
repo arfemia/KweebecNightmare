@@ -7,9 +7,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.joml.Vector3d;
 
@@ -20,9 +20,10 @@ import com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
-import com.hypixel.hytale.server.core.universe.world.SoundUtil;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.ziggfreed.common.sound.Sound3D;
+import com.ziggfreed.common.util.AssetIndexCache;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
 import com.ziggfreed.kweebec.round.PlayerRoundState;
@@ -33,6 +34,13 @@ import com.ziggfreed.kweebec.round.RoundInstance;
  * at their own position, re-armed on a tightening interval driven by the round's
  * corruption tier (the 3-tier terror-radius cadence). There is no engine StopSound
  * for a loop, so the dread bed is repeated one-shots; stopping = stop scheduling.
+ *
+ * <p>Playback routes through the shared {@link Sound3D} seam (the ziggfreed-common
+ * 3D-sound primitive: category + per-listener predicate + index cache) rather than a
+ * private {@code SoundUtil}/index-cache copy. A shared {@link AssetIndexCache} over
+ * the heartbeat candidate ids gates the pulse: when no candidate is registered we
+ * stop pulsing (the round still plays); it caches ONLY a real index so a later round
+ * re-resolves if the asset lands afterwards.
  */
 public final class HeartbeatService {
 
@@ -44,6 +52,14 @@ public final class HeartbeatService {
             "KweebecNightmare_Heartbeat", "Heartbeat", "UI_Heartbeat"
     };
 
+    /**
+     * One shared cache that resolves the FIRST registered candidate id (pack first,
+     * then vanilla). Used only as the pulse gate (whether ANY heartbeat asset exists);
+     * the actual playback re-resolves the chosen id through {@link Sound3D}'s own cache.
+     */
+    private static final AssetIndexCache<SoundEvent> HEARTBEAT_INDEX =
+            AssetIndexCache.ofCandidates(HEARTBEAT_CANDIDATES, id -> SoundEvent.getAssetMap().getIndex(id));
+
     private static final ScheduledExecutorService SCHEDULER =
             Executors.newSingleThreadScheduledExecutor(r -> {
                 Thread t = new Thread(r, "kweebec-heartbeat");
@@ -52,9 +68,6 @@ public final class HeartbeatService {
             });
 
     private static final Map<String, ScheduledFuture<?>> ACTIVE = new ConcurrentHashMap<>();
-
-    /** -1 = unresolved, Integer.MIN_VALUE = no asset found, else the sound index. */
-    private static volatile int soundIndex = -1;
 
     private HeartbeatService() {
     }
@@ -101,9 +114,9 @@ public final class HeartbeatService {
             schedule(round, 1000L);
             return;
         }
-        int idx = resolveSound();
-        if (idx == Integer.MIN_VALUE) {
-            // No heartbeat asset available; stop pulsing (the round still plays).
+        // Gate: if no heartbeat candidate is registered yet, stop pulsing (the round
+        // still plays). A round-scoped resolve re-runs next round if the asset lands.
+        if (HEARTBEAT_INDEX.resolve() == AssetIndexCache.UNRESOLVED) {
             stop(round.roundId());
             return;
         }
@@ -112,7 +125,7 @@ public final class HeartbeatService {
         long interval = TIER_INTERVAL_MS[Math.max(0, Math.min(TIER_INTERVAL_MS.length - 1, tier))];
 
         try {
-            world.execute(() -> playForSurvivors(round, world, idx));
+            world.execute(() -> playForSurvivors(round, world));
         } catch (Throwable t) {
             KweebecNightmarePlugin.LOGGER.atFine().log(
                     "[Kweebec] heartbeat dispatch failed: " + t.getMessage());
@@ -123,8 +136,12 @@ public final class HeartbeatService {
         }
     }
 
-    private static void playForSurvivors(@Nonnull RoundInstance round, @Nonnull World world, int idx) {
+    private static void playForSurvivors(@Nonnull RoundInstance round, @Nonnull World world) {
         Store<EntityStore> store = world.getEntityStore().getStore();
+        String heartbeatId = HEARTBEAT_INDEX.resolvedIdOrNull();
+        if (heartbeatId == null) {
+            return;
+        }
         for (PlayerRoundState st : round.playerStates()) {
             if (!st.isActive()) {
                 continue;
@@ -143,36 +160,9 @@ public final class HeartbeatService {
                 continue;
             }
             Vector3d pos = tc.getPosition();
-            Predicate<Ref<EntityStore>> onlyMe = candidate -> {
-                PlayerRef cand = store.getComponent(candidate, PlayerRef.getComponentType());
-                return cand != null && uuid.equals(cand.getUuid());
-            };
-            try {
-                SoundUtil.playSoundEvent3d(idx, SoundCategory.SFX, pos.x(), pos.y(), pos.z(), onlyMe, store);
-            } catch (Throwable ignored) {
-                // a single missed pulse is harmless
-            }
+            // Private to this survivor: only their own ref hears it (the self-only predicate).
+            Sound3D.play(heartbeatId, SoundCategory.SFX, pos.x(), pos.y(), pos.z(),
+                    Sound3D.onlyEntity(ref), store, "HEARTBEAT", false);
         }
-    }
-
-    private static int resolveSound() {
-        int cached = soundIndex;
-        if (cached != -1) {
-            return cached; // a real index was found and cached
-        }
-        for (String id : HEARTBEAT_CANDIDATES) {
-            try {
-                int i = SoundEvent.getAssetMap().getIndex(id);
-                if (i != Integer.MIN_VALUE) {
-                    soundIndex = i; // cache ONLY a real index
-                    return i;
-                }
-            } catch (Throwable ignored) {
-                return Integer.MIN_VALUE; // map not ready - skip this pulse, retry next round
-            }
-        }
-        // No heartbeat asset registered. Do NOT cache MIN_VALUE permanently, so a
-        // later round re-resolves in case the asset is registered afterwards.
-        return Integer.MIN_VALUE;
     }
 }

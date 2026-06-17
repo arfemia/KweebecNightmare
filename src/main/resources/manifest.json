@@ -11,7 +11,8 @@
   "Website": "https://wintergreen-solutions.com",
   "ServerVersion": ">=0.5.0-pre.0 <0.6.0",
   "Dependencies": {
-    "narwhals:Perfect Utils": "*"
+    "narwhals:Perfect Utils": "*",
+    "Ziggfreed:ZiggfreedCommon": "*"
   },
   "OptionalDependencies": {
     "Ziggfreed:MMOSkillTree": "*"

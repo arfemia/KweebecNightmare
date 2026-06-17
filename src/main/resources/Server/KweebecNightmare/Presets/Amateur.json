@@ -1,0 +1,21 @@
+{
+  "Name": "amateur",
+  "Enabled": true,
+  "NameKey": "kweebecnightmare.preset.amateur.name",
+  "ReviveStyle": "FORGIVING",
+  "MaxDowns": 2147483647,
+  "BleedOutSeconds": 45,
+  "HunterCount": 1,
+  "HunterSpeedBase": 0.9,
+  "HunterSpeedMax": 1.1,
+  "ShrineBase": 2,
+  "ShrinePerPlayer": 1,
+  "CaveShrineCount": 2,
+  "RoundCapSeconds": 900,
+  "CorruptionPerSecond": 0.0008,
+  "CorruptionPerShrine": 0.08,
+  "ShrineRelightSeconds": 5.0,
+  "InventoryMode": "PRESERVE_AND_STRIP",
+  "RewardOnExit": "ON_WIN",
+  "HunterArchetype": "stalker"
+}

@@ -1,0 +1,21 @@
+{
+  "Name": "hardcore",
+  "Enabled": true,
+  "NameKey": "kweebecnightmare.preset.hardcore.name",
+  "ReviveStyle": "HARDCORE",
+  "MaxDowns": 0,
+  "BleedOutSeconds": 20,
+  "HunterCount": 2,
+  "HunterSpeedBase": 1.1,
+  "HunterSpeedMax": 1.5,
+  "ShrineBase": 2,
+  "ShrinePerPlayer": 1,
+  "CaveShrineCount": 2,
+  "RoundCapSeconds": 900,
+  "CorruptionPerSecond": 0.002,
+  "CorruptionPerShrine": 0.15,
+  "ShrineRelightSeconds": 7.0,
+  "InventoryMode": "PRESERVE_AND_STRIP",
+  "RewardOnExit": "ON_WIN",
+  "HunterArchetype": "stalker"
+}

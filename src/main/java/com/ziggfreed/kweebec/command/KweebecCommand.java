@@ -13,8 +13,8 @@ import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
+import com.ziggfreed.kweebec.asset.PresetConfig;
 import com.ziggfreed.kweebec.i18n.Lang;
-import com.ziggfreed.kweebec.round.RoundPreset;
 import com.ziggfreed.kweebec.round.RoundService;
 
 /**
@@ -68,19 +68,19 @@ public final class KweebecCommand extends CommandBase {
             return;
         }
 
-        RoundPreset preset = RoundPreset.DEFAULT;
+        String presetId = PresetConfig.DEFAULT;
         if (ctx.provided(presetArg)) {
-            RoundPreset parsed = RoundPreset.byId(presetArg.get(ctx));
-            if (parsed == null) {
+            String requested = presetArg.get(ctx);
+            if (PresetConfig.getInstance().byId(requested) == null) {
                 ctx.sendMessage(Lang.msg(Lang.CMD_UNKNOWN_PRESET));
                 return;
             }
-            preset = parsed;
+            presetId = requested;
         }
 
         List<UUID> party = partyInSameWorld(initiator);
         ctx.sendMessage(Lang.msg(Lang.CMD_STARTING));
-        svc.startChase(initiator, party, preset).whenComplete((roundId, err) -> {
+        svc.startChase(initiator, party, presetId).whenComplete((roundId, err) -> {
             if (err != null) {
                 ctx.sendMessage(Lang.msg(Lang.CMD_START_FAILED));
             }

@@ -2,7 +2,7 @@
 
 A **standalone Hytale horror minigame** for a mod jam, set in a Void-blighted Emerald Grove at perpetual midnight where the peaceful Kweebec tree-folk have been corrupted into something that hunts. It runs fully on its own and carries day-1 *optional* MMO Skill Tree elevation via **outbound native events** (no dependency), and is designed to later fold into [MMO Skill Tree](https://www.curseforge.com/hytale/mods/mmo-skill-tree) as the repeatable dungeon **capstone of the Emerald Wilds / Kweebec questline**.
 
-This is ONE mod shipping **two modes as separate worlds/instances** (no lobby UI). It is a supplemental mod under the parent hyMMO repo's `additional-mods/` (a git submodule; development is launched from hyMMO, like the content packs). **Status: v0.1.0 scaffold** - the plugin stands up and the asset pack loads; the round loop is not built yet.
+This is ONE mod shipping **two modes as separate worlds/instances** (no lobby UI). It is a supplemental mod under the **hyMMO monorepo**'s `additional-mods/` (a git submodule; development is launched from hyMMO, like the content packs). **Status: v0.2.0 in dev** - the Chase MVP ("Relight & Escape") runs end-to-end, plus a Phase-1 foundation pass: asset-driven config (pack-authorable codecs + a runtime override API), natural-terrain worldgen (no flat disc, finite edge cliff, worldgen tree scatter, surface-snapped placement), and a shared primitive lib (`ziggfreed-common`) it now consumes. Survival mode is still reserved.
 
 > **Design + tech are LOCKED and verified.** Read these in the parent repo before building gameplay - they are the authority, this file is the local router:
 > - Plan + LOCKED DESIGN: `../../.claude/plans/utilize-a-new-git-snappy-moon.md`
@@ -28,6 +28,8 @@ Produces `build/libs/KweebecNightmare-<version>.jar` and copies the runtime jar 
 
 **Perfect Utils is a HARD dependency.** `manifest.json` `Dependencies` lists `"narwhals:Perfect Utils": "*"`, and `build.gradle` adds it `compileOnly files(perfectUtilsJar)` (path in `gradle.properties` `perfectUtilsJar`, the installed jar) so `com.narwhals.perfectutils.api.AggroAPI` compiles. The server provides the jar at runtime; it is the override-only aggro layer used to steer the hunter. Its source is the **Developer-Utils** repo (`D:/dev/business/hytale-clients/Developer-Utils`).
 
+**`ziggfreed-common` is ALSO a HARD dependency.** A shared, mod-agnostic primitive lib (sibling submodule `additional-mods/ziggfreed-common`, package `com.ziggfreed.common`): 3D sound, camera, asset-index cache, `SurfaceProbe` (floor-snap onto procedural terrain), notifications, HUD helpers. `manifest.json` `Dependencies` lists `"Ziggfreed:ZiggfreedCommon": "*"`; `build.gradle` adds it `compileOnly files(ziggfreedCommonJar)` (path in `gradle.properties`). **PARADIGM: a generic, reusable Hytale primitive belongs in `ziggfreed-common` and is consumed here - never reimplemented locally.** Install BOTH dependency jars to `Mods/` (a missing one fails the load / NoClassDefFounds mid-round).
+
 ## Layout
 
 ```
@@ -40,7 +42,9 @@ src/main/resources/Server/                             the asset pack: HytaleGen
                                                         Environments / AmbienceFX / Particles / PortalTypes / Prefabs / Languages
 src/main/java/com/ziggfreed/kweebec/         (nearly every package carries a nested CLAUDE.md router - see Architecture)
   KweebecNightmarePlugin.java                          JavaPlugin entry (setup/shutdown), wires the death system + command + round service
-  round/                                               round state machine + RuleSet + instance lifecycle (shared)
+  round/                                               round state machine + RuleSet + instance lifecycle (shared); RuleSet is now SOURCED from asset/ (PresetConfig), not the old enum
+  asset/                                               pack-authorable custom asset TYPES (RoundPresetAsset + HunterArchetypeAsset codecs) + PresetConfig/HunterArchetypeConfig folds + KweebecAssetRegistrar + KweebecPackControlAsset
+  integration/                                         KweebecNightmareAPI - the runtime difficulty-override seam (overridePreset/scaleRuleSet) an installed MMO calls; resolveRuleSet composes defaults<pack<owner<runtime
   mode/chase/                                          the Chase loop (thin leaf over round/); survival mode reserved
   hunter/                                              HunterController seam (AI now, human-driven post-jam) + spawn + marked-target
   arena/                                               ArenaLayout anchors + ArenaBuilder prefab stamping

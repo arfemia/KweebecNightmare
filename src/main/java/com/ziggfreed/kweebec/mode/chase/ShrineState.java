@@ -16,7 +16,7 @@ import com.ziggfreed.kweebec.arena.Anchor;
 public final class ShrineState {
 
     private final int index;
-    private final Anchor anchor;
+    private Anchor anchor;
 
     private boolean lit;
     /** 0..1 relight progress. */
@@ -38,6 +38,31 @@ public final class ShrineState {
     @Nonnull
     public Anchor anchor() {
         return anchor;
+    }
+
+    /**
+     * Re-point this shrine's anchor. Used to floor-snap a CAVE shrine's chamber stand
+     * Y to the locally-probed surface once the worldgen terrain rolls (so the
+     * underground channel Y-band in {@code ChaseMode} matches the carved chamber).
+     * World-thread only.
+     */
+    public void setAnchor(@Nonnull Anchor anchor) {
+        this.anchor = anchor;
+    }
+
+    /**
+     * The surface top-solid Y a CAVE shaft was first carved from (so the +4s/+9s objective
+     * re-pastes reuse the SAME Y instead of re-probing the already-carved surface, which would
+     * stack a fresh shaft at a new depth each pass). {@link Integer#MIN_VALUE} = not yet resolved.
+     */
+    private int caveSurfaceTopY = Integer.MIN_VALUE;
+
+    public int caveSurfaceTopY() {
+        return caveSurfaceTopY;
+    }
+
+    public void setCaveSurfaceTopY(int caveSurfaceTopY) {
+        this.caveSurfaceTopY = caveSurfaceTopY;
     }
 
     public boolean isLit() {

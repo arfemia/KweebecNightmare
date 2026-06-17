@@ -6,6 +6,7 @@ import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.narwhals.perfectutils.api.AggroAPI;
+import com.ziggfreed.kweebec.asset.KweebecAssetRegistrar;
 import com.ziggfreed.kweebec.command.KweebecCommand;
 import com.ziggfreed.kweebec.death.CocoonOnDeathSystem;
 import com.ziggfreed.kweebec.round.RoundService;
@@ -38,6 +39,11 @@ public class KweebecNightmarePlugin extends JavaPlugin {
 
     @Override
     protected void setup() {
+        // Custom asset stores (Presets, Hunters, Control) - registered FIRST so they
+        // exist before the engine's asset-load event; their load listeners fold pack
+        // content into PresetConfig / HunterArchetypeConfig (defaults < pack < owner).
+        KweebecAssetRegistrar.registerAll(this);
+
         // Death interception: cocoon in-round players, leave everyone else's death alone.
         getEntityStoreRegistry().registerSystem(new CocoonOnDeathSystem());
 

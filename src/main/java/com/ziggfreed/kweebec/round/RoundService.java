@@ -20,6 +20,7 @@ import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
+import com.ziggfreed.kweebec.asset.PresetConfig;
 import com.ziggfreed.kweebec.arena.ArenaBuilder;
 import com.ziggfreed.kweebec.atmosphere.AtmosphereService;
 import com.ziggfreed.kweebec.atmosphere.MusicBedService;
@@ -28,6 +29,7 @@ import com.ziggfreed.kweebec.feedback.HeartbeatService;
 import com.ziggfreed.kweebec.feedback.RoundFeedback;
 import com.ziggfreed.kweebec.hunter.AiHunterController;
 import com.ziggfreed.kweebec.i18n.Lang;
+import com.ziggfreed.kweebec.integration.KweebecNightmareAPI;
 import com.ziggfreed.kweebec.mode.chase.ChaseMode;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
 
@@ -85,11 +87,19 @@ public final class RoundService {
      * Start a Chase round for a party (the initiator is included). Spawns a fresh
      * instance from the pack asset and teleports each member in. Returns the round
      * id, or a failed future on a validation error.
+     *
+     * <p>The preset id resolves through {@link KweebecNightmareAPI#resolveRuleSet}, which
+     * composes all four difficulty tiers ({@code defaults < pack < owner < runtime}):
+     * the static {@link PresetConfig} fold plus any runtime preset-override / scale an
+     * installed MMO registered. The resulting {@link RuleSet} stays the round's
+     * immutable runtime value object.
+     *
+     * @param presetId the requested preset id ({@code null}/blank/unknown = the default)
      */
     @Nonnull
     public CompletableFuture<String> startChase(@Nonnull UUID initiator,
                                                 @Nonnull List<UUID> party,
-                                                @Nonnull RoundPreset preset) {
+                                                @Nullable String presetId) {
         if (registry.isInRound(initiator)) {
             return CompletableFuture.failedFuture(new IllegalStateException("already in a round"));
         }
@@ -102,9 +112,11 @@ public final class RoundService {
             return CompletableFuture.failedFuture(new IllegalStateException("initiator has no world"));
         }
 
+        // Four-tier resolve: defaults < pack < owner (PresetConfig) < runtime (API).
+        RuleSet ruleSet = KweebecNightmareAPI.resolveRuleSet(presetId);
         String roundId = UUID.randomUUID().toString();
         RoundInstance round = new RoundInstance(roundId, KweebecMode.CHASE,
-                preset.ruleSet(), System.currentTimeMillis());
+                ruleSet, System.currentTimeMillis());
         registry.add(round);
 
         // Bind every eligible member (online + not already in a round).

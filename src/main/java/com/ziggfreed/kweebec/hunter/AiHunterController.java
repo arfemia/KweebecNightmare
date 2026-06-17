@@ -22,6 +22,7 @@ import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.npc.NPCPlugin;
 import com.narwhals.perfectutils.api.AggroAPI;
+import com.ziggfreed.common.world.SurfaceProbe;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.arena.Anchor;
 import com.ziggfreed.kweebec.arena.ArenaLayout;
@@ -117,9 +118,15 @@ public final class AiHunterController implements HunterController {
 
         int count = Math.max(1, round.ruleSet().hunterCount());
         Anchor den = ArenaLayout.HUNTER_DEN;
+        int denZ = (int) Math.floor(den.z());
         for (int i = 0; i < count; i++) {
             double offset = (i - (count - 1) / 2.0) * 2.0;
-            Vector3d pos = new Vector3d(den.x() + offset, den.y(), den.z());
+            double hx = den.x() + offset;
+            // Floor-snap the den to the rolling grove surface (the flat disc is gone) so the hunter
+            // spawns ON the ground, never buried in a hill or floating over a valley. World thread
+            // (spawn runs in the round tick), so the column is queryable; degrade to the authored stand Y.
+            int standY = SurfaceProbe.standableY(world, (int) Math.floor(hx), denZ, (int) ArenaLayout.STAND_Y);
+            Vector3d pos = new Vector3d(hx, standY, den.z());
             Rotation3f rot = new Rotation3f(0f, den.yaw(), 0f);
             try {
                 // No spawn-time target lock: the first tick's taunt directs the hunter (the aggro

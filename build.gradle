@@ -34,6 +34,12 @@ dependencies {
     // under two classloaders. Path in gradle.properties (perfectUtilsJar).
     compileOnly files(perfectUtilsJar)
 
+    // Ziggfreed Common (hard runtime dep, manifest Dependencies, loads first): compileOnly
+    // so com.ziggfreed.common.* (Sound3D, ...) compiles. The server provides the jar at
+    // runtime, so we NEVER bundle it - bundling would double-load its engine-touching
+    // classes under two classloaders. Path in gradle.properties (ziggfreedCommonJar).
+    compileOnly files(ziggfreedCommonJar)
+
     // Phase 4 (soft-dep integration): compileOnly the MMOSkillTree api jar - NEVER bundle it
     // (bundling double-loads its event types under two classloaders -> ClassCastException).
     // compileOnly files("${rootDir}/../../api/build/libs/mmoskilltree-api-1.3.2.jar")
