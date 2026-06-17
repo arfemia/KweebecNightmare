@@ -8,6 +8,7 @@ import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.narwhals.perfectutils.api.AggroAPI;
 import com.ziggfreed.kweebec.asset.KweebecAssetRegistrar;
 import com.ziggfreed.kweebec.command.KweebecCommand;
+import com.ziggfreed.kweebec.command.KweebecTalkCommand;
 import com.ziggfreed.kweebec.death.CocoonOnDeathSystem;
 import com.ziggfreed.kweebec.round.RoundService;
 
@@ -49,6 +50,9 @@ public class KweebecNightmarePlugin extends JavaPlugin {
 
         // Round entry command (the first of the designed-for triggers).
         getCommandRegistry().registerCommand(new KweebecCommand());
+
+        // Dialogue demo trigger: opens the shared ziggfreed-common dialogue page.
+        getCommandRegistry().registerCommand(new KweebecTalkCommand());
 
         // Round engine: 1 Hz state machine + cleanup ticker.
         RoundService.getInstance().startup();

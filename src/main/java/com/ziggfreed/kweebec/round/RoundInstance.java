@@ -43,6 +43,18 @@ public final class RoundInstance {
     private volatile InstanceState state = InstanceState.LOADING;
     private volatile long stateChangedAtMs = System.currentTimeMillis();
     private volatile boolean resolved;
+
+    /**
+     * The per-round world seed: the SINGLE coherent source the terrain, the shrine ring rotation,
+     * the cave-anchor selection, and the corrupted-structure subset + facing all derive from, so a
+     * given round is internally consistent and distinct rounds vary together. {@code 0} until set.
+     *
+     * <p>Set by {@code RoundService.onInstanceReady} from the freshly-spawned instance world's own
+     * {@code instWorld.getWorldConfig().getSeed()} (the instance.bson omits a hardcoded {@code Seed},
+     * so each spawned world auto-seeds via {@code WorldConfig.seed = System.currentTimeMillis()}),
+     * read back BEFORE {@code ChaseMode.onStart(round)} and {@code ArenaBuilder.build(round, ...)} run.
+     */
+    private volatile long worldSeed;
     @Nullable
     private volatile RoundCompletedEvent.Outcome outcome;
 
@@ -90,6 +102,18 @@ public final class RoundInstance {
 
     public void setWorld(@Nullable World world) {
         this.world = world;
+    }
+
+    /**
+     * The per-round world seed (see the field doc). {@code 0} until the parent sets it in
+     * {@code RoundService.onInstanceReady} from {@code instWorld.getWorldConfig().getSeed()}.
+     */
+    public long worldSeed() {
+        return worldSeed;
+    }
+
+    public void setWorldSeed(long worldSeed) {
+        this.worldSeed = worldSeed;
     }
 
     @Nonnull

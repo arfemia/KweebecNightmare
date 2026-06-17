@@ -1,0 +1,11 @@
+{
+  "Name": "relentless",
+  "NameKey": "kweebecnightmare.mutator.relentless.name",
+  "HunterCountDelta": 0,
+  "HunterSpeedMaxDelta": 0.2,
+  "CaveShrineCountDelta": 0,
+  "CorruptionPerSecondDelta": 0.0,
+  "ShrineRelightSecondsDelta": 0.0,
+  "RoundCapSecondsDelta": 0,
+  "ShrineBaseDelta": 0
+}

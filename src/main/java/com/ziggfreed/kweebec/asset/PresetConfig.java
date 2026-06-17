@@ -38,8 +38,15 @@ public final class PresetConfig {
 
     private static PresetConfig instance;
 
-    /** Effective presets by lowercase id (defaults < pack). */
+    /**
+     * Effective BASE presets by lowercase id (defaults < pack), BEFORE the mutator
+     * fold. {@link #resolve(String)} stacks each preset's authored mutators on top of
+     * its base at resolve time (lazily, so it is robust to the order the preset and
+     * mutator load handlers fire in).
+     */
     private final ConcurrentHashMap<String, RuleSet> presets = new ConcurrentHashMap<>();
+    /** Authored mutator ids per preset (lowercase id -> ordered mutator ids), stacked at resolve. */
+    private final ConcurrentHashMap<String, String[]> mutatorIds = new ConcurrentHashMap<>();
     /** Display name keys by lowercase id. */
     private final ConcurrentHashMap<String, String> nameKeys = new ConcurrentHashMap<>();
 
@@ -48,6 +55,7 @@ public final class PresetConfig {
      * handler); deliberately NOT cleared by reloads so an owner reload re-overlays.
      */
     @Nullable private Map<String, RuleSet> packLayer = null;
+    @Nullable private Map<String, String[]> packMutatorIds = null;
     @Nullable private Map<String, String> packNameKeys = null;
     private boolean packReplace = false;
 
@@ -74,9 +82,12 @@ public final class PresetConfig {
      */
     private synchronized void loadDefaults() {
         presets.clear();
+        mutatorIds.clear();
         nameKeys.clear();
-        for (RuleSet rs : DefaultPresets.all()) {
+        for (DefaultPresets.Preset p : DefaultPresets.all()) {
+            RuleSet rs = p.ruleSet();
             presets.put(rs.presetId(), rs);
+            mutatorIds.put(rs.presetId(), p.mutatorIds());
             nameKeys.put(rs.presetId(), "kweebecnightmare.preset." + rs.presetId() + ".name");
         }
     }
@@ -88,14 +99,17 @@ public final class PresetConfig {
      * handler decodes each pack {@code RoundPresetAsset} into a RuleSet via the
      * shared {@code RoundPresetAsset.CODEC}, so this layer arrives already typed.
      *
-     * @param layer    decoded RuleSets by lowercase id
-     * @param nameKeys display name keys by lowercase id
-     * @param replace  {@code true} to drop the jar defaults for the presets type
+     * @param layer       decoded BASE RuleSets by lowercase id (un-mutated)
+     * @param mutatorIds  authored mutator ids per preset (stacked at resolve time)
+     * @param nameKeys    display name keys by lowercase id
+     * @param replace     {@code true} to drop the jar defaults for the presets type
      */
     public synchronized void mergePackLayer(@Nonnull Map<String, RuleSet> layer,
+                                            @Nonnull Map<String, String[]> mutatorIds,
                                             @Nonnull Map<String, String> nameKeys,
                                             boolean replace) {
         this.packLayer = layer;
+        this.packMutatorIds = mutatorIds;
         this.packNameKeys = nameKeys;
         this.packReplace = replace;
         applyPackLayer();
@@ -106,11 +120,14 @@ public final class PresetConfig {
 
     private synchronized void applyPackLayer() {
         Map<String, RuleSet> effPresets = new LinkedHashMap<>();
+        Map<String, String[]> effMutators = new LinkedHashMap<>();
         Map<String, String> effNames = new LinkedHashMap<>();
         // (a) jar defaults floor, unless the pack declares replace.
         if (!packReplace) {
-            for (RuleSet rs : DefaultPresets.all()) {
+            for (DefaultPresets.Preset p : DefaultPresets.all()) {
+                RuleSet rs = p.ruleSet();
                 effPresets.put(rs.presetId(), rs);
+                effMutators.put(rs.presetId(), p.mutatorIds());
                 effNames.put(rs.presetId(), "kweebecnightmare.preset." + rs.presetId() + ".name");
             }
         }
@@ -118,11 +135,16 @@ public final class PresetConfig {
         if (packLayer != null) {
             effPresets.putAll(packLayer);
         }
+        if (packMutatorIds != null) {
+            effMutators.putAll(packMutatorIds);
+        }
         if (packNameKeys != null) {
             effNames.putAll(packNameKeys);
         }
         presets.clear();
         presets.putAll(effPresets);
+        mutatorIds.clear();
+        mutatorIds.putAll(effMutators);
         nameKeys.clear();
         nameKeys.putAll(effNames);
         // Guarantee the default preset always resolves (a replace pack without
@@ -130,6 +152,7 @@ public final class PresetConfig {
         if (!presets.containsKey(DEFAULT)) {
             RuleSet fallback = DefaultPresets.nightmare();
             presets.put(DEFAULT, fallback);
+            mutatorIds.putIfAbsent(DEFAULT, new String[0]);
             nameKeys.putIfAbsent(DEFAULT, "kweebecnightmare.preset." + DEFAULT + ".name");
             SafeLog.warn("[Kweebec][AssetPacks] no '" + DEFAULT
                     + "' preset after fold; restored jar baseline so rounds can start.");
@@ -139,23 +162,56 @@ public final class PresetConfig {
     // ==================== resolve / queries ====================
 
     /**
-     * Resolve a preset id to its {@link RuleSet}. {@code null} / blank / unknown
-     * falls back to {@link #DEFAULT}. This is the single static-fold authority;
-     * runtime overrides (the MMO API tier) are applied above this in RoundService.
+     * Resolve a preset id to its fully-folded {@link RuleSet}. {@code null} / blank /
+     * unknown falls back to {@link #DEFAULT}. This is the single static-fold
+     * authority: it returns the preset's base {@link RuleSet} with the preset's
+     * authored mutators (the {@code mutator fold}) STACKED on top - sitting between
+     * the {@code defaults < pack < owner} layering and the runtime SCALE tier (the
+     * MMO API tier applies last, above this in RoundService, untouched).
      */
     @Nonnull
     public RuleSet resolve(@Nullable String id) {
         if (id != null && !id.isBlank()) {
-            RuleSet rs = presets.get(id.toLowerCase(Locale.ROOT));
+            String key = id.toLowerCase(Locale.ROOT);
+            RuleSet rs = presets.get(key);
             if (rs != null) {
-                return rs;
+                return applyMutators(key, rs);
             }
         }
         RuleSet def = presets.get(DEFAULT);
         if (def != null) {
-            return def;
+            return applyMutators(DEFAULT, def);
         }
         return DefaultPresets.nightmare();
+    }
+
+    /**
+     * Stack the preset's authored mutators onto its base {@link RuleSet}. Each id
+     * resolves against {@link MutatorConfig}; an unknown id is skipped (logged once,
+     * never fatal). The deltas are additive + commutative, so list order does not
+     * matter. A preset with no mutators returns its base unchanged.
+     */
+    @Nonnull
+    private RuleSet applyMutators(@Nonnull String presetKey, @Nonnull RuleSet base) {
+        String[] ids = mutatorIds.get(presetKey);
+        if (ids == null || ids.length == 0) {
+            return base;
+        }
+        RuleSet result = base;
+        MutatorConfig mc = MutatorConfig.getInstance();
+        for (String mutId : ids) {
+            if (mutId == null || mutId.isBlank()) {
+                continue;
+            }
+            MutatorAsset m = mc.resolve(mutId);
+            if (m == null) {
+                SafeLog.warn("[Kweebec][AssetPacks] preset '" + presetKey
+                        + "' names unknown mutator '" + mutId + "'; skipped.");
+                continue;
+            }
+            result = m.apply(result);
+        }
+        return result;
     }
 
     /** A preset RuleSet by id, or {@code null} if unknown (no default fallback). */

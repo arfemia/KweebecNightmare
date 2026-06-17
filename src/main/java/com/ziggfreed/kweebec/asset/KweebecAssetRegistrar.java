@@ -48,6 +48,9 @@ public final class KweebecAssetRegistrar {
     private static final String CONTROL_PATH = "KweebecNightmare/Control";
     private static final String PRESETS_PATH = "KweebecNightmare/Presets";
     private static final String HUNTERS_PATH = "KweebecNightmare/Hunters";
+    private static final String MUTATORS_PATH = "KweebecNightmare/Mutators";
+    private static final String STRUCTURES_PATH = "KweebecNightmare/Structures";
+    private static final String SCAREBEATS_PATH = "KweebecNightmare/ScareBeats";
 
     private KweebecAssetRegistrar() {
     }
@@ -72,7 +75,28 @@ public final class KweebecAssetRegistrar {
         plugin.getEventRegistry().register(LoadedAssetsEvent.class, HunterArchetypeAsset.class,
                 KweebecAssetRegistrar::onHunterAssetsLoaded);
 
-        SafeLog.info("[Kweebec][AssetPacks] Registered Kweebec content asset stores (Presets, Hunters, Control)");
+        // Round mutators (Pattern A) - loadsAfter the control store.
+        registerStore(MutatorAsset.class, new DefaultAssetMap<String, MutatorAsset>(),
+                MUTATORS_PATH, MutatorAsset::getId, MutatorAsset.CODEC,
+                new Class<?>[]{KweebecPackControlAsset.class});
+        plugin.getEventRegistry().register(LoadedAssetsEvent.class, MutatorAsset.class,
+                KweebecAssetRegistrar::onMutatorAssetsLoaded);
+
+        // Corrupted-structure placements (Pattern A) - loadsAfter the control store.
+        registerStore(StructurePlacementAsset.class, new DefaultAssetMap<String, StructurePlacementAsset>(),
+                STRUCTURES_PATH, StructurePlacementAsset::getId, StructurePlacementAsset.CODEC,
+                new Class<?>[]{KweebecPackControlAsset.class});
+        plugin.getEventRegistry().register(LoadedAssetsEvent.class, StructurePlacementAsset.class,
+                KweebecAssetRegistrar::onStructureAssetsLoaded);
+
+        // Scare beats (Pattern A) - loadsAfter the control store.
+        registerStore(ScareBeatAsset.class, new DefaultAssetMap<String, ScareBeatAsset>(),
+                SCAREBEATS_PATH, ScareBeatAsset::getId, ScareBeatAsset.CODEC,
+                new Class<?>[]{KweebecPackControlAsset.class});
+        plugin.getEventRegistry().register(LoadedAssetsEvent.class, ScareBeatAsset.class,
+                KweebecAssetRegistrar::onScareBeatAssetsLoaded);
+
+        SafeLog.info("[Kweebec][AssetPacks] Registered Kweebec content asset stores (Presets, Hunters, Mutators, Structures, ScareBeats, Control)");
     }
 
     // ==================== load listeners (Pattern A typed-map fold) ====================
@@ -86,6 +110,7 @@ public final class KweebecAssetRegistrar {
             LoadedAssetsEvent<String, RoundPresetAsset, DefaultAssetMap<String, RoundPresetAsset>> event) {
         DefaultAssetMap<String, RoundPresetAsset> assetMap = event.getAssetMap();
         Map<String, RuleSet> layer = new LinkedHashMap<>();
+        Map<String, String[]> mutatorIds = new LinkedHashMap<>();
         Map<String, String> nameKeys = new LinkedHashMap<>();
         for (Map.Entry<String, RoundPresetAsset> entry : assetMap.getAssetMap().entrySet()) {
             String key = entry.getKey();
@@ -98,10 +123,98 @@ public final class KweebecAssetRegistrar {
             }
             String id = key.toLowerCase(Locale.ROOT);
             layer.put(id, asset.toRuleSet(id));
+            mutatorIds.put(id, asset.mutators());
             nameKeys.put(id, asset.nameKey(id));
         }
         boolean replace = KweebecPackControlRegistry.isReplace(KweebecPackControlAsset.PRESETS);
-        PresetConfig.getInstance().mergePackLayer(layer, nameKeys, replace);
+        PresetConfig.getInstance().mergePackLayer(layer, mutatorIds, nameKeys, replace);
+    }
+
+    /**
+     * Fold pack {@link MutatorAsset}s into {@link MutatorConfig}. Pattern A typed-map
+     * fold (the mutator is already the consumer's value type, so no extra decode
+     * step) - the same shape as {@link #onHunterAssetsLoaded}.
+     */
+    static void onMutatorAssetsLoaded(
+            LoadedAssetsEvent<String, MutatorAsset, DefaultAssetMap<String, MutatorAsset>> event) {
+        DefaultAssetMap<String, MutatorAsset> assetMap = event.getAssetMap();
+        Map<String, MutatorAsset> layer = new LinkedHashMap<>();
+        for (Map.Entry<String, MutatorAsset> entry : assetMap.getAssetMap().entrySet()) {
+            String key = entry.getKey();
+            if (DefaultAssetMap.DEFAULT_PACK_KEY.equals(assetMap.getAssetPack(key))) {
+                continue;
+            }
+            MutatorAsset asset = entry.getValue();
+            if (asset == null) {
+                continue;
+            }
+            layer.put(key.toLowerCase(Locale.ROOT), asset);
+        }
+        // Mutators are ADD-only: the per-type replace control lives in
+        // KweebecPackControlAsset (parent-owned this pass), which has no "Mutators"
+        // field yet, so a pack always UNIONS its mutators over the jar defaults. To
+        // enable replace, the parent adds a "Mutators" key to KweebecPackControlAsset
+        // (mirroring its Presets/Hunters fields) and this line becomes
+        // KweebecPackControlRegistry.isReplace(KweebecPackControlAsset.MUTATORS).
+        MutatorConfig.getInstance().mergePackLayer(layer, false);
+    }
+
+    /**
+     * Fold pack {@link StructurePlacementAsset}s into {@link StructureConfig}. Pattern
+     * A typed-map fold (the placement is already the consumer's value type, so no extra
+     * decode step) - the same shape as {@link #onMutatorAssetsLoaded}.
+     */
+    static void onStructureAssetsLoaded(
+            LoadedAssetsEvent<String, StructurePlacementAsset, DefaultAssetMap<String, StructurePlacementAsset>> event) {
+        DefaultAssetMap<String, StructurePlacementAsset> assetMap = event.getAssetMap();
+        Map<String, StructurePlacementAsset> layer = new LinkedHashMap<>();
+        for (Map.Entry<String, StructurePlacementAsset> entry : assetMap.getAssetMap().entrySet()) {
+            String key = entry.getKey();
+            if (DefaultAssetMap.DEFAULT_PACK_KEY.equals(assetMap.getAssetPack(key))) {
+                continue;
+            }
+            StructurePlacementAsset asset = entry.getValue();
+            if (asset == null) {
+                continue;
+            }
+            layer.put(key.toLowerCase(Locale.ROOT), asset);
+        }
+        // Structures are ADD-only: the per-type replace control lives in
+        // KweebecPackControlAsset (parent-owned this pass), which has no "Structures"
+        // field yet, so a pack always UNIONS its placements over the jar defaults. To
+        // enable replace, the parent adds a "Structures" key to KweebecPackControlAsset
+        // (mirroring its Presets/Hunters fields) and this line becomes
+        // KweebecPackControlRegistry.isReplace(KweebecPackControlAsset.STRUCTURES).
+        StructureConfig.getInstance().mergePackLayer(layer, false);
+    }
+
+    /**
+     * Fold pack {@link ScareBeatAsset}s into {@link ScareBeatConfig}. Pattern A
+     * typed-map fold (the beat is already the consumer's value type, so no extra decode
+     * step) - the same shape as {@link #onMutatorAssetsLoaded}.
+     */
+    static void onScareBeatAssetsLoaded(
+            LoadedAssetsEvent<String, ScareBeatAsset, DefaultAssetMap<String, ScareBeatAsset>> event) {
+        DefaultAssetMap<String, ScareBeatAsset> assetMap = event.getAssetMap();
+        Map<String, ScareBeatAsset> layer = new LinkedHashMap<>();
+        for (Map.Entry<String, ScareBeatAsset> entry : assetMap.getAssetMap().entrySet()) {
+            String key = entry.getKey();
+            if (DefaultAssetMap.DEFAULT_PACK_KEY.equals(assetMap.getAssetPack(key))) {
+                continue;
+            }
+            ScareBeatAsset asset = entry.getValue();
+            if (asset == null) {
+                continue;
+            }
+            layer.put(key.toLowerCase(Locale.ROOT), asset);
+        }
+        // Scare beats are ADD-only: the per-type replace control lives in
+        // KweebecPackControlAsset (parent-owned this pass), which has no "ScareBeats"
+        // field yet, so a pack always UNIONS its beats over the jar defaults. To enable
+        // replace, the parent adds a "ScareBeats" key to KweebecPackControlAsset
+        // (mirroring its Presets/Hunters fields) and this line becomes
+        // KweebecPackControlRegistry.isReplace(KweebecPackControlAsset.SCAREBEATS).
+        ScareBeatConfig.getInstance().mergePackLayer(layer, false);
     }
 
     /**

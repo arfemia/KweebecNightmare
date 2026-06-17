@@ -1,0 +1,22 @@
+{
+  "Name": "endless",
+  "Enabled": true,
+  "NameKey": "kweebecnightmare.preset.endless.name",
+  "ReviveStyle": "COOP_RESCUE",
+  "MaxDowns": 2,
+  "BleedOutSeconds": 40,
+  "HunterCount": 1,
+  "HunterSpeedBase": 1.0,
+  "HunterSpeedMax": 1.3,
+  "ShrineBase": 3,
+  "ShrinePerPlayer": 1,
+  "CaveShrineCount": 4,
+  "RoundCapSeconds": 1500,
+  "CorruptionPerSecond": 0.0009,
+  "CorruptionPerShrine": 0.10,
+  "ShrineRelightSeconds": 6.0,
+  "InventoryMode": "PRESERVE_AND_STRIP",
+  "RewardOnExit": "ON_WIN",
+  "HunterArchetype": "stalker",
+  "Mutators": []
+}

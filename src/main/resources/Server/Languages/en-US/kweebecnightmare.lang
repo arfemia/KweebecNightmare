@@ -9,11 +9,24 @@ mode.survival.name = Last Light Till Dawn
 preset.amateur.name = Amateur
 preset.nightmare.name = Nightmare
 preset.hardcore.name = Hardcore
+preset.endless.name = Endless Night
+preset.swarm.name = The Swarm
+preset.pitch.name = Pitch Black
+preset.blitz.name = Blitz
+
+mutator.swarm.name = Swarm
+mutator.relentless.name = Relentless
+mutator.caverns.name = Caverns
+mutator.decay.name = Creeping Decay
+mutator.blitz.name = Blitz
 
 instance.chase.title = The Blighted Grove
 instance.chase.subtitle = Relight the shrines. Do not let it catch you.
 
 npc.blight.name = Blighted Kweebec
+npc.lunger.name = Lunging Blight
+npc.spitter.name = Spitting Blight
+npc.ambusher.name = Blinking Blight
 
 title.hunt_begins = The Hunt Begins
 title.hunt_begins.sub = Relight the grove shrines
@@ -25,6 +38,8 @@ title.caught = The Grove Claims You
 title.caught.sub = All survivors were cocooned
 title.night_falls = The Night Wins
 title.night_falls.sub = Dawn never came
+title.jumpscare = IT HAS YOU
+title.jumpscare.sub = Tear free and run
 
 toast.shrine_lit = A shrine flares to life
 toast.shrine_progress = Keep channelling the shrine
@@ -49,10 +64,29 @@ cmd.not_in_round = You are not in a round.
 cmd.starting = Descending into the Blighted Grove...
 cmd.start_failed = Could not start the round. Try again.
 cmd.leaving = Leaving the grove...
-cmd.unknown_preset = Unknown preset. Use amateur, nightmare, or hardcore.
+cmd.unknown_preset = Unknown preset. Try amateur, nightmare, hardcore, endless, swarm, pitch, or blitz.
 cmd.no_active_rounds = No active rounds.
 cmd.ended = Ended all active rounds.
 cmd.usage = Usage: /kweebec [start|exit|endall] [preset]
 cmd.kweebec.desc = Start, leave, or end a Kweebec Nightmare round
 cmd.arg.sub = start | exit | endall
 cmd.arg.preset = amateur | nightmare | hardcore
+cmd.kntalk.desc = Speak with the Whispering Sapling (dialogue demo)
+
+# Dialogue page chrome (resolved by the shared ziggfreed-common dialogue engine).
+ui.dialogue.farewell = Step away
+ui.dialogue.missing = The voice fades. Nothing more comes.
+
+# Demo dialogue: the Whispering Sapling (id "kweebec_intro"; keys are by-convention
+# dialogue.<id>.<node>.text and dialogue.<id>.<node>.opt.<index>).
+dialogue.kweebec_intro.npc = The Whispering Sapling
+dialogue.kweebec_intro.greet.text = A pale sapling turns its hollow eyes toward you. "You still breathe," it rasps. "Few do, this deep in the blight."
+dialogue.kweebec_intro.greet.opt.0 = What is this place?
+dialogue.kweebec_intro.greet.opt.1 = What hunts in the dark?
+dialogue.kweebec_intro.greet.opt.2 = You spoke of a warning. Tell me what the grove hid.
+dialogue.kweebec_intro.lore.text = "Once the Emerald Grove sang. The Void crept in through the roots, and the song turned to screaming. We are what is left of the singers."
+dialogue.kweebec_intro.lore.opt.0 = Go back
+dialogue.kweebec_intro.warning.text = "It wears our bark and our faces. It does not tire. When a shrine flares, it turns toward the light, and toward you."
+dialogue.kweebec_intro.warning.opt.0 = Go back
+dialogue.kweebec_intro.secret.text = The sapling leans close. "The Heartwood Gate is not an exit. It is a mouth. Relight every shrine, or it swallows whoever runs last."
+dialogue.kweebec_intro.secret.opt.0 = Go back

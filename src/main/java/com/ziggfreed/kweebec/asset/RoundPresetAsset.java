@@ -62,6 +62,7 @@ public final class RoundPresetAsset
     @Nullable private String inventoryMode;
     @Nullable private String rewardOnExit;
     @Nullable private String hunterArchetype;
+    @Nullable private String[] mutators;
 
     private int maxDowns = UNSET_INT;
     private int bleedOutSeconds = UNSET_INT;
@@ -127,6 +128,8 @@ public final class RoundPresetAsset
             .add()
             .append(new KeyedCodec<>("HunterArchetype", Codec.STRING, false), (a, v) -> a.hunterArchetype = v, a -> a.hunterArchetype)
             .add()
+            .append(new KeyedCodec<>("Mutators", Codec.STRING_ARRAY, false), (a, v) -> a.mutators = v, a -> a.mutators)
+            .add()
             .build();
 
     public RoundPresetAsset() {
@@ -152,6 +155,18 @@ public final class RoundPresetAsset
             return nameKey;
         }
         return "kweebecnightmare.preset." + presetId.toLowerCase() + ".name";
+    }
+
+    /**
+     * Ids of the {@link MutatorAsset}s this preset applies on top of its base
+     * {@link RuleSet} (resolved + stacked in {@link PresetConfig#resolve(String)}).
+     * An empty array (the default) means a plain preset with no mutators; an unknown
+     * id is skipped during the fold. The deltas are additive + commutative, so list
+     * order does not matter.
+     */
+    @Nonnull
+    public String[] mutators() {
+        return mutators != null ? mutators : new String[0];
     }
 
     /**

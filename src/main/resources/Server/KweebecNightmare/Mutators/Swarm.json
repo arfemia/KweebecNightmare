@@ -1,0 +1,11 @@
+{
+  "Name": "swarm",
+  "NameKey": "kweebecnightmare.mutator.swarm.name",
+  "HunterCountDelta": 1,
+  "HunterSpeedMaxDelta": 0.0,
+  "CaveShrineCountDelta": 0,
+  "CorruptionPerSecondDelta": 0.0,
+  "ShrineRelightSecondsDelta": 0.0,
+  "RoundCapSecondsDelta": 0,
+  "ShrineBaseDelta": 0
+}

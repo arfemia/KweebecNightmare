@@ -24,9 +24,11 @@ import com.ziggfreed.kweebec.asset.PresetConfig;
 import com.ziggfreed.kweebec.arena.ArenaBuilder;
 import com.ziggfreed.kweebec.atmosphere.AtmosphereService;
 import com.ziggfreed.kweebec.atmosphere.MusicBedService;
+import com.ziggfreed.kweebec.event.DifficultyScore;
 import com.ziggfreed.kweebec.event.RoundEvents;
 import com.ziggfreed.kweebec.feedback.HeartbeatService;
 import com.ziggfreed.kweebec.feedback.RoundFeedback;
+import com.ziggfreed.kweebec.feedback.ScareDirector;
 import com.ziggfreed.kweebec.hunter.AiHunterController;
 import com.ziggfreed.kweebec.i18n.Lang;
 import com.ziggfreed.kweebec.integration.KweebecNightmareAPI;
@@ -78,6 +80,7 @@ public final class RoundService {
         stateMachine.stop();
         cleanupTicker.stop();
         HeartbeatService.shutdown();
+        ScareDirector.shutdown();
         InstanceLifecycle.shutdown();
     }
 
@@ -227,6 +230,11 @@ public final class RoundService {
                     return;
                 }
                 round.setWorld(instWorld);
+                // Read back the instance world's actual generation seed (the hardcoded
+                // instance.bson Seed was removed so each round auto-seeds from currentTimeMillis)
+                // and stamp it on the round BEFORE the layout + structures are seeded, so the
+                // terrain, shrine ring, cave anchors, and ruin subset all vary off ONE coherent seed.
+                round.setWorldSeed(instWorld.getWorldConfig().getSeed());
                 round.setHunterController(new AiHunterController(HUNTER_ROLE));
                 ChaseMode.onStart(round);
                 round.setState(InstanceState.ACTIVE);
@@ -264,6 +272,7 @@ public final class RoundService {
         int progress = chase != null ? chase.litShrines() : 0;
         int duration = round.durationSeconds();
         List<UUID> participants = round.participantList();
+        int difficultyScore = DifficultyScore.compute(round.ruleSet());
         World world = round.world();
 
         KweebecNightmarePlugin.LOGGER.atInfo().log(
@@ -272,7 +281,7 @@ public final class RoundService {
 
         if (world == null) {
             RoundEvents.fireRoundCompleted(round.roundId(), round.mode().id(), outcome,
-                    participants, duration, progress);
+                    participants, duration, progress, difficultyScore);
             registry.remove(round.roundId());
             return;
         }
@@ -280,7 +289,7 @@ public final class RoundService {
         world.execute(() -> {
             // Fire the native event on the world thread so listeners can hop safely.
             RoundEvents.fireRoundCompleted(round.roundId(), round.mode().id(), outcome,
-                    participants, duration, progress);
+                    participants, duration, progress, difficultyScore);
             showResult(round, outcome);
             teardown(round, world);
         });
@@ -317,6 +326,9 @@ public final class RoundService {
             if (round.hunterController() != null) {
                 round.hunterController().despawnAll(world, store);
             }
+            // Clear every survivor's scare vignette + jumpscare throttle + the whisper schedule,
+            // so a lingering dread EntityEffect never rides out of the instance on an ejected player.
+            ScareDirector.clear(round, store);
             for (PlayerRoundState st : round.playerStates()) {
                 PlayerRef pr = Universe.get().getPlayer(st.playerId());
                 if (pr == null) {

@@ -1,0 +1,8 @@
+{
+  "Name": "jumpscare",
+  "Band": 0,
+  "MinCorruptionTier": 0,
+  "EffectId": "KweebecNightmare_Jumpscare",
+  "SoundId": "SFX_Hedera_Scream",
+  "OneShot": true
+}

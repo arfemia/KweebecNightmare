@@ -44,6 +44,7 @@ public final class RoundCompletedEvent implements IEvent<Void> {
     private final int partySize;
     private final int durationSeconds;
     private final int objectiveProgress;
+    private final int difficultyScore;
 
     /**
      * @param roundId           unique id of the round instance
@@ -52,13 +53,17 @@ public final class RoundCompletedEvent implements IEvent<Void> {
      * @param participants      every player who took part (by UUID)
      * @param durationSeconds   wall-clock length of the round in seconds
      * @param objectiveProgress mode objective progress at end (chase: shrines lit; survival: wave reached)
+     * @param difficultyScore   stable difficulty score of the round's resolved rule-set
+     *                          (see {@code DifficultyScore.compute}); a consumer scales
+     *                          rewards by it. {@code 0} when the firing path supplies none.
      */
     public RoundCompletedEvent(@Nonnull String roundId,
                                @Nonnull String mode,
                                @Nonnull Outcome outcome,
                                @Nonnull List<UUID> participants,
                                int durationSeconds,
-                               int objectiveProgress) {
+                               int objectiveProgress,
+                               int difficultyScore) {
         this.roundId = roundId;
         this.mode = mode;
         this.outcome = outcome;
@@ -66,6 +71,7 @@ public final class RoundCompletedEvent implements IEvent<Void> {
         this.partySize = this.participants.size();
         this.durationSeconds = durationSeconds;
         this.objectiveProgress = objectiveProgress;
+        this.difficultyScore = difficultyScore;
     }
 
     @Nonnull
@@ -105,5 +111,15 @@ public final class RoundCompletedEvent implements IEvent<Void> {
     /** Chase: number of shrines relit. Survival: highest wave reached. */
     public int objectiveProgress() {
         return objectiveProgress;
+    }
+
+    /**
+     * Stable difficulty score of the round's resolved rule-set (more hunters / faster
+     * hunter / deeper caves / steeper corruption ramp / more shrines = higher). An
+     * installed MMO Skill Tree multiplies a round's reward by it. {@code 0} when the
+     * firing path supplied none (the legacy no-score fire path).
+     */
+    public int difficultyScore() {
+        return difficultyScore;
     }
 }

@@ -28,13 +28,22 @@ public final class ChaseState {
     /** Epoch ms when PREP ends and the ritual (and hunter) begins. */
     private volatile long prepEndsAtMs;
 
-    public ChaseState(int surfaceShrineCount, int caveShrineCount) {
-        // The surface ring shrines, then the underground cave shrines appended last, so allShrinesLit()
-        // naturally requires descending into every cave (and returning) before the gate logic fires.
-        // Each cave shrine's visual + the carved chamber ship as a Relight_Shaft(_Ladder) prefab; only
-        // its anchor (at the chamber stand-Y) drives the gameplay here.
-        List<Anchor> anchors = new ArrayList<>(ArenaLayout.shrineAnchors(surfaceShrineCount));
-        anchors.addAll(ArenaLayout.caveShrineAnchors(caveShrineCount));
+    /**
+     * Build the shrine set for a round, SEEDED off the per-round world seed ({@code RoundInstance.worldSeed()},
+     * passed by {@code ChaseMode.onStart}). The surface ring is rotated by a seed-derived offset and the
+     * underground cave shrines are a seed-shuffled subset, so the layout varies per round off the SAME
+     * coherent seed as the terrain and the corrupted-structure ruins. Surface ring shrines first, then the
+     * cave shrines appended last, so {@link #allShrinesLit()} still requires descending into every cave (and
+     * returning) before the gate logic fires. Each cave shrine's visual + carved chamber ship as a
+     * Relight_Shaft(_Ladder) prefab; only its anchor (at the chamber stand-Y) drives the gameplay here.
+     *
+     * @param seed the per-round world seed (deterministic for a given seed; varies between seeds). A
+     *             {@code 0} seed (the field default before the parent sets it) is still a valid, fixed
+     *             layout, not the un-rotated original; the parent always sets a real seed first.
+     */
+    public ChaseState(int surfaceShrineCount, int caveShrineCount, long seed) {
+        List<Anchor> anchors = new ArrayList<>(ArenaLayout.shrineAnchors(surfaceShrineCount, seed));
+        anchors.addAll(ArenaLayout.caveShrineAnchors(caveShrineCount, seed));
         ShrineState[] arr = new ShrineState[anchors.size()];
         for (int i = 0; i < anchors.size(); i++) {
             arr[i] = new ShrineState(i, anchors.get(i));

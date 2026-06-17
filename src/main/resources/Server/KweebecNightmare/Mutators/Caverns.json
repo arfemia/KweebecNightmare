@@ -1,0 +1,11 @@
+{
+  "Name": "caverns",
+  "NameKey": "kweebecnightmare.mutator.caverns.name",
+  "HunterCountDelta": 0,
+  "HunterSpeedMaxDelta": 0.0,
+  "CaveShrineCountDelta": 2,
+  "CorruptionPerSecondDelta": 0.0,
+  "ShrineRelightSecondsDelta": 0.0,
+  "RoundCapSecondsDelta": 0,
+  "ShrineBaseDelta": 0
+}

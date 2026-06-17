@@ -1,0 +1,11 @@
+{
+  "Name": "blitz",
+  "NameKey": "kweebecnightmare.mutator.blitz.name",
+  "HunterCountDelta": 0,
+  "HunterSpeedMaxDelta": 0.0,
+  "CaveShrineCountDelta": 0,
+  "CorruptionPerSecondDelta": 0.0,
+  "ShrineRelightSecondsDelta": -2.0,
+  "RoundCapSecondsDelta": -300,
+  "ShrineBaseDelta": 0
+}

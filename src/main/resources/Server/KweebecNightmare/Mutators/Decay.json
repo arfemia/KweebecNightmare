@@ -1,0 +1,11 @@
+{
+  "Name": "decay",
+  "NameKey": "kweebecnightmare.mutator.decay.name",
+  "HunterCountDelta": 0,
+  "HunterSpeedMaxDelta": 0.0,
+  "CaveShrineCountDelta": 0,
+  "CorruptionPerSecondDelta": 0.0008,
+  "ShrineRelightSecondsDelta": 0.0,
+  "RoundCapSecondsDelta": 0,
+  "ShrineBaseDelta": 0
+}

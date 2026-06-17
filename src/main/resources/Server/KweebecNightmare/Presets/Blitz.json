@@ -1,0 +1,22 @@
+{
+  "Name": "blitz",
+  "Enabled": true,
+  "NameKey": "kweebecnightmare.preset.blitz.name",
+  "ReviveStyle": "COOP_RESCUE",
+  "MaxDowns": 1,
+  "BleedOutSeconds": 20,
+  "HunterCount": 1,
+  "HunterSpeedBase": 1.15,
+  "HunterSpeedMax": 1.5,
+  "ShrineBase": 2,
+  "ShrinePerPlayer": 1,
+  "CaveShrineCount": 0,
+  "RoundCapSeconds": 600,
+  "CorruptionPerSecond": 0.0018,
+  "CorruptionPerShrine": 0.14,
+  "ShrineRelightSeconds": 5.0,
+  "InventoryMode": "PRESERVE_AND_STRIP",
+  "RewardOnExit": "ON_WIN",
+  "HunterArchetype": "stalker",
+  "Mutators": ["blitz"]
+}

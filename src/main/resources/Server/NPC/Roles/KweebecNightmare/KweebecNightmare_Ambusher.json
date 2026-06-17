@@ -1,0 +1,18 @@
+{
+  "Type": "Variant",
+  "Reference": "Template_KweebecNightmare_Ambusher",
+  "Modify": {
+    "DefaultPlayerAttitude": "Hostile",
+    "Appearance": "Kweebec_Sapling_Razorleaf",
+    "DropList": "Drop_Kweebec_Sapling_Razorleaf",
+    "MaxHealth": 180,
+    "IsMemory": false,
+    "MaxSpeed": 8.5,
+    "ViewRange": 256,
+    "AlertedRange": 256,
+    "HearingRange": 256,
+    "ViewSector": 360,
+    "WanderRadius": 8,
+    "NameTranslationKey": "kweebecnightmare.npc.ambusher.name"
+  }
+}

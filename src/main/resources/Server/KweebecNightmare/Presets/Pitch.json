@@ -1,0 +1,22 @@
+{
+  "Name": "pitch",
+  "Enabled": true,
+  "NameKey": "kweebecnightmare.preset.pitch.name",
+  "ReviveStyle": "COOP_RESCUE",
+  "MaxDowns": 1,
+  "BleedOutSeconds": 25,
+  "HunterCount": 1,
+  "HunterSpeedBase": 1.05,
+  "HunterSpeedMax": 1.45,
+  "ShrineBase": 2,
+  "ShrinePerPlayer": 1,
+  "CaveShrineCount": 1,
+  "RoundCapSeconds": 900,
+  "CorruptionPerSecond": 0.0022,
+  "CorruptionPerShrine": 0.16,
+  "ShrineRelightSeconds": 7.0,
+  "InventoryMode": "PRESERVE_AND_STRIP",
+  "RewardOnExit": "ON_WIN",
+  "HunterArchetype": "stalker",
+  "Mutators": ["decay"]
+}

@@ -1,6 +1,5 @@
 {
   "Version": 4,
-  "Seed": 66613666,
   "DisplayName": "The Blighted Grove",
   "SpawnProvider": {
     "Id": "Global",

@@ -44,16 +44,37 @@ public final class RoundEvents {
         }
     }
 
+    /**
+     * Legacy fire path with no difficulty score. Delegates to the score-carrying
+     * overload with {@code difficultyScore = 0} so existing callers keep working.
+     */
     public static void fireRoundCompleted(@Nonnull String roundId, @Nonnull String mode,
                                           @Nonnull RoundCompletedEvent.Outcome outcome,
                                           @Nonnull List<UUID> participants,
                                           int durationSeconds, int objectiveProgress) {
+        fireRoundCompleted(roundId, mode, outcome, participants, durationSeconds, objectiveProgress, 0);
+    }
+
+    /**
+     * Fire {@code RoundCompletedEvent} carrying the round's difficulty score (compute
+     * it with {@code DifficultyScore.compute(round.ruleSet())}). An installed MMO
+     * Skill Tree reads the score off the event to scale rewards. Same dispatch
+     * semantics as every other fire: resolve the dispatcher, guard on
+     * {@code hasListener()}, dispatch on the calling (world) thread, whole body
+     * try-guarded.
+     */
+    public static void fireRoundCompleted(@Nonnull String roundId, @Nonnull String mode,
+                                          @Nonnull RoundCompletedEvent.Outcome outcome,
+                                          @Nonnull List<UUID> participants,
+                                          int durationSeconds, int objectiveProgress,
+                                          int difficultyScore) {
         try {
             IEventDispatcher<RoundCompletedEvent, RoundCompletedEvent> d =
                     HytaleServer.get().getEventBus().dispatchFor(RoundCompletedEvent.class);
             if (d.hasListener()) {
                 d.dispatch(new RoundCompletedEvent(
-                        roundId, mode, outcome, participants, durationSeconds, objectiveProgress));
+                        roundId, mode, outcome, participants, durationSeconds, objectiveProgress,
+                        difficultyScore));
             }
         } catch (Throwable t) {
             log("RoundCompleted", t);

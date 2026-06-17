@@ -1,0 +1,10 @@
+{
+  "ApplicationEffects": {
+    "EntityBottomTint": "#010102",
+    "EntityTopTint": "#0a0608",
+    "ScreenEffect": "ScreenEffects/Fire.png"
+  },
+  "Infinite": true,
+  "OverlapBehavior": "Overwrite",
+  "Debuff": false
+}

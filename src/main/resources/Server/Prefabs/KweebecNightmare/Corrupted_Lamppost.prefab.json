@@ -1,0 +1,24 @@
+{
+  "version": 8,
+  "blockIdVersion": 11,
+  "anchorX": 1,
+  "anchorY": 8,
+  "anchorZ": 1,
+  "blocks": [
+    {"x": 1, "y": 6, "z": 1, "name": "Wood_Ash_Trunk_Full"},
+    {"x": 1, "y": 7, "z": 1, "name": "Wood_Petrified_Trunk_Full"},
+    {"x": 1, "y": 8, "z": 1, "name": "Wood_Poisoned_Trunk_Full"},
+    {"x": 1, "y": 9, "z": 1, "name": "Wood_Petrified_Trunk_Full"},
+    {"x": 1, "y": 10, "z": 1, "name": "Wood_Ash_Branch_Long"},
+    {"x": 1, "y": 11, "z": 1, "name": "Wood_Petrified_Branch_Long"},
+    {"x": 1, "y": 12, "z": 1, "name": "Wood_Poisoned_Branch_Corner", "rotation": 8},
+    {"x": 1, "y": 5, "z": 2, "name": "Wood_Ash_Roots"},
+    {"x": 1, "y": 6, "z": 2, "name": "Wood_Ash_Trunk_Full"},
+    {"x": 1, "y": 9, "z": 2, "name": "Furniture_Kweebec_Shelf"},
+    {"x": 1, "y": 11, "z": 2, "name": "Furniture_Kweebec_Lantern"},
+    {"x": 1, "y": 12, "z": 2, "name": "Wood_Ash_Branch_Corner", "rotation": 10},
+    {"x": 2, "y": 6, "z": 1, "name": "Wood_Poisoned_Roots"},
+    {"x": 2, "y": 7, "z": 1, "name": "Wood_Petrified_Trunk_Full"}
+  ],
+  "entities": []
+}

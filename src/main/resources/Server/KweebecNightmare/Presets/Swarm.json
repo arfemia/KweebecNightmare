@@ -1,0 +1,22 @@
+{
+  "Name": "swarm",
+  "Enabled": true,
+  "NameKey": "kweebecnightmare.preset.swarm.name",
+  "ReviveStyle": "COOP_RESCUE",
+  "MaxDowns": 1,
+  "BleedOutSeconds": 30,
+  "HunterCount": 1,
+  "HunterSpeedBase": 1.0,
+  "HunterSpeedMax": 1.35,
+  "ShrineBase": 2,
+  "ShrinePerPlayer": 1,
+  "CaveShrineCount": 2,
+  "RoundCapSeconds": 900,
+  "CorruptionPerSecond": 0.0014,
+  "CorruptionPerShrine": 0.12,
+  "ShrineRelightSeconds": 6.0,
+  "InventoryMode": "PRESERVE_AND_STRIP",
+  "RewardOnExit": "ON_WIN",
+  "HunterArchetype": "stalker",
+  "Mutators": ["swarm"]
+}

@@ -1,7 +1,9 @@
 package com.ziggfreed.kweebec.arena;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import javax.annotation.Nonnull;
 
@@ -87,6 +89,32 @@ public final class ArenaLayout {
         return out;
     }
 
+    /**
+     * The seeded variant of {@link #caveShrineAnchors(int)}: picks {@code count} cave anchors as a
+     * seed-SHUFFLED SUBSET of the predefined set (rather than always the first {@code count}), so the
+     * underground objectives sit in a different quadrant combination per round while still being the
+     * same distinct, non-overlapping chambers. The anchors themselves (and {@link #CAVE_STAND_Y}) are
+     * unchanged, so {@code ArenaBuilder.pasteCaveShaft}'s SurfaceProbe snap still lands each chamber.
+     *
+     * @param count number of cave shrines ({@code RuleSet.caveShrineCount()}; clamped to the set)
+     * @param seed  the per-round world seed ({@code RoundInstance.worldSeed()})
+     */
+    @Nonnull
+    public static List<Anchor> caveShrineAnchors(int count, long seed) {
+        int n = Math.max(0, Math.min(count, CAVE_ANCHORS.length));
+        if (n == 0) {
+            return new ArrayList<>(0);
+        }
+        // Shuffle the full predefined set off the seed, then take the first n. A dedicated salt keeps
+        // this stream independent of the ring-rotation derivation, so the two do not move in lockstep.
+        List<Anchor> pool = new ArrayList<>(CAVE_ANCHORS.length);
+        for (Anchor a : CAVE_ANCHORS) {
+            pool.add(a);
+        }
+        Collections.shuffle(pool, new Random(seed ^ 0x5DEECE66DL));
+        return new ArrayList<>(pool.subList(0, n));
+    }
+
     /** Radius of the shrine ring around spawn. */
     private static final double SHRINE_RING_RADIUS = 26.0;
 
@@ -113,12 +141,42 @@ public final class ArenaLayout {
      */
     @Nonnull
     public static List<Anchor> shrineAnchors(int count) {
+        return shrineAnchors(count, 0.0);
+    }
+
+    /**
+     * The seeded variant of {@link #shrineAnchors(int)}: the SAME evenly-spaced ring, but ROTATED by a
+     * seed-derived angular offset so the shrine positions (and the gate-side bias) differ per round
+     * while staying a uniform ring every client agrees on. The ring radius, {@link #STAND_Y}, and the
+     * even spacing are unchanged, so the surface-shrine SurfaceProbe snap in {@code ArenaBuilder} still
+     * lands each pillar.
+     *
+     * @param count number of shrines ({@code RuleSet.shrineCount(partySize)})
+     * @param seed  the per-round world seed ({@code RoundInstance.worldSeed()})
+     */
+    @Nonnull
+    public static List<Anchor> shrineAnchors(int count, long seed) {
+        // A seed-derived rotation in [0, 2pi). Deterministic for a given seed so every client agrees;
+        // distinct for distinct rounds so the ring orientation varies. A salt independent of the cave
+        // shuffle keeps the two seed-derivations from moving in lockstep.
+        Random rng = new Random(seed * 0x9E3779B97F4A7C15L);
+        double offset = rng.nextDouble() * 2.0 * Math.PI;
+        return shrineAnchors(count, offset);
+    }
+
+    /**
+     * Build the shrine ring with an explicit angular {@code rotationOffset} (radians) applied to every
+     * shrine. The no-seed {@link #shrineAnchors(int)} passes {@code 0.0} (the original layout); the
+     * seeded {@link #shrineAnchors(int, long)} passes a seed-derived offset.
+     */
+    @Nonnull
+    private static List<Anchor> shrineAnchors(int count, double rotationOffset) {
         List<Anchor> out = new ArrayList<>(Math.max(0, count));
         if (count <= 0) {
             return out;
         }
         for (int i = 0; i < count; i++) {
-            double theta = (2.0 * Math.PI * i) / count;
+            double theta = (2.0 * Math.PI * i) / count + rotationOffset;
             double x = SPAWN.x() + SHRINE_RING_RADIUS * Math.sin(theta);
             double z = SPAWN.z() - SHRINE_RING_RADIUS * Math.cos(theta);
             // Face the shrine roughly back toward spawn.

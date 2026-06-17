@@ -44,8 +44,31 @@ public final class MusicBedService {
             "KweebecNightmare_BlightTheme", "MC_Zone4_Dark", "Track_Portal_Void_Event", "MC_Zone4_Caves"
     };
 
+    /**
+     * Per-corruption-tier dread containers (a parallel ladder above the base
+     * {@link #DREAD_MUSIC_CANDIDATES}): tier 0 = the calm bed, tier 1 = mid, tier 2 = the
+     * heaviest dread bed. Each row is its own first-that-resolves candidate list (pack
+     * asset first, then a vanilla heavier fallback), so an un-authored tier falls back to
+     * a vanilla container; if a whole row resolves to nothing the swap keeps the previous
+     * tier's bed (never silences the round). Indexed by {@code corruptionTier()} (0/1/2).
+     */
+    private static final String[][] TIER_MUSIC_CANDIDATES = {
+            // tier 0: calm - the base dread bed.
+            { "KweebecNightmare_BlightTheme", "MC_Zone4_Dark", "Track_Portal_Void_Event", "MC_Zone4_Caves" },
+            // tier 1: mid - a darker variant.
+            { "KweebecNightmare_BlightTheme_Tier2", "Track_Portal_Void_Event", "MC_Zone4_Caves", "MC_Zone4_Dark" },
+            // tier 2: max - the heaviest dread bed.
+            { "KweebecNightmare_BlightTheme_Tier3", "Track_Portal_Void_Event", "MC_Zone4_Caves", "MC_Zone4_Dark" },
+    };
+
     /** -1 = unresolved, else the container index (>0). Never caches 0 (a 0 means "retry"). */
     private static volatile int musicIndex = -1;
+
+    /** Resolved container index per tier; -1 = not yet resolved (re-resolved next swap). */
+    private static final int[] TIER_INDEX = { -1, -1, -1 };
+
+    /** Last tier whose bed was forced for the whole party; -1 = none yet. World-thread only. */
+    private static volatile int appliedTier = -1;
 
     private MusicBedService() {
     }
@@ -95,8 +118,58 @@ public final class MusicBedService {
         }
     }
 
+    /**
+     * Swap the forced dread bed for the WHOLE party to the {@code tier}'s container, but
+     * ONLY when the tier rose since the last swap (so this is cheap to call every tick).
+     * Resolves the tier's own candidate ladder ({@link #TIER_MUSIC_CANDIDATES}); if the
+     * tier resolves to nothing it keeps the previous bed (never silences the round). The
+     * base per-player {@code applyFor} one-shot still seeds tier 0 on arrival; this layers
+     * the rising-tier escalation on top. World-thread only (it self-hops via
+     * {@code world.execute} like {@link #clear}); fully try-guarded.
+     *
+     * @param tier the round's current {@code ChaseState.corruptionTier()} (0/1/2)
+     */
+    public static void applyTierForSurvivors(@Nonnull RoundInstance round, int tier) {
+        int clamped = Math.max(0, Math.min(TIER_MUSIC_CANDIDATES.length - 1, tier));
+        if (clamped <= appliedTier) {
+            return; // unchanged or a (non-escalating) drop - no churn; keep the heavier bed
+        }
+        int idx = resolveTier(clamped);
+        if (idx <= 0) {
+            // The tier's containers are not registered yet; do not latch, retry next rise.
+            return;
+        }
+        World world = round.world();
+        if (world == null) {
+            return;
+        }
+        appliedTier = clamped;
+        setForAll(round, world, idx);
+        KweebecNightmarePlugin.LOGGER.atInfo().log(
+                "[Kweebec][music] tier bed swap -> tier=" + clamped + " idx=" + idx);
+    }
+
+    /** Resolve (and cache) the container index for one tier's candidate ladder. */
+    private static int resolveTier(int tier) {
+        int cached = TIER_INDEX[tier];
+        if (cached != -1) {
+            return cached;
+        }
+        for (String id : TIER_MUSIC_CANDIDATES[tier]) {
+            Integer i = tryIndex(id);
+            if (i != null && i != Integer.MIN_VALUE && i > 0) {
+                TIER_INDEX[tier] = i; // cache only a real index
+                KweebecNightmarePlugin.LOGGER.atInfo().log(
+                        "[Kweebec][music] tier " + tier + " bed resolved '" + id + "' -> idx " + i);
+                return i;
+            }
+        }
+        return 0; // nothing registered yet; re-resolve next rise (do not cache)
+    }
+
     /** Clear the override (index 0) for every player. Call on resolve/exit. */
     public static void clear(@Nonnull RoundInstance round) {
+        appliedTier = -1; // reset so the next round's tier ladder starts from tier 0
         World world = round.world();
         if (world == null) {
             return;

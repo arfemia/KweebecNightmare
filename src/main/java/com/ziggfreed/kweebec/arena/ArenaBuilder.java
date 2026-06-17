@@ -1,6 +1,7 @@
 package com.ziggfreed.kweebec.arena;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -23,6 +24,7 @@ import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
 import com.ziggfreed.kweebec.mode.chase.ShrineState;
 import com.ziggfreed.kweebec.round.RoundInstance;
+import com.ziggfreed.kweebec.util.SafeLog;
 
 /**
  * Stamps the authored horror beats (shrine pillars, the Heartwood Gate, the exit)
@@ -42,13 +44,15 @@ public final class ArenaBuilder {
     private static final String GATE_PREFAB = "KweebecNightmare/Gate";
     private static final String EXIT_PREFAB = "KweebecNightmare/Exit";
     /**
-     * A native Kweebec structure pasted as the grove's village-ruin CENTERPIECE (the hybrid "ruined
-     * village in a dead forest" identity). Offset SOUTH of spawn (+z) so it never traps a spawning
-     * player and stays clear of the gate corridor (-z). A healthy-green Oak well for now; a
-     * corruption-repaint (dead-leaf reskin) is a follow-up. Pasted ONCE (not in the objective re-paste
-     * loop) so it never stacks on its own pasted top the way a re-probed cave shaft would.
+     * The corruption-repainted Kweebec well pasted as the grove's village-ruin CENTERPIECE (the hybrid
+     * "ruined village in a dead forest" identity). Offset SOUTH of spawn (+z) so it never traps a
+     * spawning player and stays clear of the gate corridor (-z). Cycle-3 swaps the old healthy-green
+     * {@code Npc/Kweebec/Oak/Well} for the committed {@code KweebecNightmare/Corrupted_Well} (the
+     * build-time block-swap repaint) so the centerpiece reads as blight. Pasted ONCE (not in the
+     * objective re-paste loop) so it never stacks on its own pasted top the way a re-probed cave shaft
+     * would.
      */
-    private static final String CENTERPIECE_PREFAB = "Npc/Kweebec/Oak/Well/Kweebec_Oak_Well_001";
+    private static final String CENTERPIECE_PREFAB = "KweebecNightmare/Corrupted_Well";
     private static final double CENTERPIECE_Z_OFFSET = 10.0;
     /**
      * The underground-objective prefabs: a carved descent shaft + lit chamber + the cave shrine pillar.
@@ -82,11 +86,13 @@ public final class ArenaBuilder {
         if (chase == null) {
             return;
         }
-        // Immediate pass: the gameplay objective beats + the village-ruin centerpiece (pasted once).
-        // Ambient grove trees are now scattered by the worldgen biome (KweebecNightmare_Grove Props[]).
+        // Immediate pass: the gameplay objective beats + the village-ruin centerpiece + the seeded
+        // corrupted-structure ruins (all pasted once). Ambient grove trees are scattered by the
+        // worldgen biome (KweebecNightmare_Grove Props[]); these are the GAMEPLAY-anchored ruins.
         CompletableFuture.runAsync(() -> {
             pasteObjectives(world, chase);
             pasteCenterpiece(world);
+            pasteStructures(round, world);
         });
         // Re-stamp the OBJECTIVES a couple of times during PREP. On a busy relaunch the first paste
         // can be overwritten by chunk generation still filling those chunks (the objectives paste
@@ -194,6 +200,51 @@ public final class ArenaBuilder {
         }
     }
 
+    /**
+     * Paste the seeded corrupted-structure ruins ONCE (never re-pasted, like the centerpiece - these
+     * are decorative cover / chokepoints / beacons / landmarks, never a logic dependency). Best-effort:
+     * a missing prefab or a worldgen-race clobber only costs the cosmetic; the round plays regardless.
+     *
+     * <p>Deterministic per round: uses the per-round world seed ({@code round.worldSeed()}, the same
+     * coherent source as the terrain and the seeded shrine layout), asks {@link StructureCatalog} for the
+     * seed-shuffled subset whose footprint clears the shared {@link ExclusionMask}, and floor-snaps each via the existing
+     * {@code paste(...)} surface path ({@code force=false}, like the centerpiece). Each structure's
+     * FACING is varied by the same seed (one of the four cardinal {@link Rotation}s) so the chosen set
+     * AND orientation differ per round.
+     */
+    private static void pasteStructures(@Nonnull RoundInstance round, @Nonnull World world) {
+        try {
+            // The per-round world seed: the SAME coherent source as the terrain and the seeded shrine
+            // layout (ChaseState), so the structure subset + facing match this round's terrain. Set by
+            // RoundService.onInstanceReady from the instance world's getWorldConfig().getSeed().
+            long seed = round.worldSeed();
+            ExclusionMask mask = ExclusionMask.defaultMask();
+            List<StructureCatalog.Placement> placements = StructureCatalog.select(seed, mask);
+            if (placements.isEmpty()) {
+                SafeLog.info("[Kweebec] no corrupted structures selected for round " + round.roundId());
+                return;
+            }
+            // A second RNG off the same seed drives the per-placement facing, independent of the
+            // selection shuffle so adding/removing candidates does not rotate the kept ones.
+            Random facingRng = new Random(seed * 0x9E3779B97F4A7C15L);
+            for (StructureCatalog.Placement p : placements) {
+                IPrefabBuffer buffer = load(p.prefabKey());
+                if (buffer == null) {
+                    // load() already WARNs the missing key; skip best-effort.
+                    continue;
+                }
+                Rotation yaw = Rotation.NORMAL[facingRng.nextInt(Rotation.NORMAL.length)];
+                SafeLog.info("[Kweebec] placing corrupted structure '" + p.prefabKey() + "' ("
+                        + p.role() + ") at (" + p.x() + "," + p.z() + ") yaw=" + yaw);
+                // Surface-decoration paste: floor-snapped, force=false (only adds blocks), facing varied.
+                Anchor at = new Anchor(p.x(), ArenaLayout.STAND_Y, p.z(), 0f);
+                paste(world, buffer, at, true, false, yaw);
+            }
+        } catch (Throwable t) {
+            SafeLog.warn("[Kweebec] corrupted structure placement failed: " + t.getMessage());
+        }
+    }
+
     @Nullable
     private static IPrefabBuffer load(@Nonnull String key) {
         try {
@@ -239,6 +290,23 @@ public final class ArenaBuilder {
      */
     private static void paste(@Nonnull World world, @Nonnull IPrefabBuffer buffer, @Nonnull Anchor at,
                               boolean verbose, boolean force) {
+        paste(world, buffer, at, verbose, force, Rotation.None);
+    }
+
+    /**
+     * Paste an authored beat (shrine / exit / gate / structure) at an anchor, FLOOR-SNAPPED to the real
+     * generated surface, rotated by {@code rotation} (one of the four cardinal {@link Rotation}s).
+     * {@code verbose} INFO-logs the placement; a FAILURE always WARNs.
+     *
+     * <p>Placement: prefab buffer coords are stored ANCHOR-RELATIVE (the authored anchor sits at stored
+     * (0,0,0)), and {@code PrefabUtil.paste} places stored (0,0,0) exactly at {@code position}. The
+     * grove is now natural rolling terrain (the flat play disc is gone), so a hardcoded Y would float
+     * or bury every beat; instead we probe the LOCAL top-solid Y with {@link SurfaceProbe} on the world
+     * thread (after PREP chunk-gen, so the column is queryable) and land the anchor there. If the probe
+     * misses (unloaded chunk) it degrades to the anchor's authored floor block ({@code at.y - 1}).
+     */
+    private static void paste(@Nonnull World world, @Nonnull IPrefabBuffer buffer, @Nonnull Anchor at,
+                              boolean verbose, boolean force, @Nonnull Rotation rotation) {
         int x = (int) Math.floor(at.x());
         int z = (int) Math.floor(at.z());
         int fallbackTop = (int) Math.floor(at.y() - 1.0);
@@ -247,10 +315,10 @@ public final class ArenaBuilder {
                 int topY = SurfaceProbe.topSolidY(world, x, z, fallbackTop);
                 Vector3i pos = new Vector3i(x, topY, z);
                 Store<EntityStore> store = world.getEntityStore().getStore();
-                PrefabUtilPaste.paste(buffer, world, pos, store, force);
+                PrefabUtilPaste.paste(buffer, world, pos, store, force, rotation);
                 if (verbose) {
                     KweebecNightmarePlugin.LOGGER.atInfo().log(
-                            "[Kweebec] prefab pasted at " + pos + " (surface-snapped)");
+                            "[Kweebec] prefab pasted at " + pos + " (surface-snapped, rot=" + rotation + ")");
                 }
             } catch (Throwable t) {
                 KweebecNightmarePlugin.LOGGER.atWarning().log(
@@ -304,16 +372,24 @@ public final class ArenaBuilder {
     private static final class PrefabUtilPaste {
         private static final Random RNG = new Random(0xC0C0L);
 
-        /**
-         * @param force {@code true} routes the paste through {@code chunk.setBlock} (UNCONDITIONAL -
-         *              writes every cell incl. {@code Empty}, so the prefab can CARVE solid terrain);
-         *              {@code false} uses {@code placeBlock} (respects placement rules, for surface
-         *              decoration that only adds blocks).
-         */
+        /** Unrotated paste (the cave-shaft / facing-independent path). */
         static void paste(@Nonnull IPrefabBuffer buffer, @Nonnull World world,
                           @Nonnull Vector3i pos, @Nonnull Store<EntityStore> store, boolean force) {
+            paste(buffer, world, pos, store, force, Rotation.None);
+        }
+
+        /**
+         * @param force    {@code true} routes the paste through {@code chunk.setBlock} (UNCONDITIONAL -
+         *                 writes every cell incl. {@code Empty}, so the prefab can CARVE solid terrain);
+         *                 {@code false} uses {@code placeBlock} (respects placement rules, for surface
+         *                 decoration that only adds blocks).
+         * @param rotation the cardinal yaw the prefab is rotated by before pasting.
+         */
+        static void paste(@Nonnull IPrefabBuffer buffer, @Nonnull World world,
+                          @Nonnull Vector3i pos, @Nonnull Store<EntityStore> store, boolean force,
+                          @Nonnull Rotation rotation) {
             com.hypixel.hytale.server.core.util.PrefabUtil.paste(
-                    buffer, world, pos, Rotation.None, force, RNG, store);
+                    buffer, world, pos, rotation, force, RNG, store);
         }
     }
 }

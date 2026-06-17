@@ -62,6 +62,12 @@ public final class Lang {
     public static final String ARG_SUB_DESC = "kweebecnightmare.cmd.arg.sub";
     public static final String ARG_PRESET_DESC = "kweebecnightmare.cmd.arg.preset";
 
+    // Dialogue demo (the /kntalk trigger + the Whispering Sapling name header). The
+    // dialogue's node/option TEXT keys are by-convention (dialogue.kweebec_intro.*)
+    // and live only in the .lang, not as constants here.
+    public static final String CMD_TALK_DESC = "kweebecnightmare.cmd.kntalk.desc";
+    public static final String DIALOGUE_INTRO_NPC = "kweebecnightmare.dialogue.kweebec_intro.npc";
+
     /** Build a localized {@link Message} from a key (resolved client-side). */
     @Nonnull
     public static Message msg(@Nonnull String key) {

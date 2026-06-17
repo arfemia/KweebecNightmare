@@ -26,6 +26,7 @@ import com.ziggfreed.kweebec.death.CocoonService;
 import com.ziggfreed.kweebec.feedback.HeartbeatService;
 import com.ziggfreed.kweebec.feedback.NightmareHud;
 import com.ziggfreed.kweebec.feedback.RoundFeedback;
+import com.ziggfreed.kweebec.feedback.ScareDirector;
 import com.ziggfreed.kweebec.hunter.HunterController;
 import com.ziggfreed.kweebec.i18n.Lang;
 import com.ziggfreed.kweebec.round.ChasePhase;
@@ -55,10 +56,16 @@ public final class ChaseMode {
     private ChaseMode() {
     }
 
-    /** Build chase state for a freshly-spawned round. Pure state; no world work. */
+    /**
+     * Build chase state for a freshly-spawned round. Pure state; no world work. The shrine layout is
+     * seeded off {@code round.worldSeed()} - the SAME per-round world seed the terrain and the
+     * corrupted-structure ruins derive from - so the whole round is internally coherent and varies per
+     * round. The parent guarantees {@code worldSeed} is set (in {@code RoundService.onInstanceReady},
+     * read back from the instance world's {@code getWorldConfig().getSeed()}) BEFORE this runs.
+     */
     public static void onStart(@Nonnull RoundInstance round) {
         ChaseState chase = new ChaseState(round.ruleSet().shrineCount(round.partySize()),
-                round.ruleSet().caveShrineCount());
+                round.ruleSet().caveShrineCount(), round.worldSeed());
         chase.setPhase(ChasePhase.PREP);
         chase.setPrepEndsAtMs(System.currentTimeMillis() + PREP_SECONDS * 1000L);
         round.setChaseState(chase);
@@ -98,6 +105,9 @@ public final class ChaseMode {
             if (hunter != null) {
                 hunter.tick(round, world, store);
             }
+            // Per-survivor horror conductor: proximity vignette (hysteresis) + jumpscare +
+            // whisper layer + tier music escalation. Best-effort; never throws into the loop.
+            ScareDirector.tick(round, world, store);
         }
 
         handleRescues(round, world, store);

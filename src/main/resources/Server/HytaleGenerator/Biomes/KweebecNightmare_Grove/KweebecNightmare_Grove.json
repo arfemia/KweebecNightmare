@@ -370,6 +370,73 @@
     {
       "Skip": false,
       "Runtime": 0,
+      "$Comment": "TRACK A (cycle 3): SPARSE corrupted-structure ruins scattered gen-time among the dead trees. CLONED from Props[0] (the Type:Prefab tree-scatter prop) and repointed at the committed KweebecNightmare/Corrupted_* structures, so it mirrors the proven Prefab-prop shape exactly (a malformed Prefab prop fails the WHOLE biome decode = all air; validate in-game, this JSON is not gradle-compiled). MUCH sparser than the trees: Mesh ScaleX/Y/Z 48 (vs the trees' 16) plus SkipChance 0.85 means only a handful of ruins land, biased to the outer grove since the structures are big (the small Lamppost / House / Bridge are weighted highest, the large Shop / GuardTower / Well rarest). LoadEntities:false so the native NPC_Spawn_Marker / NPC_Path_Marker entities baked into the source villages never spawn (the Corrupted_* files already zero entities; this is belt-and-suspenders at the scatter layer too). DontReplace placement guard: the ColumnLinear scanner floor-snaps onto the rolling surface and the Floor pattern only accepts a column standing on Soil_Grass_Dry under Empty, so a ruin never gouges existing soil or floats in the air; we DROP the trees' +8 air-offset headroom check because these structures are tall and do not need clear sky at exactly +8 blocks. Random directionality rotates each ruin. Jitter 0.5 (the <=0.5 BiomeAsset cap). IN-GAME GATE: pack-authored Corrupted_* prefab-folder resolution during worldgen scatter is unverified here; confirm the keys resolve and the footprints do not bury/float badly on rolling terrain.",
+      "Positions": {
+        "Type": "Mesh2D",
+        "Skip": false,
+        "PointsY": 0,
+        "PointGenerator": {
+          "Type": "Mesh",
+          "Jitter": 0.5,
+          "ScaleX": 48,
+          "ScaleY": 48,
+          "ScaleZ": 48,
+          "Seed": "KN_Ruins"
+        }
+      },
+      "Assignments": {
+        "Type": "Weighted",
+        "SkipChance": 0.85,
+        "Seed": "KN_RuinsW",
+        "WeightedAssignments": [
+          {
+            "Weight": 1,
+            "Assignments": {
+              "Type": "Constant",
+              "Prop": {
+                "Type": "Prefab",
+                "Skip": false,
+                "WeightedPrefabPaths": [
+                  { "Path": "KweebecNightmare/Corrupted_Lamppost", "Weight": 5 },
+                  { "Path": "KweebecNightmare/Corrupted_House_Small", "Weight": 4 },
+                  { "Path": "KweebecNightmare/Corrupted_Bridge", "Weight": 3 },
+                  { "Path": "KweebecNightmare/Corrupted_Shop", "Weight": 2 },
+                  { "Path": "KweebecNightmare/Corrupted_GuardTower", "Weight": 2 },
+                  { "Path": "KweebecNightmare/Corrupted_Well", "Weight": 1 }
+                ],
+                "LegacyPath": false,
+                "LoadEntities": false,
+                "Directionality": {
+                  "Type": "Random",
+                  "Seed": "KN_RuinRot",
+                  "Pattern": {
+                    "Type": "Floor",
+                    "Skip": false,
+                    "Origin": { "Type": "BlockSet", "Skip": false, "BlockSet": { "Inclusive": true, "Materials": [ { "Solid": "Empty" } ] } },
+                    "Floor": { "Type": "BlockSet", "Skip": false, "BlockSet": { "Inclusive": true, "Materials": [ { "Solid": "Soil_Grass_Dry" } ] } }
+                  }
+                },
+                "Scanner": {
+                  "Type": "ColumnLinear",
+                  "Skip": false,
+                  "MaxY": 40,
+                  "MinY": -20,
+                  "RelativeToPosition": false,
+                  "BaseHeightName": "Base",
+                  "TopDownOrder": true,
+                  "ResultCap": 1
+                },
+                "MoldingDirection": "None",
+                "MoldingChildren": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "Skip": false,
+      "Runtime": 0,
       "Positions": {
         "Type": "Mesh2D",
         "Skip": false,

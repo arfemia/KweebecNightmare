@@ -1,6 +1,10 @@
 package com.ziggfreed.kweebec.hunter;
 
+import java.util.List;
+
 import javax.annotation.Nonnull;
+
+import org.joml.Vector3d;
 
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.universe.world.World;
@@ -36,4 +40,13 @@ public interface HunterController {
 
     /** Remove all hunters (round end / teardown). */
     void despawnAll(@Nonnull World world, @Nonnull Store<EntityStore> store);
+
+    /**
+     * Live world positions of every active hunter (empty if none / not spawned). The
+     * {@code ScareDirector} consumes this to band a survivor's dread by their distance
+     * to the NEAREST hunter, so a multi-hunter roster makes the whole grove menacing.
+     * Skips invalid refs; never throws. World-thread only (reads {@code TransformComponent}).
+     */
+    @Nonnull
+    List<Vector3d> hunterPositions(@Nonnull Store<EntityStore> store);
 }
