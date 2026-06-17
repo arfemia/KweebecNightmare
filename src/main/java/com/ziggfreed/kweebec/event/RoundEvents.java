@@ -1,6 +1,7 @@
 package com.ziggfreed.kweebec.event;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -9,8 +10,10 @@ import javax.annotation.Nullable;
 import com.hypixel.hytale.event.IEventDispatcher;
 import com.hypixel.hytale.server.core.HytaleServer;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
+import com.ziggfreed.kweebec.api.KweebecRoundScoredEvent;
 import com.ziggfreed.kweebec.api.PlayerCocoonedEvent;
 import com.ziggfreed.kweebec.api.PlayerRescuedEvent;
+import com.ziggfreed.kweebec.api.PlayerScore;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
 import com.ziggfreed.kweebec.api.RoundStartedEvent;
 
@@ -78,6 +81,27 @@ public final class RoundEvents {
             }
         } catch (Throwable t) {
             log("RoundCompleted", t);
+        }
+    }
+
+    /**
+     * Fire {@code KweebecRoundScoredEvent} carrying the per-player score breakdown, AFTER
+     * {@code fireRoundCompleted}. A consumer rewards each player by their score. Same dispatch
+     * semantics as every other fire; whole body try-guarded.
+     */
+    public static void fireRoundScored(@Nonnull String roundId, @Nonnull String mode,
+                                       @Nonnull RoundCompletedEvent.Outcome outcome,
+                                       int durationSeconds, int difficultyScore,
+                                       @Nonnull Map<UUID, PlayerScore> scores) {
+        try {
+            IEventDispatcher<KweebecRoundScoredEvent, KweebecRoundScoredEvent> d =
+                    HytaleServer.get().getEventBus().dispatchFor(KweebecRoundScoredEvent.class);
+            if (d.hasListener()) {
+                d.dispatch(new KweebecRoundScoredEvent(
+                        roundId, mode, outcome, durationSeconds, difficultyScore, scores));
+            }
+        } catch (Throwable t) {
+            log("RoundScored", t);
         }
     }
 

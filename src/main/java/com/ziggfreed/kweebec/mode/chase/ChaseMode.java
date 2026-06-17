@@ -16,7 +16,9 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.ziggfreed.common.inventory.InventoryUtil;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
+import com.ziggfreed.kweebec.moonbloom.Moonbloom;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
 import com.ziggfreed.kweebec.atmosphere.MusicBedService;
 import com.ziggfreed.kweebec.arena.Anchor;
@@ -30,6 +32,7 @@ import com.ziggfreed.kweebec.feedback.ScareDirector;
 import com.ziggfreed.kweebec.hunter.HunterController;
 import com.ziggfreed.kweebec.i18n.Lang;
 import com.ziggfreed.kweebec.round.ChasePhase;
+import com.ziggfreed.kweebec.round.PlayerResync;
 import com.ziggfreed.kweebec.round.PlayerRoundState;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.round.RoundService;
@@ -101,6 +104,7 @@ public final class ChaseMode {
         if (chase.phase() != ChasePhase.PREP) {
             chase.addCorruption(round.ruleSet().corruptionPerSecond());
             handleShrines(round, world, store, chase);
+            maybeRespawnMoonbloom(round, world, chase);
             HunterController hunter = round.hunterController();
             if (hunter != null) {
                 hunter.tick(round, world, store);
@@ -154,18 +158,35 @@ public final class ChaseMode {
             // PLAYER target in Adventure mode). Applied once, never re-asserted each
             // tick, so an admin can switch to Creative to debug without it snapping
             // back a second later. Retried next tick if the component is not ready.
-            if (!st.isGameModeApplied()) {
-                try {
-                    Player p = store.getComponent(ref, Player.getComponentType());
-                    if (p != null) {
+            Player p = null;
+            try {
+                p = store.getComponent(ref, Player.getComponentType());
+            } catch (Throwable ignored) {
+                // best effort - retried next tick if the component is not ready
+            }
+            if (p != null) {
+                if (!st.isGameModeApplied()) {
+                    try {
                         if (p.getGameMode() != GameMode.Adventure) {
                             Player.setGameMode(ref, GameMode.Adventure, store);
                         }
                         st.setGameModeApplied(true);
+                    } catch (Throwable ignored) {
+                        // best effort
                     }
-                } catch (Throwable ignored) {
-                    // best effort
                 }
+                // The engine never resyncs position on a game-mode switch (setGameMode
+                // sends only a SetGameMode packet). Flying in Creative then dropping back
+                // to Adventure therefore leaves the client drifted from the server - mobs
+                // hit you while visually attacking empty air, and blocks read as too far to
+                // break. Snap the client back the instant they return to Adventure. We do
+                // NOT force the game mode (an admin may stay in Creative to debug); we only
+                // heal the Creative -> Adventure edge.
+                GameMode current = p.getGameMode();
+                if (st.lastGameMode() == GameMode.Creative && current == GameMode.Adventure) {
+                    PlayerResync.resync(ref, store);
+                }
+                st.setLastGameMode(current);
             }
             // Install the HUD once.
             if (round.hud(uuid) == null) {
@@ -204,57 +225,70 @@ public final class ChaseMode {
 
     // --- shrines ---
 
-    /** Progress at which the shrine "flares" - the surge of light + noise that turns the hunter. */
-    private static final double SHRINE_FLARE_AT = 0.5;
-
     /**
-     * The shrine ritual. A survivor channels by holding position within
-     * {@link ArenaLayout#INTERACT_RADIUS} of a shrine; progress climbs while they channel and
-     * decays (slowly) when they leave. The ritual is a deliberate RISK, not a safe chore:
-     * while you channel you are the {@link ChaseState#loudestChanneller()}, so the hunter
-     * prioritizes you (the noise draws it - see {@code AiHunterController.chooseTarget}). The
-     * feedback escalates per attempt: a start cue, a "flare" danger cue at the half-way surge,
-     * and a grove-wide success on completion.
+     * The shrine CLEANSE (1.4.0 Moonbloom loop, pure-swap). A shrine is no longer relit by a
+     * hold-in-place channel timer; an active survivor standing within {@link ArenaLayout#INTERACT_RADIUS}
+     * who holds at least {@code cleanseCost} gathered Moonbloom charges SPENDS them and the shrine
+     * lights instantly. The cost is a configurable rule-set knob ({@link RuleSet#cleanseCost()}); a
+     * configured cost of 0 cleanses on proximity alone (the degenerate, supply-free dial). A survivor
+     * who is at the shrine but short on Moonbloom is nudged once per approach to go gather more.
+     *
+     * <p>{@code feedbackStage} is reused as a per-approach "already nudged" flag (reset when the
+     * survivor steps away) so the "gather Moonbloom" cue does not spam every tick. The old channel
+     * {@code progress}/{@code channeller} fields are vestigial under pure-swap; the hunter no longer
+     * draws toward a channeller (there is none) and falls back to nearest-survivor pursuit.
      */
     private static void handleShrines(@Nonnull RoundInstance round, @Nonnull World world,
                                       @Nonnull Store<EntityStore> store, @Nonnull ChaseState chase) {
-        double perTick = 1.0 / Math.max(1.0, round.ruleSet().shrineRelightSeconds());
+        int cleanseCost = round.ruleSet().cleanseCost();
         UUID worldUuid = world.getWorldConfig().getUuid();
         for (ShrineState shrine : chase.shrines()) {
             if (shrine.isLit()) {
                 continue;
             }
-            UUID channeller = activeSurvivorNear(round, store, worldUuid, shrine.anchor(), ArenaLayout.INTERACT_RADIUS_SQ);
-            if (channeller != null) {
-                double before = shrine.progress();
-                shrine.setChanneller(channeller);
-                shrine.setProgress(before + perTick);
-                // Start cue: the moment a survivor begins the ritual, warn them they are exposed.
-                if (shrine.feedbackStage() < 1) {
-                    shrine.setFeedbackStage(1);
-                    toastTo(channeller, pr -> RoundFeedback.warningToast(pr, Lang.TOAST_SHRINE_CHANNEL));
-                }
-                // Half-way flare: the shrine surges and the hunter turns toward the noise.
-                if (before < SHRINE_FLARE_AT && shrine.progress() >= SHRINE_FLARE_AT && shrine.feedbackStage() < 2) {
-                    shrine.setFeedbackStage(2);
-                    toastTo(channeller, pr -> RoundFeedback.dangerToast(pr, Lang.TOAST_SHRINE_FLARE));
-                }
-                if (shrine.progress() >= 1.0) {
-                    shrine.setLit(true);
-                    chase.addCorruption(round.ruleSet().corruptionPerShrine());
-                    KweebecNightmarePlugin.LOGGER.atInfo().log(
-                            "[Kweebec][win] shrine " + shrine.index() + " LIT ("
-                                    + chase.litShrines() + "/" + chase.totalShrines() + ")");
-                    forEachPresent(round, pr -> RoundFeedback.successToast(pr, Lang.TOAST_SHRINE_LIT));
-                }
-            } else {
-                shrine.setChanneller(null);
-                shrine.setProgress(shrine.progress() - perTick * 0.5);
-                // Reset the feedback ladder once the ritual fully lapses, so a fresh attempt re-cues.
-                if (shrine.progress() <= 0.0 && shrine.feedbackStage() != 0) {
-                    shrine.setFeedbackStage(0);
-                }
+            UUID cleanser = activeSurvivorNear(round, store, worldUuid, shrine.anchor(), ArenaLayout.INTERACT_RADIUS_SQ);
+            if (cleanser == null) {
+                shrine.setFeedbackStage(0); // stepped away; re-arm the "need Moonbloom" nudge
+                continue;
             }
+            Ref<EntityStore> ref = presentRef(cleanser, worldUuid);
+            boolean cleansed = cleanseCost <= 0
+                    || (ref != null && InventoryUtil.spend(store, ref, Moonbloom.CHARGE_ITEM, cleanseCost));
+            if (cleansed) {
+                shrine.setLit(true);
+                chase.addCorruption(round.ruleSet().corruptionPerShrine());
+                KweebecNightmarePlugin.LOGGER.atInfo().log(
+                        "[Kweebec][win] shrine " + shrine.index() + " CLEANSED ("
+                                + chase.litShrines() + "/" + chase.totalShrines() + ")");
+                forEachPresent(round, pr -> RoundFeedback.successToast(pr, Lang.TOAST_CLEANSE_DONE));
+            } else if (shrine.feedbackStage() < 1) {
+                // At the shrine but short on Moonbloom: nudge to gather, once per approach.
+                shrine.setFeedbackStage(1);
+                toastTo(cleanser, pr -> RoundFeedback.warningToast(pr, Lang.TOAST_CLEANSE_NEED));
+            }
+        }
+    }
+
+    /**
+     * Mid-match Moonbloom respawn: at each configured wave time the grove regrows a fresh batch (one
+     * plant at every still-unlit shrine plus a scattered batch), so a charge-starved party can keep
+     * cleansing. Fires every wave whose time has elapsed (catches up if ticks were skipped), tracked by
+     * {@link ChaseState#moonbloomRespawnsFired()} so each wave fires once. World-thread only.
+     */
+    private static void maybeRespawnMoonbloom(@Nonnull RoundInstance round, @Nonnull World world,
+                                              @Nonnull ChaseState chase) {
+        int respawnCount = round.ruleSet().moonbloomRespawnCount();
+        int[] times = round.ruleSet().moonbloomRespawnAtSeconds();
+        if (respawnCount <= 0 || times.length == 0) {
+            return;
+        }
+        int elapsed = round.durationSeconds();
+        while (chase.moonbloomRespawnsFired() < times.length
+                && elapsed >= times[chase.moonbloomRespawnsFired()]) {
+            long wave = chase.moonbloomRespawnsFired() + 1L;
+            ArenaBuilder.plantMoonbloom(round, world, 1, respawnCount, wave);
+            chase.incrementMoonbloomRespawnsFired();
+            forEachPresent(round, pr -> RoundFeedback.warningToast(pr, Lang.TOAST_MOONBLOOM_RESPAWN));
         }
     }
 

@@ -1,0 +1,51 @@
+{
+  "TranslationProperties": {
+    "Name": "kweebecnightmare.item.moonbloom.name"
+  },
+  "Categories": [
+    "Items.Weapons"
+  ],
+  "Quality": "Uncommon",
+  "ItemLevel": 1,
+  "MaxStack": 16,
+  "PlayerAnimationsId": "Item",
+  "Interactions": {
+    "Primary": {
+      "Interactions": [
+        "KweebecNightmare_Moonbloom_Throw"
+      ]
+    }
+  },
+  "Model": "Blocks/Foliage/Plants/Mushroom_Balls.blockymodel",
+  "Texture": "Blocks/Foliage/Plants/Mushroom_Balls_Corrupted.png",
+  "Icon": "Icons/ItemsGenerated/Plant_Crop_Mushroom_Glowcap_Purple.png",
+  "IconProperties": {
+    "Scale": 0.62,
+    "Translation": [
+      -2.1,
+      -10.0
+    ],
+    "Rotation": [
+      22.5,
+      45,
+      22.5
+    ]
+  },
+  "Particles": [
+    {
+      "SystemId": "Fuse_Bomb",
+      "TargetNodeName": "Fuse_Lit",
+      "TargetEntityPart": "PrimaryItem"
+    }
+  ],
+  "Tags": {
+    "Type": [
+      "Weapon"
+    ],
+    "Family": [
+      "Bomb"
+    ]
+  },
+  "Weapon": {},
+  "ItemSoundSetId": "ISS_Items_Foliage"
+}

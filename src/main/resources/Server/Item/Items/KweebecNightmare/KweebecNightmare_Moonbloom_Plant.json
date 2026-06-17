@@ -1,0 +1,66 @@
+{
+  "TranslationProperties": {
+    "Name": "kweebecnightmare.item.moonbloom_plant.name"
+  },
+  "Categories": [
+    "Blocks.Plants"
+  ],
+  "Interactions": {
+    "Primary": "Block_Primary",
+    "Secondary": "Block_Secondary"
+  },
+  "BlockType": {
+    "InteractionHint": "server.interactionHints.pick",
+    "DrawType": "Model",
+    "Opacity": "Transparent",
+    "CustomModel": "Blocks/Foliage/Plants/Mushroom_Balls.blockymodel",
+    "CustomModelTexture": [
+      {
+        "Texture": "Blocks/Foliage/Plants/Mushroom_Balls_Corrupted.png",
+        "Weight": 1
+      }
+    ],
+    "Group": "Plant",
+    "HitboxType": "Mushroom_Medium",
+    "VariantRotation": "UpDown",
+    "Light": {
+      "Color": "#6f9"
+    },
+    "Flags": {
+      "IsStackable": true
+    },
+    "RandomRotation": "YawStep1",
+    "Gathering": {
+      "Harvest": {
+        "DropList": "KweebecNightmare_Moonbloom_Drop"
+      },
+      "Soft": {
+        "DropList": "KweebecNightmare_Moonbloom_Drop"
+      }
+    },
+    "Support": {
+      "Down": [
+        {
+          "FaceType": "Full"
+        }
+      ]
+    },
+    "BlockParticleSetId": "Dust",
+    "ParticleColor": "#6fffa0",
+    "BlockSoundSetId": "Mushroom",
+    "PhysicalMaterialId": "Foliage",
+    "TextureComputedColor": "#2f7d4a"
+  },
+  "PlayerAnimationsId": "Item",
+  "Tags": {
+    "Type": [
+      "Plant"
+    ],
+    "Family": [
+      "Crop"
+    ]
+  },
+  "ItemSoundSetId": "ISS_Items_Foliage",
+  "Icon": "Icons/ItemsGenerated/Plant_Crop_Mushroom_Glowcap_Purple.png",
+  "DropOnDeath": true
+}

@@ -46,8 +46,8 @@ public final class ArenaLayout {
 
     /**
      * The underground relight shrine: the survivor must DESCEND a carved shaft to reach it.
-     * Inside the flat play disc (r~19, so the surface above it stays flat and the shaft top is
-     * standable) but well off the surface shrine ring and the gate corridor. Its Y is the cave
+     * Spread out in the grove (r~38, well off the surface shrine ring and the gate corridor); the
+     * shaft top floor-snaps to the local rolling surface so the entrance stays standable. Its Y is the cave
      * chamber's stand level (one above the chamber floor at world Y=65), distinct from the ring
      * shrines' {@link #STAND_Y}, so the Y-band proximity guard in {@code ChaseMode} lets it be
      * channelled ONLY from inside the chamber, never from the surface directly above. The shaft (a
@@ -58,18 +58,21 @@ public final class ArenaLayout {
     public static final double CAVE_STAND_Y = 66.0;
 
     /**
-     * Deterministic anchors for the underground relight shrines (one per
-     * {@code RuleSet.caveShrineCount()}). All sit inside the flat play disc (r~19-21) so the surface
-     * above each stays flat and standable, in distinct quadrants well clear of the surface shrine ring
-     * (r26), the gate corridor, the hunter den, and each other (chambers never overlap). Each carves a
-     * descent shaft + chamber; {@code ArenaBuilder} alternates the descent style (spiral / ladder) by
-     * index for variety.
+     * Deterministic anchors for the underground relight shrines (one per {@code RuleSet.caveShrineCount()}),
+     * SPREAD across the four quadrants at r~38 so the descents are distributed across the grove rather
+     * than clustered near spawn (the old r~19-21 cluster). The grove is now natural rolling terrain
+     * everywhere (the flat play disc is gone), and each shaft FLOOR-SNAPS its top to the LOCAL surface in
+     * {@code ArenaBuilder.pasteCaveShaft} (via {@code SurfaceProbe}, now skipping tree/scatter decoration),
+     * so an off-center, non-flat anchor lands correctly. Each sits in a DISTINCT quadrant, clear of the
+     * spawn courtyard (r~12), the surface shrine ring (r26), the gate -> escape corridor (the -z lane,
+     * |x| > 9), the hunter den (0.5, +40), and each other (chambers never overlap). {@code ArenaBuilder}
+     * alternates the descent style (spiral / ladder) by index for variety.
      */
     private static final Anchor[] CAVE_ANCHORS = {
-            new Anchor(13.5, CAVE_STAND_Y, 13.5, (float) Math.PI),
-            new Anchor(-18.5, CAVE_STAND_Y, 6.5, (float) Math.PI),
-            new Anchor(18.5, CAVE_STAND_Y, -10.5, (float) Math.PI),
-            new Anchor(-12.5, CAVE_STAND_Y, -16.5, (float) Math.PI),
+            new Anchor(30.5, CAVE_STAND_Y, 24.5, (float) Math.PI),   // NE
+            new Anchor(-34.5, CAVE_STAND_Y, 18.5, (float) Math.PI),  // NW
+            new Anchor(28.5, CAVE_STAND_Y, -26.5, (float) Math.PI),  // SE
+            new Anchor(-24.5, CAVE_STAND_Y, -30.5, (float) Math.PI), // SW
     };
 
     /** The first (canonical) underground shrine anchor; the single-cave default. */

@@ -2,7 +2,7 @@
 
 A **standalone Hytale horror minigame** for a mod jam, set in a Void-blighted Emerald Grove at perpetual midnight where the peaceful Kweebec tree-folk have been corrupted into something that hunts. It runs fully on its own and carries day-1 *optional* MMO Skill Tree elevation via **outbound native events** (no dependency), and is designed to later fold into [MMO Skill Tree](https://www.curseforge.com/hytale/mods/mmo-skill-tree) as the repeatable dungeon **capstone of the Emerald Wilds / Kweebec questline**.
 
-This is ONE mod shipping **two modes as separate worlds/instances** (no lobby UI). It is a supplemental mod under the **hyMMO monorepo**'s `additional-mods/` (a git submodule; development is launched from hyMMO, like the content packs). **Status: v0.3.0 in dev** - the Chase MVP ("Relight & Escape") runs end-to-end, plus a Phase-1 foundation pass: asset-driven config (pack-authorable codecs + a runtime override API), natural-terrain worldgen (no flat disc, finite edge cliff, worldgen tree scatter, surface-snapped placement), and a shared primitive lib (`ziggfreed-common`) it now consumes. Survival mode is still reserved.
+This is ONE mod shipping **two modes as separate worlds/instances** (no lobby UI). It is a supplemental mod under the **hyMMO monorepo**'s `additional-mods/` (a git submodule; development is launched from hyMMO, like the content packs). **Status: v0.4.0 in dev** - the Chase MVP ("Relight & Escape") runs end-to-end, plus the 0.3.0 worldgen/hunter/scare pass and the 0.4.0 **Moonbloom loop**: a gathered glowing-mushroom resource you spend to CLEANSE shrines (pure swap, replacing the channel timer) or THROW to STUN a hunter (a reskinned vanilla Stun Bomb chain + Perfect Utils `StunMobAPI`, attributed via one `KweebecDamageSystem`), per-player SCORING (time / damage-avoided / stuns), a native `KweebecRoundScoredEvent`, and a persisted per-playercount LEADERBOARD. Asset-driven config (pack-authorable codecs + a runtime override API), natural-terrain worldgen, and the `ziggfreed-common` primitive lib (now incl. `InventoryUtil`) it consumes. Survival mode is still reserved.
 
 > **Design + tech are LOCKED and verified.** Read these in the parent repo before building gameplay - they are the authority, this file is the local router:
 > - Plan + LOCKED DESIGN: `../../.claude/plans/utilize-a-new-git-snappy-moon.md`
@@ -41,8 +41,10 @@ src/main/resources/Server/                             the asset pack: HytaleGen
                                                         Instances/ (per-mode instance.bson), Models / NPC Roles / Weathers /
                                                         Environments / AmbienceFX / Particles / PortalTypes / Prefabs / Languages
 src/main/java/com/ziggfreed/kweebec/         (nearly every package carries a nested CLAUDE.md router - see Architecture)
-  KweebecNightmarePlugin.java                          JavaPlugin entry (setup/shutdown), wires the death system + command + round service
+  KweebecNightmarePlugin.java                          JavaPlugin entry (setup/shutdown), wires the death + damage systems + command + round service + leaderboard
   round/                                               round state machine + RuleSet + instance lifecycle (shared); RuleSet is now SOURCED from asset/ (PresetConfig), not the old enum
+  moonbloom/                                           the glowing-mushroom resource id authority (Moonbloom) - gather/cleanse/throw policy lives in arena/, mode/chase/, event/
+  score/                                               configurable round scoring (ScoringConfig/ScoreCalculator) + the per-playercount persisted Leaderboard
   asset/                                               pack-authorable custom asset TYPES (RoundPresetAsset + HunterArchetypeAsset codecs) + PresetConfig/HunterArchetypeConfig folds + KweebecAssetRegistrar + KweebecPackControlAsset
   integration/                                         KweebecNightmareAPI - the runtime difficulty-override seam (overridePreset/scaleRuleSet) an installed MMO calls; resolveRuleSet composes defaults<pack<owner<runtime
   mode/chase/                                          the Chase loop (thin leaf over round/); survival mode reserved
@@ -53,8 +55,8 @@ src/main/java/com/ziggfreed/kweebec/         (nearly every package carries a nes
   camera/                                              ServerCameraService (top-down apply/reset; survival mode, reserved)
   feedback/                                            custom HUD + 3D-pulse heartbeat + title cards + toasts
   i18n/                                                Lang key registry (the .lang prefix contract)
-  command/                                             /kweebec start|exit|endall (the first entry trigger; pad/block/NPC designed-for)
-  event/                                               native event POJOs fired on the engine bus
+  command/                                             /kweebec start|exit|endall|give|score|leaderboard (the first entry trigger; pad/block/NPC designed-for)
+  event/                                               native event POJOs fired on the engine bus + KweebecDamageSystem (throw-stun attribution + damage-taken scoring)
 ```
 
 ## Architecture (per-package routers carry the working detail)

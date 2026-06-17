@@ -26,6 +26,15 @@ public final class Lang {
     public static final String TITLE_NIGHT_FALLS = "kweebecnightmare.title.night_falls";
     public static final String TITLE_NIGHT_FALLS_SUB = "kweebecnightmare.title.night_falls.sub";
 
+    // Custom item display names (Moonbloom charge + the grove plant).
+    public static final String ITEM_MOONBLOOM = "kweebecnightmare.item.moonbloom.name";
+    public static final String ITEM_MOONBLOOM_PLANT = "kweebecnightmare.item.moonbloom_plant.name";
+
+    // Moonbloom loop toasts (cleanse / stun / gather).
+    public static final String TOAST_CLEANSE_DONE = "kweebecnightmare.toast.cleanse_done";
+    public static final String TOAST_CLEANSE_NEED = "kweebecnightmare.toast.cleanse_need";
+    public static final String TOAST_MOONBLOOM_RESPAWN = "kweebecnightmare.toast.moonbloom_respawn";
+
     // Danger / status toasts.
     public static final String TOAST_SHRINE_LIT = "kweebecnightmare.toast.shrine_lit";
     public static final String TOAST_SHRINE_PROGRESS = "kweebecnightmare.toast.shrine_progress";
@@ -56,6 +65,11 @@ public final class Lang {
     public static final String CMD_NO_ACTIVE_ROUNDS = "kweebecnightmare.cmd.no_active_rounds";
     public static final String CMD_ENDED = "kweebecnightmare.cmd.ended";
     public static final String CMD_USAGE = "kweebecnightmare.cmd.usage";
+    public static final String CMD_GIVE_DONE = "kweebecnightmare.cmd.give_done";
+    public static final String CMD_SCORE_HEADER = "kweebecnightmare.cmd.score_header";
+    public static final String CMD_SCORE_NONE = "kweebecnightmare.cmd.score_none";
+    public static final String CMD_LB_HEADER = "kweebecnightmare.cmd.lb_header";
+    public static final String CMD_LB_EMPTY = "kweebecnightmare.cmd.lb_empty";
 
     // Command + argument descriptions (the engine resolves these as lang keys, not literals).
     public static final String CMD_DESC = "kweebecnightmare.cmd.kweebec.desc";

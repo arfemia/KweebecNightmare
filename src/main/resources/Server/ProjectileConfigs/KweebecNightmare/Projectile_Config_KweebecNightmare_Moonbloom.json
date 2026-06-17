@@ -1,0 +1,38 @@
+{
+  "Parent": "Projectile_Config_Bomb_Base",
+  "Interactions": {
+    "ProjectileSpawn": {
+      "Cooldown": {
+        "Cooldown": 0
+      },
+      "Interactions": [
+        {
+          "Type": "Simple",
+          "RunTime": 1.0
+        },
+        "KweebecNightmare_Moonbloom_Burst",
+        {
+          "Type": "RemoveEntity",
+          "Entity": "User"
+        }
+      ]
+    },
+    "ProjectileHit": {
+      "Cooldown": {
+        "Cooldown": 0
+      },
+      "Rules": {
+        "Interrupting": [
+          "ProjectileSpawn"
+        ]
+      },
+      "Interactions": [
+        "KweebecNightmare_Moonbloom_Burst",
+        {
+          "Type": "RemoveEntity",
+          "Entity": "User"
+        }
+      ]
+    }
+  }
+}

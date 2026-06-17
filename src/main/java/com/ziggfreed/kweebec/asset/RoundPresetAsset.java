@@ -13,6 +13,7 @@ import com.ziggfreed.kweebec.round.InventoryMode;
 import com.ziggfreed.kweebec.round.RewardOnExit;
 import com.ziggfreed.kweebec.round.ReviveStyle;
 import com.ziggfreed.kweebec.round.RuleSet;
+import com.ziggfreed.kweebec.round.ThrowMode;
 
 /**
  * A pack-authorable round preset, loaded from a pack's
@@ -49,8 +50,9 @@ import com.ziggfreed.kweebec.round.RuleSet;
 public final class RoundPresetAsset
         implements JsonAssetWithMap<String, DefaultAssetMap<String, RoundPresetAsset>> {
 
-    /** Sentinel for "field absent" on the optional int / double knobs (NaN / MIN_VALUE = use the builder default). */
+    /** Sentinel for "field absent" on the optional int / long / double knobs (MIN_VALUE / NaN = use the builder default). */
     private static final int UNSET_INT = Integer.MIN_VALUE;
+    private static final long UNSET_LONG = Long.MIN_VALUE;
     private static final double UNSET_DOUBLE = Double.NaN;
 
     private String id;
@@ -76,6 +78,14 @@ public final class RoundPresetAsset
     private double corruptionPerSecond = UNSET_DOUBLE;
     private double corruptionPerShrine = UNSET_DOUBLE;
     private double shrineRelightSeconds = UNSET_DOUBLE;
+    // 1.4.0 Moonbloom loop knobs.
+    private int cleanseCost = UNSET_INT;
+    private long stunDurationMs = UNSET_LONG;
+    @Nullable private String throwMode;
+    private int moonbloomPerShrine = UNSET_INT;
+    private int moonbloomScatter = UNSET_INT;
+    private int moonbloomRespawnCount = UNSET_INT;
+    @Nullable private int[] moonbloomRespawnAtSeconds;
 
     public static final AssetBuilderCodec<String, RoundPresetAsset> CODEC = AssetBuilderCodec.builder(
                     RoundPresetAsset.class,
@@ -129,6 +139,20 @@ public final class RoundPresetAsset
             .append(new KeyedCodec<>("HunterArchetype", Codec.STRING, false), (a, v) -> a.hunterArchetype = v, a -> a.hunterArchetype)
             .add()
             .append(new KeyedCodec<>("Mutators", Codec.STRING_ARRAY, false), (a, v) -> a.mutators = v, a -> a.mutators)
+            .add()
+            .append(new KeyedCodec<>("CleanseCost", Codec.INTEGER, false), (a, v) -> a.cleanseCost = v, a -> a.cleanseCost)
+            .add()
+            .append(new KeyedCodec<>("StunDurationMs", Codec.LONG, false), (a, v) -> a.stunDurationMs = v, a -> a.stunDurationMs)
+            .add()
+            .append(new KeyedCodec<>("ThrowMode", Codec.STRING, false), (a, v) -> a.throwMode = v, a -> a.throwMode)
+            .add()
+            .append(new KeyedCodec<>("MoonbloomPerShrine", Codec.INTEGER, false), (a, v) -> a.moonbloomPerShrine = v, a -> a.moonbloomPerShrine)
+            .add()
+            .append(new KeyedCodec<>("MoonbloomScatter", Codec.INTEGER, false), (a, v) -> a.moonbloomScatter = v, a -> a.moonbloomScatter)
+            .add()
+            .append(new KeyedCodec<>("MoonbloomRespawnCount", Codec.INTEGER, false), (a, v) -> a.moonbloomRespawnCount = v, a -> a.moonbloomRespawnCount)
+            .add()
+            .append(new KeyedCodec<>("MoonbloomRespawnAtSeconds", Codec.INT_ARRAY, false), (a, v) -> a.moonbloomRespawnAtSeconds = v, a -> a.moonbloomRespawnAtSeconds)
             .add()
             .build();
 
@@ -222,6 +246,28 @@ public final class RoundPresetAsset
         b.rewardOnExit(RewardOnExit.fromString(rewardOnExit));
         if (hunterArchetype != null && !hunterArchetype.isBlank()) {
             b.hunterArchetype(hunterArchetype.toLowerCase());
+        }
+        // Moonbloom loop knobs (each absent = the RuleSet builder default).
+        if (cleanseCost != UNSET_INT) {
+            b.cleanseCost(cleanseCost);
+        }
+        if (stunDurationMs != UNSET_LONG) {
+            b.stunDurationMs(stunDurationMs);
+        }
+        if (throwMode != null && !throwMode.isBlank()) {
+            b.throwMode(ThrowMode.fromString(throwMode));
+        }
+        if (moonbloomPerShrine != UNSET_INT) {
+            b.moonbloomPerShrine(moonbloomPerShrine);
+        }
+        if (moonbloomScatter != UNSET_INT) {
+            b.moonbloomScatter(moonbloomScatter);
+        }
+        if (moonbloomRespawnCount != UNSET_INT) {
+            b.moonbloomRespawnCount(moonbloomRespawnCount);
+        }
+        if (moonbloomRespawnAtSeconds != null) {
+            b.moonbloomRespawnAtSeconds(moonbloomRespawnAtSeconds);
         }
         return b.build();
     }

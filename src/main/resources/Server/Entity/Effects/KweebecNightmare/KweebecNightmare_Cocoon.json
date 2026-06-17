@@ -1,0 +1,13 @@
+{
+  "ApplicationEffects": {
+    "MovementEffects": {
+      "DisableAll": true
+    },
+    "HorizontalSpeedMultiplier": 0.0,
+    "EntityBottomTint": "#0a0014",
+    "EntityTopTint": "#2a0a3a"
+  },
+  "Infinite": true,
+  "OverlapBehavior": "Overwrite",
+  "Debuff": true
+}

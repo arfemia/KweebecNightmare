@@ -154,6 +154,15 @@ public final class CocoonService {
     }
 
     private static void clearCocoonEffect(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
+        clearEffects(ref, store);
+    }
+
+    /**
+     * Clear ALL entity effects on the player (cocoon root, dread, hunter-pace). Called before a
+     * player crosses back to the overworld so the cocoon's {@code DisableAll} movement lock - or
+     * any other round effect - never rides out and immobilizes them there. Best-effort.
+     */
+    public static void clearEffects(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
         try {
             EffectControllerComponent effects = store.getComponent(ref, EffectControllerComponent.getComponentType());
             if (effects != null) {

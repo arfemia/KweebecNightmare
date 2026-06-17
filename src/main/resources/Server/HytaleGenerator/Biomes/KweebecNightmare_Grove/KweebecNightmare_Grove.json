@@ -44,8 +44,8 @@
               "Skip": false,
               "FromMin": -1,
               "FromMax": 1,
-              "ToMin": -0.20,
-              "ToMax": 0.20,
+              "ToMin": -0.2,
+              "ToMax": 0.2,
               "Inputs": [
                 {
                   "Type": "SimplexNoise2D",
@@ -292,7 +292,7 @@
     {
       "Skip": false,
       "Runtime": 0,
-      "$Comment": "1C: ambient blight trees scattered by WORLDGEN (replaces the runtime ArenaBuilder foliage ring, per the design's 'trees from worldgen, not manual paste'). A sparse Mesh2D grid of weighted native dead/poisoned tree prefabs, floor-snapped to the rolling surface by the ColumnLinear scanner; BlockMask.DontReplace keeps trunks from gouging the soil. A malformed Prefab prop fails the WHOLE biome decode (= all air), so this mirrors the proven vanilla Example_Prop 'Hills' Prefab-prop shape exactly. Validate in-game (the biome JSON is not gradle-compiled).",
+      "$Comment": "1C: ambient blight trees scattered by WORLDGEN (replaces the runtime ArenaBuilder foliage ring, per the design's 'trees from worldgen, not manual paste'). A sparse Mesh2D grid of weighted native dead/poisoned tree prefabs (FULL ATMOSPHERIC PASS: ash/poisoned/petrified/burnt-dead stages plus rare Ash_twisted Large/Giant canopy landmarks; density unchanged, only the variety widened - all paths verified to resolve to native prefab folders), floor-snapped to the rolling surface by the ColumnLinear scanner; BlockMask.DontReplace keeps trunks from gouging the soil. A malformed Prefab prop fails the WHOLE biome decode (= all air), so this mirrors the proven vanilla Example_Prop 'Hills' Prefab-prop shape exactly. Validate in-game (the biome JSON is not gradle-compiled).",
       "Positions": {
         "Type": "Mesh2D",
         "Skip": false,
@@ -322,8 +322,14 @@
                   { "Path": "Trees/Ash_twisted", "Weight": 3 },
                   { "Path": "Trees/Poisoned/Stage_1", "Weight": 2 },
                   { "Path": "Trees/Petrified_Dead/Stage_1", "Weight": 2 },
+                  { "Path": "Trees/Petrified_Dead/Stage_2", "Weight": 2 },
                   { "Path": "Trees/Dry_Dead", "Weight": 2 },
-                  { "Path": "Trees/Ash_Dead/Stage_2", "Weight": 1 }
+                  { "Path": "Trees/Ash_Dead/Stage_2", "Weight": 2 },
+                  { "Path": "Trees/Ash_Dead/Stage_3", "Weight": 2 },
+                  { "Path": "Trees/Burnt_dead/Stage_2", "Weight": 2 },
+                  { "Path": "Trees/Burnt_dead/Stage_3", "Weight": 1 },
+                  { "Path": "Trees/Ash_twisted_Large", "Weight": 1 },
+                  { "Path": "Trees/Ash_twisted_Giant", "Weight": 1 }
                 ],
                 "LegacyPath": false,
                 "LoadEntities": true,
@@ -337,13 +343,34 @@
                       {
                         "Type": "Floor",
                         "Skip": false,
-                        "Origin": { "Type": "BlockSet", "Skip": false, "BlockSet": { "Inclusive": true, "Materials": [ { "Solid": "Empty" } ] } },
-                        "Floor": { "Type": "BlockSet", "Skip": false, "BlockSet": { "Inclusive": true, "Materials": [ { "Solid": "Soil_Grass_Dry" } ] } }
+                        "Origin": {
+                          "Type": "BlockSet",
+                          "Skip": false,
+                          "BlockSet": {
+                            "Inclusive": true,
+                            "Materials": [{ "Solid": "Empty" }]
+                          }
+                        },
+                        "Floor": {
+                          "Type": "BlockSet",
+                          "Skip": false,
+                          "BlockSet": {
+                            "Inclusive": true,
+                            "Materials": [{ "Solid": "Soil_Grass_Dry" }]
+                          }
+                        }
                       },
                       {
                         "Type": "Offset",
                         "Skip": false,
-                        "Pattern": { "Type": "BlockSet", "Skip": false, "BlockSet": { "Inclusive": true, "Materials": [ { "Solid": "Empty" } ] } },
+                        "Pattern": {
+                          "Type": "BlockSet",
+                          "Skip": false,
+                          "BlockSet": {
+                            "Inclusive": true,
+                            "Materials": [{ "Solid": "Empty" }]
+                          }
+                        },
                         "Offset": { "X": 0, "Y": 8, "Z": 0 }
                       }
                     ]
@@ -397,11 +424,20 @@
                 "Type": "Prefab",
                 "Skip": false,
                 "WeightedPrefabPaths": [
-                  { "Path": "KweebecNightmare/Corrupted_Lamppost", "Weight": 5 },
-                  { "Path": "KweebecNightmare/Corrupted_House_Small", "Weight": 4 },
+                  {
+                    "Path": "KweebecNightmare/Corrupted_Lamppost",
+                    "Weight": 5
+                  },
+                  {
+                    "Path": "KweebecNightmare/Corrupted_House_Small",
+                    "Weight": 4
+                  },
                   { "Path": "KweebecNightmare/Corrupted_Bridge", "Weight": 3 },
                   { "Path": "KweebecNightmare/Corrupted_Shop", "Weight": 2 },
-                  { "Path": "KweebecNightmare/Corrupted_GuardTower", "Weight": 2 },
+                  {
+                    "Path": "KweebecNightmare/Corrupted_GuardTower",
+                    "Weight": 2
+                  },
                   { "Path": "KweebecNightmare/Corrupted_Well", "Weight": 1 }
                 ],
                 "LegacyPath": false,
@@ -412,8 +448,22 @@
                   "Pattern": {
                     "Type": "Floor",
                     "Skip": false,
-                    "Origin": { "Type": "BlockSet", "Skip": false, "BlockSet": { "Inclusive": true, "Materials": [ { "Solid": "Empty" } ] } },
-                    "Floor": { "Type": "BlockSet", "Skip": false, "BlockSet": { "Inclusive": true, "Materials": [ { "Solid": "Soil_Grass_Dry" } ] } }
+                    "Origin": {
+                      "Type": "BlockSet",
+                      "Skip": false,
+                      "BlockSet": {
+                        "Inclusive": true,
+                        "Materials": [{ "Solid": "Empty" }]
+                      }
+                    },
+                    "Floor": {
+                      "Type": "BlockSet",
+                      "Skip": false,
+                      "BlockSet": {
+                        "Inclusive": true,
+                        "Materials": [{ "Solid": "Soil_Grass_Dry" }]
+                      }
+                    }
                   }
                 },
                 "Scanner": {
@@ -698,7 +748,7 @@
             }
           },
           {
-            "Weight": 20,
+            "Weight": 60,
             "Assignments": {
               "Type": "Constant",
               "Prop": {
@@ -708,7 +758,7 @@
                   {
                     "Y": 0,
                     "Material": {
-                      "Solid": "Plant_Crop_Mushroom_Glowing_Purple"
+                      "Solid": "KweebecNightmare_Moonbloom_Plant"
                     }
                   }
                 ],
@@ -744,6 +794,169 @@
                   "TopDownOrder": true,
                   "ResultCap": 1
                 }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "Skip": false,
+      "Runtime": 0,
+      "$Comment": "FULL ATMOSPHERIC PASS: forest-floor DEBRIS - fallen logs, stumps, petrified logs, mossy boulders strewn through the dead grove for cover + decay texture. CLONED from the Corrupted_* ruins prop (the proven Type:Prefab scatter shape; a malformed Prefab prop fails the WHOLE biome decode = all air), repointed at verified native prefab folders (each folder resolves to a random child variant). Sparser than trees (Mesh Scale 14 + SkipChance 0.7). LoadEntities:false; the Floor pattern + ColumnLinear scanner floor-snap each piece onto Soil_Grass_Dry under Empty so nothing gouges soil or floats; Random rotation. Validate in-game (this JSON is not gradle-compiled).",
+      "Positions": {
+        "Type": "Mesh2D",
+        "Skip": false,
+        "PointsY": 0,
+        "PointGenerator": {
+          "Type": "Mesh",
+          "Jitter": 0.5,
+          "ScaleX": 14,
+          "ScaleY": 14,
+          "ScaleZ": 14,
+          "Seed": "KN_Debris"
+        }
+      },
+      "Assignments": {
+        "Type": "Weighted",
+        "SkipChance": 0.7,
+        "Seed": "KN_DebrisW",
+        "WeightedAssignments": [
+          {
+            "Weight": 1,
+            "Assignments": {
+              "Type": "Constant",
+              "Prop": {
+                "Type": "Prefab",
+                "Skip": false,
+                "WeightedPrefabPaths": [
+                  { "Path": "Trees/Cedar_Logs/Large", "Weight": 3 },
+                  { "Path": "Trees/Cedar_Logs/Small", "Weight": 4 },
+                  { "Path": "Trees/Fir_Logs/Small", "Weight": 3 },
+                  { "Path": "Trees/Autumn_Stumps", "Weight": 3 },
+                  { "Path": "Trees/Petrified_Logs", "Weight": 2 }
+                ],
+                "LegacyPath": false,
+                "LoadEntities": false,
+                "Directionality": {
+                  "Type": "Random",
+                  "Seed": "KN_DebrisRot",
+                  "Pattern": {
+                    "Type": "Floor",
+                    "Skip": false,
+                    "Origin": {
+                      "Type": "BlockSet",
+                      "Skip": false,
+                      "BlockSet": {
+                        "Inclusive": true,
+                        "Materials": [{ "Solid": "Empty" }]
+                      }
+                    },
+                    "Floor": {
+                      "Type": "BlockSet",
+                      "Skip": false,
+                      "BlockSet": {
+                        "Inclusive": true,
+                        "Materials": [{ "Solid": "Soil_Grass_Dry" }]
+                      }
+                    }
+                  }
+                },
+                "Scanner": {
+                  "Type": "ColumnLinear",
+                  "Skip": false,
+                  "MaxY": 40,
+                  "MinY": -20,
+                  "RelativeToPosition": false,
+                  "BaseHeightName": "Base",
+                  "TopDownOrder": true,
+                  "ResultCap": 1
+                },
+                "MoldingDirection": "None",
+                "MoldingChildren": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "Skip": false,
+      "Runtime": 0,
+      "$Comment": "FULL ATMOSPHERIC PASS: rare GRAVES + RELICS - Cursed Crypt tombstones + a warning sign-post seeded sparsely as haunted set-dressing. The big Crypt_Entrance set-piece is deliberately NOT scattered here (it carves a deep pit; a random drop onto a shrine/spawn would break the chase) - that stays on the runtime, ExclusionMask-protected seam. CLONED from the ruins prop shape. Very sparse (Mesh Scale 40 + SkipChance 0.85). LoadEntities:false; Floor pattern + ColumnLinear floor-snap; Random rotation. Validate in-game.",
+      "Positions": {
+        "Type": "Mesh2D",
+        "Skip": false,
+        "PointsY": 0,
+        "PointGenerator": {
+          "Type": "Mesh",
+          "Jitter": 0.5,
+          "ScaleX": 40,
+          "ScaleY": 40,
+          "ScaleZ": 40,
+          "Seed": "KN_Graves"
+        }
+      },
+      "Assignments": {
+        "Type": "Weighted",
+        "SkipChance": 0.85,
+        "Seed": "KN_GravesW",
+        "WeightedAssignments": [
+          {
+            "Weight": 1,
+            "Assignments": {
+              "Type": "Constant",
+              "Prop": {
+                "Type": "Prefab",
+                "Skip": false,
+                "WeightedPrefabPaths": [
+                  {
+                    "Path": "Dungeon/Cursed_Crypt/Entrance/Parts/Tomb_Small",
+                    "Weight": 4
+                  },
+                  {
+                    "Path": "Dungeon/Cursed_Crypt/Entrance/Parts/Sign_Post",
+                    "Weight": 1
+                  }
+                ],
+                "LegacyPath": false,
+                "LoadEntities": false,
+                "Directionality": {
+                  "Type": "Random",
+                  "Seed": "KN_GravesRot",
+                  "Pattern": {
+                    "Type": "Floor",
+                    "Skip": false,
+                    "Origin": {
+                      "Type": "BlockSet",
+                      "Skip": false,
+                      "BlockSet": {
+                        "Inclusive": true,
+                        "Materials": [{ "Solid": "Empty" }]
+                      }
+                    },
+                    "Floor": {
+                      "Type": "BlockSet",
+                      "Skip": false,
+                      "BlockSet": {
+                        "Inclusive": true,
+                        "Materials": [{ "Solid": "Soil_Grass_Dry" }]
+                      }
+                    }
+                  }
+                },
+                "Scanner": {
+                  "Type": "ColumnLinear",
+                  "Skip": false,
+                  "MaxY": 40,
+                  "MinY": -20,
+                  "RelativeToPosition": false,
+                  "BaseHeightName": "Base",
+                  "TopDownOrder": true,
+                  "ResultCap": 1
+                },
+                "MoldingDirection": "None",
+                "MoldingChildren": false
               }
             }
           }

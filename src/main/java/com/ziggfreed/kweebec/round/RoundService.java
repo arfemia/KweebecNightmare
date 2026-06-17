@@ -1,6 +1,8 @@
 package com.ziggfreed.kweebec.round;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -19,11 +21,13 @@ import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
+import com.ziggfreed.kweebec.api.PlayerScore;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
 import com.ziggfreed.kweebec.asset.PresetConfig;
 import com.ziggfreed.kweebec.arena.ArenaBuilder;
 import com.ziggfreed.kweebec.atmosphere.AtmosphereService;
 import com.ziggfreed.kweebec.atmosphere.MusicBedService;
+import com.ziggfreed.kweebec.death.CocoonService;
 import com.ziggfreed.kweebec.event.DifficultyScore;
 import com.ziggfreed.kweebec.event.RoundEvents;
 import com.ziggfreed.kweebec.feedback.HeartbeatService;
@@ -34,6 +38,9 @@ import com.ziggfreed.kweebec.i18n.Lang;
 import com.ziggfreed.kweebec.integration.KweebecNightmareAPI;
 import com.ziggfreed.kweebec.mode.chase.ChaseMode;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
+import com.ziggfreed.kweebec.score.Leaderboard;
+import com.ziggfreed.kweebec.score.ScoreCalculator;
+import com.ziggfreed.kweebec.score.ScoringConfig;
 
 /**
  * The mutating authority over all rounds: spawn (Path A instance + teleport-in),
@@ -273,6 +280,9 @@ public final class RoundService {
         int duration = round.durationSeconds();
         List<UUID> participants = round.participantList();
         int difficultyScore = DifficultyScore.compute(round.ruleSet());
+        int partySize = round.partySize();
+        // Per-player score (time / damage-avoided / stun bonus), computed from each PlayerRoundState.
+        Map<UUID, PlayerScore> scores = computeScores(round, outcome, win, duration);
         World world = round.world();
 
         KweebecNightmarePlugin.LOGGER.atInfo().log(
@@ -282,14 +292,20 @@ public final class RoundService {
         if (world == null) {
             RoundEvents.fireRoundCompleted(round.roundId(), round.mode().id(), outcome,
                     participants, duration, progress, difficultyScore);
+            RoundEvents.fireRoundScored(round.roundId(), round.mode().id(), outcome,
+                    duration, difficultyScore, scores);
+            recordScores(partySize, round, scores);
             registry.remove(round.roundId());
             return;
         }
 
         world.execute(() -> {
-            // Fire the native event on the world thread so listeners can hop safely.
+            // Fire the native events on the world thread so listeners can hop safely.
             RoundEvents.fireRoundCompleted(round.roundId(), round.mode().id(), outcome,
                     participants, duration, progress, difficultyScore);
+            RoundEvents.fireRoundScored(round.roundId(), round.mode().id(), outcome,
+                    duration, difficultyScore, scores);
+            recordScores(partySize, round, scores);
             showResult(round, outcome);
             teardown(round, world);
         });
@@ -297,6 +313,42 @@ public final class RoundService {
         HytaleServer.SCHEDULED_EXECUTOR.schedule(
                 () -> finalizeAndEject(round, world),
                 RESULT_HOLD_SECONDS, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Compute every participant's {@link PlayerScore} from their {@link PlayerRoundState} (damage taken,
+     * Moonbloom stuns) plus the round duration, against the runtime-resolved {@link ScoringConfig}. A
+     * player's win = the round was a win AND they personally escaped (chase) / were not downed at dawn
+     * (survival), so a cocooned-but-team-won player scores lower than the survivor who ran.
+     */
+    @Nonnull
+    private Map<UUID, PlayerScore> computeScores(@Nonnull RoundInstance round,
+                                                 @Nonnull RoundCompletedEvent.Outcome outcome,
+                                                 boolean win, int duration) {
+        ScoringConfig scoring = KweebecNightmareAPI.resolveScoring();
+        Map<UUID, PlayerScore> scores = new HashMap<>();
+        for (PlayerRoundState st : round.playerStates()) {
+            boolean playerWin = win && (st.hasEscaped()
+                    || (outcome == RoundCompletedEvent.Outcome.SURVIVED
+                        && !st.isCocooned() && !st.hasLeftRound()));
+            scores.put(st.playerId(), ScoreCalculator.compute(
+                    duration, st.damageTaken(), st.mobsStunned(), playerWin, scoring));
+        }
+        return scores;
+    }
+
+    /** Record each present (non-abandoning) player's score into the party-size leaderboard bucket. */
+    private void recordScores(int partySize, @Nonnull RoundInstance round,
+                              @Nonnull Map<UUID, PlayerScore> scores) {
+        for (PlayerRoundState st : round.playerStates()) {
+            if (st.hasLeftRound()) {
+                continue; // an abandoner is not recorded
+            }
+            PlayerScore ps = scores.get(st.playerId());
+            if (ps != null) {
+                Leaderboard.getInstance().record(partySize, st.playerId(), ps);
+            }
+        }
     }
 
     private void showResult(@Nonnull RoundInstance round, @Nonnull RoundCompletedEvent.Outcome outcome) {
@@ -368,46 +420,129 @@ public final class RoundService {
         });
     }
 
+    /** Ticks for the in-instance revive to fully apply before the cross-world exit (see {@link #reviveThenExit}). */
+    private static final long REVIVE_SETTLE_MS = 500;
+
     /**
-     * Restore a player to ALIVE (remove their {@link DeathComponent} via the engine
+     * Restore a dead player to ALIVE (remove their {@link DeathComponent} via the engine
      * respawn path) and THEN teleport them out of the instance, so a cocooned
-     * (dead-in-place) player never arrives in the overworld with a lingering death
-     * state - which the engine PlayerAddedSystem turns into a respawn/death menu (and a
-     * SEVERE "wasn't alive but didn't have a pending death message").
+     * (dead-in-place) player never arrives in the overworld with a lingering death state -
+     * which the engine PlayerAddedSystem turns into a respawn/death menu.
      *
-     * <p>For an already-alive player (escapee or never cocooned) the respawn future
-     * completes immediately with no DeathComponent, so this degrades to a plain exit.
-     * Runs on the instance world thread; the post-respawn exit re-hops via
-     * {@code world.execute} so it always lands back on the world thread.
+     * <p>CRITICAL: the revive (health/stat reset, effect + UI clear) is NOT synchronous - it is
+     * driven by the engine's {@code RespawnSystems} firing on {@link DeathComponent} REMOVAL,
+     * which {@code DeathComponent.respawn} only SCHEDULES ({@code respawnPlayer} returns an
+     * already-completed future). Those systems run over the next instance-world ticks. Exiting
+     * cross-world immediately interrupts them, so the {@code DeathComponent} rides along and the
+     * player arrives still dead (0 hp, death animation) until relog. So for a dead player we let
+     * the revive settle in the instance ({@link #REVIVE_SETTLE_MS}) BEFORE the exit; the same
+     * window lets the engine's in-instance effect-clear (cocoon root) sync to the client. An
+     * already-alive player (escapee) has no DeathComponent and exits immediately.
+     *
+     * <p>Runs on the instance world thread; the exit re-hops via {@code world.execute}.
      */
     private void reviveThenExit(@Nonnull World world, @Nonnull Store<EntityStore> store,
                                @Nonnull Ref<EntityStore> ref) {
+        // Capture the UUID now: the cross-world exit invalidates this ref, so the
+        // post-exit heal must re-resolve the player by UUID in the overworld.
+        UUID uuid = null;
+        boolean dead = false;
+        try {
+            PlayerRef pr = store.getComponent(ref, PlayerRef.getComponentType());
+            if (pr != null) {
+                uuid = pr.getUuid();
+            }
+            dead = store.getComponent(ref, DeathComponent.getComponentType()) != null;
+        } catch (Throwable ignored) {
+            // best effort
+        }
+        final UUID playerId = uuid;
+        final boolean wasDead = dead;
         try {
             DeathComponent.respawn(store, ref).whenComplete((v, err) -> {
                 if (err != null) {
                     KweebecNightmarePlugin.LOGGER.atWarning().log(
                             "[Kweebec] revive-before-exit respawn failed: " + err.getMessage());
                 }
-                world.execute(() -> {
-                    try {
-                        Store<EntityStore> ws = world.getEntityStore().getStore();
-                        if (ref.isValid()) {
-                            InstanceLifecycle.exit(ref, ws);
-                        }
-                    } catch (Throwable t) {
-                        KweebecNightmarePlugin.LOGGER.atWarning().log(
-                                "[Kweebec] exit-after-revive failed: " + t.getMessage());
-                    }
-                });
+                if (wasDead) {
+                    // Let the DeathComponent-removal revive systems (health/stat reset, effect
+                    // clear) apply in the instance before we move the player cross-world.
+                    HytaleServer.SCHEDULED_EXECUTOR.schedule(
+                            () -> exitFromInstance(world, ref, playerId),
+                            REVIVE_SETTLE_MS, TimeUnit.MILLISECONDS);
+                } else {
+                    exitFromInstance(world, ref, playerId);
+                }
             });
         } catch (Throwable t) {
             // Last-resort: if the respawn call itself throws, still get the player out.
             KweebecNightmarePlugin.LOGGER.atWarning().log(
                     "[Kweebec] reviveThenExit failed, exiting directly: " + t.getMessage());
             if (ref.isValid()) {
-                InstanceLifecycle.exit(ref, store);
+                InstanceLifecycle.exit(ref, store)
+                        .whenComplete((v2, e2) -> scheduleOverworldResync(playerId));
             }
         }
+    }
+
+    /** Cross-world exit on the instance world thread, then heal the player once back in the overworld. */
+    private void exitFromInstance(@Nonnull World world, @Nonnull Ref<EntityStore> ref, @Nullable UUID playerId) {
+        world.execute(() -> {
+            try {
+                Store<EntityStore> ws = world.getEntityStore().getStore();
+                if (ref.isValid()) {
+                    InstanceLifecycle.exit(ref, ws)
+                            .whenComplete((v2, e2) -> scheduleOverworldResync(playerId));
+                }
+            } catch (Throwable t) {
+                KweebecNightmarePlugin.LOGGER.atWarning().log(
+                        "[Kweebec] exit-after-revive failed: " + t.getMessage());
+            }
+        });
+    }
+
+    /**
+     * After a player has fully returned to the overworld, clear any stale {@link
+     * com.hypixel.hytale.server.core.modules.entity.teleport.PendingTeleport} left over from the
+     * death respawn's same-world teleport (the cross-world exit does not clear it, and the client
+     * never acks a teleport from the world it already left). An outstanding pending teleport makes
+     * the server drop the player's movement packets, freezing the server position so block
+     * interaction is locked to the landing area until relog. ALSO clears the cocoon root (and any
+     * round effect) here rather than before the exit, so the effect removal syncs to the client in
+     * the overworld instead of being dropped by the world transition. A settle delay lets the exit's
+     * world-join finish first, then we re-resolve the player and heal on their overworld world
+     * thread. Best-effort; never throws.
+     */
+    private void scheduleOverworldResync(@Nullable UUID uuid) {
+        if (uuid == null) {
+            return;
+        }
+        HytaleServer.SCHEDULED_EXECUTOR.schedule(() -> {
+            try {
+                PlayerRef back = Universe.get().getPlayer(uuid);
+                if (back == null) {
+                    return;
+                }
+                World w = Universe.get().getWorld(back.getWorldUuid());
+                if (w == null) {
+                    return;
+                }
+                w.execute(() -> {
+                    Ref<EntityStore> r = back.getReference();
+                    if (r != null) {
+                        Store<EntityStore> ws = w.getEntityStore().getStore();
+                        PlayerResync.clearPendingTeleport(r, ws);
+                        // Clear the cocoon root + any round effect HERE (in the overworld) so the
+                        // removal syncs to the client; clearing it before the cross-world exit
+                        // dropped the removal and left the player cocooned on arrival.
+                        CocoonService.clearEffects(r, ws);
+                    }
+                });
+            } catch (Throwable t) {
+                KweebecNightmarePlugin.LOGGER.atFine().log(
+                        "[Kweebec] clear-pending-teleport after exit failed: " + t.getMessage());
+            }
+        }, 500, TimeUnit.MILLISECONDS);
     }
 
     // --- voluntary exit ---

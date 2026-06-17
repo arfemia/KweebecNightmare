@@ -3,6 +3,9 @@ package com.ziggfreed.kweebec.round;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
+import com.hypixel.hytale.protocol.GameMode;
 
 /**
  * Per-player runtime state inside a round: whether they are cocooned (downed),
@@ -28,6 +31,13 @@ public final class PlayerRoundState {
     private boolean gameModeApplied;
     /** Whether the dread music bed (ForcedMusicTracker index) has been pushed once for this player. */
     private boolean musicApplied;
+    /** Last game-mode observed for this player (1 Hz); used to detect a Creative -> Adventure switch. */
+    @Nullable
+    private GameMode lastGameMode;
+    /** Total damage this player has taken this round (scoring input; less = a higher score). */
+    private float damageTaken;
+    /** How many hunters this player has stunned with a thrown Moonbloom this round (scoring bonus input). */
+    private int mobsStunned;
 
     public PlayerRoundState(@Nonnull UUID playerId) {
         this.playerId = playerId;
@@ -116,6 +126,37 @@ public final class PlayerRoundState {
 
     public void setMusicApplied(boolean musicApplied) {
         this.musicApplied = musicApplied;
+    }
+
+    @Nullable
+    public GameMode lastGameMode() {
+        return lastGameMode;
+    }
+
+    public void setLastGameMode(@Nullable GameMode lastGameMode) {
+        this.lastGameMode = lastGameMode;
+    }
+
+    /** Total damage taken this round (scoring input). */
+    public float damageTaken() {
+        return damageTaken;
+    }
+
+    /** Accumulate damage taken (world thread; called from the damage system). Negative deltas are ignored. */
+    public void addDamageTaken(float delta) {
+        if (delta > 0f) {
+            this.damageTaken += delta;
+        }
+    }
+
+    /** How many hunters this player stunned with a thrown Moonbloom this round. */
+    public int mobsStunned() {
+        return mobsStunned;
+    }
+
+    /** Record one hunter stunned by this player (world thread). */
+    public void incrementMobsStunned() {
+        this.mobsStunned++;
     }
 
     /**

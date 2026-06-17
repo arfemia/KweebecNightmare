@@ -19,6 +19,7 @@ import com.hypixel.hytale.server.core.prefab.selection.buffer.PrefabBufferUtil;
 import com.hypixel.hytale.server.core.prefab.selection.buffer.impl.IPrefabBuffer;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.ziggfreed.common.world.BlockTypeLists;
 import com.ziggfreed.common.world.SurfaceProbe;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
@@ -63,6 +64,28 @@ public final class ArenaBuilder {
             "KweebecNightmare/Relight_Shaft",          // [0] spiral staircase
             "KweebecNightmare/Relight_Shaft_Ladder",   // [1] ladder
     };
+
+    /** The single Moonbloom plant prefab (one harvestable glowing-mushroom block, floor-snapped per paste). */
+    private static final String MOONBLOOM_PREFAB = "KweebecNightmare/Moonbloom";
+    /** Seconds after build to stamp the initial Moonbloom supply (after PREP chunk-gen, so the surface probe hits). */
+    private static final long MOONBLOOM_INITIAL_DELAY_SEC = 5L;
+    /** Cluster ring radius (blocks) Moonbloom plants ring a surface shrine at. */
+    private static final double MOONBLOOM_CLUSTER_RADIUS = 2.5;
+    /** Min / max scatter radius (blocks) from spawn for grove-scattered Moonbloom (inside the r112 edge cliff, clear of the r6 spawn courtyard). */
+    private static final double MOONBLOOM_SCATTER_MIN_R = 12.0;
+    private static final double MOONBLOOM_SCATTER_MAX_R = 90.0;
+
+    /**
+     * Engine {@code BlockTypeList} ids whose blocks are SURFACE DECORATION the worldgen scatters ON TOP of
+     * the terrain (the grove's dead trees - trunks/branches/leaves - plus ground scatter: grass, bushes,
+     * sticks, mushrooms), NOT the real ground. The {@link SurfaceProbe} skips them so every runtime paste
+     * floor-snaps to the genuine surface UNDER the canopy instead of anchoring on a tree trunk or a leaf
+     * block (the cave shaft / spiral / ladder were landing on foliage). Worldgen's own height snap never
+     * hit this because it runs against the terrain buffer BEFORE the tree/prop phase; the runtime probe
+     * runs after, so it must scan past the decoration. Asset-driven: the lists are vanilla data resolved
+     * via {@link BlockTypeLists#keys(String...)}, so new tree/scatter blocks are skipped automatically.
+     */
+    private static final String[] SURFACE_DECORATION_LISTS = {"TreeWoodAndLeaves", "AllScatter"};
 
     // The decorative dead/blighted grove TREES are now scattered by the worldgen biome itself
     // (KweebecNightmare_Grove Props[] - a Type:Prefab prop over native Poisoned / Ash_twisted /
@@ -109,6 +132,77 @@ public final class ArenaBuilder {
                 }
             }, delay, TimeUnit.SECONDS);
         }
+        // Stamp the initial Moonbloom supply once the PREP chunk-gen has settled (so the surface probe
+        // hits real ground, like the objective re-paste): a guaranteed cluster at each surface shrine
+        // plus a seed-deterministic grove scatter. Amounts are rule-set knobs (pack/runtime tunable).
+        HytaleServer.SCHEDULED_EXECUTOR.schedule(() -> {
+            if (round.isResolved()) {
+                return;
+            }
+            World w = round.world();
+            if (w != null) {
+                plantMoonbloom(round, w, round.ruleSet().moonbloomPerShrine(),
+                        round.ruleSet().moonbloomScatter(), 0L);
+            }
+        }, MOONBLOOM_INITIAL_DELAY_SEC, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Stamp Moonbloom plants into the grove: {@code perShrine} in a ring at EACH still-unlit SURFACE
+     * shrine (the guaranteed cleanse supply, withdrawn as shrines are cleansed) plus {@code scatter}
+     * at seed-deterministic grove positions (the exploration supply). Reused for the initial supply and
+     * each mid-match respawn wave; {@code seedSalt} varies the scatter per wave. Best-effort: the
+     * blocking prefab load runs off-thread, then each plant floor-snaps + pastes on the world thread
+     * (a missing prefab or unplantable column is skipped). Safe to call from any thread.
+     */
+    public static void plantMoonbloom(@Nonnull RoundInstance round, @Nonnull World world,
+                                      int perShrine, int scatter, long seedSalt) {
+        if (perShrine <= 0 && scatter <= 0) {
+            return;
+        }
+        ChaseState chase = round.chaseState();
+        CompletableFuture.runAsync(() -> {
+            try {
+                IPrefabBuffer buffer = load(MOONBLOOM_PREFAB);
+                if (buffer == null) {
+                    return; // load() already WARNs the missing key
+                }
+                // Cluster at each unlit surface shrine.
+                if (perShrine > 0 && chase != null) {
+                    for (ShrineState s : chase.shrines()) {
+                        if (s.isLit()) {
+                            continue;
+                        }
+                        Anchor a = s.anchor();
+                        if (a.y() < ArenaLayout.STAND_Y - 1.0) {
+                            continue; // cave shrine: no surface cluster (players carry charges down)
+                        }
+                        for (int i = 0; i < perShrine; i++) {
+                            double theta = 2.0 * Math.PI * i / perShrine;
+                            double px = a.x() + MOONBLOOM_CLUSTER_RADIUS * Math.sin(theta);
+                            double pz = a.z() + MOONBLOOM_CLUSTER_RADIUS * Math.cos(theta);
+                            paste(world, buffer, new Anchor(px, ArenaLayout.STAND_Y, pz, 0f), false, false);
+                        }
+                    }
+                }
+                // Scatter across the grove, deterministic off the round seed + the per-wave salt.
+                if (scatter > 0) {
+                    Random rng = new Random(round.worldSeed() ^ (0x4D6F6F6EL + seedSalt));
+                    for (int i = 0; i < scatter; i++) {
+                        double r = MOONBLOOM_SCATTER_MIN_R
+                                + rng.nextDouble() * (MOONBLOOM_SCATTER_MAX_R - MOONBLOOM_SCATTER_MIN_R);
+                        double theta = rng.nextDouble() * 2.0 * Math.PI;
+                        double px = ArenaLayout.SPAWN.x() + r * Math.sin(theta);
+                        double pz = ArenaLayout.SPAWN.z() + r * Math.cos(theta);
+                        paste(world, buffer, new Anchor(px, ArenaLayout.STAND_Y, pz, 0f), false, false);
+                    }
+                }
+                SafeLog.info("[Kweebec] planted Moonbloom (perShrine=" + perShrine + ", scatter="
+                        + scatter + ", wave=" + seedSalt + ") in " + round.roundId());
+            } catch (Throwable t) {
+                SafeLog.warn("[Kweebec] Moonbloom planting failed: " + t.getMessage());
+            }
+        });
     }
 
     /**
@@ -312,7 +406,8 @@ public final class ArenaBuilder {
         int fallbackTop = (int) Math.floor(at.y() - 1.0);
         world.execute(() -> {
             try {
-                int topY = SurfaceProbe.topSolidY(world, x, z, fallbackTop);
+                int topY = SurfaceProbe.topSolidY(world, x, z, fallbackTop,
+                        BlockTypeLists.keys(SURFACE_DECORATION_LISTS));
                 Vector3i pos = new Vector3i(x, topY, z);
                 Store<EntityStore> store = world.getEntityStore().getStore();
                 PrefabUtilPaste.paste(buffer, world, pos, store, force, rotation);
@@ -351,7 +446,8 @@ public final class ArenaBuilder {
                 // re-probe would find a different top and stack a second/third shaft on top.
                 int topY = cave.caveSurfaceTopY();
                 if (topY == Integer.MIN_VALUE) {
-                    topY = SurfaceProbe.topSolidY(world, x, z, fallbackTop);
+                    topY = SurfaceProbe.topSolidY(world, x, z, fallbackTop,
+                            BlockTypeLists.keys(SURFACE_DECORATION_LISTS));
                     cave.setCaveSurfaceTopY(topY);
                     // Re-point the chamber stand Y ONLY on the first resolve (the channel Y-band match).
                     cave.setAnchor(new Anchor(a.x(), topY - CAVE_SHAFT_DEPTH, a.z(), a.yaw()));

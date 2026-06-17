@@ -78,11 +78,14 @@ public final class InstanceLifecycle {
 
     /**
      * Send a player back out of the instance to their captured return point.
-     * Run on the instance world thread.
+     * Run on the instance world thread. The returned future completes once the
+     * cross-world return teleport finishes, so a caller can resync the client
+     * afterwards (see {@code RoundService.reviveThenExit}).
      */
-    public static void exit(@Nonnull Ref<EntityStore> entityRef,
-                            @Nonnull ComponentAccessor<EntityStore> accessor) {
-        InstancesPlugin.exitInstance(entityRef, accessor);
+    @Nonnull
+    public static CompletableFuture<Void> exit(@Nonnull Ref<EntityStore> entityRef,
+                                               @Nonnull ComponentAccessor<EntityStore> accessor) {
+        return InstancesPlugin.exitInstance(entityRef, accessor);
     }
 
     /**

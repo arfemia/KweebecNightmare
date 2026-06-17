@@ -27,6 +27,8 @@ public final class ChaseState {
     private volatile boolean alertFired;
     /** Epoch ms when PREP ends and the ritual (and hunter) begins. */
     private volatile long prepEndsAtMs;
+    /** How many mid-match Moonbloom respawn waves have already fired (indexes RuleSet.moonbloomRespawnAtSeconds). */
+    private int moonbloomRespawnsFired;
 
     /**
      * Build the shrine set for a round, SEEDED off the per-round world seed ({@code RoundInstance.worldSeed()},
@@ -139,6 +141,15 @@ public final class ChaseState {
 
     public void setPrepEndsAtMs(long prepEndsAtMs) {
         this.prepEndsAtMs = prepEndsAtMs;
+    }
+
+    /** How many Moonbloom respawn waves have fired this round. World-thread only. */
+    public int moonbloomRespawnsFired() {
+        return moonbloomRespawnsFired;
+    }
+
+    public void incrementMoonbloomRespawnsFired() {
+        this.moonbloomRespawnsFired++;
     }
 
     /**

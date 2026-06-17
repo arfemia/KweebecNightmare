@@ -1,21 +1,31 @@
 package com.ziggfreed.kweebec.command;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.GameMode;
+import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.OptionalArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
+import com.hypixel.hytale.server.core.universe.world.World;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.ziggfreed.common.inventory.InventoryUtil;
 import com.ziggfreed.kweebec.asset.PresetConfig;
 import com.ziggfreed.kweebec.i18n.Lang;
+import com.ziggfreed.kweebec.moonbloom.Moonbloom;
 import com.ziggfreed.kweebec.round.RoundService;
+import com.ziggfreed.kweebec.score.Leaderboard;
 
 /**
  * {@code /kweebec [start|exit|endall] [preset]} - the round entry point.
@@ -52,6 +62,9 @@ public final class KweebecCommand extends CommandBase {
             case "start" -> start(ctx);
             case "exit", "leave" -> exit(ctx);
             case "endall", "end" -> endAll(ctx);
+            case "give" -> give(ctx);
+            case "score" -> score(ctx);
+            case "leaderboard", "lb" -> leaderboard(ctx);
             default -> ctx.sendMessage(Lang.msg(Lang.CMD_USAGE));
         }
     }
@@ -108,6 +121,102 @@ public final class KweebecCommand extends CommandBase {
         } else {
             ctx.sendMessage(Lang.msg(Lang.CMD_ENDED));
         }
+    }
+
+    /** {@code give [n]} - grant the caller n Moonbloom charges (testing aid; default 5). */
+    private void give(@Nonnull CommandContext ctx) {
+        if (!(ctx.sender() instanceof PlayerRef player)) {
+            ctx.sendMessage(Lang.msg(Lang.CMD_PLAYERS_ONLY));
+            return;
+        }
+        int n = 5;
+        if (ctx.provided(presetArg)) {
+            try {
+                n = Math.max(1, Integer.parseInt(presetArg.get(ctx).trim()));
+            } catch (NumberFormatException ignored) {
+                // keep the default
+            }
+        }
+        final int count = n;
+        World world = Universe.get().getWorld(player.getWorldUuid());
+        if (world == null) {
+            ctx.sendMessage(Lang.msg(Lang.CMD_START_FAILED));
+            return;
+        }
+        ctx.sendMessage(Lang.msg(Lang.CMD_GIVE_DONE).param("0", count));
+        world.execute(() -> {
+            Store<EntityStore> store = world.getEntityStore().getStore();
+            Ref<EntityStore> ref = player.getReference();
+            if (ref != null && ref.isValid()) {
+                InventoryUtil.give(store, ref, Moonbloom.CHARGE_ITEM, count);
+            }
+        });
+    }
+
+    /** {@code score} - report the caller's own best leaderboard entry in each party-size bucket. */
+    private void score(@Nonnull CommandContext ctx) {
+        if (!(ctx.sender() instanceof PlayerRef player)) {
+            ctx.sendMessage(Lang.msg(Lang.CMD_PLAYERS_ONLY));
+            return;
+        }
+        UUID uuid = player.getUuid();
+        boolean any = false;
+        for (int ps = 1; ps <= MAX_PARTY_SIZE; ps++) {
+            Leaderboard.Entry e = Leaderboard.getInstance().forPartySize(ps).get(uuid);
+            if (e != null) {
+                if (!any) {
+                    ctx.sendMessage(Lang.msg(Lang.CMD_SCORE_HEADER));
+                    any = true;
+                }
+                ctx.sendMessage(Message.raw(formatEntry(ps + "p", e)));
+            }
+        }
+        if (!any) {
+            ctx.sendMessage(Lang.msg(Lang.CMD_SCORE_NONE));
+        }
+    }
+
+    /** {@code leaderboard [partySize]} - chat-dump the top entries for a party size (default solo). */
+    private void leaderboard(@Nonnull CommandContext ctx) {
+        int partySize = 1;
+        if (ctx.provided(presetArg)) {
+            try {
+                partySize = Math.max(1, Integer.parseInt(presetArg.get(ctx).trim()));
+            } catch (NumberFormatException ignored) {
+                // keep the default
+            }
+        }
+        Map<UUID, Leaderboard.Entry> bucket = Leaderboard.getInstance().forPartySize(partySize);
+        if (bucket.isEmpty()) {
+            ctx.sendMessage(Lang.msg(Lang.CMD_LB_EMPTY));
+            return;
+        }
+        ctx.sendMessage(Lang.msg(Lang.CMD_LB_HEADER).param("0", partySize));
+        int[] rank = {0};
+        bucket.entrySet().stream()
+                .sorted(Comparator.comparingInt((Map.Entry<UUID, Leaderboard.Entry> en) -> en.getValue().bestScore).reversed())
+                .limit(LEADERBOARD_TOP_N)
+                .forEach(en -> {
+                    rank[0]++;
+                    String who = shortId(en.getKey());
+                    ctx.sendMessage(Message.raw(rank[0] + ". " + formatEntry(who, en.getValue())));
+                });
+    }
+
+    /** Largest party size the score / leaderboard chat surface scans. */
+    private static final int MAX_PARTY_SIZE = 8;
+    /** How many entries the leaderboard chat dump shows. */
+    private static final int LEADERBOARD_TOP_N = 10;
+
+    @Nonnull
+    private static String formatEntry(@Nonnull String label, @Nonnull Leaderboard.Entry e) {
+        String time = e.bestTimeSeconds > 0 ? ", " + e.bestTimeSeconds + "s win" : "";
+        return label + ": " + e.bestScore + " pts" + time + " (" + e.plays + " plays)";
+    }
+
+    @Nonnull
+    private static String shortId(@Nonnull UUID uuid) {
+        return uuid.toString().substring(0, 8);
     }
 
     /** The caller plus every other online player in the caller's current world. */

@@ -8,9 +8,9 @@
     "MaxHealth": 180,
     "IsMemory": false,
     "MaxSpeed": 8.5,
-    "ViewRange": 256,
-    "AlertedRange": 256,
-    "HearingRange": 256,
+    "ViewRange": 512,
+    "AlertedRange": 512,
+    "HearingRange": 512,
     "ViewSector": 360,
     "WanderRadius": 8,
     "NameTranslationKey": "kweebecnightmare.npc.ambusher.name"

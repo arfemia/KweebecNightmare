@@ -32,6 +32,13 @@ public final class RuleSet {
     private final InventoryMode inventoryMode;
     private final RewardOnExit rewardOnExit;
     @Nullable private final String hunterArchetype;
+    private final int cleanseCost;
+    private final long stunDurationMs;
+    private final ThrowMode throwMode;
+    private final int moonbloomPerShrine;
+    private final int moonbloomScatter;
+    private final int moonbloomRespawnCount;
+    private final int[] moonbloomRespawnAtSeconds;
 
     private RuleSet(Builder b) {
         this.presetId = b.presetId;
@@ -51,6 +58,13 @@ public final class RuleSet {
         this.inventoryMode = b.inventoryMode;
         this.rewardOnExit = b.rewardOnExit;
         this.hunterArchetype = b.hunterArchetype;
+        this.cleanseCost = b.cleanseCost;
+        this.stunDurationMs = b.stunDurationMs;
+        this.throwMode = b.throwMode;
+        this.moonbloomPerShrine = b.moonbloomPerShrine;
+        this.moonbloomScatter = b.moonbloomScatter;
+        this.moonbloomRespawnCount = b.moonbloomRespawnCount;
+        this.moonbloomRespawnAtSeconds = b.moonbloomRespawnAtSeconds;
     }
 
     /** Preset id (e.g. {@code "nightmare"}); used in native events + the preset name lang key. */
@@ -154,6 +168,46 @@ public final class RuleSet {
         return hunterArchetype;
     }
 
+    /** Moonbloom charges a survivor must SPEND at an unlit shrine to cleanse it (the cleanse cost). */
+    public int cleanseCost() {
+        return cleanseCost;
+    }
+
+    /** How long (ms) a thrown Moonbloom freezes a hunter via the Perfect Utils stun on impact. */
+    public long stunDurationMs() {
+        return stunDurationMs;
+    }
+
+    /** How a thrown Moonbloom delivers its stun: the asset projectile, or the code-only cone fallback. */
+    @Nonnull
+    public ThrowMode throwMode() {
+        return throwMode;
+    }
+
+    /** Guaranteed Moonbloom plants stamped in a cluster near EACH shrine anchor at round start. */
+    public int moonbloomPerShrine() {
+        return moonbloomPerShrine;
+    }
+
+    /** Extra Moonbloom plants scattered across the grove at round start (exploration supply). */
+    public int moonbloomScatter() {
+        return moonbloomScatter;
+    }
+
+    /** How many Moonbloom plants the grove regrows on EACH mid-match respawn wave. 0 = no respawn. */
+    public int moonbloomRespawnCount() {
+        return moonbloomRespawnCount;
+    }
+
+    /**
+     * Round-elapsed seconds at which the grove regrows {@link #moonbloomRespawnCount()} Moonbloom
+     * (the design's "respawn once or twice"). Empty = no respawn. A defensive copy is returned.
+     */
+    @Nonnull
+    public int[] moonbloomRespawnAtSeconds() {
+        return moonbloomRespawnAtSeconds.clone();
+    }
+
     @Nonnull
     public static Builder builder(@Nonnull String presetId) {
         return new Builder(presetId);
@@ -184,6 +238,13 @@ public final class RuleSet {
         b.inventoryMode = this.inventoryMode;
         b.rewardOnExit = this.rewardOnExit;
         b.hunterArchetype = this.hunterArchetype;
+        b.cleanseCost = this.cleanseCost;
+        b.stunDurationMs = this.stunDurationMs;
+        b.throwMode = this.throwMode;
+        b.moonbloomPerShrine = this.moonbloomPerShrine;
+        b.moonbloomScatter = this.moonbloomScatter;
+        b.moonbloomRespawnCount = this.moonbloomRespawnCount;
+        b.moonbloomRespawnAtSeconds = this.moonbloomRespawnAtSeconds;
         return b;
     }
 
@@ -206,6 +267,13 @@ public final class RuleSet {
         private InventoryMode inventoryMode = InventoryMode.DEFAULT;
         private RewardOnExit rewardOnExit = RewardOnExit.DEFAULT;
         @Nullable private String hunterArchetype = null;
+        private int cleanseCost = 1;
+        private long stunDurationMs = 2500L;
+        private ThrowMode throwMode = ThrowMode.DEFAULT;
+        private int moonbloomPerShrine = 3;
+        private int moonbloomScatter = 12;
+        private int moonbloomRespawnCount = 6;
+        private int[] moonbloomRespawnAtSeconds = {180, 360};
 
         private Builder(@Nonnull String presetId) {
             this.presetId = presetId;
@@ -225,6 +293,13 @@ public final class RuleSet {
         @Nonnull public Builder inventoryMode(@Nonnull InventoryMode v) { this.inventoryMode = v; return this; }
         @Nonnull public Builder rewardOnExit(@Nonnull RewardOnExit v) { this.rewardOnExit = v; return this; }
         @Nonnull public Builder hunterArchetype(@Nullable String v) { this.hunterArchetype = v; return this; }
+        @Nonnull public Builder cleanseCost(int v) { this.cleanseCost = Math.max(0, v); return this; }
+        @Nonnull public Builder stunDurationMs(long v) { this.stunDurationMs = Math.max(0L, v); return this; }
+        @Nonnull public Builder throwMode(@Nonnull ThrowMode v) { this.throwMode = v; return this; }
+        @Nonnull public Builder moonbloomPerShrine(int v) { this.moonbloomPerShrine = Math.max(0, v); return this; }
+        @Nonnull public Builder moonbloomScatter(int v) { this.moonbloomScatter = Math.max(0, v); return this; }
+        @Nonnull public Builder moonbloomRespawnCount(int v) { this.moonbloomRespawnCount = Math.max(0, v); return this; }
+        @Nonnull public Builder moonbloomRespawnAtSeconds(@Nonnull int[] v) { this.moonbloomRespawnAtSeconds = v.clone(); return this; }
 
         @Nonnull
         public RuleSet build() {

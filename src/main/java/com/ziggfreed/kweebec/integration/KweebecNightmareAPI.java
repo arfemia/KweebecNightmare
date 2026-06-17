@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 
 import com.ziggfreed.kweebec.asset.PresetConfig;
 import com.ziggfreed.kweebec.round.RuleSet;
+import com.ziggfreed.kweebec.score.ScoringConfig;
 import com.ziggfreed.kweebec.util.SafeLog;
 
 /**
@@ -44,6 +45,12 @@ public final class KweebecNightmareAPI {
 
     /** Runtime rule-set scale; {@code null} = identity (no post-transform). */
     private static final AtomicReference<UnaryOperator<RuleSet>> SCALE = new AtomicReference<>(null);
+
+    /** Runtime scoring-config override; {@code null} = use {@link ScoringConfig#DEFAULT}. */
+    private static final AtomicReference<ScoringConfig> SCORING_OVERRIDE = new AtomicReference<>(null);
+
+    /** Runtime scoring-config scale; {@code null} = identity. */
+    private static final AtomicReference<UnaryOperator<ScoringConfig>> SCORING_SCALE = new AtomicReference<>(null);
 
     private KweebecNightmareAPI() {
     }
@@ -116,6 +123,50 @@ public final class KweebecNightmareAPI {
         } catch (Throwable t) {
             SafeLog.warn("[Kweebec][API] rule-set scale threw; using unscaled preset: " + t.getMessage());
             return resolved;
+        }
+    }
+
+    // ==================== scoring runtime tier ====================
+
+    /**
+     * Force the round-scoring weights for every subsequent round (e.g. an MMO tuning how a capstone
+     * run is scored). Pass {@code null} to clear and use {@link ScoringConfig#DEFAULT}.
+     */
+    public static void overrideScoring(@Nullable ScoringConfig scoring) {
+        SCORING_OVERRIDE.set(scoring);
+        SafeLog.info("[Kweebec][API] scoring override " + (scoring == null ? "cleared" : "set"));
+    }
+
+    /**
+     * Register a runtime transform applied to the resolved {@link ScoringConfig} (after any override),
+     * typically via {@link ScoringConfig#toBuilder()}. Pass {@code null} to clear.
+     */
+    public static void scaleScoring(@Nullable UnaryOperator<ScoringConfig> scale) {
+        SCORING_SCALE.set(scale);
+        SafeLog.info("[Kweebec][API] scoring scale " + (scale == null ? "cleared" : "registered"));
+    }
+
+    /**
+     * Resolve the effective {@link ScoringConfig} for a round: the runtime override (or
+     * {@link ScoringConfig#DEFAULT}), then the runtime scale if registered. Always non-null. Used by
+     * {@code RoundService.resolve} when it computes each player's score.
+     */
+    @Nonnull
+    public static ScoringConfig resolveScoring() {
+        ScoringConfig base = SCORING_OVERRIDE.get();
+        if (base == null) {
+            base = ScoringConfig.DEFAULT;
+        }
+        UnaryOperator<ScoringConfig> scale = SCORING_SCALE.get();
+        if (scale == null) {
+            return base;
+        }
+        try {
+            ScoringConfig scaled = scale.apply(base);
+            return scaled != null ? scaled : base;
+        } catch (Throwable t) {
+            SafeLog.warn("[Kweebec][API] scoring scale threw; using unscaled config: " + t.getMessage());
+            return base;
         }
     }
 }
