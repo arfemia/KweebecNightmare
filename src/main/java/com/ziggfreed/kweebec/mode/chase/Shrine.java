@@ -16,6 +16,10 @@ public final class Shrine {
     /** The shrine furnace block item id (authored at {@code Server/Item/Items/KweebecNightmare/KweebecNightmare_Shrine.json}). */
     public static final String SHRINE_BLOCK = "KweebecNightmare_Shrine";
 
-    /** The cleansed "lit" interaction state (green fire), authored under the block's {@code State.Definitions}. */
-    public static final String LIT_STATE = "lit";
+    /**
+     * The cleansed "Lit" interaction state (green fire), authored under the block's {@code State.Definitions}.
+     * MUST be PascalCase: the engine generates the block-state asset key {@code *<block>_State_Definitions_Lit}
+     * and rejects a lowercase ("lit") definition name with "Asset key ... has incorrect format!".
+     */
+    public static final String LIT_STATE = "Lit";
 }

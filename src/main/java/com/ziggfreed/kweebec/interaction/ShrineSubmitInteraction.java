@@ -11,7 +11,6 @@ import com.hypixel.hytale.protocol.BlockPosition;
 import com.hypixel.hytale.protocol.InteractionState;
 import com.hypixel.hytale.protocol.InteractionType;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
-import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.CooldownHandler;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.SimpleInstantInteraction;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -54,6 +53,19 @@ public final class ShrineSubmitInteraction extends SimpleInstantInteraction {
         return CODEC;
     }
 
+    /**
+     * The predicted CLIENT-simulation pass. {@link SimpleInstantInteraction} would otherwise route this to
+     * {@link #firstRun} too, double-running our Moonbloom consume + block mutation against a non-authoritative
+     * (predicted) store - the cause of "it does not see my Moonbloom". We make this interaction
+     * SERVER-AUTHORITATIVE: optimistically finish the prediction here and do all real work in {@link #firstRun}.
+     */
+    @Override
+    protected void simulateFirstRun(@Nonnull InteractionType interactionType,
+                                    @Nonnull InteractionContext ctx,
+                                    @Nonnull CooldownHandler cooldownHandler) {
+        ctx.getState().state = InteractionState.Finished;
+    }
+
     @Override
     protected void firstRun(@Nonnull InteractionType interactionType,
                             @Nonnull InteractionContext ctx,
@@ -65,9 +77,8 @@ public final class ShrineSubmitInteraction extends SimpleInstantInteraction {
                 ctx.getState().state = InteractionState.Failed;
                 return;
             }
-            Player player = commandBuffer.getComponent(ctx.getEntity(), Player.getComponentType());
             PlayerRef pr = commandBuffer.getComponent(ctx.getEntity(), PlayerRef.getComponentType());
-            if (player == null || pr == null) {
+            if (pr == null) {
                 ctx.getState().state = InteractionState.Failed;
                 return;
             }
@@ -112,10 +123,15 @@ public final class ShrineSubmitInteraction extends SimpleInstantInteraction {
                 return;
             }
 
-            Ref<EntityStore> ref = player.getReference();
-            Store<EntityStore> store = ref.getStore();
+            // Use the authoritative world store + the PlayerRef's reference (the SAME pair the 1 Hz tick used
+            // for the old proximity cleanse), not the interaction-context entity store.
+            Store<EntityStore> store = world.getEntityStore().getStore();
+            Ref<EntityStore> ref = pr.getReference();
             int remaining = required - shrine.submitted();
+            int have = InventoryUtil.count(store, ref, Moonbloom.CHARGE_ITEM);
             int taken = remaining > 0 ? InventoryUtil.take(store, ref, Moonbloom.CHARGE_ITEM, remaining) : 0;
+            KweebecNightmarePlugin.LOGGER.atInfo().log("[Kweebec] shrine " + shrine.index()
+                    + " submit: have=" + have + " need=" + remaining + " taken=" + taken);
             if (taken <= 0) {
                 // At the shrine but carrying no Moonbloom: nudge to gather more.
                 RoundFeedback.warningToast(pr, Lang.TOAST_CLEANSE_NEED);

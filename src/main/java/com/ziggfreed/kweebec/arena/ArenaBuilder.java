@@ -461,6 +461,16 @@ public final class ArenaBuilder {
     private static final double CAVE_SHAFT_DEPTH = ArenaLayout.FLOOR_Y - ArenaLayout.CAVE_STAND_Y;
 
     /**
+     * The shaft prefab bakes a cyan shrine "beam" column at prefab-relative {@code (0, -12..-8, +2)} (offsets
+     * from the shaft anchor, which pastes at the surface top; the shaft force-pastes unrotated). The cave
+     * furnace REPLACES it: placed at the beam BASE ({@code -12}) and the 4 blocks above ({@code -11..-8})
+     * cleared to air, so the furnace stands where the beam did instead of beside an un-replaced beam.
+     */
+    private static final int CAVE_BEAM_DZ = 2;
+    private static final int CAVE_BEAM_BASE_DY = -12;
+    private static final int CAVE_BEAM_TOP_DY = -8;
+
+    /**
      * Carve one underground shrine's descent shaft + chamber, floor-snapped to the rolling surface:
      * probe the LOCAL top-solid Y, force-paste the shaft top there (so the entrance meets the surface),
      * and RE-POINT the shrine's chamber stand Y to {@code surface - shaftDepth} so the underground
@@ -490,13 +500,18 @@ public final class ArenaBuilder {
                 Vector3i pos = new Vector3i(x, topY, z);
                 Store<EntityStore> store = world.getEntityStore().getStore();
                 PrefabUtilPaste.paste(shaft, world, pos, store, true);
-                // The cave shrine is ALSO a furnace: place it at the chamber stand level, AFTER the carve (a
-                // re-carve clears the chamber, so re-adding it here each pass keeps it). The player must
+                // The cave shrine IS the furnace, placed where the prefab's baked cyan "beam" stood so it
+                // REPLACES it: furnace at the beam base, the column above cleared to air. Runs AFTER the carve
+                // (which re-bakes the beam), so it re-asserts on every +4s/+9s re-paste. The player must
                 // descend the shaft to press F on it - the descend-and-return objective is preserved.
-                int standY = (int) Math.floor(cave.anchor().y());
-                setShrineFurnace(world, cave, x, standY, z);
+                int fz = z + CAVE_BEAM_DZ;
+                int fy = topY + CAVE_BEAM_BASE_DY;
+                setShrineFurnace(world, cave, x, fy, fz);
+                for (int dy = CAVE_BEAM_BASE_DY + 1; dy <= CAVE_BEAM_TOP_DY; dy++) {
+                    world.breakBlock(x, topY + dy, fz, 0); // clear the rest of the cyan beam column to air
+                }
                 KweebecNightmarePlugin.LOGGER.atInfo().log(
-                        "[Kweebec] cave shaft carved at " + pos + ", furnace at chamber stand y=" + standY);
+                        "[Kweebec] cave shaft carved at " + pos + ", furnace at (" + x + "," + fy + "," + fz + ")");
             } catch (Throwable t) {
                 KweebecNightmarePlugin.LOGGER.atWarning().log(
                         "[Kweebec] cave shaft carve failed at (" + x + "," + z + "): " + t.getMessage());

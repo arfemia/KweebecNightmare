@@ -40,7 +40,7 @@
     },
     "State": {
       "Definitions": {
-        "lit": {
+        "Lit": {
           "Looping": true,
           "InteractionHint": "",
           "Light": {
