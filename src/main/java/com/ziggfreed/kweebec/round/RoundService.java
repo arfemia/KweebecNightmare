@@ -346,7 +346,11 @@ public final class RoundService {
             }
             PlayerScore ps = scores.get(st.playerId());
             if (ps != null) {
-                Leaderboard.getInstance().record(partySize, st.playerId(), ps);
+                // Players are online at round-resolve, so capture the current username for the
+                // leaderboard so offline rows show a real name instead of a UUID prefix.
+                PlayerRef pr = Universe.get().getPlayer(st.playerId());
+                String name = pr != null ? pr.getUsername() : null;
+                Leaderboard.getInstance().record(partySize, st.playerId(), name, ps);
             }
         }
     }

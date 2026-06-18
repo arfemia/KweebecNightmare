@@ -53,6 +53,8 @@ public final class Leaderboard {
         public int bestTimeSeconds;
         public int plays;
         public long lastUpdatedMs;
+        /** Last-known display name of the player, captured at record time; null on legacy entries. */
+        public String name;
     }
 
     /** On-disk shape: partySize(string) -> uuid(string) -> entry. */
@@ -131,11 +133,11 @@ public final class Leaderboard {
     }
 
     /**
-     * Record a player's round result into the party-size bucket: bump their play count, keep the
-     * higher score, and (for a win) keep the lower completion time. Schedules a debounced flush.
-     * Safe to call from the world-thread resolve path.
+     * Record a player's round result into the party-size bucket: bump their play count, store their
+     * latest display name, keep the higher score, and (for a win) keep the lower completion time.
+     * Schedules a debounced flush. Safe to call from the world-thread resolve path.
      */
-    public void record(int partySize, @Nonnull UUID uuid, @Nonnull PlayerScore score) {
+    public void record(int partySize, @Nonnull UUID uuid, @Nullable String name, @Nonnull PlayerScore score) {
         if (partySize <= 0) {
             return;
         }
@@ -144,6 +146,9 @@ public final class Leaderboard {
             Entry e = existing != null ? existing : new Entry();
             e.plays++;
             e.lastUpdatedMs = System.currentTimeMillis();
+            if (name != null && !name.isBlank()) {
+                e.name = name;
+            }
             if (score.total() > e.bestScore) {
                 e.bestScore = score.total();
             }

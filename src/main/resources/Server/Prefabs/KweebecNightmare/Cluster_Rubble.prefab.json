@@ -1,0 +1,57 @@
+{
+  "version": 8,
+  "blockIdVersion": 11,
+  "anchorX": 0,
+  "anchorY": 0,
+  "anchorZ": 0,
+  "blocks": [
+    {
+      "x": 0,
+      "y": 0,
+      "z": 0,
+      "name": "Prefab_Spawner_Block",
+      "components": {
+        "Components": {
+          "PrefabSpawner": {
+            "PrefabPath": "Trees.Petrified_Logs.*",
+            "FitHeightmap": true,
+            "InheritSeed": true,
+            "InheritHeightCondition": true
+          }
+        }
+      }
+    },
+    {
+      "x": 2,
+      "y": 0,
+      "z": -1,
+      "name": "Prefab_Spawner_Block",
+      "components": {
+        "Components": {
+          "PrefabSpawner": {
+            "PrefabPath": "Trees.Cedar_Logs.Small.*",
+            "FitHeightmap": true,
+            "InheritSeed": true,
+            "InheritHeightCondition": true
+          }
+        }
+      }
+    },
+    {
+      "x": -1,
+      "y": 0,
+      "z": 2,
+      "name": "Prefab_Spawner_Block",
+      "components": {
+        "Components": {
+          "PrefabSpawner": {
+            "PrefabPath": "Trees.Autumn_Stumps.*",
+            "FitHeightmap": true,
+            "InheritSeed": true,
+            "InheritHeightCondition": true
+          }
+        }
+      }
+    }
+  ]
+}

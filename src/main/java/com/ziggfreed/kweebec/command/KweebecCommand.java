@@ -239,8 +239,9 @@ public final class KweebecCommand extends CommandBase {
                 .limit(LEADERBOARD_TOP_N)
                 .forEach(en -> {
                     rank[0]++;
-                    String who = shortId(en.getKey());
-                    ctx.sendMessage(Message.raw(rank[0] + ". " + formatEntry(who, en.getValue())));
+                    Leaderboard.Entry e = en.getValue();
+                    String who = (e.name != null && !e.name.isBlank()) ? e.name : shortId(en.getKey());
+                    ctx.sendMessage(Message.raw(rank[0] + ". " + formatEntry(who, e)));
                 });
     }
 
