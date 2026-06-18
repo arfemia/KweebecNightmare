@@ -109,10 +109,9 @@ dialogue.kweebec_intro.secret.text = The sapling leans close. "The Heartwood Gat
 dialogue.kweebec_intro.secret.opt.0 = Go back
 
 # Matchmaking queue feedback. Toasts (Notify) are coloured by their NotificationStyle
-# (success/warning/danger), the countdown banner (EventTitles) renders PLAIN text only.
-# {0} = current size, {1} = max party; countdown primary shows the seconds remaining.
-# Hytale has NO inline-markup parser for .lang values (the server only substitutes
-# {param}); colour/bold/italic come from the Message tree in Java, never <color>/<i> tags.
+# (success/warning/danger); the countdown banner (EventTitles) renders PLAIN text only -
+# it is NOT a TextSpans Label, so it cannot do <color>/<b>/<i> markup (the dialogue node
+# text below CAN, because the page sets it on TextSpans). {0} = size, {1} = max party.
 queue.joined = You step into the gathering. {0} of {1} have answered the call.
 queue.left = You slip back into the dark. You have left the gathering.
 queue.countdown = The grove pulls you in... {0}
@@ -144,6 +143,7 @@ dialogue.nightmares_intro.greet.text = A small Kweebec, its bark still <color is
 dialogue.nightmares_intro.greet.opt.0 = What happened to this place?
 dialogue.nightmares_intro.greet.opt.1 = I am ready. Send me into the grove.
 dialogue.nightmares_intro.greet.opt.2 = About the hunt I have already chosen...
+dialogue.nightmares_intro.greet.opt.3 = Who has survived the most?
 dialogue.nightmares_intro.lore.text = <i>"Once the Emerald Grove <b>sang</b>. The <color is="#a06cff">Void</color> seeped up through the roots, and the song became screaming. My kin wear our faces now, and they <color is="#ff6b6b">hunt</color>. Relight the grove-shrines and the Heartwood Gate will open; linger too long, and the dark takes whoever runs last."</i>
 dialogue.nightmares_intro.lore.opt.0 = Enough. I am ready to hunt.
 dialogue.nightmares_intro.lore.opt.1 = Tell me something else.
@@ -154,3 +154,19 @@ dialogue.nightmares_intro.preset_pick.opt.2 = Hardcore - one life, no mercy.
 dialogue.nightmares_intro.preset_pick.opt.3 = Not yet. Step back.
 dialogue.nightmares_intro.already_engaged.text = <i>"You are already bound to a hunt, warm one,"</i> the warden murmurs. <i>"Step out of the gathering first, and I will offer you the choice again."</i>
 dialogue.nightmares_intro.already_engaged.opt.0 = I understand.
+
+# Leaderboard page (the Grove Warden's "Who has survived the most?" option, greet.opt.3).
+# Plain labels shown on Label .Text (no inline markup); column colours come from the .ui styles.
+leaderboard.title = Survivors of the Grove
+leaderboard.tab.solo = Solo
+leaderboard.tab.duo = Duo
+leaderboard.tab.trio = Trio
+leaderboard.tab.squad = Squad
+leaderboard.col.rank = Rank
+leaderboard.col.player = Survivor
+leaderboard.col.score = Score
+leaderboard.col.time = Best Time
+leaderboard.col.plays = Runs
+leaderboard.empty = No survivors have been recorded in this bracket yet. Be the first.
+leaderboard.your_rank = Your best: #{0}  ({1} pts)
+leaderboard.your_rank_none = You have no ranked run in this bracket yet.
