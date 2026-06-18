@@ -1,14 +1,17 @@
 package com.ziggfreed.kweebec.mode.chase;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.joml.Vector3i;
+
 import com.ziggfreed.kweebec.arena.Anchor;
-import com.ziggfreed.kweebec.arena.ArenaLayout;
 import com.ziggfreed.kweebec.round.ChasePhase;
 import com.ziggfreed.kweebec.round.RuleSet;
 
@@ -16,10 +19,27 @@ import com.ziggfreed.kweebec.round.RuleSet;
  * Chase-mode gameplay state hung off a round instance: shrines, current phase,
  * the corruption meter, and the one-shot ESCAPE flags. Mutated only on the
  * instance world thread by {@link ChaseMode}.
+ *
+ * <p><b>Shrines are INTERACTION-DISCOVERED (0.4.x rework), not position-tracked.</b> A shrine is any
+ * {@code KweebecNightmare_Shrine} furnace BLOCK in the world - baked into a worldgen-placed host prefab
+ * (3 surface, deterministic) or a runtime-carved cave shaft (2 cave) = {@link #totalShrines} for normal
+ * mode. We never pre-compute shrine positions: the furnace's own {@code Use} RootInteraction fires from
+ * the placed block, and {@link #shrineForBlock} lazily registers a {@link ShrineState} keyed by that block
+ * position the first time a survivor offers Moonbloom at it. The win is a COUNT ({@link #allShrinesLit});
+ * the total is known up front from the deterministic worldgen/carve placement. See
+ * [[kweebec-worldgen-both-seams]] (the objective-as-block correction).
  */
 public final class ChaseState {
 
-    private final List<ShrineState> shrines;
+    /** The expected total shrine count this round (3 worldgen surface + cave count). Drives the win denominator. */
+    private final int totalShrines;
+    /** Lazily-discovered shrines, keyed by furnace block position; created on first interaction. World-thread only. */
+    private final Map<Vector3i, ShrineState> discovered = new HashMap<>();
+    /** Per-cave resolved surface top-Y (cave anchor index -> Y), so {@code ArenaBuilder}'s +4s/+9s re-carve reuses the same Y instead of re-probing the already-carved surface (which would stack shafts). World-thread only. */
+    private final Map<Integer, Integer> caveCarveY = new HashMap<>();
+    /** Synthetic ShrineState index base for discovered shrines (kept distinct from any future fixed indices, for logs). */
+    private static final int DISCOVERED_INDEX_BASE = 100;
+
     private volatile ChasePhase phase = ChasePhase.PREP;
     /** 0..1 corruption meter; ramps with time + per shrine, drives hunter speed / dark / heartbeat. */
     private volatile double corruption;
@@ -31,55 +51,62 @@ public final class ChaseState {
     private int moonbloomRespawnsFired;
 
     /**
-     * Build the shrine set for a round, SEEDED off the per-round world seed ({@code RoundInstance.worldSeed()},
-     * passed by {@code ChaseMode.onStart}). The surface ring is rotated by a seed-derived offset and the
-     * underground cave shrines are a seed-shuffled subset, so the layout varies per round off the SAME
-     * coherent seed as the terrain and the corrupted-structure ruins. Surface ring shrines first, then the
-     * cave shrines appended last, so {@link #allShrinesLit()} still requires descending into every cave (and
-     * returning) before the gate logic fires. Each cave shrine's visual + carved chamber ship as a
-     * Relight_Shaft(_Ladder) prefab; only its anchor (at the chamber stand-Y) drives the gameplay here.
-     *
-     * @param seed the per-round world seed (deterministic for a given seed; varies between seeds). A
-     *             {@code 0} seed (the field default before the parent sets it) is still a valid, fixed
-     *             layout, not the un-rotated original; the parent always sets a real seed first.
+     * Build chase state for a round. {@code totalShrines} is the KNOWN total furnace count
+     * ({@code ArenaLayout.SURFACE_WORLDGEN_SHRINES} worldgen surface hosts + {@code RuleSet.caveShrineCount()}
+     * runtime-carved caves). No anchors are pre-built: shrines are discovered via their furnace interaction.
      */
-    public ChaseState(int surfaceShrineCount, int caveShrineCount, long seed) {
-        List<Anchor> anchors = new ArrayList<>(ArenaLayout.shrineAnchors(surfaceShrineCount, seed));
-        anchors.addAll(ArenaLayout.caveShrineAnchors(caveShrineCount, seed));
-        ShrineState[] arr = new ShrineState[anchors.size()];
-        for (int i = 0; i < anchors.size(); i++) {
-            arr[i] = new ShrineState(i, anchors.get(i));
-        }
-        this.shrines = List.of(arr);
-    }
-
-    @Nonnull
-    public List<ShrineState> shrines() {
-        return shrines;
+    public ChaseState(int totalShrines) {
+        this.totalShrines = Math.max(0, totalShrines);
     }
 
     /**
-     * The shrine whose interactable furnace is the block at {@code (x,y,z)}, or null if no shrine furnace
-     * sits there. Used by the cleanse interaction to resolve which shrine a survivor pressed F on. A round
-     * has only a handful of shrines, so a linear scan is fine. World-thread only.
+     * The DISCOVERED shrines (those a survivor has interacted with at least once). Used by the
+     * {@code ChaseMode} lit reconciler to re-assert the green-fire block state. An undiscovered shrine
+     * furnace is just the authored default-state block in the world - it needs no per-tick work until lit.
+     */
+    @Nonnull
+    public List<ShrineState> shrines() {
+        return new ArrayList<>(discovered.values());
+    }
+
+    /**
+     * The shrine whose furnace is the block at {@code (x,y,z)}, or null if no shrine has been discovered
+     * there yet. World-thread only.
      */
     @Nullable
     public ShrineState shrineAt(int x, int y, int z) {
-        for (ShrineState s : shrines) {
-            if (s.matchesBlock(x, y, z)) {
-                return s;
-            }
+        return discovered.get(new Vector3i(x, y, z));
+    }
+
+    /**
+     * Resolve (CREATING on first touch) the shrine for the furnace block a survivor pressed F on. The
+     * {@code KweebecNightmare_Shrine_Use} RootInteraction only fires on a shrine furnace block, so a block
+     * not yet in the map IS a real shrine being discovered - register it. Returns null only once the known
+     * {@link #totalShrines} have already been discovered (ignore any unexpected extra furnace). World-thread only.
+     */
+    @Nullable
+    public ShrineState shrineForBlock(int x, int y, int z) {
+        Vector3i pos = new Vector3i(x, y, z);
+        ShrineState existing = discovered.get(pos);
+        if (existing != null) {
+            return existing;
         }
-        return null;
+        if (discovered.size() >= totalShrines) {
+            return null;
+        }
+        ShrineState s = new ShrineState(DISCOVERED_INDEX_BASE + discovered.size(), new Anchor(x, y, z, 0f));
+        s.setBlockPos(pos);
+        discovered.put(pos, s);
+        return s;
     }
 
     public int totalShrines() {
-        return shrines.size();
+        return totalShrines;
     }
 
     public int litShrines() {
         int n = 0;
-        for (ShrineState s : shrines) {
+        for (ShrineState s : discovered.values()) {
             if (s.isLit()) {
                 n++;
             }
@@ -88,29 +115,27 @@ public final class ChaseState {
     }
 
     public boolean allShrinesLit() {
-        return litShrines() >= totalShrines();
+        return litShrines() >= totalShrines;
+    }
+
+    /** The resolved cave surface top-Y for a cave index, or {@code null} if not yet carved. World-thread only. */
+    @Nullable
+    public Integer caveCarveY(int caveIndex) {
+        return caveCarveY.get(caveIndex);
+    }
+
+    public void setCaveCarveY(int caveIndex, int topY) {
+        caveCarveY.put(caveIndex, topY);
     }
 
     /**
-     * The survivor channelling the unlit shrine with the most progress (the "loudest"
-     * ritual noise), or {@code null} if nobody is channelling. The hunter prioritizes
-     * this survivor - channelling a shrine draws the hunter toward you.
+     * Vestigial (the pre-0.4.0 channel-bar relight): the furnace interaction supersedes channelling, so
+     * there is never a channeller. Kept so {@code AiHunterController} still compiles; always null = the
+     * hunter's safe no-channeller fallback (nearest-survivor pursuit).
      */
     @Nullable
     public UUID loudestChanneller() {
-        UUID best = null;
-        double bestProgress = 0.0;
-        for (ShrineState s : shrines) {
-            if (s.isLit()) {
-                continue;
-            }
-            UUID ch = s.channeller();
-            if (ch != null && s.progress() > bestProgress) {
-                bestProgress = s.progress();
-                best = ch;
-            }
-        }
-        return best;
+        return null;
     }
 
     @Nonnull

@@ -1,6 +1,7 @@
 package com.ziggfreed.kweebec.event;
 
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -11,6 +12,7 @@ import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.component.SystemGroup;
 import com.hypixel.hytale.component.query.Query;
+import com.hypixel.hytale.protocol.SoundCategory;
 import com.hypixel.hytale.server.core.asset.type.entityeffect.config.EntityEffect;
 import com.hypixel.hytale.server.core.asset.type.entityeffect.config.OverlapBehavior;
 import com.hypixel.hytale.server.core.entity.effect.EffectControllerComponent;
@@ -22,6 +24,8 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.narwhals.perfectutils.api.StunMobAPI;
+import com.ziggfreed.common.sound.Sound3D;
+import com.ziggfreed.common.util.EntityIdentifierUtil;
 import com.ziggfreed.kweebec.round.PlayerRoundState;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.round.RoundService;
@@ -59,6 +63,13 @@ public final class KweebecDamageSystem extends DamageEventSystem {
     private static final String STUN_VISUAL_EFFECT = "Stun";
     /** Stun length for a Moonbloom hit thrown OUTSIDE a round (no rule-set to read). */
     private static final long DEFAULT_STUN_MS = 2500L;
+
+    /** Model-asset-id prefix shared by every hunter appearance (KweebecNightmare_HunterCorrupted), used to ID a hunter melee hit. */
+    private static final String HUNTER_MODEL_PREFIX = "KweebecNightmare";
+    /** Chance a hunter SNICKERS when it lands a hit on a survivor (the on-hit sibling of the proximity snicker in ScareDirector). */
+    private static final double SNICKER_ON_HIT_CHANCE = 0.25;
+    /** Vanilla eerie SFX used for the snicker (no custom audio); retune here. */
+    private static final String SNICKER_SOUND_ID = "SFX_Emit_Temple_Wisps";
 
     /** Resolved index of the Moonbloom damage cause; cached ONLY once positive (the asset loads after this class). */
     private volatile int moonbloomCauseIndex = -1;
@@ -117,9 +128,38 @@ public final class KweebecDamageSystem extends DamageEventSystem {
             if (st != null && damage.getAmount() > 0f) {
                 st.addDamageTaken(damage.getAmount());
             }
+            // A hunter that lands a hit has a chance to snicker, private to the victim.
+            maybeSnickerOnHit(store, targetRef, damage);
         } catch (Throwable t) {
             SafeLog.fine("[Kweebec] damage observe failed: " + t.getMessage());
         }
+    }
+
+    /**
+     * When the attacker is a hunter (identified by its model asset id, read off the
+     * damage source ref - the same self-contained technique the MMO uses for kill/XP
+     * attribution), roll the on-hit snicker and play the eerie cue at the hunter's own
+     * position, private to the victim. Best-effort: a non-hunter attacker / failed roll
+     * / missing sound is a silent no-op. {@code victimRef} is the player who was hit.
+     */
+    private void maybeSnickerOnHit(@Nonnull Store<EntityStore> store, @Nonnull Ref<EntityStore> victimRef,
+                                   @Nonnull Damage damage) {
+        if (ThreadLocalRandom.current().nextDouble() >= SNICKER_ON_HIT_CHANCE) {
+            return;
+        }
+        if (!(damage.getSource() instanceof Damage.EntitySource es)) {
+            return;
+        }
+        Ref<EntityStore> attacker = es.getRef();
+        if (attacker == null || !attacker.isValid()) {
+            return;
+        }
+        String mobId = EntityIdentifierUtil.getMobId(store, attacker);
+        if (mobId == null || !mobId.startsWith(HUNTER_MODEL_PREFIX)) {
+            return; // not one of our hunters
+        }
+        Sound3D.playAt(SNICKER_SOUND_ID, SoundCategory.SFX, attacker,
+                Sound3D.onlyEntity(victimRef), store, "SNICKER_HIT", false);
     }
 
     /** Whether this damage carries the custom Moonbloom cause (resolved + cached lazily). */

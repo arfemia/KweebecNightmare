@@ -62,15 +62,34 @@
               "Type": "Cylinder",
               "Skip": false,
               "Spin": 0,
-              "NewYAxis": { "X": 0, "Y": 1, "Z": 0 },
-              "AxialCurve": { "Type": "Constant", "Value": 1.0 },
+              "NewYAxis": {
+                "X": 0,
+                "Y": 1,
+                "Z": 0
+              },
+              "AxialCurve": {
+                "Type": "Constant",
+                "Value": 1.0
+              },
               "RadialCurve": {
                 "Type": "Manual",
                 "Points": [
-                  { "In": 0, "Out": 0 },
-                  { "In": 6, "Out": 0 },
-                  { "In": 12, "Out": 1 },
-                  { "In": 4000, "Out": 1 }
+                  {
+                    "In": 0,
+                    "Out": 0
+                  },
+                  {
+                    "In": 6,
+                    "Out": 0
+                  },
+                  {
+                    "In": 12,
+                    "Out": 1
+                  },
+                  {
+                    "In": 4000,
+                    "Out": 1
+                  }
                 ]
               }
             }
@@ -319,17 +338,50 @@
                 "Type": "Prefab",
                 "Skip": false,
                 "WeightedPrefabPaths": [
-                  { "Path": "Trees/Ash_twisted", "Weight": 3 },
-                  { "Path": "Trees/Poisoned/Stage_1", "Weight": 2 },
-                  { "Path": "Trees/Petrified_Dead/Stage_1", "Weight": 2 },
-                  { "Path": "Trees/Petrified_Dead/Stage_2", "Weight": 2 },
-                  { "Path": "Trees/Dry_Dead", "Weight": 2 },
-                  { "Path": "Trees/Ash_Dead/Stage_2", "Weight": 2 },
-                  { "Path": "Trees/Ash_Dead/Stage_3", "Weight": 2 },
-                  { "Path": "Trees/Burnt_dead/Stage_2", "Weight": 2 },
-                  { "Path": "Trees/Burnt_dead/Stage_3", "Weight": 1 },
-                  { "Path": "Trees/Ash_twisted_Large", "Weight": 1 },
-                  { "Path": "Trees/Ash_twisted_Giant", "Weight": 1 }
+                  {
+                    "Path": "Trees/Ash_twisted",
+                    "Weight": 3
+                  },
+                  {
+                    "Path": "Trees/Poisoned/Stage_1",
+                    "Weight": 2
+                  },
+                  {
+                    "Path": "Trees/Petrified_Dead/Stage_1",
+                    "Weight": 2
+                  },
+                  {
+                    "Path": "Trees/Petrified_Dead/Stage_2",
+                    "Weight": 2
+                  },
+                  {
+                    "Path": "Trees/Dry_Dead",
+                    "Weight": 2
+                  },
+                  {
+                    "Path": "Trees/Ash_Dead/Stage_2",
+                    "Weight": 2
+                  },
+                  {
+                    "Path": "Trees/Ash_Dead/Stage_3",
+                    "Weight": 2
+                  },
+                  {
+                    "Path": "Trees/Burnt_dead/Stage_2",
+                    "Weight": 2
+                  },
+                  {
+                    "Path": "Trees/Burnt_dead/Stage_3",
+                    "Weight": 1
+                  },
+                  {
+                    "Path": "Trees/Ash_twisted_Large",
+                    "Weight": 1
+                  },
+                  {
+                    "Path": "Trees/Ash_twisted_Giant",
+                    "Weight": 1
+                  }
                 ],
                 "LegacyPath": false,
                 "LoadEntities": true,
@@ -348,7 +400,11 @@
                           "Skip": false,
                           "BlockSet": {
                             "Inclusive": true,
-                            "Materials": [{ "Solid": "Empty" }]
+                            "Materials": [
+                              {
+                                "Solid": "Empty"
+                              }
+                            ]
                           }
                         },
                         "Floor": {
@@ -356,7 +412,11 @@
                           "Skip": false,
                           "BlockSet": {
                             "Inclusive": true,
-                            "Materials": [{ "Solid": "Soil_Grass_Dry" }]
+                            "Materials": [
+                              {
+                                "Solid": "Soil_Grass_Dry"
+                              }
+                            ]
                           }
                         }
                       },
@@ -368,10 +428,18 @@
                           "Skip": false,
                           "BlockSet": {
                             "Inclusive": true,
-                            "Materials": [{ "Solid": "Empty" }]
+                            "Materials": [
+                              {
+                                "Solid": "Empty"
+                              }
+                            ]
                           }
                         },
-                        "Offset": { "X": 0, "Y": 8, "Z": 0 }
+                        "Offset": {
+                          "X": 0,
+                          "Y": 8,
+                          "Z": 0
+                        }
                       }
                     ]
                   }
@@ -432,13 +500,22 @@
                     "Path": "KweebecNightmare/Corrupted_House_Small",
                     "Weight": 4
                   },
-                  { "Path": "KweebecNightmare/Corrupted_Bridge", "Weight": 3 },
-                  { "Path": "KweebecNightmare/Corrupted_Shop", "Weight": 2 },
+                  {
+                    "Path": "KweebecNightmare/Corrupted_Bridge",
+                    "Weight": 3
+                  },
+                  {
+                    "Path": "KweebecNightmare/Corrupted_Shop",
+                    "Weight": 2
+                  },
                   {
                     "Path": "KweebecNightmare/Corrupted_GuardTower",
                     "Weight": 2
                   },
-                  { "Path": "KweebecNightmare/Corrupted_Well", "Weight": 1 }
+                  {
+                    "Path": "KweebecNightmare/Corrupted_Well",
+                    "Weight": 1
+                  }
                 ],
                 "LegacyPath": false,
                 "LoadEntities": false,
@@ -453,7 +530,11 @@
                       "Skip": false,
                       "BlockSet": {
                         "Inclusive": true,
-                        "Materials": [{ "Solid": "Empty" }]
+                        "Materials": [
+                          {
+                            "Solid": "Empty"
+                          }
+                        ]
                       }
                     },
                     "Floor": {
@@ -461,7 +542,11 @@
                       "Skip": false,
                       "BlockSet": {
                         "Inclusive": true,
-                        "Materials": [{ "Solid": "Soil_Grass_Dry" }]
+                        "Materials": [
+                          {
+                            "Solid": "Soil_Grass_Dry"
+                          }
+                        ]
                       }
                     }
                   }
@@ -830,11 +915,26 @@
                 "Type": "Prefab",
                 "Skip": false,
                 "WeightedPrefabPaths": [
-                  { "Path": "Trees/Cedar_Logs/Large", "Weight": 3 },
-                  { "Path": "Trees/Cedar_Logs/Small", "Weight": 4 },
-                  { "Path": "Trees/Fir_Logs/Small", "Weight": 3 },
-                  { "Path": "Trees/Autumn_Stumps", "Weight": 3 },
-                  { "Path": "Trees/Petrified_Logs", "Weight": 2 }
+                  {
+                    "Path": "Trees/Cedar_Logs/Large",
+                    "Weight": 3
+                  },
+                  {
+                    "Path": "Trees/Cedar_Logs/Small",
+                    "Weight": 4
+                  },
+                  {
+                    "Path": "Trees/Fir_Logs/Small",
+                    "Weight": 3
+                  },
+                  {
+                    "Path": "Trees/Autumn_Stumps",
+                    "Weight": 3
+                  },
+                  {
+                    "Path": "Trees/Petrified_Logs",
+                    "Weight": 2
+                  }
                 ],
                 "LegacyPath": false,
                 "LoadEntities": false,
@@ -849,7 +949,11 @@
                       "Skip": false,
                       "BlockSet": {
                         "Inclusive": true,
-                        "Materials": [{ "Solid": "Empty" }]
+                        "Materials": [
+                          {
+                            "Solid": "Empty"
+                          }
+                        ]
                       }
                     },
                     "Floor": {
@@ -857,7 +961,11 @@
                       "Skip": false,
                       "BlockSet": {
                         "Inclusive": true,
-                        "Materials": [{ "Solid": "Soil_Grass_Dry" }]
+                        "Materials": [
+                          {
+                            "Solid": "Soil_Grass_Dry"
+                          }
+                        ]
                       }
                     }
                   }
@@ -932,7 +1040,11 @@
                       "Skip": false,
                       "BlockSet": {
                         "Inclusive": true,
-                        "Materials": [{ "Solid": "Empty" }]
+                        "Materials": [
+                          {
+                            "Solid": "Empty"
+                          }
+                        ]
                       }
                     },
                     "Floor": {
@@ -940,7 +1052,197 @@
                       "Skip": false,
                       "BlockSet": {
                         "Inclusive": true,
-                        "Materials": [{ "Solid": "Soil_Grass_Dry" }]
+                        "Materials": [
+                          {
+                            "Solid": "Soil_Grass_Dry"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "Scanner": {
+                  "Type": "ColumnLinear",
+                  "Skip": false,
+                  "MaxY": 40,
+                  "MinY": -20,
+                  "RelativeToPosition": false,
+                  "BaseHeightName": "Base",
+                  "TopDownOrder": true,
+                  "ResultCap": 1
+                },
+                "MoldingDirection": "None",
+                "MoldingChildren": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "Skip": false,
+      "Runtime": 0,
+      "$Comment": "ATMOSPHERE CLUSTERS (native prefab-stitching): composed multi-prefab set-dressing via Child_Prefabs / Prefab_Spawner_Block. Each cluster parent (KweebecNightmare/Cluster_Deadfall, Cluster_Rubble) embeds Prefab_Spawner_Block markers the worldgen PrefabProp path harvests + recursively pastes (decompile-verified: builtin.hytalegenerator.props.deprecated.prefab.PrefabProp harvests prefab.getChildPrefabs() at construction and pastes each child in place(); that branch is taken because this prop carries Scanner+Directionality). Children are confirmed-resolving native debris (Trees/Cedar_Logs, Fir_Logs, Petrified_Logs, Autumn_Stumps); each child carries FitHeightmap:true so it self-snaps to the rolling surface (no float/gouge). SPARSER than the lone-debris pass (Mesh 40 + SkipChance 0.8) so a handful of intentional rubble/deadfall piles read among the single debris. CLONED from the proven debris Prefab-prop shape; LoadEntities:false; Floor pattern + ColumnLinear floor-snaps the cluster anchor, Random rotation turns the whole cluster. IN-GAME GATE: (1) biome still generates (not all-air), (2) clusters appear as grouped debris, (3) the @Tech Prefab_Spawner_Block leaves NO visible marker on this V2 generator path (vanilla crypt/goblin use it cleanly on the V1 path; the V2 paste is unverified). This JSON is not gradle-compiled.",
+      "Positions": {
+        "Type": "Mesh2D",
+        "Skip": false,
+        "PointsY": 0,
+        "PointGenerator": {
+          "Type": "Mesh",
+          "Jitter": 0.5,
+          "ScaleX": 40,
+          "ScaleY": 40,
+          "ScaleZ": 40,
+          "Seed": "KN_Clusters"
+        }
+      },
+      "Assignments": {
+        "Type": "Weighted",
+        "SkipChance": 0.8,
+        "Seed": "KN_ClustersW",
+        "WeightedAssignments": [
+          {
+            "Weight": 1,
+            "Assignments": {
+              "Type": "Constant",
+              "Prop": {
+                "Type": "Prefab",
+                "Skip": false,
+                "WeightedPrefabPaths": [
+                  {
+                    "Path": "KweebecNightmare/Cluster_Deadfall",
+                    "Weight": 3
+                  },
+                  {
+                    "Path": "KweebecNightmare/Cluster_Rubble",
+                    "Weight": 2
+                  }
+                ],
+                "LegacyPath": false,
+                "LoadEntities": false,
+                "Directionality": {
+                  "Type": "Random",
+                  "Seed": "KN_ClusterRot",
+                  "Pattern": {
+                    "Type": "Floor",
+                    "Skip": false,
+                    "Origin": {
+                      "Type": "BlockSet",
+                      "Skip": false,
+                      "BlockSet": {
+                        "Inclusive": true,
+                        "Materials": [
+                          {
+                            "Solid": "Empty"
+                          }
+                        ]
+                      }
+                    },
+                    "Floor": {
+                      "Type": "BlockSet",
+                      "Skip": false,
+                      "BlockSet": {
+                        "Inclusive": true,
+                        "Materials": [
+                          {
+                            "Solid": "Soil_Grass_Dry"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "Scanner": {
+                  "Type": "ColumnLinear",
+                  "Skip": false,
+                  "MaxY": 40,
+                  "MinY": -20,
+                  "RelativeToPosition": false,
+                  "BaseHeightName": "Base",
+                  "TopDownOrder": true,
+                  "ResultCap": 1
+                },
+                "MoldingDirection": "None",
+                "MoldingChildren": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "Skip": false,
+      "Runtime": 0,
+      "$Comment": "WORLDGEN SHRINE HOSTS (scatter): the 3 furnace-baked copied-vanilla crypt/ruin host prefabs, scattered at RANDOM grove positions via the proven Mesh2D+Weighted shape (the trees/debris use this). FIXED List positions do NOT work for a biome prop - the prop position pass runs in buffer-LOCAL voxel-grid coords, so world coords never match (decompile: PropStage localPositionsBounds_voxelGrid). Over-provisioned (Scale 50 + SkipChance 0.5 ~5-6) so >=5 furnaces exist with the 2 cave shrines; ChaseState.totalShrines caps the win at 5, so a survivor lights ANY 5 (the furnace is discovered via its interaction). Furnace is a baked 4-cell multiblock (renders correct). IN-GAME GATE: confirm hosts generate + the round is winnable. Not gradle-compiled.",
+      "Positions": {
+        "Type": "Mesh2D",
+        "Skip": false,
+        "PointsY": 0,
+        "PointGenerator": {
+          "Type": "Mesh",
+          "Jitter": 0.5,
+          "ScaleX": 50,
+          "ScaleY": 50,
+          "ScaleZ": 50,
+          "Seed": "KN_ShrineHosts"
+        }
+      },
+      "Assignments": {
+        "Type": "Weighted",
+        "SkipChance": 0.5,
+        "Seed": "KN_ShrineHostsW",
+        "WeightedAssignments": [
+          {
+            "Weight": 1,
+            "Assignments": {
+              "Type": "Constant",
+              "Prop": {
+                "Type": "Prefab",
+                "Skip": false,
+                "WeightedPrefabPaths": [
+                  {
+                    "Path": "KweebecNightmare/Shrine_Cave_Alcove",
+                    "Weight": 1
+                  },
+                  {
+                    "Path": "KweebecNightmare/Shrine_Crypt_Alcove",
+                    "Weight": 1
+                  },
+                  {
+                    "Path": "KweebecNightmare/Shrine_Slate_Ruin",
+                    "Weight": 1
+                  }
+                ],
+                "LegacyPath": false,
+                "LoadEntities": false,
+                "Directionality": {
+                  "Type": "Random",
+                  "Seed": "KN_ShrineHostRot",
+                  "Pattern": {
+                    "Type": "Floor",
+                    "Skip": false,
+                    "Origin": {
+                      "Type": "BlockSet",
+                      "Skip": false,
+                      "BlockSet": {
+                        "Inclusive": true,
+                        "Materials": [
+                          {
+                            "Solid": "Empty"
+                          }
+                        ]
+                      }
+                    },
+                    "Floor": {
+                      "Type": "BlockSet",
+                      "Skip": false,
+                      "BlockSet": {
+                        "Inclusive": true,
+                        "Materials": [
+                          {
+                            "Solid": "Soil_Grass_Dry"
+                          }
+                        ]
                       }
                     }
                   }

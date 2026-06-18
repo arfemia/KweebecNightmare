@@ -85,6 +85,7 @@ public final class DefaultPresets {
                 .corruptionPerShrine(0.15)
                 .shrineRelightSeconds(7.0)
                 .hunterArchetype("stalker")
+                .exitMarker(false)
                 .build();
     }
 

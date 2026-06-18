@@ -1,0 +1,15 @@
+{
+  "Name": "amateur",
+  "Enabled": true,
+  "NameKey": "kweebecnightmare.preset.amateur.name",
+  "FillTimeoutSeconds": 20,
+  "CountdownSeconds": 5,
+  "AllowSolo": true,
+  "LeaderForceStart": false,
+  "LeaderboardBucket": "PARTY_SIZE",
+  "LeaderboardKey": "kweebecnightmare.leaderboard.title",
+  "RewardOnExit": "ON_WIN",
+  "Rewards": [
+    "item KweebecNightmare_Moonbloom 2 kweebecnightmare.results.reward.moonbloom"
+  ]
+}

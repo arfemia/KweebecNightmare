@@ -114,6 +114,31 @@
   "CombatConfig": {
     "EntityEffect": "Immunity_Environmental"
   },
+  "$Comment_Melee": "Devastating-attack override (Stalker tier): the spear attack interaction Replaces its Melee_Damage var with this, so the de-leashed hunter hits for a flat Absolute Physical instead of the vanilla 5 and launches the survivor (Knockback Force/VelocityY up from 1/3). Per-archetype values live in each archetype template (Lunger heaviest, Spitter lightest). Sound/particle impact fx are inherited from NPC_Attack_Melee_Damage.",
+  "InteractionVars": {
+    "Melee_Damage": {
+      "Interactions": [
+        {
+          "Parent": "NPC_Attack_Melee_Damage",
+          "DamageCalculator": {
+            "Type": "Absolute",
+            "BaseDamage": {
+              "Physical": 10
+            }
+          },
+          "DamageEffects": {
+            "Knockback": {
+              "Force": 4,
+              "RelativeX": 0,
+              "RelativeZ": -1,
+              "VelocityY": 4,
+              "VelocityType": "Set"
+            }
+          }
+        }
+      ]
+    }
+  },
   "Instructions": [
     {
       "Instructions": [

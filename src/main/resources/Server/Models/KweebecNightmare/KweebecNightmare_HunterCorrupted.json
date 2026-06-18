@@ -1,0 +1,15 @@
+{
+  "$Comment": "Corrupted-hunter appearance: extends the vanilla Razorleaf sapling (keeps the spear silhouette + razorleaf attachments), swaps to the darkest vanilla Kweebec body texture as a corrupted stopgap, and attaches a persistent void-glow particle to each eye bone so the hunter reads with glowing eyes. Mechanism mirrors vanilla Golem_Guardian_Void (Particles[] with TargetNodeName on the eye bones). The eye-bone node names (L-Eye-Attachment / R-Eye-Attachment) are the documented Kweebec names; a wrong name no-ops that particle (no crash) - verify in-game and fall back to L-Eye / R-Eye if absent. Body + eye TEXTURE art (a bespoke dark-corrupted body PNG and a white emissive eye PNG) is a pending swap: drop the PNGs in and point Texture / an Eyes override at them, no Java change needed.",
+  "Parent": "Kweebec_Sapling_Razorleaf",
+  "Texture": "NPC/Intelligent/Kweebec_Sapling/Models/Model_Textures/Brown.png",
+  "Particles": [
+    {
+      "SystemId": "Spectre_Void_Hands",
+      "TargetNodeName": "L-Eye-Attachment"
+    },
+    {
+      "SystemId": "Spectre_Void_Hands",
+      "TargetNodeName": "R-Eye-Attachment"
+    }
+  ]
+}

@@ -11,6 +11,7 @@ import org.joml.Vector3i;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.GameMode;
+import com.hypixel.hytale.protocol.SoundCategory;
 import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
@@ -18,6 +19,8 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.ziggfreed.common.sound.BlockStateSound;
+import com.ziggfreed.common.worldmap.WorldMapMarkers;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
 import com.ziggfreed.kweebec.atmosphere.MusicBedService;
@@ -51,6 +54,9 @@ public final class ChaseMode {
 
     private static final int PREP_SECONDS = 15;
     private static final double RESCUE_SECONDS = 3.0;
+    /** World-map POI id + icon for the exit marker placed at gate-open (see {@code openGate}). */
+    private static final String EXIT_MARKER_ID = "kweebec_exit";
+    private static final String EXIT_MARKER_ICON = "Portal.png";
     /** Ticks (1 Hz) a player who already entered can be absent before being dropped (disconnect). */
     private static final int DISCONNECT_GRACE_TICKS = 5;
     /** Ticks a player who never arrived (still teleporting) is given before being dropped. */
@@ -67,8 +73,11 @@ public final class ChaseMode {
      * read back from the instance world's {@code getWorldConfig().getSeed()}) BEFORE this runs.
      */
     public static void onStart(@Nonnull RoundInstance round) {
-        ChaseState chase = new ChaseState(round.ruleSet().shrineCount(round.partySize()),
-                round.ruleSet().caveShrineCount(), round.worldSeed());
+        // Total shrines = the deterministic worldgen surface hosts + the runtime-carved caves. Shrines are
+        // discovered via their furnace interaction (no ring, no pre-tracked positions); this is just the
+        // win denominator. The surface count is fixed by the biome's shrine-host List props.
+        ChaseState chase = new ChaseState(
+                ArenaLayout.SURFACE_WORLDGEN_SHRINES + round.ruleSet().caveShrineCount());
         chase.setPhase(ChasePhase.PREP);
         chase.setPrepEndsAtMs(System.currentTimeMillis() + PREP_SECONDS * 1000L);
         round.setChaseState(chase);
@@ -255,6 +264,15 @@ public final class ChaseMode {
         shrine.setLit(true);
         chase.addCorruption(round.ruleSet().corruptionPerShrine());
         renderLit(world, shrine);
+        // One-shot ignite "whoosh" at the furnace (the steady crackle while lit is the native "Lit"-state
+        // AmbientSoundEventId). The state's InteractionSoundEventId does NOT fire on a server-set state, so
+        // play the authored id ourselves via the mod-agnostic ziggfreed-common helper (the id stays in the
+        // block JSON). Best-effort, world-thread.
+        Vector3i firePos = shrine.blockPos();
+        if (firePos != null) {
+            BlockStateSound.playInteractionSound(world, firePos.x(), firePos.y(), firePos.z(),
+                    Shrine.LIT_STATE, SoundCategory.SFX, world.getEntityStore().getStore(), "SHRINE_IGNITE");
+        }
         KweebecNightmarePlugin.LOGGER.atInfo().log(
                 "[Kweebec][win] shrine " + shrine.index() + " CLEANSED ("
                         + chase.litShrines() + "/" + chase.totalShrines() + ")");
@@ -353,6 +371,18 @@ public final class ChaseMode {
         // opens" beat). The escape win is pure-anchor logic (checkEscapes crossing GATE.z), so this
         // prefab is purely cosmetic - the win works with or without it.
         ArenaBuilder.pasteGate(world);
+        // Place the exit map marker (a world-map / compass POI at the escape) so survivors can find
+        // the way out in the dark. Game-mode-asset-driven: the RuleSet.exitMarker() knob (Hardcore
+        // ships it off, so its survivors get no marker). The marker lives on this round's own
+        // instance world, so it is naturally scoped to the round and dies with the world at teardown.
+        if (round.ruleSet().exitMarker()) {
+            // Compass updating is the rendering precondition (the world-map tracker only delivers
+            // markers while the compass or world map is enabled); enable it so the POI shows.
+            world.setCompassUpdating(true);
+            WorldMapMarkers.place(world, EXIT_MARKER_ID,
+                    ArenaLayout.ESCAPE.x(), ArenaLayout.STAND_Y, ArenaLayout.ESCAPE.z(),
+                    EXIT_MARKER_ICON, Lang.msg(Lang.MARKER_EXIT));
+        }
         HunterController hunter = round.hunterController();
         if (hunter != null) {
             hunter.onAlert(round, world, store);

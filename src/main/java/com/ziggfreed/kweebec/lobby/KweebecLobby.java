@@ -1,5 +1,6 @@
 package com.ziggfreed.kweebec.lobby;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Predicate;
 
@@ -7,6 +8,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.hypixel.hytale.server.core.Message;
+import com.ziggfreed.common.instance.preset.InstancePreset;
+import com.ziggfreed.common.instance.preset.InstancePresetConfig;
+import com.ziggfreed.common.lobby.GroupJoinResult;
 import com.ziggfreed.common.lobby.JoinResult;
 import com.ziggfreed.common.lobby.LobbyConfig;
 import com.ziggfreed.common.lobby.LobbyService;
@@ -64,10 +68,26 @@ public final class KweebecLobby {
         SERVICE.shutdown();
     }
 
+    /** The underlying generic lobby service (read access for a UI queue screen). */
+    @Nonnull
+    public static LobbyService service() {
+        return SERVICE;
+    }
+
     /** Queue {@code uuid} for {@code presetId} (defaulted + normalized). */
     @Nonnull
     public static JoinResult join(@Nonnull UUID uuid, @Nullable String presetId) {
         return queue(keyFor(presetId)).join(uuid);
+    }
+
+    /** Queue a whole party as a unit for {@code presetId} (public queue; backfills with strangers). */
+    @Nonnull
+    public static GroupJoinResult queueParty(@Nonnull List<UUID> members, @Nonnull UUID owner,
+                                             @Nullable String presetId) {
+        QueueKey key = keyFor(presetId);
+        String preset = key.presetId();
+        return SERVICE.queueParty(key, members, owner, configFor(preset), launcherFor(preset),
+                ALREADY_ENGAGED, messagesFor(preset));
     }
 
     /** The (get-or-create) queue for {@code key}. */
@@ -99,6 +119,12 @@ public final class KweebecLobby {
     @Nonnull
     private static LobbyConfig configFor(@Nonnull String presetId) {
         RuleSet rs = PresetConfig.getInstance().resolve(presetId);
+        // Queue policy is asset-driven when an InstancePreset is authored for this id;
+        // min/max party stay on the gameplay RuleSet (the arena-budget clamp authority).
+        InstancePreset ip = InstancePresetConfig.getInstance().resolve(presetId);
+        if (ip != null) {
+            return ip.toLobbyConfig(rs.minParty(), rs.maxParty());
+        }
         return new LobbyConfig(rs.minParty(), rs.maxParty(),
                 FILL_TIMEOUT_SECONDS, COUNTDOWN_SECONDS, ALLOW_SOLO, LEADER_FORCE_START);
     }

@@ -43,6 +43,8 @@
         "Lit": {
           "Looping": true,
           "InteractionHint": "",
+          "AmbientSoundEventId": "SFX_Flame_Default_Loop",
+          "InteractionSoundEventId": "SFX_Flame_Ignite",
           "Light": {
             "Color": "#6f9"
           },

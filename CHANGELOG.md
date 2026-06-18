@@ -2,6 +2,16 @@
 
 Developer changelog for Kweebec Nightmare. User-facing release notes live in `patch-notes/`.
 
+## 0.5.0 (in development)
+
+Hunter fear pass: a scarier hunter look, vocal taunts, and far harder per-archetype attacks. Built green (java); the asset + audio surfaces validate in-game.
+
+- **Glowing-eyed corrupted appearance.** A new pack model `KweebecNightmare_HunterCorrupted` (`Server/Models/KweebecNightmare/`) extends the vanilla `Kweebec_Sapling_Razorleaf` (keeps the spear silhouette), swaps to the darkest vanilla Kweebec body texture as a corruption stopgap, and attaches a persistent `Spectre_Void_Hands` glow particle to each eye bone (`Particles[]` with `TargetNodeName`, the verified vanilla `Golem_Guardian_Void` eye-glow mechanism). All four hunter Variant roles (`KweebecNightmare_{Blight,Lunger,Spitter,Ambusher}`) point their `Appearance` at it. The eye-bone node name (`L-Eye-Attachment`/`R-Eye-Attachment`) and a bespoke dark-body + white-eye PNG swap are the in-game verification / pending-art items (a wrong bone name no-ops the particle, no crash).
+- **Snicker cues (two triggers, vanilla SFX, no custom audio).** (1) **On proximity** - `ScareDirector.tick` rolls a throttled (~5s/player), ~12%-per-tick chance once a survivor is in proximity band >= 2, playing an eerie cue at the NEAREST hunter's position, private to that survivor (mirrors the whisper layer but located ON the hunter, not mislocated). (2) **On hit** - `KweebecDamageSystem` rolls ~25% when a hunter lands a hit, played at the hunter's position, private to the victim. The attacker is identified as a hunter by reading its model asset id off the damage source ref via `ziggfreed-common` `EntityIdentifierUtil.getMobId` (the same self-contained technique the MMO uses for kill/XP attribution) and matching the `KweebecNightmare` prefix - no custom DamageCause needed. Sound id `SFX_Emit_Temple_Wisps` (one-constant retune point); resolution degrades to silence via `AssetIndexCache` if absent.
+- **Per-archetype devastating melee.** Each archetype template overrides the spear attack's `Melee_Damage` var (top-level `InteractionVars.Melee_Damage`, the vanilla `Bison` lever) with a flat Absolute Physical + a stronger launch knockback, up from the vanilla NPC melee (5 dmg / force 1): Lunger 14/8, Stalker (Blight) 10/4, Ambusher 9/4, Spitter 7/3 (`Physical`/`Knockback.Force`). Impact sound/particle fx inherited from `NPC_Attack_Melee_Damage`. Hunter melee stays plain physical, so damage-taken scoring is unaffected.
+
+Technical: built green via `gradlew build` (java). The new model JSON, the role/template asset edits, the eye-bone particle, and the snicker SFX are NOT gradle-validated - they need an in-game `/kweebec start` pass (eye-bone name, emissive read, snicker audibility/throttle, per-archetype damage feel, no one-shot of a fresh survivor).
+
 ## 0.4.0 (in development)
 
 The Moonbloom loop: a gathered glowing-mushroom RESOURCE with two competing sinks (cleanse vs defend), plus per-player scoring, a native scored event, and a persisted leaderboard. Built green (java + api); the throw/gather/cleanse surfaces validate in-game.

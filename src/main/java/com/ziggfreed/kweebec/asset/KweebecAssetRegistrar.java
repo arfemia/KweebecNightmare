@@ -15,6 +15,9 @@ import com.hypixel.hytale.assetstore.map.DefaultAssetMap;
 import com.hypixel.hytale.assetstore.map.JsonAssetWithMap;
 import com.hypixel.hytale.server.core.asset.HytaleAssetStore;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
+import com.ziggfreed.common.asset.AssetStoreRegistrar;
+import com.ziggfreed.common.instance.preset.InstancePresetAsset;
+import com.ziggfreed.kweebec.experience.KweebecExperience;
 import com.ziggfreed.kweebec.round.RuleSet;
 import com.ziggfreed.kweebec.util.SafeLog;
 
@@ -51,6 +54,7 @@ public final class KweebecAssetRegistrar {
     private static final String MUTATORS_PATH = "KweebecNightmare/Mutators";
     private static final String STRUCTURES_PATH = "KweebecNightmare/Structures";
     private static final String SCAREBEATS_PATH = "KweebecNightmare/ScareBeats";
+    private static final String INSTANCES_PATH = "KweebecNightmare/Instances";
 
     private KweebecAssetRegistrar() {
     }
@@ -96,7 +100,17 @@ public final class KweebecAssetRegistrar {
         plugin.getEventRegistry().register(LoadedAssetsEvent.class, ScareBeatAsset.class,
                 KweebecAssetRegistrar::onScareBeatAssetsLoaded);
 
-        SafeLog.info("[Kweebec][AssetPacks] Registered Kweebec content asset stores (Presets, Hunters, Mutators, Structures, ScareBeats, Control)");
+        // Instance presets (the GENERIC ziggfreed-common cross-cutting layer: queue policy +
+        // leaderboard config + the asset-driven reward list), registered via the lifted common
+        // registrar. Field-disjoint from RoundPresetAsset over the SAME preset-id namespace.
+        AssetStoreRegistrar.registerStore(InstancePresetAsset.class,
+                new DefaultAssetMap<String, InstancePresetAsset>(), INSTANCES_PATH,
+                InstancePresetAsset::getId, InstancePresetAsset.CODEC,
+                new Class<?>[]{KweebecPackControlAsset.class});
+        plugin.getEventRegistry().register(LoadedAssetsEvent.class, InstancePresetAsset.class,
+                KweebecExperience::onInstanceAssetsLoaded);
+
+        SafeLog.info("[Kweebec][AssetPacks] Registered Kweebec content asset stores (Presets, Hunters, Mutators, Structures, ScareBeats, Instances, Control)");
     }
 
     // ==================== load listeners (Pattern A typed-map fold) ====================

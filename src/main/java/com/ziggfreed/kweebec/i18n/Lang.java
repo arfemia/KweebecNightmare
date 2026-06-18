@@ -60,6 +60,9 @@ public final class Lang {
     public static final String HUD_OBJECTIVE_RITUAL = "kweebecnightmare.hud.objective.ritual";
     public static final String HUD_OBJECTIVE_ESCAPE = "kweebecnightmare.hud.objective.escape";
 
+    // World-map / compass marker names (the exit POI placed when the Heartwood Gate opens).
+    public static final String MARKER_EXIT = "kweebecnightmare.marker.exit";
+
     // Command + system feedback.
     public static final String CMD_PLAYERS_ONLY = "kweebecnightmare.cmd.players_only";
     public static final String CMD_ALREADY_IN_ROUND = "kweebecnightmare.cmd.already_in_round";
@@ -106,6 +109,86 @@ public final class Lang {
 
     // The guide NPC's dialogue header name (the "nightmares_intro" backstory + preset launcher).
     public static final String DIALOGUE_NIGHTMARES_NPC = "kweebecnightmare.dialogue.nightmares_intro.npc";
+
+    // Leaderboard page (launched by the guide's "Open: leaderboard" dialogue option). The option
+    // LABEL is by-convention (dialogue.nightmares_intro.greet.opt.3) and lives only in the .lang.
+    public static final String LB_TITLE = "kweebecnightmare.leaderboard.title";
+    public static final String LB_TAB_SOLO = "kweebecnightmare.leaderboard.tab.solo";
+    public static final String LB_TAB_DUO = "kweebecnightmare.leaderboard.tab.duo";
+    public static final String LB_TAB_TRIO = "kweebecnightmare.leaderboard.tab.trio";
+    public static final String LB_TAB_SQUAD = "kweebecnightmare.leaderboard.tab.squad";
+    public static final String LB_COL_RANK = "kweebecnightmare.leaderboard.col.rank";
+    public static final String LB_COL_PLAYER = "kweebecnightmare.leaderboard.col.player";
+    public static final String LB_COL_SCORE = "kweebecnightmare.leaderboard.col.score";
+    public static final String LB_COL_TIME = "kweebecnightmare.leaderboard.col.time";
+    public static final String LB_COL_PLAYS = "kweebecnightmare.leaderboard.col.plays";
+    public static final String LB_EMPTY = "kweebecnightmare.leaderboard.empty";
+    public static final String LB_YOUR_RANK = "kweebecnightmare.leaderboard.your_rank";
+    public static final String LB_YOUR_RANK_NONE = "kweebecnightmare.leaderboard.your_rank_none";
+
+    // End-of-game results screen (the common instance-experience ResultsPage).
+    public static final String RESULTS_WIN = "kweebecnightmare.results.win";
+    public static final String RESULTS_LOSS = "kweebecnightmare.results.loss";
+    public static final String RESULTS_DRAW = "kweebecnightmare.results.draw";
+    public static final String RESULTS_ABORT = "kweebecnightmare.results.abort";
+    public static final String RESULTS_DURATION = "kweebecnightmare.results.duration";
+    public static final String RESULTS_BREAKDOWN = "kweebecnightmare.results.breakdown";
+    public static final String RESULTS_REWARDS = "kweebecnightmare.results.rewards";
+    public static final String RESULTS_NO_REWARDS = "kweebecnightmare.results.no_rewards";
+    public static final String RESULTS_PENDING = "kweebecnightmare.results.pending";
+    public static final String RESULTS_BTN_LB = "kweebecnightmare.results.btn.leaderboard";
+    public static final String RESULTS_BTN_AGAIN = "kweebecnightmare.results.btn.again";
+    public static final String RESULTS_BTN_CLOSE = "kweebecnightmare.results.btn.close";
+    public static final String RESULTS_TEAM_TOTAL = "kweebecnightmare.results.team_total";
+    public static final String RESULTS_COL_TIME = "kweebecnightmare.results.col.time";
+    public static final String RESULTS_COL_DAMAGE = "kweebecnightmare.results.col.damage";
+    public static final String RESULTS_COL_STUN = "kweebecnightmare.results.col.stun";
+    public static final String RESULTS_COL_DURATION = "kweebecnightmare.results.col.duration";
+    public static final String RESULTS_REWARD_MOONBLOOM = "kweebecnightmare.results.reward.moonbloom";
+
+    // Queue / ready screen (the common QueuePage).
+    public static final String QUEUE_SCREEN_TITLE = "kweebecnightmare.queue.screen.title";
+    public static final String QUEUE_SCREEN_COUNT = "kweebecnightmare.queue.screen.count";
+    public static final String QUEUE_SCREEN_WAITING = "kweebecnightmare.queue.screen.waiting";
+    public static final String QUEUE_SCREEN_COUNTDOWN = "kweebecnightmare.queue.screen.countdown";
+    public static final String QUEUE_SCREEN_LAUNCHING = "kweebecnightmare.queue.screen.launching";
+    public static final String QUEUE_SCREEN_WAIT = "kweebecnightmare.queue.screen.wait";
+    public static final String QUEUE_SCREEN_LEAVE = "kweebecnightmare.queue.screen.leave";
+    public static final String QUEUE_SCREEN_REFRESH = "kweebecnightmare.queue.screen.refresh";
+    public static final String QUEUE_SCREEN_NOT_QUEUED = "kweebecnightmare.queue.screen.not_queued";
+
+    // Party + invite screen (the common PartyInvitePage).
+    public static final String PARTY_TITLE = "kweebecnightmare.party.title";
+    public static final String PARTY_TAB_PARTY = "kweebecnightmare.party.tab.party";
+    public static final String PARTY_TAB_INVITE = "kweebecnightmare.party.tab.invite";
+    public static final String PARTY_EMPTY_INVITE = "kweebecnightmare.party.empty.invite";
+    public static final String PARTY_EMPTY_PARTY = "kweebecnightmare.party.empty.party";
+    public static final String PARTY_BTN_INVITE = "kweebecnightmare.party.btn.invite";
+    public static final String PARTY_BTN_KICK = "kweebecnightmare.party.btn.kick";
+    public static final String PARTY_BTN_LEAVE = "kweebecnightmare.party.btn.leave";
+    public static final String PARTY_BTN_DISBAND = "kweebecnightmare.party.btn.disband";
+    public static final String PARTY_BTN_QUEUE = "kweebecnightmare.party.btn.queue";
+    public static final String PARTY_BTN_ACCEPT = "kweebecnightmare.party.btn.accept";
+    public static final String PARTY_BTN_DECLINE = "kweebecnightmare.party.btn.decline";
+    public static final String PARTY_OWNER_BADGE = "kweebecnightmare.party.owner_badge";
+    public static final String PARTY_COUNT = "kweebecnightmare.party.count";
+
+    // Party feedback toasts + banner.
+    public static final String PARTY_MSG_INVITED = "kweebecnightmare.party.msg.invited";
+    public static final String PARTY_MSG_BANNER = "kweebecnightmare.party.msg.banner";
+    public static final String PARTY_MSG_BANNER_SUB = "kweebecnightmare.party.msg.banner.sub";
+    public static final String PARTY_MSG_SENT = "kweebecnightmare.party.msg.sent";
+    public static final String PARTY_MSG_DECLINED = "kweebecnightmare.party.msg.declined";
+    public static final String PARTY_MSG_EXPIRED = "kweebecnightmare.party.msg.expired";
+    public static final String PARTY_MSG_JOINED = "kweebecnightmare.party.msg.joined";
+    public static final String PARTY_MSG_LEFT = "kweebecnightmare.party.msg.left";
+    public static final String PARTY_MSG_KICKED = "kweebecnightmare.party.msg.kicked";
+    public static final String PARTY_MSG_KICKED_MEMBER = "kweebecnightmare.party.msg.kicked_member";
+    public static final String PARTY_MSG_DISBANDED = "kweebecnightmare.party.msg.disbanded";
+    public static final String PARTY_MSG_OWNER = "kweebecnightmare.party.msg.owner";
+
+    // Command feedback for the new party / queue sub-commands.
+    public static final String CMD_PARTY_OPENED = "kweebecnightmare.cmd.party_opened";
 
     /** Build a localized {@link Message} from a key (resolved client-side). */
     @Nonnull

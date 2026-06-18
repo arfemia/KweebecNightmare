@@ -1,0 +1,76 @@
+$C = "../Common.ui";
+$F = "../Common/ZigFrames.ui";    // shared decorated frame + close (ziggfreed-common, cross-jar)
+$Z = "../Common/ZigButtons.ui";   // shared @ZigTabBtnStyle (ziggfreed-common, cross-jar)
+
+// Kweebec Nightmare leaderboard page. Reuses ziggfreed-common's shared decorated frame
+// (@ZigDecoratedFrame) + tab button (@ZigTabBtnStyle) cross-jar, and util/NumberFormatter -
+// it defines no frame/button style of its own (the DRY + paradigm rule). Rows are colour-only
+// Labels appended from KweebecLeaderboardPage.java (Pages/KweebecLeaderboardRow.ui). Element
+// ids are the contract the page sets against. Column tracks here align with the row template
+// (both inset 26px / 844px wide under the frame padding). NOT gradle-validated; smoke-test in-game.
+
+$C.@PageOverlay {}
+$F.@ZigDecoratedFrame {
+  @CloseButton = true;
+  Anchor: (Width: 900, Height: 720);
+
+  #Content {
+    Label #Title {
+      Text: "";
+      Anchor: (Height: 32, Bottom: 10);
+      Style: (FontSize: 22, TextColor: #ffd97a, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
+    }
+
+    // Party-size tabs (Solo / Duo / Trio / Squad). The active tab is tinted from Java.
+    Group #TabBar {
+      LayoutMode: Left;
+      Anchor: (Height: 38, Bottom: 10);
+      TextButton #TabSolo  { Anchor: (Width: 168, Height: 34, Right: 8); Style: $Z.@ZigTabBtnStyle; }
+      TextButton #TabDuo   { Anchor: (Width: 168, Height: 34, Right: 8); Style: $Z.@ZigTabBtnStyle; }
+      TextButton #TabTrio  { Anchor: (Width: 168, Height: 34, Right: 8); Style: $Z.@ZigTabBtnStyle; }
+      TextButton #TabSquad { Anchor: (Width: 168, Height: 34); Style: $Z.@ZigTabBtnStyle; }
+    }
+
+    // Column header (column widths match KweebecLeaderboardRow.ui).
+    Group #TableHeader {
+      LayoutMode: Left;
+      Anchor: (Height: 28, Bottom: 4);
+      Padding: (Left: 8, Right: 12);
+      Background: (TexturePath: "../Common/ContainerPanelPatch.png", Border: 4);
+      Label #HdrRank   { Text: ""; Anchor: (Width: 60);  Style: (FontSize: 12, TextColor: #8aa0b6, RenderBold: true, VerticalAlignment: Center); }
+      Label #HdrPlayer { Text: ""; FlexWeight: 1;         Style: (FontSize: 12, TextColor: #8aa0b6, RenderBold: true, VerticalAlignment: Center); }
+      Label #HdrScore  { Text: ""; Anchor: (Width: 120); Style: (FontSize: 12, TextColor: #8aa0b6, RenderBold: true, VerticalAlignment: Center); }
+      Label #HdrTime   { Text: ""; Anchor: (Width: 110); Style: (FontSize: 12, TextColor: #8aa0b6, RenderBold: true, VerticalAlignment: Center); }
+      Label #HdrPlays  { Text: ""; Anchor: (Width: 90);  Style: (FontSize: 12, TextColor: #8aa0b6, RenderBold: true, VerticalAlignment: Center); }
+    }
+
+    // Scrollable ranked rows (appended from Java). The only FlexWeight child in this Top column.
+    Group #LeaderboardList {
+      FlexWeight: 1;
+      LayoutMode: TopScrolling;
+      ScrollbarStyle: $C.@DefaultScrollbarStyle;
+      Padding: (Right: 4);
+    }
+
+    // Shown only when the selected bucket is empty (Java flips Visible).
+    Label #EmptyState {
+      Text: "";
+      Visible: false;
+      Anchor: (Height: 40, Top: 8);
+      Style: (FontSize: 14, TextColor: #8696a8, HorizontalAlignment: Center, VerticalAlignment: Center);
+    }
+
+    // Footer: the viewer's own rank line for this bucket.
+    Group #YourRankRow {
+      LayoutMode: Left;
+      Anchor: (Height: 34, Top: 8);
+      Padding: (Left: 10, Right: 10);
+      Background: (TexturePath: "../Common/ContainerPanelPatch.png", Border: 4);
+      Label #YourRank {
+        Text: "";
+        FlexWeight: 1;
+        Style: (FontSize: 13, TextColor: #d7e4f0, RenderBold: true, VerticalAlignment: Center);
+      }
+    }
+  }
+}

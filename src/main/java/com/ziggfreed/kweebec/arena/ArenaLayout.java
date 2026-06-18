@@ -79,6 +79,27 @@ public final class ArenaLayout {
     public static final Anchor SHRINE_CAVE = CAVE_ANCHORS[0];
 
     /**
+     * Count of WORLDGEN-placed surface shrine host prefabs (the {@code KweebecNightmare_Grove} biome
+     * shrine-host {@code List} props). The shrine furnace is BAKED into a copied vanilla prefab and placed
+     * by worldgen, not a runtime ring. MUST match the number of shrine-host List props in the biome JSON
+     * and the {@link #WORLDGEN_SHRINE_XZ} entries. Normal-mode total = this + {@code RuleSet.caveShrineCount()}.
+     */
+    public static final int SURFACE_WORLDGEN_SHRINES = 3;
+
+    /**
+     * The fixed (X, Z) of each worldgen surface shrine host - the biome {@code List}-prop positions, spread
+     * across quadrants clear of spawn (r6 courtyard), the gate corridor (-Z), and the cave anchors (r~38).
+     * Y floor-snaps at gen time. Used ONLY to cluster the Moonbloom SUPPLY near each shrine; the shrine
+     * OBJECTIVE is discovered via its furnace interaction (see {@code ChaseState.shrineForBlock}), never these
+     * coords. MUST match the biome JSON's shrine-host List positions.
+     */
+    public static final double[][] WORLDGEN_SHRINE_XZ = {
+            {52.0, 58.0},
+            {-64.0, 40.0},
+            {30.0, 82.0},
+    };
+
+    /**
      * The first {@code count} underground shrine anchors (clamped to the predefined set). An empty
      * list when {@code count <= 0} (a pure-surface round).
      */

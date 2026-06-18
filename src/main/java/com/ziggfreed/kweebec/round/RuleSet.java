@@ -48,6 +48,7 @@ public final class RuleSet {
     private final int[] moonbloomRespawnAtSeconds;
     private final int minParty;
     private final int maxParty;
+    private final boolean exitMarker;
 
     private RuleSet(Builder b) {
         this.presetId = b.presetId;
@@ -76,6 +77,7 @@ public final class RuleSet {
         this.moonbloomRespawnAtSeconds = b.moonbloomRespawnAtSeconds;
         this.minParty = b.minParty;
         this.maxParty = b.maxParty;
+        this.exitMarker = b.exitMarker;
     }
 
     /**
@@ -241,6 +243,16 @@ public final class RuleSet {
         return moonbloomRespawnAtSeconds.clone();
     }
 
+    /**
+     * Whether this round shows an exit map marker (a world-map / compass POI placed at
+     * the escape when the Heartwood Gate opens). Default on; the Hardcore preset ships
+     * it off so survivors must find their own way out. Asset-driven via the preset's
+     * {@code ExitMarker} knob.
+     */
+    public boolean exitMarker() {
+        return exitMarker;
+    }
+
     @Nonnull
     public static Builder builder(@Nonnull String presetId) {
         return new Builder(presetId);
@@ -280,6 +292,7 @@ public final class RuleSet {
         b.moonbloomRespawnAtSeconds = this.moonbloomRespawnAtSeconds;
         b.minParty = this.minParty;
         b.maxParty = this.maxParty;
+        b.exitMarker = this.exitMarker;
         return b;
     }
 
@@ -312,6 +325,7 @@ public final class RuleSet {
         private int[] moonbloomRespawnAtSeconds = {180, 360};
         private int minParty = 1;
         private int maxParty = ARENA_MAX_PARTY;
+        private boolean exitMarker = true;
 
         private Builder(@Nonnull String presetId) {
             this.presetId = presetId;
@@ -340,6 +354,7 @@ public final class RuleSet {
         @Nonnull public Builder moonbloomRespawnAtSeconds(@Nonnull int[] v) { this.moonbloomRespawnAtSeconds = v.clone(); return this; }
         @Nonnull public Builder minParty(int v) { this.minParty = v; return this; }
         @Nonnull public Builder maxParty(int v) { this.maxParty = v; return this; }
+        @Nonnull public Builder exitMarker(boolean v) { this.exitMarker = v; return this; }
 
         @Nonnull
         public RuleSet build() {

@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
@@ -147,6 +148,36 @@ public final class ScareDirector {
     private static final Map<String, ScheduledFuture<?>> WHISPER_ACTIVE = new ConcurrentHashMap<>();
 
     // ---------------------------------------------------------------------
+    // snicker layer (a hunter taunts you when it is close)
+    // ---------------------------------------------------------------------
+
+    /**
+     * A hunter has a random chance to SNICKER when a survivor is within mid range or
+     * closer - a vocal "I see you" cue from the hunter's own position (not mislocated
+     * like the whisper), folded into the 1 Hz {@link #tick} rather than its own
+     * scheduler. Per-survivor cooldown keeps a lingering hunter from cackling every
+     * second. The on-HIT snicker is the sibling cue in {@code KweebecDamageSystem}.
+     */
+    private static final int SNICKER_MIN_BAND = 2;
+    /** Per-tick (1 Hz) probability of a proximity snicker once a survivor is in band &gt;= {@link #SNICKER_MIN_BAND}. */
+    private static final double SNICKER_CHANCE = 0.12;
+    /** Minimum gap (ms) between proximity snickers for one survivor. */
+    private static final long SNICKER_COOLDOWN_MS = 5_000L;
+
+    /** Candidate snicker sound ids (vanilla eerie SFX; no custom audio). Swap the first id to retune. */
+    private static final String[] SNICKER_CANDIDATES = {
+            "SFX_Emit_Temple_Wisps", "SFX_Emit_Forgotten_Whispers"
+    };
+
+    /** Gate cache: whether ANY snicker candidate is registered (playback re-resolves through Sound3D's own cache). */
+    private static final AssetIndexCache<com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent>
+            SNICKER_INDEX = AssetIndexCache.ofCandidates(SNICKER_CANDIDATES,
+                    id -> com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent.getAssetMap().getIndex(id));
+
+    /** Last proximity-snicker epoch ms per survivor (the per-player throttle). */
+    private static final Map<UUID, Long> LAST_SNICKER_MS = new ConcurrentHashMap<>();
+
+    // ---------------------------------------------------------------------
     // per-round, per-survivor vignette + jumpscare state (world-thread only)
     // ---------------------------------------------------------------------
 
@@ -215,7 +246,70 @@ public final class ScareDirector {
             if (targetBand >= CLOSEST_BAND && prevBand < CLOSEST_BAND) {
                 fireJumpscare(uuid, ref, store);
             }
+
+            // Snicker: a random chance for the nearest hunter to cackle while it is close.
+            maybeSnicker(uuid, pos, hunterPositions, store);
         }
+    }
+
+    /**
+     * A throttled, random-chance snicker from the nearest hunter when {@code pos} is in
+     * the mid/close proximity band - a vocal cue private to that survivor, played at the
+     * hunter's own position so it reads as coming FROM the thing chasing them. Best-effort:
+     * a missing sound / no hunter / off cooldown / failed roll is a silent no-op.
+     */
+    private static void maybeSnicker(@Nonnull UUID uuid, @Nonnull Vector3d pos,
+                                     @Nonnull List<Vector3d> hunterPositions, @Nonnull Store<EntityStore> store) {
+        int band = nearestBand(pos, hunterPositions);
+        if (band < SNICKER_MIN_BAND) {
+            return;
+        }
+        if (ThreadLocalRandom.current().nextDouble() >= SNICKER_CHANCE) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        Long last = LAST_SNICKER_MS.get(uuid);
+        if (last != null && now - last < SNICKER_COOLDOWN_MS) {
+            return;
+        }
+        if (SNICKER_INDEX.resolve() == AssetIndexCache.UNRESOLVED) {
+            return; // no snicker asset registered (the round still plays)
+        }
+        Vector3d hunter = nearestHunterPos(pos, hunterPositions);
+        if (hunter == null) {
+            return;
+        }
+        String snickerId = SNICKER_INDEX.resolvedIdOrNull();
+        if (snickerId == null) {
+            return;
+        }
+        LAST_SNICKER_MS.put(uuid, now);
+        Ref<EntityStore> ref = survivorRef(uuid);
+        if (ref == null || !ref.isValid()) {
+            return;
+        }
+        Sound3D.play(snickerId, SoundCategory.SFX, hunter.x(), hunter.y(), hunter.z(),
+                Sound3D.onlyEntity(ref), store, "SNICKER", false);
+    }
+
+    /** The hunter position nearest {@code pos} (horizontal), or null if the list is empty. */
+    @Nullable
+    private static Vector3d nearestHunterPos(@Nonnull Vector3d pos, @Nonnull List<Vector3d> hunterPositions) {
+        Vector3d best = null;
+        double bestSq = Double.MAX_VALUE;
+        for (Vector3d h : hunterPositions) {
+            if (h == null) {
+                continue;
+            }
+            double dx = pos.x() - h.x();
+            double dz = pos.z() - h.z();
+            double sq = dx * dx + dz * dz;
+            if (sq < bestSq) {
+                bestSq = sq;
+                best = h;
+            }
+        }
+        return best;
     }
 
     /**
@@ -567,10 +661,11 @@ public final class ScareDirector {
             KweebecNightmarePlugin.LOGGER.atFine().log(
                     "[Kweebec][scare] clear failed: " + t.getMessage());
         }
-        // Drop the jumpscare throttle for everyone in this round (the vignette maps are
-        // already pruned by clearVignetteFor).
+        // Drop the jumpscare + snicker throttles for everyone in this round (the vignette
+        // maps are already pruned by clearVignetteFor).
         for (UUID uuid : roundPlayers) {
             LAST_JUMPSCARE_MS.remove(uuid);
+            LAST_SNICKER_MS.remove(uuid);
         }
     }
 

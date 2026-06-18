@@ -1,9 +1,6 @@
 package com.ziggfreed.kweebec.npc;
 
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
 
@@ -23,8 +20,10 @@ import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 /**
  * Spawns the "Grove Warden" guide NPC ({@code KweebecNightmare_Guide}) once per world
  * on {@link PlayerReadyEvent}, near the world spawn, via the lifted
- * {@link NpcSpawnService}. Idempotency is a kweebec-side per-world set (NOT a lifted
- * singleton placement store, which would clobber across mods); a recorded per-world
+ * {@link NpcSpawnService}. Idempotency is the kweebec-owned, file-backed
+ * {@link KweebecGuidePlacementStore} (NOT a lifted singleton placement store, which
+ * would clobber across mods, and NOT an in-memory set, which resets every boot and
+ * stacks a fresh guide beside the persisted one on each restart); a recorded per-world
  * UUID lets the {@code /kweebec spawnguide} debug hatch despawn the old one before
  * re-placing.
  *
@@ -37,9 +36,6 @@ public final class KweebecGuideSpawn {
 
     /** The default Passive role the guide uses (overridable via {@link KweebecGuideConfig#getRole()}). */
     public static final String GUIDE_ROLE = "KweebecNightmare_Guide";
-
-    private static final Set<String> spawnedWorlds = ConcurrentHashMap.newKeySet();
-    private static final Map<String, UUID> guideByWorld = new ConcurrentHashMap<>();
 
     private KweebecGuideSpawn() {
     }
@@ -71,31 +67,33 @@ public final class KweebecGuideSpawn {
         if (!cfg.isEnabled() || !cfg.shouldSpawnInWorld(worldName)) {
             return;
         }
-        if (!spawnedWorlds.add(worldName)) {
-            return; // already spawned for this world (atomic claim)
+        // Persistent once-per-world gate: the guide NPC persists in the world's entity store, so the
+        // marker MUST persist too or a fresh boot stacks another guide beside the saved one. Mark AFTER
+        // a successful place (mirrors hyMMO's maybeAutoSpawnHub), so a failed spawn simply retries on
+        // the next join. PlayerReady world.execute tasks run serialized on the world thread, so the
+        // check-then-mark needs no separate atomic claim.
+        KweebecGuidePlacementStore placements = KweebecGuidePlacementStore.getInstance();
+        if (placements.hasSpawned(worldName)) {
+            return;
         }
         try {
             Ref<EntityStore> ref = player.getReference();
             if (ref == null) {
-                spawnedWorlds.remove(worldName);
                 return;
             }
             Store<EntityStore> store = ref.getStore();
             Vector3dc base = NpcSpawnService.resolveSpawnPosition(world, store, ref);
             if (base == null) {
-                spawnedWorlds.remove(worldName);
                 return;
             }
             Vector3d pos = new Vector3d(
                     base.x() + cfg.getOffsetX(), base.y() + cfg.getOffsetY(), base.z() + cfg.getOffsetZ());
-            if (!place(world, store, worldName, pos, cfg.getYaw())) {
-                spawnedWorlds.remove(worldName); // let a later join retry
-            } else {
+            if (place(world, store, worldName, pos, cfg.getYaw())) {
+                placements.markSpawned(worldName);
                 KweebecNightmarePlugin.LOGGER.atInfo().log(
                         "[Kweebec] spawned Grove Warden guide in world '" + worldName + "'.");
             }
         } catch (Throwable t) {
-            spawnedWorlds.remove(worldName);
             KweebecNightmarePlugin.LOGGER.atWarning().log(
                     "[Kweebec] guide spawn failed: " + t.getMessage());
         }
@@ -108,11 +106,12 @@ public final class KweebecGuideSpawn {
     public static boolean reposition(@Nonnull World world, @Nonnull Store<EntityStore> store,
                                      @Nonnull Vector3dc pos, float yaw) {
         String worldName = world.getName();
-        UUID old = guideByWorld.get(worldName);
+        KweebecGuidePlacementStore placements = KweebecGuidePlacementStore.getInstance();
+        UUID old = placements.getGuide(worldName);
         if (old != null) {
             NpcSpawnService.despawn(store, old);
         }
-        spawnedWorlds.add(worldName); // suppress the auto-spawn now that one is placed
+        placements.markSpawned(worldName); // suppress the auto-spawn now that one is placed
         return place(world, store, worldName, pos, yaw);
     }
 
@@ -122,7 +121,7 @@ public final class KweebecGuideSpawn {
             try {
                 UUIDComponent uc = st.getComponent(npcRef, UUIDComponent.getComponentType());
                 if (uc != null && uc.getUuid() != null) {
-                    guideByWorld.put(worldName, uc.getUuid());
+                    KweebecGuidePlacementStore.getInstance().recordGuide(worldName, uc.getUuid());
                 }
             } catch (Throwable ignored) {
                 // best-effort UUID record (only used by the debug reposition)

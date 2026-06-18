@@ -38,7 +38,7 @@ import com.ziggfreed.kweebec.i18n.Lang;
 import com.ziggfreed.kweebec.integration.KweebecNightmareAPI;
 import com.ziggfreed.kweebec.mode.chase.ChaseMode;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
-import com.ziggfreed.kweebec.score.Leaderboard;
+import com.ziggfreed.kweebec.experience.KweebecExperience;
 import com.ziggfreed.kweebec.score.ScoreCalculator;
 import com.ziggfreed.kweebec.score.ScoringConfig;
 
@@ -307,6 +307,10 @@ public final class RoundService {
                     duration, difficultyScore, scores);
             recordScores(partySize, round, scores);
             showResult(round, outcome);
+            // Open the end-of-game results screen (team breakdown + asset-driven rewards
+            // with the full-inventory guard + leaderboard CTA) during the result hold,
+            // before finalizeAndEject tears the in-memory round state down.
+            KweebecExperience.openResults(round, outcome, win, duration, difficultyScore, scores);
             teardown(round, world);
         });
 
@@ -337,22 +341,10 @@ public final class RoundService {
         return scores;
     }
 
-    /** Record each present (non-abandoning) player's score into the party-size leaderboard bucket. */
+    /** Record each present (non-abandoning) player's score into the (common) leaderboard bucket. */
     private void recordScores(int partySize, @Nonnull RoundInstance round,
                               @Nonnull Map<UUID, PlayerScore> scores) {
-        for (PlayerRoundState st : round.playerStates()) {
-            if (st.hasLeftRound()) {
-                continue; // an abandoner is not recorded
-            }
-            PlayerScore ps = scores.get(st.playerId());
-            if (ps != null) {
-                // Players are online at round-resolve, so capture the current username for the
-                // leaderboard so offline rows show a real name instead of a UUID prefix.
-                PlayerRef pr = Universe.get().getPlayer(st.playerId());
-                String name = pr != null ? pr.getUsername() : null;
-                Leaderboard.getInstance().record(partySize, st.playerId(), name, ps);
-            }
-        }
+        KweebecExperience.recordScores(partySize, round, scores);
     }
 
     private void showResult(@Nonnull RoundInstance round, @Nonnull RoundCompletedEvent.Outcome outcome) {

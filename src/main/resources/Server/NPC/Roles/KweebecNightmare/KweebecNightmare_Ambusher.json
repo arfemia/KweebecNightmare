@@ -3,7 +3,7 @@
   "Reference": "Template_KweebecNightmare_Ambusher",
   "Modify": {
     "DefaultPlayerAttitude": "Hostile",
-    "Appearance": "Kweebec_Sapling_Razorleaf",
+    "Appearance": "KweebecNightmare_HunterCorrupted",
     "DropList": "Drop_Kweebec_Sapling_Razorleaf",
     "MaxHealth": 180,
     "IsMemory": false,

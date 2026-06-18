@@ -70,6 +70,8 @@ hud.corruption = Corruption {0}%
 hud.objective.ritual = Relight the grove shrines
 hud.objective.escape = Flee through the Heartwood Gate
 
+marker.exit = Exit
+
 cmd.players_only = Only players can run this.
 cmd.already_in_round = You are already in a round.
 cmd.not_in_round = You are not in a round.
@@ -170,3 +172,67 @@ leaderboard.col.plays = Runs
 leaderboard.empty = No survivors have been recorded in this bracket yet. Be the first.
 leaderboard.your_rank = Your best: #{0}  ({1} pts)
 leaderboard.your_rank_none = You have no ranked run in this bracket yet.
+
+# End-of-game results screen (the shared instance-experience ResultsPage).
+results.win = You Survived
+results.loss = The Grove Took You
+results.draw = A Hollow Night
+results.abort = The Ritual Broke
+results.duration = Total time: {0}
+results.breakdown = Your run
+results.rewards = Spoils of the Grove
+results.no_rewards = No spoils this night.
+results.pending = Some spoils are waiting - make inventory space to claim them.
+results.btn.leaderboard = View Leaderboard
+results.btn.again = Play Again
+results.btn.close = Leave
+results.team_total = Grove total: {0}
+results.col.time = Swiftness
+results.col.damage = Caution
+results.col.stun = Defiance
+results.col.duration = Time alive
+results.reward.moonbloom = x{0} Moonbloom
+
+# Queue / ready screen (the shared QueuePage). The player stays here after queueing.
+queue.screen.title = The Gathering
+queue.screen.count = {0}/{1} survivors
+queue.screen.waiting = Waiting for more to answer the call...
+queue.screen.countdown = The grove pulls you in... {0}
+queue.screen.launching = The Blighted Grove takes you...
+queue.screen.wait = up to ~{0}s
+queue.screen.leave = Leave the Gathering
+queue.screen.refresh = Refresh
+queue.screen.not_queued = You are not in a gathering.
+
+# Party + invite screen (the shared PartyInvitePage).
+party.title = Your Coven
+party.tab.party = Coven
+party.tab.invite = Invite
+party.empty.invite = No one else is online to invite.
+party.empty.party = You have no coven. Invite survivors to brave the grove together.
+party.btn.invite = Invite
+party.btn.kick = Remove
+party.btn.leave = Leave Coven
+party.btn.disband = Disband
+party.btn.queue = Queue Coven
+party.btn.accept = Accept
+party.btn.decline = Decline
+party.owner_badge = Leader
+party.count = {0}/{1}
+
+# Party feedback toasts + the invite banner.
+party.msg.invited = {0} invites you into their coven ({1}/{2}).
+party.msg.banner = {0} invites you
+party.msg.banner.sub = Open your coven to accept.
+party.msg.sent = Invite sent to {0}.
+party.msg.declined = {0} declined your invite.
+party.msg.expired = The invite faded into the dark.
+party.msg.joined = {0} joins the coven ({1}/{2}).
+party.msg.left = {0} left the coven.
+party.msg.kicked = You were removed from the coven.
+party.msg.kicked_member = {0} was removed from the coven.
+party.msg.disbanded = The coven scatters.
+party.msg.owner = {0} now leads the coven.
+
+# Command feedback.
+cmd.party_opened = Opening your coven...

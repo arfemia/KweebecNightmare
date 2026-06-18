@@ -108,9 +108,12 @@ public final class ShrineSubmitInteraction extends SimpleInstantInteraction {
                 ctx.getState().state = InteractionState.Finished;
                 return;
             }
-            ShrineState shrine = chase.shrineAt(bp.x, bp.y, bp.z);
+            // DISCOVER-on-touch: this RootInteraction only fires on a KweebecNightmare_Shrine furnace block,
+            // so resolve (creating on first F-press) the shrine for the targeted block. Null only once the
+            // round's known total shrines are already discovered (an unexpected extra furnace) - then no-op.
+            ShrineState shrine = chase.shrineForBlock(bp.x, bp.y, bp.z);
             if (shrine == null || shrine.isLit()) {
-                // Not a tracked shrine furnace, or already cleansed: no-op (no Moonbloom consumed).
+                // Beyond the expected shrine count, or already cleansed: no-op (no Moonbloom consumed).
                 ctx.getState().state = InteractionState.Finished;
                 return;
             }

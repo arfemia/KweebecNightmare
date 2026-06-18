@@ -20,9 +20,10 @@ import com.ziggfreed.kweebec.event.KweebecDamageSystem;
 import com.ziggfreed.kweebec.interaction.ShrineSubmitInteraction;
 import com.ziggfreed.kweebec.lobby.KweebecLobby;
 import com.ziggfreed.kweebec.npc.KweebecGuideConfig;
+import com.ziggfreed.kweebec.npc.KweebecGuidePlacementStore;
 import com.ziggfreed.kweebec.npc.KweebecGuideSpawn;
+import com.ziggfreed.kweebec.experience.KweebecExperience;
 import com.ziggfreed.kweebec.round.RoundService;
-import com.ziggfreed.kweebec.score.Leaderboard;
 
 /**
  * Entry point for Kweebec Nightmare, the standalone co-op horror chase minigame.
@@ -86,13 +87,21 @@ public class KweebecNightmarePlugin extends JavaPlugin {
             LOGGER.atSevere().log("[Kweebec] failed to register shrine interaction: " + e.getMessage());
         }
 
-        // Per-playercount leaderboard, loaded from the plugin data dir (durable across restarts).
-        Leaderboard.getInstance().init(getDataDirectory());
+        // The shared instance-experience layer: the (common) leaderboard + party service +
+        // pending-reward store + the page deps, loaded from the plugin data dir. Built after
+        // KweebecLobby.init below would be ideal, but it only reads KweebecLobby.service()
+        // lazily at page-open, so order here is fine.
+        KweebecExperience.init(getDataDirectory());
 
         // Grove Warden guide auto-spawn config (<data dir>/guide.json; defaults written on first run):
         // which worlds get the guide (default the "default" overworld only) + its spawn offset/yaw.
         // Mirrors MMO Skill Tree's spawn-hub.json.
         KweebecGuideConfig.getInstance().load(getDataDirectory());
+
+        // Persistent once-per-world marker (<data dir>/guide-placements.json) so a reboot never stacks a
+        // second guide beside the one already saved in the world. Loaded BEFORE the player-ready hook
+        // below can fire. Mirrors MMO Skill Tree's MmoNpcPlacementStore auto-spawn marker.
+        KweebecGuidePlacementStore.getInstance().init(getDataDirectory());
 
         // Round engine: 1 Hz state machine + cleanup ticker.
         RoundService.getInstance().startup();
@@ -104,6 +113,10 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // Auto-spawn the "Grove Warden" guide once per world on player-ready (the diegetic
         // entry trigger); press-F opens the backstory dialogue + preset launcher.
         getEventRegistry().registerGlobal(PlayerReadyEvent.class, KweebecGuideSpawn::onPlayerReady);
+
+        // Re-deliver any rewards a player could not claim last time because their inventory
+        // was full (the no-claim-with-full-inventory guard holds them until they make space).
+        getEventRegistry().registerGlobal(PlayerReadyEvent.class, KweebecExperience::onPlayerReady);
 
         // Perfect Utils is a hard dependency (loads first); confirm the aggro API resolved so a
         // missing/older jar is obvious in the log rather than a silent fall-back to natural sensors.
@@ -129,6 +142,7 @@ public class KweebecNightmarePlugin extends JavaPlugin {
     protected void shutdown() {
         RoundService.getInstance().shutdown();
         KweebecLobby.shutdown();
+        KweebecExperience.shutdown();
         LOGGER.atInfo().log("KweebecNightmare shutdown complete.");
     }
 }

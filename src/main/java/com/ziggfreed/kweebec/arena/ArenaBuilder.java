@@ -23,8 +23,6 @@ import com.ziggfreed.common.world.BlockTypeLists;
 import com.ziggfreed.common.world.SurfaceProbe;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
-import com.ziggfreed.kweebec.mode.chase.Shrine;
-import com.ziggfreed.kweebec.mode.chase.ShrineState;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.util.SafeLog;
 
@@ -113,7 +111,7 @@ public final class ArenaBuilder {
         // corrupted-structure ruins (all pasted once). Ambient grove trees are scattered by the
         // worldgen biome (KweebecNightmare_Grove Props[]); these are the GAMEPLAY-anchored ruins.
         CompletableFuture.runAsync(() -> {
-            pasteObjectives(world, chase);
+            pasteObjectives(round, world);
             pasteCenterpiece(world);
             pasteStructures(round, world);
         });
@@ -128,7 +126,7 @@ public final class ArenaBuilder {
                 }
                 World w = round.world();
                 if (w != null) {
-                    CompletableFuture.runAsync(() -> pasteObjectives(w, chase));
+                    CompletableFuture.runAsync(() -> pasteObjectives(round, w));
                 }
             }, delay, TimeUnit.SECONDS);
         }
@@ -160,27 +158,21 @@ public final class ArenaBuilder {
         if (perShrine <= 0 && scatter <= 0) {
             return;
         }
-        ChaseState chase = round.chaseState();
         CompletableFuture.runAsync(() -> {
             try {
                 IPrefabBuffer buffer = load(MOONBLOOM_PREFAB);
                 if (buffer == null) {
                     return; // load() already WARNs the missing key
                 }
-                // Cluster at each unlit surface shrine.
-                if (perShrine > 0 && chase != null) {
-                    for (ShrineState s : chase.shrines()) {
-                        if (s.isLit()) {
-                            continue;
-                        }
-                        Anchor a = s.anchor();
-                        if (a.y() < ArenaLayout.STAND_Y - 1.0) {
-                            continue; // cave shrine: no surface cluster (players carry charges down)
-                        }
+                // Cluster the guaranteed supply near each WORLDGEN surface shrine host (the known biome List
+                // positions; the shrine OBJECTIVE itself is discovered via its furnace interaction, not these
+                // coords). Cave shrines get no surface cluster - survivors carry charges down the shaft.
+                if (perShrine > 0) {
+                    for (double[] xz : ArenaLayout.WORLDGEN_SHRINE_XZ) {
                         for (int i = 0; i < perShrine; i++) {
                             double theta = 2.0 * Math.PI * i / perShrine;
-                            double px = a.x() + MOONBLOOM_CLUSTER_RADIUS * Math.sin(theta);
-                            double pz = a.z() + MOONBLOOM_CLUSTER_RADIUS * Math.cos(theta);
+                            double px = xz[0] + MOONBLOOM_CLUSTER_RADIUS * Math.sin(theta);
+                            double pz = xz[1] + MOONBLOOM_CLUSTER_RADIUS * Math.cos(theta);
                             paste(world, buffer, new Anchor(px, ArenaLayout.STAND_Y, pz, 0f), false, false);
                         }
                     }
@@ -211,7 +203,11 @@ public final class ArenaBuilder {
      * {@link com.ziggfreed.kweebec.mode.chase.ChaseMode}'s {@code openGate} only once every shrine is
      * lit (the dramatic "the gate opens" beat), via {@link #pasteGate(World)}.
      */
-    private static void pasteObjectives(@Nonnull World world, @Nonnull ChaseState chase) {
+    private static void pasteObjectives(@Nonnull RoundInstance round, @Nonnull World world) {
+        ChaseState chase = round.chaseState();
+        if (chase == null) {
+            return;
+        }
         try {
             IPrefabBuffer exit = load(EXIT_PREFAB);
             IPrefabBuffer[] shafts = new IPrefabBuffer[SHAFT_PREFABS.length];
@@ -219,25 +215,17 @@ public final class ArenaBuilder {
                 shafts[i] = load(SHAFT_PREFABS[i]);
             }
 
-            int caveIndex = 0;
-            for (var s : chase.shrines()) {
-                Anchor a = s.anchor();
-                if (a.y() >= ArenaLayout.STAND_Y - 1.0) {
-                    // Surface ring shrine: the interactable furnace block (REPLACES the old pillar prefab).
-                    placeShrineBlock(world, s);
-                } else {
-                    // Underground shrine: carve the descent shaft + lit chamber + baked shrine pillar
-                    // straight into the solid terrain, alternating the descent style (spiral / ladder)
-                    // per cave for variety. force=true so the prefab's Empty cells UNCONDITIONALLY clear
-                    // the rock (PrefabUtil's setBlock path) - the descend-and-return shrine MUST be
-                    // reachable or allShrinesLit() never fires and the round is unwinnable. On the
-                    // now-rolling grove terrain the shaft top is floor-snapped to the LOCAL surface and
-                    // the shrine's chamber stand Y is re-pointed to match (see pasteCaveShaft).
-                    IPrefabBuffer shaft = shafts[caveIndex % shafts.length];
-                    if (shaft != null) {
-                        pasteCaveShaft(world, shaft, s);
-                    }
-                    caveIndex++;
+            // SURFACE shrines are WORLDGEN-placed (the furnace baked into copied vanilla host prefabs by the
+            // KweebecNightmare_Grove biome shrine-host List props) and discovered via their interaction -
+            // ArenaBuilder no longer rings them. ArenaBuilder still CARVES the cave shrines (force-paste into
+            // solid terrain so the descent is reachable); their furnace is BAKED into the shaft prefab too
+            // (no runtime block placement, no cyan beam). Both kinds are discovered by ChaseState.shrineForBlock
+            // when a survivor offers Moonbloom at the furnace, so neither needs a pre-tracked position here.
+            List<Anchor> caves = ArenaLayout.caveShrineAnchors(round.ruleSet().caveShrineCount(), round.worldSeed());
+            for (int caveIndex = 0; caveIndex < caves.size(); caveIndex++) {
+                IPrefabBuffer shaft = shafts[caveIndex % shafts.length];
+                if (shaft != null) {
+                    pasteCaveShaft(world, shaft, caves.get(caveIndex), caveIndex, chase);
                 }
             }
             if (exit != null) {
@@ -247,44 +235,6 @@ public final class ArenaBuilder {
             KweebecNightmarePlugin.LOGGER.atWarning().log(
                     "[Kweebec] arena objective paste failed: " + t.getMessage());
         }
-    }
-
-    /**
-     * Place (or re-place) the interactable shrine FURNACE block at a SURFACE shrine anchor, floor-snapped to
-     * the local surface. This REPLACES the old pillar prefab - the furnace IS the shrine now (dark until a
-     * survivor offers Moonbloom at it, then green fire). Records the block position on the shrine so the
-     * cleanse interaction + the lit reconciler resolve it. Idempotent across the +4s/+9s re-paste (same
-     * probed surface -> same cell). Best-effort: the probe + set run on the world thread.
-     */
-    private static void placeShrineBlock(@Nonnull World world, @Nonnull ShrineState s) {
-        Anchor a = s.anchor();
-        int x = (int) Math.floor(a.x());
-        int z = (int) Math.floor(a.z());
-        int fallbackTop = (int) Math.floor(a.y() - 1.0);
-        world.execute(() -> {
-            try {
-                int topY = SurfaceProbe.topSolidY(world, x, z, fallbackTop,
-                        BlockTypeLists.keys(SURFACE_DECORATION_LISTS));
-                setShrineFurnace(world, s, x, topY + 1, z);
-                KweebecNightmarePlugin.LOGGER.atInfo().log(
-                        "[Kweebec] shrine furnace placed at (" + x + "," + (topY + 1) + "," + z + ")");
-            } catch (Throwable t) {
-                KweebecNightmarePlugin.LOGGER.atWarning().log(
-                        "[Kweebec] shrine furnace placement failed at (" + x + "," + z + "): " + t.getMessage());
-            }
-        });
-    }
-
-    /**
-     * Set the shrine furnace block at {@code (x,y,z)} (the authored UNLIT default state) and record it on the
-     * shrine. Clears {@code litRendered} so the {@code ChaseMode} reconciler re-asserts the lit state if the
-     * shrine is somehow already cleansed (re-pastes finish during PREP, before any cleanse can happen, so in
-     * practice this just places a fresh unlit furnace). World-thread only.
-     */
-    private static void setShrineFurnace(@Nonnull World world, @Nonnull ShrineState s, int x, int y, int z) {
-        world.setBlock(x, y, z, Shrine.SHRINE_BLOCK);
-        s.setBlockPos(new Vector3i(x, y, z));
-        s.setLitRendered(false);
     }
 
     /**
@@ -457,61 +407,37 @@ public final class ArenaBuilder {
         });
     }
 
-    /** The cave-shaft prefab's surface-to-chamber depth (authored for the old flat case: floor Y79 -> chamber stand Y66). */
-    private static final double CAVE_SHAFT_DEPTH = ArenaLayout.FLOOR_Y - ArenaLayout.CAVE_STAND_Y;
-
     /**
-     * The shaft prefab bakes a cyan shrine "beam" column at prefab-relative {@code (0, -12..-8, +2)} (offsets
-     * from the shaft anchor, which pastes at the surface top; the shaft force-pastes unrotated). The cave
-     * furnace REPLACES it: placed at the beam BASE ({@code -12}) and the 4 blocks above ({@code -11..-8})
-     * cleared to air, so the furnace stands where the beam did instead of beside an un-replaced beam.
+     * Carve one underground shrine's descent shaft + chamber into the solid grove, floor-snapped to the
+     * rolling surface: probe the LOCAL top-solid Y and force-paste the shaft top there (so the entrance meets
+     * the surface). The shrine FURNACE is BAKED into the shaft prefab at the chamber (no runtime block
+     * placement, no cyan beam) and discovered via its interaction when a survivor descends and offers
+     * Moonbloom. Idempotent across the +4s/+9s re-carve: the resolved surface Y is remembered per cave
+     * ({@code ChaseState.caveCarveY}) so a re-paste reuses it instead of re-probing the already-carved
+     * surface (which would stack a second shaft). On a probe miss it falls back to the flat-disc floor.
      */
-    private static final int CAVE_BEAM_DZ = 2;
-    private static final int CAVE_BEAM_BASE_DY = -12;
-    private static final int CAVE_BEAM_TOP_DY = -8;
-
-    /**
-     * Carve one underground shrine's descent shaft + chamber, floor-snapped to the rolling surface:
-     * probe the LOCAL top-solid Y, force-paste the shaft top there (so the entrance meets the surface),
-     * and RE-POINT the shrine's chamber stand Y to {@code surface - shaftDepth} so the underground
-     * channel Y-band in {@code ChaseMode} matches the carved chamber. Idempotent: a fixed surface gives
-     * the same Y on the +4s/+9s re-paste. On a probe miss it falls back to the old flat-disc floor (Y79)
-     * -> chamber stand Y66, the original behavior.
-     */
-    private static void pasteCaveShaft(@Nonnull World world, @Nonnull IPrefabBuffer shaft, @Nonnull ShrineState cave) {
-        Anchor a = cave.anchor();
+    private static void pasteCaveShaft(@Nonnull World world, @Nonnull IPrefabBuffer shaft,
+                                       @Nonnull Anchor a, int caveIndex, @Nonnull ChaseState chase) {
         int x = (int) Math.floor(a.x());
         int z = (int) Math.floor(a.z());
         int fallbackTop = (int) Math.floor(ArenaLayout.FLOOR_Y);
         world.execute(() -> {
             try {
-                // IDEMPOTENT re-paste: probe the NATURAL surface ONCE (first pass) and remember it on
-                // the shrine. The +4s/+9s re-pastes reuse that Y instead of re-probing - because the
-                // first carve REPLACES the surface at this (x,z) with the shaft's own blocks, so a
-                // re-probe would find a different top and stack a second/third shaft on top.
-                int topY = cave.caveSurfaceTopY();
-                if (topY == Integer.MIN_VALUE) {
+                Integer stored = chase.caveCarveY(caveIndex);
+                int topY;
+                if (stored == null) {
                     topY = SurfaceProbe.topSolidY(world, x, z, fallbackTop,
                             BlockTypeLists.keys(SURFACE_DECORATION_LISTS));
-                    cave.setCaveSurfaceTopY(topY);
-                    // Re-point the chamber stand Y ONLY on the first resolve (the channel Y-band match).
-                    cave.setAnchor(new Anchor(a.x(), topY - CAVE_SHAFT_DEPTH, a.z(), a.yaw()));
+                    chase.setCaveCarveY(caveIndex, topY);
+                } else {
+                    topY = stored;
                 }
                 Vector3i pos = new Vector3i(x, topY, z);
                 Store<EntityStore> store = world.getEntityStore().getStore();
+                // force=true so the shaft's Empty cells UNCONDITIONALLY carve the rock (PrefabUtil setBlock
+                // path) - the descend-and-return shrine MUST be reachable or allShrinesLit() never fires.
                 PrefabUtilPaste.paste(shaft, world, pos, store, true);
-                // The cave shrine IS the furnace, placed where the prefab's baked cyan "beam" stood so it
-                // REPLACES it: furnace at the beam base, the column above cleared to air. Runs AFTER the carve
-                // (which re-bakes the beam), so it re-asserts on every +4s/+9s re-paste. The player must
-                // descend the shaft to press F on it - the descend-and-return objective is preserved.
-                int fz = z + CAVE_BEAM_DZ;
-                int fy = topY + CAVE_BEAM_BASE_DY;
-                setShrineFurnace(world, cave, x, fy, fz);
-                for (int dy = CAVE_BEAM_BASE_DY + 1; dy <= CAVE_BEAM_TOP_DY; dy++) {
-                    world.breakBlock(x, topY + dy, fz, 0); // clear the rest of the cyan beam column to air
-                }
-                KweebecNightmarePlugin.LOGGER.atInfo().log(
-                        "[Kweebec] cave shaft carved at " + pos + ", furnace at (" + x + "," + fy + "," + fz + ")");
+                KweebecNightmarePlugin.LOGGER.atInfo().log("[Kweebec] cave shaft carved at " + pos);
             } catch (Throwable t) {
                 KweebecNightmarePlugin.LOGGER.atWarning().log(
                         "[Kweebec] cave shaft carve failed at (" + x + "," + z + "): " + t.getMessage());

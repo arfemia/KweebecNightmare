@@ -18,5 +18,6 @@
   "InventoryMode": "PRESERVE_AND_STRIP",
   "RewardOnExit": "ON_WIN",
   "HunterArchetype": "stalker",
-  "CleanseCost": 4
+  "CleanseCost": 4,
+  "ExitMarker": false
 }

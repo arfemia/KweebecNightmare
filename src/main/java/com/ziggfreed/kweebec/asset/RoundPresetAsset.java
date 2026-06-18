@@ -89,6 +89,8 @@ public final class RoundPresetAsset
     // Matchmaking party knobs (the queue's min/max seats; max clamps to the arena budget).
     private int minParty = UNSET_INT;
     private int maxParty = UNSET_INT;
+    // Exit map marker toggle (null = absent = the RuleSet default = on; Hardcore authors false).
+    @Nullable private Boolean exitMarker;
 
     public static final AssetBuilderCodec<String, RoundPresetAsset> CODEC = AssetBuilderCodec.builder(
                     RoundPresetAsset.class,
@@ -160,6 +162,8 @@ public final class RoundPresetAsset
             .append(new KeyedCodec<>("MinParty", Codec.INTEGER, false), (a, v) -> a.minParty = v, a -> a.minParty)
             .add()
             .append(new KeyedCodec<>("MaxParty", Codec.INTEGER, false), (a, v) -> a.maxParty = v, a -> a.maxParty)
+            .add()
+            .append(new KeyedCodec<>("ExitMarker", Codec.BOOLEAN, false), (a, v) -> a.exitMarker = v, a -> a.exitMarker)
             .add()
             .build();
 
@@ -281,6 +285,9 @@ public final class RoundPresetAsset
         }
         if (maxParty != UNSET_INT) {
             b.maxParty(maxParty);
+        }
+        if (exitMarker != null) {
+            b.exitMarker(exitMarker);
         }
         return b.build();
     }

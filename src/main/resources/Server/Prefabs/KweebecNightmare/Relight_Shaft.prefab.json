@@ -722,12 +722,6 @@
     {
       "x": -1,
       "y": -12,
-      "z": 2,
-      "name": "Empty"
-    },
-    {
-      "x": -1,
-      "y": -12,
       "z": 3,
       "name": "Empty"
     },
@@ -760,12 +754,6 @@
       "y": -11,
       "z": 1,
       "name": "Rock_Stone"
-    },
-    {
-      "x": -1,
-      "y": -11,
-      "z": 2,
-      "name": "Empty"
     },
     {
       "x": -1,
@@ -1177,18 +1165,6 @@
     },
     {
       "x": 0,
-      "y": -12,
-      "z": 2,
-      "name": "Build_Lightsource_Cyan"
-    },
-    {
-      "x": 0,
-      "y": -12,
-      "z": 3,
-      "name": "Empty"
-    },
-    {
-      "x": 0,
       "y": -11,
       "z": -3,
       "name": "Empty"
@@ -1216,12 +1192,6 @@
       "y": -11,
       "z": 1,
       "name": "Empty"
-    },
-    {
-      "x": 0,
-      "y": -11,
-      "z": 2,
-      "name": "Build_Lightsource_Cyan"
     },
     {
       "x": 0,
@@ -1262,12 +1232,6 @@
     {
       "x": 0,
       "y": -10,
-      "z": 2,
-      "name": "Build_Lightsource_Cyan"
-    },
-    {
-      "x": 0,
-      "y": -10,
       "z": 3,
       "name": "Empty"
     },
@@ -1304,12 +1268,6 @@
     {
       "x": 0,
       "y": -9,
-      "z": 2,
-      "name": "Build_Lightsource_Cyan"
-    },
-    {
-      "x": 0,
-      "y": -9,
       "z": 3,
       "name": "Empty"
     },
@@ -1342,12 +1300,6 @@
       "y": -8,
       "z": 1,
       "name": "Empty"
-    },
-    {
-      "x": 0,
-      "y": -8,
-      "z": 2,
-      "name": "Build_Lightsource_Cyan"
     },
     {
       "x": 0,
@@ -1634,12 +1586,6 @@
     {
       "x": 1,
       "y": -12,
-      "z": 2,
-      "name": "Empty"
-    },
-    {
-      "x": 1,
-      "y": -12,
       "z": 3,
       "name": "Empty"
     },
@@ -1671,12 +1617,6 @@
       "x": 1,
       "y": -11,
       "z": 1,
-      "name": "Empty"
-    },
-    {
-      "x": 1,
-      "y": -11,
-      "z": 2,
       "name": "Empty"
     },
     {
@@ -2572,6 +2512,33 @@
       "y": -8,
       "z": 3,
       "name": "Empty"
+    },
+    {
+      "x": 0,
+      "y": -13,
+      "z": 2,
+      "name": "KweebecNightmare_Shrine"
+    },
+    {
+      "x": -1,
+      "y": -13,
+      "z": 2,
+      "name": "KweebecNightmare_Shrine",
+      "filler": 31
+    },
+    {
+      "x": 0,
+      "y": -12,
+      "z": 2,
+      "name": "KweebecNightmare_Shrine",
+      "filler": 1024
+    },
+    {
+      "x": -1,
+      "y": -12,
+      "z": 2,
+      "name": "KweebecNightmare_Shrine",
+      "filler": 1055
     }
   ]
 }
