@@ -51,7 +51,7 @@
           ]
         },
         {
-          "$Comment": "Watching - player nearby; track with head, return to Idle when they leave.",
+          "$Comment": "Watching - player nearby; track with head, STOP the wave after a beat (clear the looping Status slot), return to Idle when they leave.",
           "Sensor": { "Type": "State", "State": "Watching" },
           "Instructions": [
             {
@@ -60,8 +60,16 @@
               "HeadMotion": { "Type": "Watch" }
             },
             {
+              "Continue": true,
+              "Sensor": { "Type": "Any" },
+              "Actions": [
+                { "Type": "Timeout", "Delay": [ 2, 2 ], "Action": { "Type": "PlayAnimation", "Slot": "Status" } }
+              ]
+            },
+            {
               "Sensor": { "Type": "Not", "Sensor": { "Type": "Player", "Range": 12 } },
               "Actions": [
+                { "Type": "PlayAnimation", "Slot": "Status" },
                 { "Type": "State", "State": "Idle" }
               ]
             },

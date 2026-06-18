@@ -19,6 +19,7 @@ import com.ziggfreed.kweebec.dialogue.KweebecDialogue;
 import com.ziggfreed.kweebec.event.KweebecDamageSystem;
 import com.ziggfreed.kweebec.interaction.ShrineSubmitInteraction;
 import com.ziggfreed.kweebec.lobby.KweebecLobby;
+import com.ziggfreed.kweebec.npc.KweebecGuideConfig;
 import com.ziggfreed.kweebec.npc.KweebecGuideSpawn;
 import com.ziggfreed.kweebec.round.RoundService;
 import com.ziggfreed.kweebec.score.Leaderboard;
@@ -87,6 +88,11 @@ public class KweebecNightmarePlugin extends JavaPlugin {
 
         // Per-playercount leaderboard, loaded from the plugin data dir (durable across restarts).
         Leaderboard.getInstance().init(getDataDirectory());
+
+        // Grove Warden guide auto-spawn config (<data dir>/guide.json; defaults written on first run):
+        // which worlds get the guide (default the "default" overworld only) + its spawn offset/yaw.
+        // Mirrors MMO Skill Tree's spawn-hub.json.
+        KweebecGuideConfig.getInstance().load(getDataDirectory());
 
         // Round engine: 1 Hz state machine + cleanup ticker.
         RoundService.getInstance().startup();

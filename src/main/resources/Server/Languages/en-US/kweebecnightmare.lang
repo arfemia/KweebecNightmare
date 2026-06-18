@@ -134,24 +134,27 @@ cmd.guide_failed = The Grove Warden cannot stand here.
 npc.guide.name = The Grove Warden
 npc.guide.hint = Press [{key}] to speak with the Grove Warden
 
-# Guide dialogue: the Grove Warden (id "nightmares_intro"; backstory + the preset
-# launcher). The NODE TEXT (a Label) uses inline markup - <color is="#hex">/<b>/<i> -
-# which RichText parses into a Message span tree rendered via the Label's TextSpans
-# property (single-locale by nature, fine for kweebec's en-US). OPTION labels stay
-# plain: they are TextButtons (no TextSpans) and are already colour-coded by their
-# DialogueOptionStyle (green ACCEPT). Toasts/banners stay plain too (not this UI).
+# Guide dialogue: the Grove Warden (id "nightmares_intro"). The greet/lore node text
+# is a {0}/{1} TEMPLATE; its styled params (the node's authored TextParams) are the
+# translation keys below, so each coloured word stays client-resolved PER-LOCALE and
+# the page composes a Message tree on the Label's TextSpans. Option labels are
+# TextButtons (no TextSpans) - colour-coded by their DialogueOptionStyle (green
+# ACCEPT). preset_pick / already_engaged carry no params (plain text).
 dialogue.nightmares_intro.npc = The Grove Warden
-dialogue.nightmares_intro.greet.text = A small Kweebec, its bark still <color is="#7affa0">green</color>, steps from the roots and looks up at you. <i>"You are warm. You are awake. Most of my kin are neither, not since the <color is="#a06cff">Void</color> crept into the grove. I am what is left to warn the warm ones."</i>
+dialogue.nightmares_intro.word.green = green
+dialogue.nightmares_intro.word.void = Void
+dialogue.nightmares_intro.word.hunt = hunt
+dialogue.nightmares_intro.greet.text = A small Kweebec, its bark still {0}, steps from the roots and looks up at you. "You are warm. You are awake. Most of my kin are neither, not since the {1} crept into the grove. I am what is left to warn the warm ones."
 dialogue.nightmares_intro.greet.opt.0 = What happened to this place?
 dialogue.nightmares_intro.greet.opt.1 = I am ready. Send me into the grove.
 dialogue.nightmares_intro.greet.opt.2 = About the hunt I have already chosen...
-dialogue.nightmares_intro.lore.text = <i>"Once the Emerald Grove <b>sang</b>. The <color is="#a06cff">Void</color> seeped up through the roots, and the song became screaming. My kin wear our faces now, and they <color is="#ff6b6b">hunt</color>. Relight the grove-shrines and the Heartwood Gate will open; linger too long, and the dark takes whoever runs last."</i>
+dialogue.nightmares_intro.lore.text = "Once the Emerald Grove sang. The {0} seeped up through the roots, and the song became screaming. My kin wear our faces now, and they {1}. Relight the grove-shrines and the Heartwood Gate will open; linger too long, and the dark takes whoever runs last."
 dialogue.nightmares_intro.lore.opt.0 = Enough. I am ready to hunt.
 dialogue.nightmares_intro.lore.opt.1 = Tell me something else.
-dialogue.nightmares_intro.preset_pick.text = <i>"How deep will you go?"</i> The warden's eyes flicker like dying embers. <i>"Choose, and I will open a way into the dark."</i>
+dialogue.nightmares_intro.preset_pick.text = "How deep will you go?" The warden's eyes flicker like dying embers. "Choose, and I will open a way into the dark."
 dialogue.nightmares_intro.preset_pick.opt.0 = Amateur - let me learn the grove.
 dialogue.nightmares_intro.preset_pick.opt.1 = Nightmare - the true hunt.
 dialogue.nightmares_intro.preset_pick.opt.2 = Hardcore - one life, no mercy.
 dialogue.nightmares_intro.preset_pick.opt.3 = Not yet. Step back.
-dialogue.nightmares_intro.already_engaged.text = <i>"You are already bound to a hunt, warm one,"</i> the warden murmurs. <i>"Step out of the gathering first, and I will offer you the choice again."</i>
+dialogue.nightmares_intro.already_engaged.text = "You are already bound to a hunt, warm one," the warden murmurs. "Step out of the gathering first, and I will offer you the choice again."
 dialogue.nightmares_intro.already_engaged.opt.0 = I understand.

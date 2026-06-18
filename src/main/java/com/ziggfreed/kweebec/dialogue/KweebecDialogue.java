@@ -144,6 +144,10 @@ public final class KweebecDialogue {
               "Start": [{ "Node": "greet" }],
               "Nodes": {
                 "greet": {
+                  "TextParams": [
+                    { "Key": "dialogue.nightmares_intro.word.green", "Color": "#7affa0" },
+                    { "Key": "dialogue.nightmares_intro.word.void", "Color": "#a06cff" }
+                  ],
                   "Options": [
                     { "Goto": "lore" },
                     { "Conditions": [{ "Type": "NotInRound" }], "Goto": "preset_pick" },
@@ -151,6 +155,10 @@ public final class KweebecDialogue {
                   ]
                 },
                 "lore": {
+                  "TextParams": [
+                    { "Key": "dialogue.nightmares_intro.word.void", "Color": "#a06cff" },
+                    { "Key": "dialogue.nightmares_intro.word.hunt", "Color": "#ff6b6b" }
+                  ],
                   "Options": [
                     { "Conditions": [{ "Type": "NotInRound" }], "Goto": "preset_pick" },
                     { "Goto": "greet" }

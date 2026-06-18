@@ -35,16 +35,8 @@ import com.ziggfreed.kweebec.KweebecNightmarePlugin;
  */
 public final class KweebecGuideSpawn {
 
-    /** The pack-authored Passive role the guide uses. */
+    /** The default Passive role the guide uses (overridable via {@link KweebecGuideConfig#getRole()}). */
     public static final String GUIDE_ROLE = "KweebecNightmare_Guide";
-
-    // Placed off the spawn point so the guide is not standing on the joining player, and
-    // deliberately on the OPPOSITE side of spawn from the MMO Skill Tree hub NPC (its
-    // default offset is +2.5 X) so the two never overlap when both mods are installed.
-    private static final double OFFSET_X = -3.0;
-    private static final double OFFSET_Z = 0.0;
-    /** Faces roughly toward the spawn point (a player arriving at spawn sees its front). */
-    private static final float YAW = 90.0f;
 
     private static final Set<String> spawnedWorlds = ConcurrentHashMap.newKeySet();
     private static final Map<String, UUID> guideByWorld = new ConcurrentHashMap<>();
@@ -72,6 +64,13 @@ public final class KweebecGuideSpawn {
 
     private static void spawnIfAbsent(@Nonnull World world, @Nonnull Player player) {
         String worldName = world.getName();
+        KweebecGuideConfig cfg = KweebecGuideConfig.getInstance();
+        // Config-driven (mirrors MMO Skill Tree's spawn-hub): only the worlds in guide.json (default
+        // ["default"]) get the guide. This excludes round instances + the creative hub - they fire
+        // PlayerReadyEvent too, but are not in the list - so the guide stays in the main overworld.
+        if (!cfg.isEnabled() || !cfg.shouldSpawnInWorld(worldName)) {
+            return;
+        }
         if (!spawnedWorlds.add(worldName)) {
             return; // already spawned for this world (atomic claim)
         }
@@ -87,8 +86,9 @@ public final class KweebecGuideSpawn {
                 spawnedWorlds.remove(worldName);
                 return;
             }
-            Vector3d pos = new Vector3d(base.x() + OFFSET_X, base.y(), base.z() + OFFSET_Z);
-            if (!place(world, store, worldName, pos, YAW)) {
+            Vector3d pos = new Vector3d(
+                    base.x() + cfg.getOffsetX(), base.y() + cfg.getOffsetY(), base.z() + cfg.getOffsetZ());
+            if (!place(world, store, worldName, pos, cfg.getYaw())) {
                 spawnedWorlds.remove(worldName); // let a later join retry
             } else {
                 KweebecNightmarePlugin.LOGGER.atInfo().log(
@@ -118,7 +118,7 @@ public final class KweebecGuideSpawn {
 
     private static boolean place(@Nonnull World world, @Nonnull Store<EntityStore> store,
                                  @Nonnull String worldName, @Nonnull Vector3dc pos, float yaw) {
-        return NpcSpawnService.spawnRole(world, store, GUIDE_ROLE, pos, yaw, (npc, npcRef, st) -> {
+        return NpcSpawnService.spawnRole(world, store, KweebecGuideConfig.getInstance().getRole(), pos, yaw, (npc, npcRef, st) -> {
             try {
                 UUIDComponent uc = st.getComponent(npcRef, UUIDComponent.getComponentType());
                 if (uc != null && uc.getUuid() != null) {
