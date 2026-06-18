@@ -1,0 +1,11 @@
+# interaction/ - registered block/item RootInteraction handlers
+
+Router for `interaction/`. The mod-root `CLAUDE.md` + the parent repo's `hytale-modding` skill are the deep authority for the custom-interaction + interactable-block plumbing; this is the local index.
+
+- **[`ShrineSubmitInteraction`](ShrineSubmitInteraction.java)** - the interactable shrine FURNACE. A survivor presses F on a `KweebecNightmare_Shrine` block to offer Moonbloom; each press deposits up to the shrine's remaining need (`RuleSet.cleanseCost() - submitted`) via `ziggfreed-common` `InventoryUtil.take`, and at the total the furnace lights (green-fire "lit" state) through [`../mode/chase/ChaseMode`](../mode/chase/ChaseMode.java)`.lightShrine`. Resolves the shrine from the F-target block (`InteractionContext.getTargetBlock()`) via `ChaseState.shrineAt(x,y,z)` after finding the player's round through `RoundService.getInstance().registry().forPlayer(uuid)`.
+
+- **Pattern (port of the hyMMO MMO `interaction/`):** extend `SimpleInstantInteraction` (engine `...modules.interaction.interaction.config`), do the work in `firstRun(InteractionType, InteractionContext, CooldownHandler)`, carry a `public static final String TYPE_NAME` + a `BuilderCodec` built on `SimpleInstantInteraction.CODEC`. [`../KweebecNightmarePlugin`](../KweebecNightmarePlugin.java)`.setup()` registers each via `getCodecRegistry(Interaction.CODEC).register(TYPE_NAME, class, CODEC)`; the block JSON's `BlockType.Interactions.Use` names a `RootInteraction` (`Server/Item/RootInteractions/KweebecNightmare/*.json`) whose `Interactions[0].Type` is the registered `TYPE_NAME`.
+
+- **EVERY exit path MUST set `ctx.getState().state`** (`Finished` on success/handled, `Failed` on a missing-context/error path); the body is wrapped in `try/catch (Throwable)` logging to `KweebecNightmarePlugin.LOGGER`. A fall-through hangs the client.
+
+- **Threading:** `firstRun` runs on the instance world thread (the engine dispatches a block-Use there) - the SAME thread the 1 Hz round tick mutates `ShrineState` on, so the handler mutates shrine state directly with no `world.execute` hop and no extra synchronization (it never races the tick; the single-threaded executor only interleaves them between ticks).

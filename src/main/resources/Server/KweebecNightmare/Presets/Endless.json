@@ -18,5 +18,6 @@
   "InventoryMode": "PRESERVE_AND_STRIP",
   "RewardOnExit": "ON_WIN",
   "HunterArchetype": "stalker",
+  "CleanseCost": 3,
   "Mutators": []
 }

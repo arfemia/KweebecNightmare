@@ -1,29 +1,31 @@
 package com.ziggfreed.kweebec.command;
 
 import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.protocol.GameMode;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.OptionalArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
+import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.ziggfreed.common.inventory.InventoryUtil;
+import com.ziggfreed.common.lobby.JoinResult;
+import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.asset.PresetConfig;
 import com.ziggfreed.kweebec.i18n.Lang;
+import com.ziggfreed.kweebec.lobby.KweebecLobby;
 import com.ziggfreed.kweebec.moonbloom.Moonbloom;
+import com.ziggfreed.kweebec.npc.KweebecGuideSpawn;
 import com.ziggfreed.kweebec.round.RoundService;
 import com.ziggfreed.kweebec.score.Leaderboard;
 
@@ -50,7 +52,8 @@ public final class KweebecCommand extends CommandBase {
         // The engine resolves the command + arg descriptions as localization keys.
         super("kweebec", Lang.CMD_DESC);
         this.addAliases("kn");
-        this.setPermissionGroup(GameMode.Adventure);
+        // The non-deprecated equivalent of the old setPermissionGroup(GameMode.Adventure).
+        this.setPermissionGroups("hytale:Adventurer");
         this.subArg = withOptionalArg("sub", Lang.ARG_SUB_DESC, ArgTypes.STRING);
         this.presetArg = withOptionalArg("preset", Lang.ARG_PRESET_DESC, ArgTypes.STRING);
     }
@@ -65,6 +68,7 @@ public final class KweebecCommand extends CommandBase {
             case "give" -> give(ctx);
             case "score" -> score(ctx);
             case "leaderboard", "lb" -> leaderboard(ctx);
+            case "spawnguide", "guide" -> spawnGuide(ctx);
             default -> ctx.sendMessage(Lang.msg(Lang.CMD_USAGE));
         }
     }
@@ -75,8 +79,7 @@ public final class KweebecCommand extends CommandBase {
             return;
         }
         UUID initiator = player.getUuid();
-        RoundService svc = RoundService.getInstance();
-        if (svc.registry().isInRound(initiator)) {
+        if (RoundService.getInstance().registry().isInRound(initiator)) {
             ctx.sendMessage(Lang.msg(Lang.CMD_ALREADY_IN_ROUND));
             return;
         }
@@ -91,13 +94,14 @@ public final class KweebecCommand extends CommandBase {
             presetId = requested;
         }
 
-        List<UUID> party = partyInSameWorld(initiator);
-        ctx.sendMessage(Lang.msg(Lang.CMD_STARTING));
-        svc.startChase(initiator, party, presetId).whenComplete((roundId, err) -> {
-            if (err != null) {
-                ctx.sendMessage(Lang.msg(Lang.CMD_START_FAILED));
-            }
-        });
+        // Queue for the preset: the lobby gathers a party over a short fill window, then
+        // launches via startChase. The queue itself toasts join + countdown feedback.
+        switch (KweebecLobby.join(initiator, presetId)) {
+            case JOINED -> ctx.sendMessage(Lang.msg(Lang.CMD_QUEUED));
+            case ALREADY_QUEUED -> ctx.sendMessage(Lang.msg(Lang.CMD_ALREADY_QUEUED));
+            case ALREADY_ENGAGED -> ctx.sendMessage(Lang.msg(Lang.CMD_ALREADY_IN_ROUND));
+            case QUEUE_UNAVAILABLE -> ctx.sendMessage(Lang.msg(Lang.CMD_START_FAILED));
+        }
     }
 
     private void exit(@Nonnull CommandContext ctx) {
@@ -106,12 +110,49 @@ public final class KweebecCommand extends CommandBase {
             return;
         }
         UUID uuid = player.getUuid();
-        if (!RoundService.getInstance().registry().isInRound(uuid)) {
-            ctx.sendMessage(Lang.msg(Lang.CMD_NOT_IN_ROUND));
+        // Leave a queue first (not yet in a round), else leave the live round.
+        if (KweebecLobby.isQueued(uuid)) {
+            KweebecLobby.leave(uuid);
+            ctx.sendMessage(Lang.msg(Lang.CMD_LEFT_QUEUE));
             return;
         }
-        ctx.sendMessage(Lang.msg(Lang.CMD_LEAVING));
-        RoundService.getInstance().exit(uuid);
+        if (RoundService.getInstance().registry().isInRound(uuid)) {
+            ctx.sendMessage(Lang.msg(Lang.CMD_LEAVING));
+            RoundService.getInstance().exit(uuid);
+            return;
+        }
+        ctx.sendMessage(Lang.msg(Lang.CMD_NOT_QUEUED_OR_IN_ROUND));
+    }
+
+    /** {@code spawnguide} - (re)place the Grove Warden guide at the caller's position (debug). */
+    private void spawnGuide(@Nonnull CommandContext ctx) {
+        if (!(ctx.sender() instanceof PlayerRef player)) {
+            ctx.sendMessage(Lang.msg(Lang.CMD_PLAYERS_ONLY));
+            return;
+        }
+        World world = Universe.get().getWorld(player.getWorldUuid());
+        if (world == null) {
+            ctx.sendMessage(Lang.msg(Lang.CMD_GUIDE_FAILED));
+            return;
+        }
+        ctx.sendMessage(Lang.msg(Lang.CMD_GUIDE_SPAWNED));
+        world.execute(() -> {
+            try {
+                Store<EntityStore> store = world.getEntityStore().getStore();
+                Ref<EntityStore> ref = player.getReference();
+                if (ref == null || !ref.isValid()) {
+                    return;
+                }
+                TransformComponent tc = store.getComponent(ref, TransformComponent.getComponentType());
+                if (tc == null) {
+                    return;
+                }
+                KweebecGuideSpawn.reposition(world, store, tc.getPosition(), 0.0f);
+            } catch (Throwable t) {
+                KweebecNightmarePlugin.LOGGER.atWarning().log(
+                        "[Kweebec] spawnguide failed: " + t.getMessage());
+            }
+        });
     }
 
     private void endAll(@Nonnull CommandContext ctx) {
@@ -217,19 +258,5 @@ public final class KweebecCommand extends CommandBase {
     @Nonnull
     private static String shortId(@Nonnull UUID uuid) {
         return uuid.toString().substring(0, 8);
-    }
-
-    /** The caller plus every other online player in the caller's current world. */
-    @Nonnull
-    private static List<UUID> partyInSameWorld(@Nonnull UUID initiator) {
-        PlayerRef initRef = Universe.get().getPlayer(initiator);
-        if (initRef == null) {
-            return List.of(initiator);
-        }
-        UUID worldUuid = initRef.getWorldUuid();
-        return Universe.get().getPlayers().stream()
-                .filter(pr -> worldUuid.equals(pr.getWorldUuid()))
-                .map(PlayerRef::getUuid)
-                .collect(Collectors.toList());
     }
 }

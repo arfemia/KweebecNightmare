@@ -6,19 +6,19 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.joml.Vector3d;
+import org.joml.Vector3i;
 
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.GameMode;
+import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import com.ziggfreed.common.inventory.InventoryUtil;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
-import com.ziggfreed.kweebec.moonbloom.Moonbloom;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
 import com.ziggfreed.kweebec.atmosphere.MusicBedService;
 import com.ziggfreed.kweebec.arena.Anchor;
@@ -103,7 +103,7 @@ public final class ChaseMode {
 
         if (chase.phase() != ChasePhase.PREP) {
             chase.addCorruption(round.ruleSet().corruptionPerSecond());
-            handleShrines(round, world, store, chase);
+            handleShrines(world, chase);
             maybeRespawnMoonbloom(round, world, chase);
             HunterController hunter = round.hunterController();
             if (hunter != null) {
@@ -226,46 +226,60 @@ public final class ChaseMode {
     // --- shrines ---
 
     /**
-     * The shrine CLEANSE (1.4.0 Moonbloom loop, pure-swap). A shrine is no longer relit by a
-     * hold-in-place channel timer; an active survivor standing within {@link ArenaLayout#INTERACT_RADIUS}
-     * who holds at least {@code cleanseCost} gathered Moonbloom charges SPENDS them and the shrine
-     * lights instantly. The cost is a configurable rule-set knob ({@link RuleSet#cleanseCost()}); a
-     * configured cost of 0 cleanses on proximity alone (the degenerate, supply-free dial). A survivor
-     * who is at the shrine but short on Moonbloom is nudged once per approach to go gather more.
-     *
-     * <p>{@code feedbackStage} is reused as a per-approach "already nudged" flag (reset when the
-     * survivor steps away) so the "gather Moonbloom" cue does not spam every tick. The old channel
-     * {@code progress}/{@code channeller} fields are vestigial under pure-swap; the hunter no longer
-     * draws toward a channeller (there is none) and falls back to nearest-survivor pursuit.
+     * Per-tick lit RECONCILER (1.4.0 furnace rework). Shrines are now cleansed by submitting Moonbloom at
+     * their interactable furnace ({@link com.ziggfreed.kweebec.interaction.ShrineSubmitInteraction}, which
+     * calls {@link #lightShrine}), NOT by a proximity scan. This loop only re-asserts the green-fire "lit"
+     * block state for any shrine that is logically lit but whose block has not yet been switched - healing a
+     * missed call, a chunk reload, or an {@code ArenaBuilder} +4s/+9s re-paste that reset the block to default.
      */
-    private static void handleShrines(@Nonnull RoundInstance round, @Nonnull World world,
-                                      @Nonnull Store<EntityStore> store, @Nonnull ChaseState chase) {
-        int cleanseCost = round.ruleSet().cleanseCost();
-        UUID worldUuid = world.getWorldConfig().getUuid();
+    private static void handleShrines(@Nonnull World world, @Nonnull ChaseState chase) {
         for (ShrineState shrine : chase.shrines()) {
-            if (shrine.isLit()) {
-                continue;
+            if (shrine.isLit() && !shrine.litRendered()) {
+                renderLit(world, shrine);
             }
-            UUID cleanser = activeSurvivorNear(round, store, worldUuid, shrine.anchor(), ArenaLayout.INTERACT_RADIUS_SQ);
-            if (cleanser == null) {
-                shrine.setFeedbackStage(0); // stepped away; re-arm the "need Moonbloom" nudge
-                continue;
+        }
+    }
+
+    /**
+     * Complete a shrine: mark it lit, bump corruption once, switch its furnace block to the green-fire
+     * state, announce it grove-wide, and log the win line. Idempotent (the {@link ShrineState#isLit()} guard
+     * means a double press never double-lights or double-counts corruption). Called from the furnace
+     * interaction on the world thread (the SAME thread as the 1 Hz tick). The all-shrines-lit -> gate chain
+     * in {@link #tick} is unchanged - it polls {@code ChaseState.allShrinesLit()} the same as before.
+     */
+    public static void lightShrine(@Nonnull RoundInstance round, @Nonnull World world,
+                                   @Nonnull ChaseState chase, @Nonnull ShrineState shrine) {
+        if (shrine.isLit()) {
+            return;
+        }
+        shrine.setLit(true);
+        chase.addCorruption(round.ruleSet().corruptionPerShrine());
+        renderLit(world, shrine);
+        KweebecNightmarePlugin.LOGGER.atInfo().log(
+                "[Kweebec][win] shrine " + shrine.index() + " CLEANSED ("
+                        + chase.litShrines() + "/" + chase.totalShrines() + ")");
+        forEachPresent(round, pr -> RoundFeedback.successToast(pr, Lang.TOAST_CLEANSE_DONE));
+    }
+
+    /**
+     * Switch a shrine's furnace block to its {@code "lit"} interaction state (green fire), once. No-ops if
+     * the block position is unset, the chunk is not yet queryable, or the cell is no longer the shrine
+     * furnace (so the per-tick reconciler retries next tick). World-thread only; best-effort.
+     */
+    private static void renderLit(@Nonnull World world, @Nonnull ShrineState shrine) {
+        Vector3i p = shrine.blockPos();
+        if (p == null) {
+            return;
+        }
+        try {
+            BlockType bt = world.getBlockType(p.x(), p.y(), p.z());
+            if (bt == null || bt.getData() == null || bt.getBlockForState(Shrine.LIT_STATE) == null) {
+                return; // chunk not ready / not the shrine block; retry next reconcile tick
             }
-            Ref<EntityStore> ref = presentRef(cleanser, worldUuid);
-            boolean cleansed = cleanseCost <= 0
-                    || (ref != null && InventoryUtil.spend(store, ref, Moonbloom.CHARGE_ITEM, cleanseCost));
-            if (cleansed) {
-                shrine.setLit(true);
-                chase.addCorruption(round.ruleSet().corruptionPerShrine());
-                KweebecNightmarePlugin.LOGGER.atInfo().log(
-                        "[Kweebec][win] shrine " + shrine.index() + " CLEANSED ("
-                                + chase.litShrines() + "/" + chase.totalShrines() + ")");
-                forEachPresent(round, pr -> RoundFeedback.successToast(pr, Lang.TOAST_CLEANSE_DONE));
-            } else if (shrine.feedbackStage() < 1) {
-                // At the shrine but short on Moonbloom: nudge to gather, once per approach.
-                shrine.setFeedbackStage(1);
-                toastTo(cleanser, pr -> RoundFeedback.warningToast(pr, Lang.TOAST_CLEANSE_NEED));
-            }
+            world.setBlockInteractionState(p, bt, Shrine.LIT_STATE);
+            shrine.setLitRendered(true);
+        } catch (Throwable t) {
+            KweebecNightmarePlugin.LOGGER.atFine().log("[Kweebec] shrine relight render failed: " + t.getMessage());
         }
     }
 
@@ -289,14 +303,6 @@ public final class ChaseMode {
             ArenaBuilder.plantMoonbloom(round, world, 1, respawnCount, wave);
             chase.incrementMoonbloomRespawnsFired();
             forEachPresent(round, pr -> RoundFeedback.warningToast(pr, Lang.TOAST_MOONBLOOM_RESPAWN));
-        }
-    }
-
-    /** Run an action for one player by UUID if they are online (used for channeller-only cues). */
-    private static void toastTo(@Nonnull UUID uuid, @Nonnull java.util.function.Consumer<PlayerRef> action) {
-        PlayerRef pr = Universe.get().getPlayer(uuid);
-        if (pr != null) {
-            action.accept(pr);
         }
     }
 

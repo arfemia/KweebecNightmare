@@ -17,5 +17,6 @@
   "ShrineRelightSeconds": 5.0,
   "InventoryMode": "PRESERVE_AND_STRIP",
   "RewardOnExit": "ON_WIN",
-  "HunterArchetype": "stalker"
+  "HunterArchetype": "stalker",
+  "CleanseCost": 3
 }

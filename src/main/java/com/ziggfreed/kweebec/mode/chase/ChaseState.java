@@ -58,6 +58,21 @@ public final class ChaseState {
         return shrines;
     }
 
+    /**
+     * The shrine whose interactable furnace is the block at {@code (x,y,z)}, or null if no shrine furnace
+     * sits there. Used by the cleanse interaction to resolve which shrine a survivor pressed F on. A round
+     * has only a handful of shrines, so a linear scan is fine. World-thread only.
+     */
+    @Nullable
+    public ShrineState shrineAt(int x, int y, int z) {
+        for (ShrineState s : shrines) {
+            if (s.matchesBlock(x, y, z)) {
+                return s;
+            }
+        }
+        return null;
+    }
+
     public int totalShrines() {
         return shrines.size();
     }

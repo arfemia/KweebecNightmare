@@ -26,13 +26,19 @@ public final class Lang {
     public static final String TITLE_NIGHT_FALLS = "kweebecnightmare.title.night_falls";
     public static final String TITLE_NIGHT_FALLS_SUB = "kweebecnightmare.title.night_falls.sub";
 
-    // Custom item display names (Moonbloom charge + the grove plant).
+    // Custom item display names (Moonbloom charge + the grove plant + the shrine furnace block).
     public static final String ITEM_MOONBLOOM = "kweebecnightmare.item.moonbloom.name";
     public static final String ITEM_MOONBLOOM_PLANT = "kweebecnightmare.item.moonbloom_plant.name";
+    public static final String ITEM_SHRINE = "kweebecnightmare.item.shrine.name";
 
-    // Moonbloom loop toasts (cleanse / stun / gather).
+    // Block interaction hints (the F-prompt shown when looking at an interactable block).
+    public static final String INTERACTION_SHRINE_HINT = "kweebecnightmare.interaction.shrine.hint";
+
+    // Moonbloom loop toasts (cleanse / submit / dormant / stun / gather).
     public static final String TOAST_CLEANSE_DONE = "kweebecnightmare.toast.cleanse_done";
     public static final String TOAST_CLEANSE_NEED = "kweebecnightmare.toast.cleanse_need";
+    public static final String TOAST_SHRINE_SUBMIT = "kweebecnightmare.toast.shrine_submit";
+    public static final String TOAST_SHRINE_DORMANT = "kweebecnightmare.toast.shrine_dormant";
     public static final String TOAST_MOONBLOOM_RESPAWN = "kweebecnightmare.toast.moonbloom_respawn";
 
     // Danger / status toasts.
@@ -70,6 +76,22 @@ public final class Lang {
     public static final String CMD_SCORE_NONE = "kweebecnightmare.cmd.score_none";
     public static final String CMD_LB_HEADER = "kweebecnightmare.cmd.lb_header";
     public static final String CMD_LB_EMPTY = "kweebecnightmare.cmd.lb_empty";
+    public static final String CMD_QUEUED = "kweebecnightmare.cmd.queued";
+    public static final String CMD_ALREADY_QUEUED = "kweebecnightmare.cmd.already_queued";
+    public static final String CMD_NOT_QUEUED_OR_IN_ROUND = "kweebecnightmare.cmd.not_queued_or_in_round";
+    public static final String CMD_LEFT_QUEUE = "kweebecnightmare.cmd.left_queue";
+    public static final String CMD_GUIDE_SPAWNED = "kweebecnightmare.cmd.guide_spawned";
+    public static final String CMD_GUIDE_FAILED = "kweebecnightmare.cmd.guide_failed";
+
+    // Matchmaking queue feedback (toasts + the launch-countdown banner). The queue itself
+    // delivers these via the shared ziggfreed-common Notify / EventTitles primitives.
+    public static final String QUEUE_JOINED = "kweebecnightmare.queue.joined";
+    public static final String QUEUE_LEFT = "kweebecnightmare.queue.left";
+    public static final String QUEUE_COUNTDOWN = "kweebecnightmare.queue.countdown";
+    public static final String QUEUE_COUNTDOWN_SUB = "kweebecnightmare.queue.countdown.sub";
+    public static final String QUEUE_LAUNCHING = "kweebecnightmare.queue.launching";
+    public static final String QUEUE_CANCELLED = "kweebecnightmare.queue.cancelled";
+    public static final String QUEUE_FAILED = "kweebecnightmare.queue.failed";
 
     // Command + argument descriptions (the engine resolves these as lang keys, not literals).
     public static final String CMD_DESC = "kweebecnightmare.cmd.kweebec.desc";
@@ -81,6 +103,9 @@ public final class Lang {
     // and live only in the .lang, not as constants here.
     public static final String CMD_TALK_DESC = "kweebecnightmare.cmd.kntalk.desc";
     public static final String DIALOGUE_INTRO_NPC = "kweebecnightmare.dialogue.kweebec_intro.npc";
+
+    // The guide NPC's dialogue header name (the "nightmares_intro" backstory + preset launcher).
+    public static final String DIALOGUE_NIGHTMARES_NPC = "kweebecnightmare.dialogue.nightmares_intro.npc";
 
     /** Build a localized {@link Message} from a key (resolved client-side). */
     @Nonnull

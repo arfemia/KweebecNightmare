@@ -43,9 +43,14 @@ title.jumpscare.sub = Tear free and run
 
 item.moonbloom.name = Moonbloom
 item.moonbloom_plant.name = Moonbloom Cluster
+item.shrine.name = Blighted Shrine
+
+interaction.shrine.hint = Offer Moonbloom
 
 toast.cleanse_done = The shrine drinks the Moonbloom light
 toast.cleanse_need = Gather Moonbloom to cleanse this shrine
+toast.shrine_submit = The shrine drinks your Moonbloom ({0}/{1})
+toast.shrine_dormant = The shrine sleeps until the hunt begins
 toast.moonbloom_respawn = The grove stirs. Fresh Moonbloom has grown.
 
 toast.shrine_lit = A shrine flares to life
@@ -74,14 +79,14 @@ cmd.leaving = Leaving the grove...
 cmd.unknown_preset = Unknown preset. Try amateur, nightmare, hardcore, endless, swarm, pitch, or blitz.
 cmd.no_active_rounds = No active rounds.
 cmd.ended = Ended all active rounds.
-cmd.usage = Usage: /kweebec [start|exit|endall|give|score|leaderboard] [preset|count|partySize]
+cmd.usage = Usage: /kweebec [start|exit|endall|give|score|leaderboard|spawnguide] [preset|count|partySize]
 cmd.give_done = Gave you {0} Moonbloom.
 cmd.score_header = Your Kweebec Nightmare bests:
 cmd.score_none = No recorded score yet. Survive a round first.
 cmd.lb_header = Kweebec Nightmare leaderboard ({0} players):
 cmd.lb_empty = No leaderboard entries for that party size yet.
 cmd.kweebec.desc = Start, leave, or end a Kweebec Nightmare round
-cmd.arg.sub = start | exit | endall | give | score | leaderboard
+cmd.arg.sub = start | exit | endall | give | score | leaderboard | spawnguide
 cmd.arg.preset = preset | count | partySize
 cmd.kntalk.desc = Speak with the Whispering Sapling (dialogue demo)
 
@@ -102,3 +107,43 @@ dialogue.kweebec_intro.warning.text = "It wears our bark and our faces. It does 
 dialogue.kweebec_intro.warning.opt.0 = Go back
 dialogue.kweebec_intro.secret.text = The sapling leans close. "The Heartwood Gate is not an exit. It is a mouth. Relight every shrine, or it swallows whoever runs last."
 dialogue.kweebec_intro.secret.opt.0 = Go back
+
+# Matchmaking queue feedback (toasts + the launch-countdown banner). {0} = current
+# size, {1} = max party; the countdown primary shows the seconds remaining.
+queue.joined = You step into the gathering. <color is="#7affa0">{0}</color> of {1} have answered the call.
+queue.left = You slip back into the dark. <color is="#b6c9de">You have left the gathering.</color>
+queue.countdown = The grove pulls you in... <color is="#a06cff">{0}</color>
+queue.countdown.sub = Stay close. Stay quiet.
+queue.launching = <color is="#a06cff">The Blighted Grove takes you...</color>
+queue.cancelled = The gathering scatters. <color is="#ff6b6b">Not enough remain.</color>
+queue.failed = The grove refuses you. <color is="#ff6b6b">Try again.</color>
+
+# Queue + guide command feedback.
+cmd.queued = You step into the gathering. Wait for the grove to draw you in.
+cmd.already_queued = You are already waiting in the gathering.
+cmd.not_queued_or_in_round = You are not in a queue or a round.
+cmd.left_queue = You leave the gathering.
+cmd.guide_spawned = The Grove Warden answers your call.
+cmd.guide_failed = The Grove Warden cannot stand here.
+
+# The Grove Warden guide NPC (role KweebecNightmare_Guide; press-F opens the dialogue below).
+npc.guide.name = The Grove Warden
+npc.guide.hint = Speak with the Grove Warden
+
+# Guide dialogue: the Grove Warden (id "nightmares_intro"; backstory + the preset
+# launcher). Rich text uses Hytale native inline formatting (<i>/<b>/<color>/\n).
+dialogue.nightmares_intro.npc = The Grove Warden
+dialogue.nightmares_intro.greet.text = A small Kweebec, its bark still <color is="#7affa0">green</color>, steps from the roots and looks up at you.\n<i>"You are warm. You are awake. Most of my kin are neither, not since the <color is="#a06cff">Void</color> crept into the grove. I am what is left to warn the warm ones."</i>
+dialogue.nightmares_intro.greet.opt.0 = What happened to this place?
+dialogue.nightmares_intro.greet.opt.1 = I am ready. Send me into the grove.
+dialogue.nightmares_intro.greet.opt.2 = About the hunt I have already chosen...
+dialogue.nightmares_intro.lore.text = <i>"Once the Emerald Grove <b>sang</b>. The <color is="#a06cff">Void</color> seeped up through the roots, and the song became screaming. My kin wear our faces now, and they <color is="#ff6b6b">hunt</color>."</i>\n<i>"Relight the grove-shrines and the Heartwood Gate will open. Linger too long, and the dark takes whoever runs last."</i>
+dialogue.nightmares_intro.lore.opt.0 = Enough. I am ready to hunt.
+dialogue.nightmares_intro.lore.opt.1 = Tell me something else.
+dialogue.nightmares_intro.preset_pick.text = <i>"How deep will you go?"</i> The warden's eyes flicker like dying embers. <i>"Choose, and I will open a way into the dark."</i>
+dialogue.nightmares_intro.preset_pick.opt.0 = <color is="#7affa0">Amateur</color> - let me learn the grove.
+dialogue.nightmares_intro.preset_pick.opt.1 = <color is="#ffd479">Nightmare</color> - the true hunt.
+dialogue.nightmares_intro.preset_pick.opt.2 = <color is="#ff6b6b">Hardcore</color> - one life, no mercy.
+dialogue.nightmares_intro.preset_pick.opt.3 = Not yet. Step back.
+dialogue.nightmares_intro.already_engaged.text = <i>"You are already bound to a hunt, warm one,"</i> the warden murmurs. <i>"Step out of the gathering first, and I will offer you the choice again."</i>
+dialogue.nightmares_intro.already_engaged.opt.0 = I understand.

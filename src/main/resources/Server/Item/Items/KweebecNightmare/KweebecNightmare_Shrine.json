@@ -1,0 +1,81 @@
+{
+  "TranslationProperties": {
+    "Name": "kweebecnightmare.item.shrine.name"
+  },
+  "Categories": [
+    "Furniture.Decorations"
+  ],
+  "Icon": "Icons/ItemsGenerated/Bench_Furnace.png",
+  "PlayerAnimationsId": "Block",
+  "MaxStack": 1,
+  "BlockType": {
+    "Material": "Solid",
+    "DrawType": "Model",
+    "Opacity": "Transparent",
+    "CustomModel": "Blocks/Benches/Furnace.blockymodel",
+    "CustomModelTexture": [
+      {
+        "Texture": "Blocks/Benches/Furnace_Texture_Off.png",
+        "Weight": 1
+      }
+    ],
+    "HitboxType": "Bench_Furnace",
+    "Support": {
+      "Down": [
+        {
+          "FaceType": "Full"
+        }
+      ]
+    },
+    "BlockParticleSetId": "Stone",
+    "ParticleColor": "#5C583E",
+    "BlockSoundSetId": "Stone",
+    "PhysicalMaterialId": "Stone",
+    "Flags": {
+      "IsUsable": true
+    },
+    "InteractionHint": "kweebecnightmare.interaction.shrine.hint",
+    "Interactions": {
+      "Use": "KweebecNightmare_Shrine_Use"
+    },
+    "State": {
+      "Definitions": {
+        "lit": {
+          "Looping": true,
+          "InteractionHint": "",
+          "Light": {
+            "Color": "#6f9"
+          },
+          "CustomModelTexture": [
+            {
+              "Texture": "Blocks/Benches/Furnace_Texture.png",
+              "Weight": 1
+            }
+          ],
+          "Particles": [
+            {
+              "SystemId": "Fire_Green",
+              "TargetNodeName": "Fire",
+              "Scale": 0.7,
+              "PositionOffset": {
+                "X": 0,
+                "Z": 0.3
+              }
+            }
+          ],
+          "CustomModelAnimation": "Blocks/Benches/Furnace_Smelting.blockyanim"
+        }
+      }
+    },
+    "TextureComputedColor": "#29281F"
+  },
+  "Tags": {
+    "Type": [
+      "Furniture"
+    ],
+    "Family": [
+      "KweebecNightmare"
+    ]
+  },
+  "ItemSoundSetId": "ISS_Blocks_Stone"
+}

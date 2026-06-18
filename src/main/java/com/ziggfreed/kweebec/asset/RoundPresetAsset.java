@@ -86,6 +86,9 @@ public final class RoundPresetAsset
     private int moonbloomScatter = UNSET_INT;
     private int moonbloomRespawnCount = UNSET_INT;
     @Nullable private int[] moonbloomRespawnAtSeconds;
+    // Matchmaking party knobs (the queue's min/max seats; max clamps to the arena budget).
+    private int minParty = UNSET_INT;
+    private int maxParty = UNSET_INT;
 
     public static final AssetBuilderCodec<String, RoundPresetAsset> CODEC = AssetBuilderCodec.builder(
                     RoundPresetAsset.class,
@@ -153,6 +156,10 @@ public final class RoundPresetAsset
             .append(new KeyedCodec<>("MoonbloomRespawnCount", Codec.INTEGER, false), (a, v) -> a.moonbloomRespawnCount = v, a -> a.moonbloomRespawnCount)
             .add()
             .append(new KeyedCodec<>("MoonbloomRespawnAtSeconds", Codec.INT_ARRAY, false), (a, v) -> a.moonbloomRespawnAtSeconds = v, a -> a.moonbloomRespawnAtSeconds)
+            .add()
+            .append(new KeyedCodec<>("MinParty", Codec.INTEGER, false), (a, v) -> a.minParty = v, a -> a.minParty)
+            .add()
+            .append(new KeyedCodec<>("MaxParty", Codec.INTEGER, false), (a, v) -> a.maxParty = v, a -> a.maxParty)
             .add()
             .build();
 
@@ -268,6 +275,12 @@ public final class RoundPresetAsset
         }
         if (moonbloomRespawnAtSeconds != null) {
             b.moonbloomRespawnAtSeconds(moonbloomRespawnAtSeconds);
+        }
+        if (minParty != UNSET_INT) {
+            b.minParty(minParty);
+        }
+        if (maxParty != UNSET_INT) {
+            b.maxParty(maxParty);
         }
         return b.build();
     }

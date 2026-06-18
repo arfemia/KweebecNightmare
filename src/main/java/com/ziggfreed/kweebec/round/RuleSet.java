@@ -15,6 +15,13 @@ import javax.annotation.Nullable;
  */
 public final class RuleSet {
 
+    /**
+     * The arena budget: the shrine ring + instance are sized for a 1-4 player co-op,
+     * so {@link #maxParty()} is clamped here however a preset authors it. The matchmaking
+     * queue never seats more than this.
+     */
+    public static final int ARENA_MAX_PARTY = 4;
+
     private final String presetId;
     private final ReviveStyle reviveStyle;
     private final int maxDowns;
@@ -39,6 +46,8 @@ public final class RuleSet {
     private final int moonbloomScatter;
     private final int moonbloomRespawnCount;
     private final int[] moonbloomRespawnAtSeconds;
+    private final int minParty;
+    private final int maxParty;
 
     private RuleSet(Builder b) {
         this.presetId = b.presetId;
@@ -65,6 +74,25 @@ public final class RuleSet {
         this.moonbloomScatter = b.moonbloomScatter;
         this.moonbloomRespawnCount = b.moonbloomRespawnCount;
         this.moonbloomRespawnAtSeconds = b.moonbloomRespawnAtSeconds;
+        this.minParty = b.minParty;
+        this.maxParty = b.maxParty;
+    }
+
+    /**
+     * Minimum party size the matchmaking queue waits for before it starts the
+     * launch countdown (and the floor to launch). Clamped to at least 1. The lone-player
+     * case is governed by the queue's {@code allowSolo}, not this floor.
+     */
+    public int minParty() {
+        return Math.max(1, minParty);
+    }
+
+    /**
+     * Maximum party size the queue seats before launching at once, clamped to the
+     * {@link #ARENA_MAX_PARTY} budget and never below {@link #minParty()}.
+     */
+    public int maxParty() {
+        return Math.max(minParty(), Math.min(maxParty, ARENA_MAX_PARTY));
     }
 
     /** Preset id (e.g. {@code "nightmare"}); used in native events + the preset name lang key. */
@@ -168,7 +196,12 @@ public final class RuleSet {
         return hunterArchetype;
     }
 
-    /** Moonbloom charges a survivor must SPEND at an unlit shrine to cleanse it (the cleanse cost). */
+    /**
+     * Moonbloom charges required to fully cleanse a shrine, offered INCREMENTALLY at its furnace block
+     * (each F-press deposits up to the remaining need; the furnace lights with green fire at this total).
+     * A cost of 0 lights a shrine on the first press (the supply-free dial). Authored per preset via the
+     * {@code RoundPresetAsset} {@code "CleanseCost"} knob (the easiest preset, Amateur, requires 3).
+     */
     public int cleanseCost() {
         return cleanseCost;
     }
@@ -245,6 +278,8 @@ public final class RuleSet {
         b.moonbloomScatter = this.moonbloomScatter;
         b.moonbloomRespawnCount = this.moonbloomRespawnCount;
         b.moonbloomRespawnAtSeconds = this.moonbloomRespawnAtSeconds;
+        b.minParty = this.minParty;
+        b.maxParty = this.maxParty;
         return b;
     }
 
@@ -267,6 +302,7 @@ public final class RuleSet {
         private InventoryMode inventoryMode = InventoryMode.DEFAULT;
         private RewardOnExit rewardOnExit = RewardOnExit.DEFAULT;
         @Nullable private String hunterArchetype = null;
+        // The shipped preset JSONs author CleanseCost per preset; this is only the zero-pack fallback.
         private int cleanseCost = 1;
         private long stunDurationMs = 2500L;
         private ThrowMode throwMode = ThrowMode.DEFAULT;
@@ -274,6 +310,8 @@ public final class RuleSet {
         private int moonbloomScatter = 12;
         private int moonbloomRespawnCount = 6;
         private int[] moonbloomRespawnAtSeconds = {180, 360};
+        private int minParty = 1;
+        private int maxParty = ARENA_MAX_PARTY;
 
         private Builder(@Nonnull String presetId) {
             this.presetId = presetId;
@@ -300,6 +338,8 @@ public final class RuleSet {
         @Nonnull public Builder moonbloomScatter(int v) { this.moonbloomScatter = Math.max(0, v); return this; }
         @Nonnull public Builder moonbloomRespawnCount(int v) { this.moonbloomRespawnCount = Math.max(0, v); return this; }
         @Nonnull public Builder moonbloomRespawnAtSeconds(@Nonnull int[] v) { this.moonbloomRespawnAtSeconds = v.clone(); return this; }
+        @Nonnull public Builder minParty(int v) { this.minParty = v; return this; }
+        @Nonnull public Builder maxParty(int v) { this.maxParty = v; return this; }
 
         @Nonnull
         public RuleSet build() {

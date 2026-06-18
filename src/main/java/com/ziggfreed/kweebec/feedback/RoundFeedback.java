@@ -110,6 +110,11 @@ public final class RoundFeedback {
         toast(playerRef, Lang.msg(key), NotificationStyle.Warning);
     }
 
+    /** A neutral progress toast carrying a PRE-BUILT (possibly parameterized) message. */
+    public static void infoToast(@Nonnull PlayerRef playerRef, @Nonnull Message message) {
+        toast(playerRef, message, NotificationStyle.Default);
+    }
+
     public static void toast(@Nonnull PlayerRef playerRef, @Nonnull Message message, @Nonnull NotificationStyle style) {
         try {
             PacketHandler handler = playerRef.getPacketHandler();

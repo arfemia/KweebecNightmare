@@ -13,10 +13,14 @@ Real INVENTORY items, not an abstract counter.
   Placement (a guaranteed cluster at each unlit surface shrine + a seed-deterministic grove scatter +
   mid-match respawn waves) lives in [`../arena/ArenaBuilder`](../arena/ArenaBuilder.java)`.plantMoonbloom`,
   driven at build (initial) and from [`../mode/chase/ChaseMode`](../mode/chase/ChaseMode.java)`.maybeRespawnMoonbloom`.
-- **Cleanse** (pure swap) lives in `ChaseMode.handleShrines`: an active survivor within
-  `INTERACT_RADIUS` of an unlit shrine who holds `RuleSet.cleanseCost()` charges SPENDS them (via
-  `ziggfreed-common` `InventoryUtil.spend`) and the shrine lights instantly. `cleanseCost` is a
-  pack/runtime-configurable rule-set knob (0 = cleanse on proximity alone).
+- **Cleanse** is an interactable shrine FURNACE (the 0.4.0 rework): a survivor presses F on a
+  `KweebecNightmare_Shrine` block to OFFER Moonbloom. The registered
+  [`../interaction/ShrineSubmitInteraction`](../interaction/CLAUDE.md) deposits up to the remaining need
+  (`RuleSet.cleanseCost()` total, authored per preset - 3 on Amateur) via `ziggfreed-common`
+  `InventoryUtil.take`, and once full `ChaseMode.lightShrine` lights the furnace with green fire. `cleanseCost`
+  is a pack/runtime-configurable rule-set knob (0 = light on the first press). `ChaseMode.handleShrines` is
+  now only a per-tick lit reconciler; the old proximity-spend (`InventoryUtil.spend` within `INTERACT_RADIUS`)
+  is gone. Cleansing is gated to the RITUAL phase.
 - **Throw-to-stun** is mostly assets (a reskin of the vanilla `Weapon_Bomb_Stun` chain: the item left-click
   `Moonbloom_Throw` -> `Projectile_Config_KweebecNightmare_Moonbloom` -> `Moonbloom_Burst`). The item needs
   `MaxStack` (vanilla bombs default non-stacking) and the throw must consume via

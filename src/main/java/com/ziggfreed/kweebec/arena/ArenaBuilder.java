@@ -23,6 +23,7 @@ import com.ziggfreed.common.world.BlockTypeLists;
 import com.ziggfreed.common.world.SurfaceProbe;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
+import com.ziggfreed.kweebec.mode.chase.Shrine;
 import com.ziggfreed.kweebec.mode.chase.ShrineState;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.util.SafeLog;
@@ -41,7 +42,6 @@ import com.ziggfreed.kweebec.util.SafeLog;
  */
 public final class ArenaBuilder {
 
-    private static final String SHRINE_PREFAB = "KweebecNightmare/Shrine";
     private static final String GATE_PREFAB = "KweebecNightmare/Gate";
     private static final String EXIT_PREFAB = "KweebecNightmare/Exit";
     /**
@@ -213,7 +213,6 @@ public final class ArenaBuilder {
      */
     private static void pasteObjectives(@Nonnull World world, @Nonnull ChaseState chase) {
         try {
-            IPrefabBuffer shrine = load(SHRINE_PREFAB);
             IPrefabBuffer exit = load(EXIT_PREFAB);
             IPrefabBuffer[] shafts = new IPrefabBuffer[SHAFT_PREFABS.length];
             for (int i = 0; i < SHAFT_PREFABS.length; i++) {
@@ -224,10 +223,8 @@ public final class ArenaBuilder {
             for (var s : chase.shrines()) {
                 Anchor a = s.anchor();
                 if (a.y() >= ArenaLayout.STAND_Y - 1.0) {
-                    // Surface ring shrine.
-                    if (shrine != null) {
-                        paste(world, shrine, a);
-                    }
+                    // Surface ring shrine: the interactable furnace block (REPLACES the old pillar prefab).
+                    placeShrineBlock(world, s);
                 } else {
                     // Underground shrine: carve the descent shaft + lit chamber + baked shrine pillar
                     // straight into the solid terrain, alternating the descent style (spiral / ladder)
@@ -250,6 +247,44 @@ public final class ArenaBuilder {
             KweebecNightmarePlugin.LOGGER.atWarning().log(
                     "[Kweebec] arena objective paste failed: " + t.getMessage());
         }
+    }
+
+    /**
+     * Place (or re-place) the interactable shrine FURNACE block at a SURFACE shrine anchor, floor-snapped to
+     * the local surface. This REPLACES the old pillar prefab - the furnace IS the shrine now (dark until a
+     * survivor offers Moonbloom at it, then green fire). Records the block position on the shrine so the
+     * cleanse interaction + the lit reconciler resolve it. Idempotent across the +4s/+9s re-paste (same
+     * probed surface -> same cell). Best-effort: the probe + set run on the world thread.
+     */
+    private static void placeShrineBlock(@Nonnull World world, @Nonnull ShrineState s) {
+        Anchor a = s.anchor();
+        int x = (int) Math.floor(a.x());
+        int z = (int) Math.floor(a.z());
+        int fallbackTop = (int) Math.floor(a.y() - 1.0);
+        world.execute(() -> {
+            try {
+                int topY = SurfaceProbe.topSolidY(world, x, z, fallbackTop,
+                        BlockTypeLists.keys(SURFACE_DECORATION_LISTS));
+                setShrineFurnace(world, s, x, topY + 1, z);
+                KweebecNightmarePlugin.LOGGER.atInfo().log(
+                        "[Kweebec] shrine furnace placed at (" + x + "," + (topY + 1) + "," + z + ")");
+            } catch (Throwable t) {
+                KweebecNightmarePlugin.LOGGER.atWarning().log(
+                        "[Kweebec] shrine furnace placement failed at (" + x + "," + z + "): " + t.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Set the shrine furnace block at {@code (x,y,z)} (the authored UNLIT default state) and record it on the
+     * shrine. Clears {@code litRendered} so the {@code ChaseMode} reconciler re-asserts the lit state if the
+     * shrine is somehow already cleansed (re-pastes finish during PREP, before any cleanse can happen, so in
+     * practice this just places a fresh unlit furnace). World-thread only.
+     */
+    private static void setShrineFurnace(@Nonnull World world, @Nonnull ShrineState s, int x, int y, int z) {
+        world.setBlock(x, y, z, Shrine.SHRINE_BLOCK);
+        s.setBlockPos(new Vector3i(x, y, z));
+        s.setLitRendered(false);
     }
 
     /**
@@ -455,8 +490,13 @@ public final class ArenaBuilder {
                 Vector3i pos = new Vector3i(x, topY, z);
                 Store<EntityStore> store = world.getEntityStore().getStore();
                 PrefabUtilPaste.paste(shaft, world, pos, store, true);
+                // The cave shrine is ALSO a furnace: place it at the chamber stand level, AFTER the carve (a
+                // re-carve clears the chamber, so re-adding it here each pass keeps it). The player must
+                // descend the shaft to press F on it - the descend-and-return objective is preserved.
+                int standY = (int) Math.floor(cave.anchor().y());
+                setShrineFurnace(world, cave, x, standY, z);
                 KweebecNightmarePlugin.LOGGER.atInfo().log(
-                        "[Kweebec] cave shaft carved at " + pos + ", chamber stand y=" + (topY - CAVE_SHAFT_DEPTH));
+                        "[Kweebec] cave shaft carved at " + pos + ", furnace at chamber stand y=" + standY);
             } catch (Throwable t) {
                 KweebecNightmarePlugin.LOGGER.atWarning().log(
                         "[Kweebec] cave shaft carve failed at (" + x + "," + z + "): " + t.getMessage());

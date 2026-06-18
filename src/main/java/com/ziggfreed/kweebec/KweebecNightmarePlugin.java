@@ -3,15 +3,23 @@ package com.ziggfreed.kweebec;
 import javax.annotation.Nonnull;
 
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
+import com.hypixel.hytale.server.core.modules.interaction.interaction.config.Interaction;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.narwhals.perfectutils.api.AggroAPI;
 import com.narwhals.perfectutils.api.StunMobAPI;
+import com.ziggfreed.common.npc.NpcActions;
+import com.ziggfreed.common.npc.NpcDialogueDepsRegistry;
 import com.ziggfreed.kweebec.asset.KweebecAssetRegistrar;
 import com.ziggfreed.kweebec.command.KweebecCommand;
 import com.ziggfreed.kweebec.command.KweebecTalkCommand;
 import com.ziggfreed.kweebec.death.CocoonOnDeathSystem;
+import com.ziggfreed.kweebec.dialogue.KweebecDialogue;
 import com.ziggfreed.kweebec.event.KweebecDamageSystem;
+import com.ziggfreed.kweebec.interaction.ShrineSubmitInteraction;
+import com.ziggfreed.kweebec.lobby.KweebecLobby;
+import com.ziggfreed.kweebec.npc.KweebecGuideSpawn;
 import com.ziggfreed.kweebec.round.RoundService;
 import com.ziggfreed.kweebec.score.Leaderboard;
 
@@ -43,6 +51,13 @@ public class KweebecNightmarePlugin extends JavaPlugin {
 
     @Override
     protected void setup() {
+        // Register the generic ziggfreed-common "press-F opens a dialogue" NPC action
+        // (ZigOpenDialogue) and point it at kweebec's DialoguePageDeps, BEFORE any NPC
+        // role asset referencing {Type:ZigOpenDialogue} loads - else the guide role
+        // silently fails to parse. Mirrors how the MMO registers OpenMmoUi in setup().
+        NpcDialogueDepsRegistry.set(KweebecDialogue::deps);
+        NpcActions.register();
+
         // Custom asset stores (Presets, Hunters, Control) - registered FIRST so they
         // exist before the engine's asset-load event; their load listeners fold pack
         // content into PresetConfig / HunterArchetypeConfig (defaults < pack < owner).
@@ -61,11 +76,28 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // Dialogue demo trigger: opens the shared ziggfreed-common dialogue page.
         getCommandRegistry().registerCommand(new KweebecTalkCommand());
 
+        // Interactable shrine furnace: the block's RootInteraction fires this handler on F (submit Moonbloom).
+        try {
+            getCodecRegistry(Interaction.CODEC).register(
+                    ShrineSubmitInteraction.TYPE_NAME, ShrineSubmitInteraction.class, ShrineSubmitInteraction.CODEC);
+            LOGGER.atInfo().log("[Kweebec] registered interaction: " + ShrineSubmitInteraction.TYPE_NAME);
+        } catch (Exception e) {
+            LOGGER.atSevere().log("[Kweebec] failed to register shrine interaction: " + e.getMessage());
+        }
+
         // Per-playercount leaderboard, loaded from the plugin data dir (durable across restarts).
         Leaderboard.getInstance().init(getDataDirectory());
 
         // Round engine: 1 Hz state machine + cleanup ticker.
         RoundService.getInstance().startup();
+
+        // Matchmaking lobby: the fill-window + countdown queue the guide dialogue and
+        // /kweebec start feed (its launcher closes over RoundService.startChase).
+        KweebecLobby.init();
+
+        // Auto-spawn the "Grove Warden" guide once per world on player-ready (the diegetic
+        // entry trigger); press-F opens the backstory dialogue + preset launcher.
+        getEventRegistry().registerGlobal(PlayerReadyEvent.class, KweebecGuideSpawn::onPlayerReady);
 
         // Perfect Utils is a hard dependency (loads first); confirm the aggro API resolved so a
         // missing/older jar is obvious in the log rather than a silent fall-back to natural sensors.
@@ -90,6 +122,7 @@ public class KweebecNightmarePlugin extends JavaPlugin {
     @Override
     protected void shutdown() {
         RoundService.getInstance().shutdown();
+        KweebecLobby.shutdown();
         LOGGER.atInfo().log("KweebecNightmare shutdown complete.");
     }
 }

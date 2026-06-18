@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.hypixel.hytale.server.core.Message;
 import com.ziggfreed.common.dialogue.DialogueEngine;
 import com.ziggfreed.common.dialogue.NpcDialogue;
 import com.ziggfreed.common.dialogue.i18n.DialogueI18n;
@@ -18,17 +19,24 @@ import com.ziggfreed.kweebec.i18n.Lang;
 
 /**
  * Kweebec's consumer-side wiring of the generic {@code ziggfreed-common} dialogue
- * engine. Builds ONE {@link DialogueEngine} with generics only (no quest/reward/gate
- * domain types - the minigame has none), an in-memory {@link KweebecDialogueFlags}
- * flag store, the {@code kweebecnightmare.} i18n namespace, and a name header; folds
- * the demo dialogue; and exposes the {@link DialoguePageDeps} the talk command opens
- * a page against. This is the whole consumer surface - the engine, page, and `.ui`
- * all live in the shared lib.
+ * engine. Builds ONE {@link DialogueEngine} with the generics PLUS kweebec's own
+ * {@link StartRoundAction} (queue a preset) and {@link NotInRoundCondition}/
+ * {@link EngagedCondition} (gate launch options on engagement), an in-memory
+ * {@link KweebecDialogueFlags} store, the {@code kweebecnightmare.} i18n namespace,
+ * and a context-aware name header; folds two authored dialogues (the {@code /kntalk}
+ * Whispering Sapling demo and the guide NPC's preset-launch backstory); and exposes
+ * the {@link DialoguePageDeps} a page (command or NPC) opens against.
  */
 public final class KweebecDialogue {
 
     /** The demo dialogue id (its content keys are {@code dialogue.kweebec_intro.*}). */
     public static final String INTRO_ID = "kweebec_intro";
+
+    /** The guide NPC's backstory + preset-launch dialogue ({@code dialogue.nightmares_intro.*}). */
+    public static final String NIGHTMARES_INTRO_ID = "nightmares_intro";
+
+    /** The {@code ContextNpc} the guide role passes, used to pick the dialogue's name header. */
+    public static final String GUIDE_CONTEXT = "guide";
 
     private static volatile DialoguePageDeps deps;
     private static final Map<String, NpcDialogue> DIALOGUES = new ConcurrentHashMap<>();
@@ -46,13 +54,15 @@ public final class KweebecDialogue {
     }
 
     private static void init() {
-        DialogueEngine engine = DialogueEngine.builder().warn(KweebecDialogue::warn).build();
+        DialogueEngine engine = DialogueEngine.builder()
+                .action(StartRoundAction.type())
+                .condition(NotInRoundCondition.type())
+                .condition(EngagedCondition.type())
+                .warn(KweebecDialogue::warn)
+                .build();
 
-        NpcDialogue intro = engine.decodeAuthored(INTRO_ID, INTRO_JSON);
-        if (intro != null) {
-            // Key on the canonical (engine-lowercased) id so PUT matches the lowercased GET lookup.
-            DIALOGUES.put(intro.getId(), intro);
-        }
+        decodeInto(engine, INTRO_ID, INTRO_JSON);
+        decodeInto(engine, NIGHTMARES_INTRO_ID, NIGHTMARES_INTRO_JSON);
 
         DialogueI18n i18n = new I18nModuleDialogueI18n("kweebecnightmare.");
         deps = new DialoguePageDeps(
@@ -63,8 +73,25 @@ public final class KweebecDialogue {
                                 KweebecDialogueFlags.store(playerRef.getUuid()), null,
                                 dialogue, nodeId, optionIndex),
                 i18n,
-                contextId -> Lang.msg(Lang.DIALOGUE_INTRO_NPC),
+                KweebecDialogue::npcName,
                 null);
+    }
+
+    /** Decode an authored body and key it on the canonical (engine-lowercased) id. */
+    private static void decodeInto(@Nonnull DialogueEngine engine, @Nonnull String id, @Nonnull String json) {
+        NpcDialogue d = engine.decodeAuthored(id, json);
+        if (d != null) {
+            DIALOGUES.put(d.getId(), d);
+        }
+    }
+
+    /** The dialogue header name, chosen by the opening NPC's context id. */
+    @Nonnull
+    private static Message npcName(@Nullable String contextId) {
+        if (GUIDE_CONTEXT.equals(contextId)) {
+            return Lang.msg(Lang.DIALOGUE_NIGHTMARES_NPC);
+        }
+        return Lang.msg(Lang.DIALOGUE_INTRO_NPC);
     }
 
     private static void warn(@Nullable String msg) {
@@ -99,6 +126,49 @@ public final class KweebecDialogue {
                 "lore":    { "Options": [ { "Goto": "greet" } ] },
                 "warning": { "Options": [ { "Goto": "greet" } ] },
                 "secret":  { "Options": [ { "Goto": "greet" } ] }
+              }
+            }
+            """;
+
+    /**
+     * The guide NPC's dialogue ("The Grove Warden"): introduces the nightmare, a lore
+     * branch telling the backstory, then a {@code preset_pick} node whose options each
+     * queue a Chase preset via {@link StartRoundAction} - gated by
+     * {@link NotInRoundCondition} so they vanish once the player commits. An
+     * {@link EngagedCondition}-gated branch points an already-queued player at an
+     * {@code already_engaged} note. Launch options are the three canonical difficulties;
+     * the variety presets stay reachable via {@code /kweebec start <preset>}.
+     */
+    private static final String NIGHTMARES_INTRO_JSON = """
+            {
+              "Start": [{ "Node": "greet" }],
+              "Nodes": {
+                "greet": {
+                  "Options": [
+                    { "Goto": "lore" },
+                    { "Conditions": [{ "Type": "NotInRound" }], "Goto": "preset_pick" },
+                    { "Conditions": [{ "Type": "Engaged" }], "Goto": "already_engaged" }
+                  ]
+                },
+                "lore": {
+                  "Options": [
+                    { "Conditions": [{ "Type": "NotInRound" }], "Goto": "preset_pick" },
+                    { "Goto": "greet" }
+                  ]
+                },
+                "preset_pick": {
+                  "Options": [
+                    { "Conditions": [{ "Type": "NotInRound" }], "StartRound": "amateur" },
+                    { "Conditions": [{ "Type": "NotInRound" }], "StartRound": "nightmare" },
+                    { "Conditions": [{ "Type": "NotInRound" }], "StartRound": "hardcore" },
+                    { "Goto": "greet" }
+                  ]
+                },
+                "already_engaged": {
+                  "Options": [
+                    { "Goto": "greet" }
+                  ]
+                }
               }
             }
             """;

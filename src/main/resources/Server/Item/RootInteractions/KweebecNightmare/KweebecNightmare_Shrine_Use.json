@@ -1,0 +1,12 @@
+{
+  "Cooldown": {
+    "Id": "BlockInteraction",
+    "Cooldown": 0.5,
+    "ClickBypass": true
+  },
+  "Interactions": [
+    {
+      "Type": "kweebec_shrine_submit"
+    }
+  ]
+}
