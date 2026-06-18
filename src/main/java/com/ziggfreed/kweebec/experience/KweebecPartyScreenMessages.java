@@ -65,4 +65,21 @@ public final class KweebecPartyScreenMessages implements PartyScreenMessages {
     @Override @Nonnull public Message memberCount(int size, int maxSize) {
         return Lang.msg(Lang.PARTY_COUNT).param("0", size).param("1", maxSize);
     }
+
+    @Override @Nonnull public Message privacyPublic() {
+        return Lang.msg(Lang.PARTY_PRIVACY_PUBLIC);
+    }
+
+    @Override @Nonnull public Message privacyPrivate() {
+        return Lang.msg(Lang.PARTY_PRIVACY_PRIVATE);
+    }
+
+    @Override @Nonnull public Message toastInviteSent(@Nonnull String playerName) {
+        // Reuse the existing service-side "Invite sent to {0}." string (DRY; same meaning).
+        return Lang.msg(Lang.PARTY_MSG_SENT).param("0", playerName);
+    }
+
+    @Override @Nonnull public Message toastInviteFailed() {
+        return Lang.msg(Lang.PARTY_TOAST_INVITE_FAILED);
+    }
 }

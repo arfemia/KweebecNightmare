@@ -1,5 +1,7 @@
 package com.ziggfreed.kweebec.experience;
 
+import java.util.UUID;
+
 import javax.annotation.Nonnull;
 
 import com.hypixel.hytale.component.Ref;
@@ -29,7 +31,9 @@ public final class KweebecParty {
                                   @Nonnull Store<EntityStore> store) {
         Party party = KweebecExperience.partyService().partyOf(initiator.getUuid());
         if (party != null && party.size() > 1) {
-            KweebecLobby.queueParty(party.orderedMembers(), party.owner(), PresetConfig.DEFAULT);
+            // Private = launch this party alone (scope = party id); public = backfill with strangers.
+            UUID privateScope = party.isPrivate() ? UUID.fromString(party.id()) : null;
+            KweebecLobby.queueParty(party.orderedMembers(), party.owner(), PresetConfig.DEFAULT, privateScope);
         } else {
             KweebecLobby.join(initiator.getUuid(), PresetConfig.DEFAULT);
         }

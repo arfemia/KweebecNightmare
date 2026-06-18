@@ -45,4 +45,8 @@ public final class KweebecQueueScreenMessages implements QueueScreenMessages {
     @Override @Nonnull public Message notInQueue() {
         return Lang.msg(Lang.QUEUE_SCREEN_NOT_QUEUED);
     }
+
+    @Override @Nonnull public Message toastQueued(int size, int maxSize) {
+        return Lang.msg(Lang.QUEUE_SCREEN_TOAST_QUEUED).param("0", size).param("1", maxSize);
+    }
 }

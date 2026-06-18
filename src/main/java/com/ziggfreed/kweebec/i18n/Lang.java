@@ -144,7 +144,6 @@ public final class Lang {
     public static final String RESULTS_COL_DAMAGE = "kweebecnightmare.results.col.damage";
     public static final String RESULTS_COL_STUN = "kweebecnightmare.results.col.stun";
     public static final String RESULTS_COL_DURATION = "kweebecnightmare.results.col.duration";
-    public static final String RESULTS_REWARD_MOONBLOOM = "kweebecnightmare.results.reward.moonbloom";
 
     // Queue / ready screen (the common QueuePage).
     public static final String QUEUE_SCREEN_TITLE = "kweebecnightmare.queue.screen.title";
@@ -156,6 +155,7 @@ public final class Lang {
     public static final String QUEUE_SCREEN_LEAVE = "kweebecnightmare.queue.screen.leave";
     public static final String QUEUE_SCREEN_REFRESH = "kweebecnightmare.queue.screen.refresh";
     public static final String QUEUE_SCREEN_NOT_QUEUED = "kweebecnightmare.queue.screen.not_queued";
+    public static final String QUEUE_SCREEN_TOAST_QUEUED = "kweebecnightmare.queue.screen.toast_queued";
 
     // Party + invite screen (the common PartyInvitePage).
     public static final String PARTY_TITLE = "kweebecnightmare.party.title";
@@ -172,6 +172,9 @@ public final class Lang {
     public static final String PARTY_BTN_DECLINE = "kweebecnightmare.party.btn.decline";
     public static final String PARTY_OWNER_BADGE = "kweebecnightmare.party.owner_badge";
     public static final String PARTY_COUNT = "kweebecnightmare.party.count";
+    public static final String PARTY_PRIVACY_PUBLIC = "kweebecnightmare.party.privacy.public";
+    public static final String PARTY_PRIVACY_PRIVATE = "kweebecnightmare.party.privacy.private";
+    public static final String PARTY_TOAST_INVITE_FAILED = "kweebecnightmare.party.toast.invite_failed";
 
     // Party feedback toasts + banner.
     public static final String PARTY_MSG_INVITED = "kweebecnightmare.party.msg.invited";

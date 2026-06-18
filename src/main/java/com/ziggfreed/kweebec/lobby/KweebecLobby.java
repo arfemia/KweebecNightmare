@@ -84,7 +84,21 @@ public final class KweebecLobby {
     @Nonnull
     public static GroupJoinResult queueParty(@Nonnull List<UUID> members, @Nonnull UUID owner,
                                              @Nullable String presetId) {
-        QueueKey key = keyFor(presetId);
+        return queueParty(members, owner, presetId, null);
+    }
+
+    /**
+     * Queue a whole party as a unit. A non-null {@code privateScope} (the party id) launches the
+     * party ALONE in a party-scoped PRIVATE queue ({@link QueueKey#privateQueue}); a null scope
+     * joins the shared PUBLIC queue (backfills with strangers up to maxParty). Public is the default.
+     */
+    @Nonnull
+    public static GroupJoinResult queueParty(@Nonnull List<UUID> members, @Nonnull UUID owner,
+                                             @Nullable String presetId, @Nullable UUID privateScope) {
+        QueueKey publicKey = keyFor(presetId); // resolves blank/unknown -> default preset + normalizes
+        QueueKey key = privateScope != null
+                ? QueueKey.privateQueue(GAME_ID, publicKey.presetId(), privateScope)
+                : publicKey;
         String preset = key.presetId();
         return SERVICE.queueParty(key, members, owner, configFor(preset), launcherFor(preset),
                 ALREADY_ENGAGED, messagesFor(preset));

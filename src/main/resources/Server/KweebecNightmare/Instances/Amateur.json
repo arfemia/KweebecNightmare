@@ -10,6 +10,6 @@
   "LeaderboardKey": "kweebecnightmare.leaderboard.title",
   "RewardOnExit": "ON_WIN",
   "Rewards": [
-    "item KweebecNightmare_Moonbloom 2 kweebecnightmare.results.reward.moonbloom"
+    "item KweebecNightmare_Moonbloom 2"
   ]
 }

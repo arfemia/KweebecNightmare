@@ -191,7 +191,6 @@ results.col.time = Swiftness
 results.col.damage = Caution
 results.col.stun = Defiance
 results.col.duration = Time alive
-results.reward.moonbloom = x{0} Moonbloom
 
 # Queue / ready screen (the shared QueuePage). The player stays here after queueing.
 queue.screen.title = The Gathering
@@ -203,6 +202,7 @@ queue.screen.wait = up to ~{0}s
 queue.screen.leave = Leave the Gathering
 queue.screen.refresh = Refresh
 queue.screen.not_queued = You are not in a gathering.
+queue.screen.toast_queued = You join the gathering ({0}/{1}).
 
 # Party + invite screen (the shared PartyInvitePage).
 party.title = Your Coven
@@ -219,6 +219,9 @@ party.btn.accept = Accept
 party.btn.decline = Decline
 party.owner_badge = Leader
 party.count = {0}/{1}
+party.privacy.public = Open Coven
+party.privacy.private = Sealed Coven
+party.toast.invite_failed = That survivor cannot join your coven.
 
 # Party feedback toasts + the invite banner.
 party.msg.invited = {0} invites you into their coven ({1}/{2}).

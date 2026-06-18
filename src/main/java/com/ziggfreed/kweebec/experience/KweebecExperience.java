@@ -13,7 +13,6 @@ import com.hypixel.hytale.assetstore.event.LoadedAssetsEvent;
 import com.hypixel.hytale.assetstore.map.DefaultAssetMap;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -36,6 +35,7 @@ import com.ziggfreed.common.instance.result.ResultKind;
 import com.ziggfreed.common.instance.result.ResultsPage;
 import com.ziggfreed.common.instance.result.ResultsPageDeps;
 import com.ziggfreed.common.instance.result.RewardChip;
+import com.ziggfreed.common.instance.result.RewardChipRenderer;
 import com.ziggfreed.common.instance.result.ScoreColumn;
 import com.ziggfreed.common.instance.result.TeamResult;
 import com.ziggfreed.common.instance.reward.GrantOutcome;
@@ -256,10 +256,10 @@ public final class KweebecExperience {
 
     @Nonnull
     private static RewardChip toChip(@Nonnull InstanceReward r, boolean pending) {
-        Message label = r.displayKey() != null
-                ? Lang.msg(r.displayKey()).param("0", r.quantity())
-                : Message.raw("x" + r.quantity() + " " + r.id());
-        return new RewardChip(r.isItem() ? r.id() : null, label, pending);
+        // Common auto-generates the label from the item's own engine display name ("Moonbloom x2"),
+        // so a pack author needs no per-reward displayKey; an authored displayKey (optional override)
+        // resolves through Lang here.
+        return RewardChipRenderer.toChip(r, pending, (key, qty) -> Lang.msg(key).param("0", qty));
     }
 
     /** On player-ready, re-attempt any rewards that were blocked by a full inventory last time. */
