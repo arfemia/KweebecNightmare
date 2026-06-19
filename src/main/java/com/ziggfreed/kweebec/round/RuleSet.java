@@ -203,9 +203,9 @@ public final class RuleSet {
     }
 
     /**
-     * How a survivor's inventory is treated this round. DATA ONLY this pass
-     * (Phase 1B): authored + overridable, but no inventory behavior is wired yet
-     * (the snapshot/strip/restore mechanism lands in Phase 2C).
+     * How a survivor's inventory is treated this round. Wired through {@code RoundInventoryGuard}:
+     * the default {@link InventoryMode#PRESERVE_AND_STRIP} snapshots + strips on entry and restores
+     * the exact entry state on exit; {@link InventoryMode#KEEP} leaves the inventory untouched.
      */
     @Nonnull
     public InventoryMode inventoryMode() {

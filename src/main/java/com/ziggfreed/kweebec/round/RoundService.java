@@ -177,6 +177,9 @@ public final class RoundService {
                 // Teleport the initiator in immediately (same world thread), returning
                 // them to where they were on exit.
                 if (ref != null && ref.isValid()) {
+                    // Snapshot + persist + strip the initiator's inventory before they enter the
+                    // nightmare (restored exactly on exit; persisted so a crash never eats gear).
+                    RoundInventoryGuard.onEnter(initiator, store, ref, ruleSet.inventoryMode());
                     InstanceLifecycle.teleportIn(ref, store, worldFuture, returnPoint);
                 }
                 // Teleport the rest, each on their own current world thread.
@@ -187,6 +190,10 @@ public final class RoundService {
                         KweebecNightmarePlugin.LOGGER.atSevere().log(
                                 "[Kweebec] spawnInstance failed: "
                                         + (err != null ? err.getMessage() : "null world"));
+                        // The instance never came up; give every stripped player their gear back.
+                        for (UUID p : round.participantList()) {
+                            RoundInventoryGuard.restore(p);
+                        }
                         registry.remove(roundId);
                         result.completeExceptionally(err != null ? err
                                 : new IllegalStateException("null instance world"));
@@ -227,6 +234,8 @@ public final class RoundService {
                     if (mer != null && mer.isValid()) {
                         // Each member returns to their OWN captured spot, not the initiator's.
                         Transform memberReturn = captureReturn(ms, mer);
+                        // Snapshot + persist + strip this member's inventory before they enter.
+                        RoundInventoryGuard.onEnter(member, ms, mer, round.ruleSet().inventoryMode());
                         InstanceLifecycle.teleportIn(mer, ms, worldFuture, memberReturn);
                     } else {
                         dropMember(round, member);
@@ -561,6 +570,9 @@ public final class RoundService {
                         // removal syncs to the client; clearing it before the cross-world exit
                         // dropped the removal and left the player cocooned on arrival.
                         CocoonService.clearEffects(r, ws);
+                        // Restore the inventory snapshot taken on entry, now that the player is back
+                        // in the overworld (drops any loot gained in-round; no-op in KEEP mode).
+                        RoundInventoryGuard.restore(ws, r, uuid);
                     }
                 });
             } catch (Throwable t) {

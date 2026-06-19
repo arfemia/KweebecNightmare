@@ -24,6 +24,7 @@ import com.ziggfreed.kweebec.npc.KweebecGuideConfig;
 import com.ziggfreed.kweebec.npc.KweebecGuidePlacementStore;
 import com.ziggfreed.kweebec.npc.KweebecGuideSpawn;
 import com.ziggfreed.kweebec.experience.KweebecExperience;
+import com.ziggfreed.kweebec.round.RoundInventoryGuard;
 import com.ziggfreed.kweebec.round.RoundService;
 
 /**
@@ -108,6 +109,11 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // below can fire. Mirrors MMO Skill Tree's MmoNpcPlacementStore auto-spawn marker.
         KweebecGuidePlacementStore.getInstance().init(getDataDirectory());
 
+        // Inventory preserve/restore: snapshot + strip a survivor's gear on round entry, restore it
+        // exactly on exit. Persisted under the data dir so a crash/disconnect/restart mid-round never
+        // eats gear (the next-login net below re-applies a leftover snapshot).
+        RoundInventoryGuard.init(getDataDirectory());
+
         // Round engine: 1 Hz state machine + cleanup ticker.
         RoundService.getInstance().startup();
 
@@ -122,6 +128,10 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // Re-deliver any rewards a player could not claim last time because their inventory
         // was full (the no-claim-with-full-inventory guard holds them until they make space).
         getEventRegistry().registerGlobal(PlayerReadyEvent.class, KweebecExperience::onPlayerReady);
+
+        // Inventory-restore crash/disconnect net: re-apply a leftover inventory snapshot for a player
+        // who entered a round but never got restored in-instance (crash / disconnect / restart mid-round).
+        getEventRegistry().registerGlobal(PlayerReadyEvent.class, RoundInventoryGuard::onPlayerReady);
 
         // Perfect Utils is a hard dependency (loads first); confirm the aggro API resolved so a
         // missing/older jar is obvious in the log rather than a silent fall-back to natural sensors.
