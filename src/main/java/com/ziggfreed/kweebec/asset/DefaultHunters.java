@@ -27,7 +27,8 @@ public final class DefaultHunters {
     /**
      * The baseline relentless stalker (today's only hunter). Mirrors the
      * {@code SPEED_BANDS} / {@code BAND_EFFECT_IDS} ladder in {@code AiHunterController}
-     * (an empty-string effect id = the role's 1.0x baseline, no effect).
+     * (an empty-string effect id = the role's 1.0x baseline, no effect), and the on-hit
+     * punishment knobs authored in {@code Stalker.json} (the slow + stacking + enrage).
      */
     @Nonnull
     public static HunterArchetypeAsset stalker() {
@@ -47,7 +48,20 @@ public final class DefaultHunters {
                         "KweebecNightmare_HunterPace_130",
                         "KweebecNightmare_HunterPace_140",
                         "KweebecNightmare_HunterPace_150",
-                });
+                },
+                // on-hit punishment (mirrors Stalker.json): slow + proximity stacking + desperation enrage.
+                "KweebecNightmare_HunterSlow_1", // onHitSlowEffectId
+                1.5,  // onHitSlowSeconds
+                1.0,  // onHitDamageMult
+                0.0,  // onHitDamageFlat
+                4,    // onHitStackCap
+                8.0,  // onHitStackWindowSeconds
+                20.0, // enrageAfterSeconds
+                1.3,  // enrageSpeedMult
+                1.25, // enrageDamageMult
+                5.0,  // enrageDurationSeconds
+                null  // enrageSoundId (no custom enrage cue authored for the baseline stalker)
+        );
     }
 
     /** All baseline archetypes, in display order. */

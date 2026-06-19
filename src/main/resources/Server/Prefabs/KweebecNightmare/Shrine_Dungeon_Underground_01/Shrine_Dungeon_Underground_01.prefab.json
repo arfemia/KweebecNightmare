@@ -4,6 +4,17 @@
  "anchorX": 0,
  "anchorY": 36,
  "anchorZ": 0,
+ "entities": [
+  {
+   "Components": {
+    "Transform": { "Position": { "X": 0.5, "Y": 36.0, "Z": 0.5 }, "Rotation": { "Pitch": 0.0, "Yaw": 0.0, "Roll": 0.0 } },
+    "HiddenFromAdventurePlayer": {},
+    "Model": { "Model": { "Id": "NPC_Path_Marker", "Scale": 1.0, "Static": false } },
+    "PersistentDisplayName": { "DisplayName": { "RawText": "kn_shrine_marker" } },
+    "Nameplate": { "Text": "kn_shrine_marker" }
+   }
+  }
+ ],
  "blocks": [
   {
    "x": -7,

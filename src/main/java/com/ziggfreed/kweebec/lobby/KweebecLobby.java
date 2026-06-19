@@ -104,6 +104,20 @@ public final class KweebecLobby {
                 ALREADY_ENGAGED, messagesFor(preset));
     }
 
+    /**
+     * Launch {@code uuid} SOLO and immediately into {@code presetId} (defaulted): a private
+     * self-scoped queue with no fill window and no countdown, reusing the same round launcher.
+     * Respects the single-queue-per-player reservation (fails as a conflict if already queued
+     * or in a round).
+     */
+    @Nonnull
+    public static GroupJoinResult launchSolo(@Nonnull UUID uuid, @Nullable String presetId) {
+        QueueKey base = keyFor(presetId); // resolves blank/unknown -> default preset + normalizes
+        String preset = base.presetId();
+        return SERVICE.launchSolo(base, uuid, configFor(preset), launcherFor(preset), ALREADY_ENGAGED,
+                messagesFor(preset));
+    }
+
     /** The (get-or-create) queue for {@code key}. */
     @Nonnull
     public static MatchmakingQueue queue(@Nonnull QueueKey key) {

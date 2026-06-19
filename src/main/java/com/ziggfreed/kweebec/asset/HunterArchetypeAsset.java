@@ -81,6 +81,21 @@ public final class HunterArchetypeAsset
     @Nullable private double[] speedBands;
     @Nullable private String[] bandEffectIds;
 
+    // --- on-hit punishment (per-archetype override of the RuleSet baseline) ---
+    // A non-null/non-zero value here WINS over the RuleSet default; an absent / zero
+    // field defers to the rule-set baseline (see HunterController.resolveOnHitConfigFor).
+    @Nullable private String onHitSlowEffectId;
+    private double onHitSlowSeconds = 0.0;
+    private double onHitDamageMult = 0.0;
+    private double onHitDamageFlat = 0.0;
+    private int onHitStackCap = 0;
+    private double onHitStackWindowSeconds = 0.0;
+    private double enrageAfterSeconds = 0.0;
+    private double enrageSpeedMult = 0.0;
+    private double enrageDamageMult = 0.0;
+    private double enrageDurationSeconds = 0.0;
+    @Nullable private String enrageSoundId;
+
     public static final AssetBuilderCodec<String, HunterArchetypeAsset> CODEC = AssetBuilderCodec.builder(
                     HunterArchetypeAsset.class,
                     HunterArchetypeAsset::new,
@@ -107,6 +122,28 @@ public final class HunterArchetypeAsset
             .add()
             .append(new KeyedCodec<>("BandEffectIds", Codec.STRING_ARRAY, false), (a, v) -> a.bandEffectIds = v, a -> a.bandEffectIds)
             .add()
+            .append(new KeyedCodec<>("OnHitSlowEffectId", Codec.STRING, false), (a, v) -> a.onHitSlowEffectId = v, a -> a.onHitSlowEffectId)
+            .add()
+            .append(new KeyedCodec<>("OnHitSlowSeconds", Codec.DOUBLE, false), (a, v) -> a.onHitSlowSeconds = v, a -> a.onHitSlowSeconds)
+            .add()
+            .append(new KeyedCodec<>("OnHitDamageMult", Codec.DOUBLE, false), (a, v) -> a.onHitDamageMult = v, a -> a.onHitDamageMult)
+            .add()
+            .append(new KeyedCodec<>("OnHitDamageFlat", Codec.DOUBLE, false), (a, v) -> a.onHitDamageFlat = v, a -> a.onHitDamageFlat)
+            .add()
+            .append(new KeyedCodec<>("OnHitStackCap", Codec.INTEGER, false), (a, v) -> a.onHitStackCap = v, a -> a.onHitStackCap)
+            .add()
+            .append(new KeyedCodec<>("OnHitStackWindowSeconds", Codec.DOUBLE, false), (a, v) -> a.onHitStackWindowSeconds = v, a -> a.onHitStackWindowSeconds)
+            .add()
+            .append(new KeyedCodec<>("EnrageAfterSeconds", Codec.DOUBLE, false), (a, v) -> a.enrageAfterSeconds = v, a -> a.enrageAfterSeconds)
+            .add()
+            .append(new KeyedCodec<>("EnrageSpeedMult", Codec.DOUBLE, false), (a, v) -> a.enrageSpeedMult = v, a -> a.enrageSpeedMult)
+            .add()
+            .append(new KeyedCodec<>("EnrageDamageMult", Codec.DOUBLE, false), (a, v) -> a.enrageDamageMult = v, a -> a.enrageDamageMult)
+            .add()
+            .append(new KeyedCodec<>("EnrageDurationSeconds", Codec.DOUBLE, false), (a, v) -> a.enrageDurationSeconds = v, a -> a.enrageDurationSeconds)
+            .add()
+            .append(new KeyedCodec<>("EnrageSoundId", Codec.STRING, false), (a, v) -> a.enrageSoundId = v, a -> a.enrageSoundId)
+            .add()
             .build();
 
     public HunterArchetypeAsset() {
@@ -130,6 +167,37 @@ public final class HunterArchetypeAsset
         a.spawnTier = spawnTier;
         a.speedBands = speedBands;
         a.bandEffectIds = bandEffectIds;
+        return a;
+    }
+
+    /**
+     * Build an archetype in code WITH on-hit punishment overrides set (the
+     * {@link DefaultHunters} floor for an archetype that punishes melee). The
+     * non-on-hit args mirror {@link #of(String, String, String, int, double, int,
+     * double[], String[])}; the on-hit args mirror the per-archetype fields (a zero /
+     * null value defers to the rule-set baseline).
+     */
+    @Nonnull
+    static HunterArchetypeAsset of(@Nonnull String id, @Nullable String kind, @Nullable String roleName,
+                                   int count, double weight, int spawnTier,
+                                   @Nullable double[] speedBands, @Nullable String[] bandEffectIds,
+                                   @Nullable String onHitSlowEffectId, double onHitSlowSeconds,
+                                   double onHitDamageMult, double onHitDamageFlat, int onHitStackCap,
+                                   double onHitStackWindowSeconds, double enrageAfterSeconds,
+                                   double enrageSpeedMult, double enrageDamageMult,
+                                   double enrageDurationSeconds, @Nullable String enrageSoundId) {
+        HunterArchetypeAsset a = of(id, kind, roleName, count, weight, spawnTier, speedBands, bandEffectIds);
+        a.onHitSlowEffectId = onHitSlowEffectId;
+        a.onHitSlowSeconds = onHitSlowSeconds;
+        a.onHitDamageMult = onHitDamageMult;
+        a.onHitDamageFlat = onHitDamageFlat;
+        a.onHitStackCap = onHitStackCap;
+        a.onHitStackWindowSeconds = onHitStackWindowSeconds;
+        a.enrageAfterSeconds = enrageAfterSeconds;
+        a.enrageSpeedMult = enrageSpeedMult;
+        a.enrageDamageMult = enrageDamageMult;
+        a.enrageDurationSeconds = enrageDurationSeconds;
+        a.enrageSoundId = enrageSoundId;
         return a;
     }
 
@@ -177,5 +245,64 @@ public final class HunterArchetypeAsset
     @Nullable
     public String[] bandEffectIds() {
         return bandEffectIds;
+    }
+
+    // --- on-hit punishment (a non-null/non-zero override wins; 0/null defers to the RuleSet baseline) ---
+
+    /** EntityEffect id applied to the victim on a hunter hit (the base slow); {@code null}/blank = use the rule-set default. */
+    @Nullable
+    public String onHitSlowEffectId() {
+        return onHitSlowEffectId;
+    }
+
+    /** Slow duration in seconds; {@code 0} = use the rule-set default. */
+    public double onHitSlowSeconds() {
+        return onHitSlowSeconds;
+    }
+
+    /** Multiplier applied to a hunter's outgoing damage; {@code 0} = use the rule-set default (which defaults to 1.0). */
+    public double onHitDamageMult() {
+        return onHitDamageMult;
+    }
+
+    /** Flat bonus added to a hunter's outgoing damage; {@code 0} = use the rule-set default. */
+    public double onHitDamageFlat() {
+        return onHitDamageFlat;
+    }
+
+    /** Highest proximity-stack tier the slow escalates to; {@code 0} = use the rule-set default. */
+    public int onHitStackCap() {
+        return onHitStackCap;
+    }
+
+    /** Seconds within which repeated hits keep escalating the stack; {@code 0} = use the rule-set default. */
+    public double onHitStackWindowSeconds() {
+        return onHitStackWindowSeconds;
+    }
+
+    /** Seconds without landing a hit before this hunter enrages; {@code 0} = use the rule-set default (0 there = off). */
+    public double enrageAfterSeconds() {
+        return enrageAfterSeconds;
+    }
+
+    /** Speed multiplier while enraged; {@code 0} = use the rule-set default. */
+    public double enrageSpeedMult() {
+        return enrageSpeedMult;
+    }
+
+    /** Damage multiplier while enraged; {@code 0} = use the rule-set default. */
+    public double enrageDamageMult() {
+        return enrageDamageMult;
+    }
+
+    /** Enrage duration in seconds; {@code 0} = use the rule-set default. */
+    public double enrageDurationSeconds() {
+        return enrageDurationSeconds;
+    }
+
+    /** Sound id played when this hunter enrages; {@code null}/blank = use the rule-set default. */
+    @Nullable
+    public String enrageSoundId() {
+        return enrageSoundId;
     }
 }

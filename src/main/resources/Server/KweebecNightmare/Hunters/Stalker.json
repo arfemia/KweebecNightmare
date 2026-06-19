@@ -14,5 +14,15 @@
     "KweebecNightmare_HunterPace_130",
     "KweebecNightmare_HunterPace_140",
     "KweebecNightmare_HunterPace_150"
-  ]
+  ],
+  "OnHitSlowEffectId": "KweebecNightmare_HunterSlow_1",
+  "OnHitSlowSeconds": 1.5,
+  "OnHitDamageMult": 1.0,
+  "OnHitDamageFlat": 0.0,
+  "OnHitStackCap": 4,
+  "OnHitStackWindowSeconds": 8.0,
+  "EnrageAfterSeconds": 20.0,
+  "EnrageSpeedMult": 1.3,
+  "EnrageDamageMult": 1.25,
+  "EnrageDurationSeconds": 5.0
 }

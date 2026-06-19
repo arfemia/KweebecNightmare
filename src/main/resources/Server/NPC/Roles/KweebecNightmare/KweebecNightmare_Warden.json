@@ -1,0 +1,21 @@
+{
+  "$Comment": "Phase 1 of the Warden boss capstone (full HP). BossController spawns THIS role at the escape climax and swaps it to _Phase2 / _Phase3 as its HP crosses the thresholds.",
+  "Type": "Variant",
+  "Reference": "Template_KweebecNightmare_Warden",
+  "Modify": {
+    "DefaultPlayerAttitude": "Hostile",
+    "Appearance": "KweebecNightmare_Warden",
+    "DropList": "Empty",
+    "MaxHealth": 600,
+    "CombatConfig": "CAE_KweebecNightmare_Warden_Phase_1",
+    "Burn": false,
+    "IsMemory": false,
+    "MaxSpeed": 6.5,
+    "ViewRange": 512,
+    "AlertedRange": 512,
+    "HearingRange": 512,
+    "ViewSector": 360,
+    "WanderRadius": 8,
+    "NameTranslationKey": "kweebecnightmare.npc.warden.name"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "Name": "shrine_reinforce",
+  "Trigger": "SHRINE_LIT",
+  "Placement": "NEAR_RANDOM_PLAYER",
+  "ArchetypeId": "",
+  "Count": 1,
+  "Weight": 1.0,
+  "Cap": 0,
+  "CooldownSeconds": 8.0,
+  "MinCorruptionTier": 0,
+  "MaxPerRound": 3,
+  "RingRadius": 14.0,
+  "AtSeconds": 0,
+  "AtTier": 0
+}

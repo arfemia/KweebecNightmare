@@ -1,0 +1,16 @@
+{
+  "Name": "warden",
+  "NameKey": "kweebecnightmare.npc.warden.name",
+  "Phase1Role": "KweebecNightmare_Warden",
+  "Phase2Role": "KweebecNightmare_Warden_Phase2",
+  "Phase3Role": "KweebecNightmare_Warden_Phase3",
+  "Phase2ThresholdFraction": 0.5,
+  "Phase3ThresholdFraction": 0.25,
+  "Phase1AddCount": 0,
+  "Phase2AddCount": 2,
+  "Phase3AddCount": 3,
+  "AddRole": "KweebecNightmare_Blight",
+  "AddCap": 4,
+  "SpawnSoundId": "",
+  "PhaseSwapSoundId": ""
+}

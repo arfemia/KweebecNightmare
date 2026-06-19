@@ -23,11 +23,14 @@ import com.ziggfreed.common.sound.BlockStateSound;
 import com.ziggfreed.common.worldmap.WorldMapMarkers;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
+import com.ziggfreed.kweebec.asset.SpawnRuleAsset;
 import com.ziggfreed.kweebec.atmosphere.MusicBedService;
+import com.ziggfreed.kweebec.boss.BossController;
 import com.ziggfreed.kweebec.arena.Anchor;
 import com.ziggfreed.kweebec.arena.ArenaBuilder;
 import com.ziggfreed.kweebec.arena.ArenaLayout;
 import com.ziggfreed.kweebec.death.CocoonService;
+import com.ziggfreed.kweebec.event.KweebecDamageSystem;
 import com.ziggfreed.kweebec.feedback.HeartbeatService;
 import com.ziggfreed.kweebec.feedback.NightmareHud;
 import com.ziggfreed.kweebec.feedback.RoundFeedback;
@@ -117,6 +120,18 @@ public final class ChaseMode {
             HunterController hunter = round.hunterController();
             if (hunter != null) {
                 hunter.tick(round, world, store);
+                // Asset-driven extra-spawn rules: a corruption-tier crossing fires CORRUPTION_TIER once;
+                // TIME_ELAPSED + PLAYER_PROXIMITY are evaluated every tick (each gated by its own rule's
+                // cooldown / max-per-round / threshold inside the controller). Best-effort.
+                int newTier = chase.pollTierIncrease();
+                if (newTier >= 0) {
+                    hunter.evaluateSpawnRules(round, world, store,
+                            SpawnRuleAsset.Trigger.CORRUPTION_TIER, newTier);
+                }
+                hunter.evaluateSpawnRules(round, world, store,
+                        SpawnRuleAsset.Trigger.TIME_ELAPSED, round.durationSeconds());
+                hunter.evaluateSpawnRules(round, world, store,
+                        SpawnRuleAsset.Trigger.PLAYER_PROXIMITY, 0);
             }
             // Per-survivor horror conductor: proximity vignette (hysteresis) + jumpscare +
             // whisper layer + tier music escalation. Best-effort; never throws into the loop.
@@ -131,6 +146,13 @@ public final class ChaseMode {
         }
         if (chase.phase() == ChasePhase.ESCAPE) {
             checkEscapes(round, world, store);
+            // Boss capstone tick: track the Warden's HP, backstop its phase swaps, drive the boss HUD.
+            // Best-effort; never throws into the loop. The boss is purely an obstacle - the escape win in
+            // checkEscapes is unchanged whether or not it is defeated, so the boss never soft-locks the round.
+            BossController boss = round.bossController();
+            if (boss != null) {
+                boss.tick(round, world, store);
+            }
         }
 
         pushHuds(round, world, store, chase);
@@ -226,6 +248,8 @@ public final class ChaseMode {
         HunterController hunter = round.hunterController();
         if (hunter != null) {
             hunter.spawn(round, world, store);
+            // Round-start extra-spawn rules (e.g. an opening flanker near the party). Best-effort.
+            hunter.evaluateSpawnRules(round, world, store, SpawnRuleAsset.Trigger.ROUND_START, 0);
         }
         HeartbeatService.start(round);
         forEachPresent(round, pr -> RoundFeedback.title(pr,
@@ -264,6 +288,9 @@ public final class ChaseMode {
         shrine.setLit(true);
         chase.addCorruption(round.ruleSet().corruptionPerShrine());
         renderLit(world, shrine);
+        // The grove catches its breath: lighting a shrine cleanses every survivor's hunter proximity-slow
+        // stack, so the next chase starts the escalation fresh (the relief beat the design calls for).
+        KweebecDamageSystem.clearAllProximityStacks();
         // One-shot ignite "whoosh" at the furnace (the steady crackle while lit is the native "Lit"-state
         // AmbientSoundEventId). The state's InteractionSoundEventId does NOT fire on a server-set state, so
         // play the authored id ourselves via the mod-agnostic ziggfreed-common helper (the id stays in the
@@ -277,6 +304,19 @@ public final class ChaseMode {
                 "[Kweebec][win] shrine " + shrine.index() + " CLEANSED ("
                         + chase.litShrines() + "/" + chase.totalShrines() + ")");
         forEachPresent(round, pr -> RoundFeedback.successToast(pr, Lang.TOAST_CLEANSE_DONE));
+        // Asset-driven extra-spawn rules: cleansing a shrine can summon reinforcements NEAR the party.
+        // Same world thread as the 1 Hz tick, so the store read is safe. Best-effort; the rule layer's
+        // own cooldown / max-per-round / cap gate the actual spawn. A toast cues the player if one fires.
+        HunterController hunter = round.hunterController();
+        if (hunter != null) {
+            int liveBefore = hunter.hunterPositions(world.getEntityStore().getStore()).size();
+            hunter.evaluateSpawnRules(round, world, world.getEntityStore().getStore(),
+                    SpawnRuleAsset.Trigger.SHRINE_LIT, 0);
+            int liveAfter = hunter.hunterPositions(world.getEntityStore().getStore()).size();
+            if (liveAfter > liveBefore) {
+                forEachPresent(round, pr -> RoundFeedback.dangerToast(pr, Lang.TOAST_HUNTERS_DRAWN));
+            }
+        }
     }
 
     /**
@@ -386,6 +426,16 @@ public final class ChaseMode {
         HunterController hunter = round.hunterController();
         if (hunter != null) {
             hunter.onAlert(round, world, store);
+        }
+        // Boss capstone: a bossEnabled round spawns the multi-phase corrupted-Kweebec Warden at the gate as
+        // the escape climax. Preset/RuleSet-gated (the BossEnabled knob) + asset-driven (the resolved
+        // BossAsset). Best-effort; a missing boss asset/role just yields no boss (the escape still works).
+        if (round.ruleSet().bossEnabled() && round.bossController() == null) {
+            BossController boss = BossController.forRound(round);
+            if (boss != null) {
+                round.setBossController(boss);
+                boss.spawn(round, world, store);
+            }
         }
         forEachPresent(round, pr -> {
             RoundFeedback.title(pr, Lang.TITLE_GATE_OPEN, Lang.TITLE_GATE_OPEN_SUB, true);

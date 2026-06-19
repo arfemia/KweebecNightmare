@@ -91,6 +91,25 @@ public final class RoundService {
         InstanceLifecycle.shutdown();
     }
 
+    /**
+     * The instance asset to spawn for a round, derived from the resolved {@link RuleSet}'s
+     * {@link RuleSet#worldStructure() worldStructure} (the per-difficulty biome). The per-profile
+     * instances mirror the worldgen suffix on the mode's base instance: {@code KweebecNightmare_Grove}
+     * -> {@code KweebecNightmare_Chase}, {@code _Grove_Dread} -> {@code _Chase_Dread}, {@code _Grove_Calm}
+     * -> {@code _Chase_Calm}. A worldStructure not following the convention (e.g. an unrelated pack biome)
+     * falls back to the mode's base instance so the round still spawns.
+     */
+    @Nonnull
+    private static String instanceName(@Nonnull RoundInstance round) {
+        String base = round.mode().instanceName();
+        String ws = round.ruleSet().worldStructure();
+        if (ws == null || ws.equals(RuleSet.DEFAULT_WORLD_STRUCTURE)
+                || !ws.startsWith(RuleSet.DEFAULT_WORLD_STRUCTURE)) {
+            return base;
+        }
+        return base + ws.substring(RuleSet.DEFAULT_WORLD_STRUCTURE.length());
+    }
+
     // --- start ---
 
     /**
@@ -153,7 +172,7 @@ public final class RoundService {
                 Transform returnPoint = captureReturn(store, ref);
 
                 CompletableFuture<World> worldFuture =
-                        InstanceLifecycle.spawnInstance(round.mode().instanceName(), fromWorld, returnPoint);
+                        InstanceLifecycle.spawnInstance(instanceName(round), fromWorld, returnPoint);
 
                 // Teleport the initiator in immediately (same world thread), returning
                 // them to where they were on exit.
@@ -378,6 +397,11 @@ public final class RoundService {
             Store<EntityStore> store = world.getEntityStore().getStore();
             if (round.hunterController() != null) {
                 round.hunterController().despawnAll(world, store);
+            }
+            // Tear the boss capstone (the Warden + its adds + the boss HUD) down so it never leaks past the
+            // round. No-op on a round without a boss. Best-effort (guarded by the surrounding try).
+            if (round.bossController() != null) {
+                round.bossController().despawnAll(world, store);
             }
             // Clear every survivor's scare vignette + jumpscare throttle + the whisper schedule,
             // so a lingering dread EntityEffect never rides out of the instance on an ejected player.

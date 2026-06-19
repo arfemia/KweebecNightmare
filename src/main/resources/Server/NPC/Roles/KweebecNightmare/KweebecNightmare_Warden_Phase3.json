@@ -1,0 +1,21 @@
+{
+  "$Comment": "Phase 3 of the Warden boss (sub-25% HP, the final desperate phase). Burn=true wreathes it in fire (the enrage signal, mirrors Goblin_Duke_Phase_3_Fast). Fastest CAE + top move speed.",
+  "Type": "Variant",
+  "Reference": "Template_KweebecNightmare_Warden",
+  "Modify": {
+    "DefaultPlayerAttitude": "Hostile",
+    "Appearance": "KweebecNightmare_Warden",
+    "DropList": "Empty",
+    "MaxHealth": 300,
+    "CombatConfig": "CAE_KweebecNightmare_Warden_Phase_3",
+    "Burn": true,
+    "IsMemory": false,
+    "MaxSpeed": 7.5,
+    "ViewRange": 512,
+    "AlertedRange": 512,
+    "HearingRange": 512,
+    "ViewSector": 360,
+    "WanderRadius": 8,
+    "NameTranslationKey": "kweebecnightmare.npc.warden.name"
+  }
+}

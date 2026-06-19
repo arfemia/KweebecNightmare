@@ -1,0 +1,21 @@
+{
+  "$Comment": "Phase 2 of the Warden boss (sub-50% HP). BossController swaps the live entity to this role on the HP threshold; the swap re-rolls HP to this MaxHealth, so the phase fraction the HUD shows is per-phase. Faster CAE + a touch faster move speed.",
+  "Type": "Variant",
+  "Reference": "Template_KweebecNightmare_Warden",
+  "Modify": {
+    "DefaultPlayerAttitude": "Hostile",
+    "Appearance": "KweebecNightmare_Warden",
+    "DropList": "Empty",
+    "MaxHealth": 450,
+    "CombatConfig": "CAE_KweebecNightmare_Warden_Phase_2",
+    "Burn": false,
+    "IsMemory": false,
+    "MaxSpeed": 7.0,
+    "ViewRange": 512,
+    "AlertedRange": 512,
+    "HearingRange": 512,
+    "ViewSector": 360,
+    "WanderRadius": 8,
+    "NameTranslationKey": "kweebecnightmare.npc.warden.name"
+  }
+}

@@ -55,17 +55,19 @@ public final class ArenaBuilder {
     private static final String CENTERPIECE_PREFAB = "KweebecNightmare/Corrupted_Well";
     private static final double CENTERPIECE_Z_OFFSET = 10.0;
     /**
-     * The underground-objective prefabs: a carved descent shaft + lit chamber + the cave shrine furnace,
-     * with the furnace baked deep at the chamber. Two interchangeable descent styles, alternated per cave
-     * shrine (by index) for variety - a facing-independent spiral staircase and a multi-level underground
-     * DUNGEON (a copied vanilla crypt, re-anchored so its top is the surface entrance and its body
-     * descends ~36 blocks to the furnace; it supersedes the old plain ladder). Both are force-carved into
-     * the solid grove; {@link #pasteCaveShaft} ignores the anchor Y and surface-snaps the prefab top, so a
-     * deeper descent just carves deeper.
+     * The underground cave-shrine descent prefab(s): a carved shaft + lit chamber + the baked cave shrine
+     * furnace deep at the chamber, force-carved into the solid grove by {@link #pasteCaveShaft} (which
+     * ignores the anchor Y and surface-snaps the prefab top, so a deeper descent just carves deeper).
+     * Currently the facing-independent spiral staircase; indexed by cave so more styles can be alternated.
+     *
+     * <p>The multi-level underground DUNGEON ({@code Shrine_Dungeon_Underground_01}) that briefly lived here
+     * was MOVED to the WORLDGEN biome scatter: a {@code Type:Prefab} prop (KweebecNightmare_Grove,
+     * {@code KN_ShrineDungeon}) writes its {@code Empty} descent cells at generation time, carving the shaft
+     * straight out of the rock with no runtime force-paste and no worldgen race. It is no longer cave-carved
+     * here.
      */
     private static final String[] SHAFT_PREFABS = {
-            "KweebecNightmare/Relight_Shaft",                  // [0] spiral staircase
-            "KweebecNightmare/Shrine_Dungeon_Underground_01",  // [1] underground dungeon descent (replaces the ladder)
+            "KweebecNightmare/Relight_Shaft",  // spiral staircase (the runtime force-carved cave style)
     };
 
     /** The single Moonbloom plant prefab (one harvestable glowing-mushroom block, floor-snapped per paste). */

@@ -98,86 +98,7 @@
         {
           "Type": "Multiplier",
           "Skip": false,
-          "$Comment": "Procedural caves carved EVERYWHERE under the footprint (the r70 flat-core Cylinder mask is gone). Gated to deep + pocketed: depthMask is 1 only at y<=60 ramping to 0 by y=66 (so the lowest valley surface ~y=72 keeps a 6+ block buffer; caves never breach the walkable floor), pocketMask is 1 where |noise3D|<0.10 ramping to 0 by 0.15. Where both are 1 it subtracts -8 (air pocket); any mask 0 short-circuits the Multiplier to 0 = no carve.",
-          "Inputs": [
-            {
-              "Type": "CurveMapper",
-              "Skip": false,
-              "Curve": {
-                "Type": "Manual",
-                "Points": [
-                  {
-                    "In": -20,
-                    "Out": 1
-                  },
-                  {
-                    "In": -14,
-                    "Out": 0
-                  }
-                ]
-              },
-              "Inputs": [
-                {
-                  "Type": "BaseHeight",
-                  "Skip": false,
-                  "BaseHeightName": "Base",
-                  "Distance": true
-                }
-              ]
-            },
-            {
-              "Type": "CurveMapper",
-              "Skip": false,
-              "Curve": {
-                "Type": "Manual",
-                "Points": [
-                  {
-                    "In": 0,
-                    "Out": 1
-                  },
-                  {
-                    "In": 0.1,
-                    "Out": 1
-                  },
-                  {
-                    "In": 0.15,
-                    "Out": 0
-                  },
-                  {
-                    "In": 1,
-                    "Out": 0
-                  }
-                ]
-              },
-              "Inputs": [
-                {
-                  "Type": "Abs",
-                  "Skip": false,
-                  "Inputs": [
-                    {
-                      "Type": "SimplexNoise3D",
-                      "Skip": false,
-                      "Lacunarity": 2,
-                      "Persistence": 0.5,
-                      "ScaleXZ": 34,
-                      "ScaleY": 22,
-                      "Octaves": 2,
-                      "Seed": "KN_CavePocket"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "Type": "Constant",
-              "Skip": false,
-              "Value": -8
-            }
-          ]
-        },
-        {
-          "Type": "Multiplier",
-          "Skip": false,
+          "$Comment": "EDGE CLIFF (finite-world boundary): 0 inside r112, -100000 beyond (sheer cliff into the void). The old procedural cave-noise term (a Multiplier carving |noise3D|<0.15 air pockets below y66) was REMOVED - it hollowed pockets nobody interacts with and generated with no lower depth bound; the descend-and-return cave SHRINES are unaffected (the runtime Relight_Shaft + the worldgen KN_ShrineDungeon force-carve their own space). See the ISLAND FLOOR term below for the finite-slab bottom.",
           "Inputs": [
             {
               "Type": "Cylinder",
@@ -218,6 +139,32 @@
               "Type": "Constant",
               "Skip": false,
               "Value": -100000
+            }
+          ]
+        },
+        {
+          "Type": "CurveMapper",
+          "Skip": false,
+          "$Comment": "ISLAND FLOOR (shorter island): the VERTICAL analogue of the r112 edge-cliff term. Over BaseHeight 'Base' Distance:true (= y-80) it contributes 0 at/above y~36 (In>=-44) and -100000 below it (In<=-50), carving a flat UNDERSIDE so the grove is a FINITE slab (rolling surface ~y72-88 down to ~y36) floating over the void, NOT a solid column to bedrock. floorY ~36 stays below the deepest kept underground feature (runtime cave chambers ~y65, worldgen KN_ShrineDungeon descent ~y44). All-additive + fail-safe like the rest of the Sum. Tunable: raise both In points together to thin the slab once/if the deep dungeon is dropped.",
+          "Curve": {
+            "Type": "Manual",
+            "Points": [
+              {
+                "In": -50,
+                "Out": -100000
+              },
+              {
+                "In": -44,
+                "Out": 0
+              }
+            ]
+          },
+          "Inputs": [
+            {
+              "Type": "BaseHeight",
+              "Skip": false,
+              "BaseHeightName": "Base",
+              "Distance": true
             }
           ]
         }
@@ -1301,6 +1248,93 @@
                 "Directionality": {
                   "Type": "Random",
                   "Seed": "KN_ShrineLargeRot",
+                  "Pattern": {
+                    "Type": "Floor",
+                    "Skip": false,
+                    "Origin": {
+                      "Type": "BlockSet",
+                      "Skip": false,
+                      "BlockSet": {
+                        "Inclusive": true,
+                        "Materials": [
+                          {
+                            "Solid": "Empty"
+                          }
+                        ]
+                      }
+                    },
+                    "Floor": {
+                      "Type": "BlockSet",
+                      "Skip": false,
+                      "BlockSet": {
+                        "Inclusive": true,
+                        "Materials": [
+                          {
+                            "Solid": "Soil_Grass_Dry"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "Scanner": {
+                  "Type": "ColumnLinear",
+                  "Skip": false,
+                  "MaxY": 40,
+                  "MinY": -20,
+                  "RelativeToPosition": false,
+                  "BaseHeightName": "Base",
+                  "TopDownOrder": true,
+                  "ResultCap": 1
+                },
+                "MoldingDirection": "None",
+                "MoldingChildren": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "Skip": false,
+      "Runtime": 0,
+      "$Comment": "WORLDGEN SHRINE HOST - UNDERGROUND DUNGEON (scatter + CARVE): the furnace-baked multi-level descent Shrine_Dungeon_Underground_01, scattered RARELY (Scale 90 + SkipChance 0.7, ~1-2 per round) on its own prop because it is a big deep carve. UNLIKE the surface crypts this prefab DESCENDS: its anchor IS the surface ENTRANCE (anchorY 36) and the body extends DOWN ~36 blocks to the furnace chamber, the descent shaft authored as Empty cells. A Type:Prefab worldgen prop writes EVERY stored cell incl. Empty (decompile-verified: props.PrefabProp.place -> materialWriteSpace.set(material,pos) per cell, no air skip), so the Empty cells CARVE the descent straight out of the solid grove AT GENERATION TIME - the same carve the runtime cave-shaft seam did, now gen-time and reliable (no worldgen race, no force-paste). The Floor pattern + ColumnLinear scanner land the ENTRANCE flush on Soil_Grass_Dry under Empty; the body carves below into the dirt/rock (material runs to BottomY -80, far below the ~surface-36 chamber). LoadEntities:true spawns the baked hidden kn_shrine_marker entity (worldgen tags it FromWorldGen so ShrinePlacement detects it, tops up, and clusters surface Moonbloom at the entrance) and the dungeon self-bakes its own Moonbloom supply down the shaft. Furnace is a baked 4-cell multiblock, discovered via its interaction like every other host. Random directionality spins the footprint. IN-GAME GATE: confirm the entrance carves flush (not buried/floating) on rolling terrain, the descent is walkable to the furnace, the marker is detected, and the biome is not all-air (a malformed Prefab prop airs out the WHOLE biome). Not gradle-compiled.",
+      "Positions": {
+        "Type": "Mesh2D",
+        "Skip": false,
+        "PointsY": 0,
+        "PointGenerator": {
+          "Type": "Mesh",
+          "Jitter": 0.5,
+          "ScaleX": 90,
+          "ScaleY": 90,
+          "ScaleZ": 90,
+          "Seed": "KN_ShrineDungeon"
+        }
+      },
+      "Assignments": {
+        "Type": "Weighted",
+        "SkipChance": 0.7,
+        "Seed": "KN_ShrineDungeonW",
+        "WeightedAssignments": [
+          {
+            "Weight": 1,
+            "Assignments": {
+              "Type": "Constant",
+              "Prop": {
+                "Type": "Prefab",
+                "Skip": false,
+                "WeightedPrefabPaths": [
+                  {
+                    "Path": "KweebecNightmare/Shrine_Dungeon_Underground_01",
+                    "Weight": 1
+                  }
+                ],
+                "LegacyPath": false,
+                "LoadEntities": true,
+                "Directionality": {
+                  "Type": "Random",
+                  "Seed": "KN_ShrineDungeonRot",
                   "Pattern": {
                     "Type": "Floor",
                     "Skip": false,

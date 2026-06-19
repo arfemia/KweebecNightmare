@@ -27,6 +27,7 @@ npc.blight.name = Blighted Kweebec
 npc.lunger.name = Lunging Blight
 npc.spitter.name = Spitting Blight
 npc.ambusher.name = Blinking Blight
+npc.warden.name = The Blight Warden
 
 title.hunt_begins = The Hunt Begins
 title.hunt_begins.sub = Relight the grove shrines
@@ -62,6 +63,7 @@ toast.rescued = You are free. Run.
 toast.teammate_down = A teammate has been cocooned
 toast.hunter_locked = It has your scent
 toast.time_low = The night is almost over
+toast.hunters_drawn = The light draws more of them in
 
 hud.timer = Time {0}
 hud.shrines = Shrines {0}/{1}
@@ -71,6 +73,12 @@ hud.objective.ritual = Relight the grove shrines
 hud.objective.escape = Flee through the Heartwood Gate
 
 marker.exit = Exit
+
+boss.hud.phase = Phase {0}/{1}
+boss.title.awakens = The Warden Awakens
+boss.title.awakens.sub = It rose to bar the gate
+boss.toast.phase = The Warden sheds its bark and surges
+boss.toast.defeated = The Warden falls. The gate is yours.
 
 cmd.players_only = Only players can run this.
 cmd.already_in_round = You are already in a round.
@@ -209,17 +217,26 @@ results.col.stun = Defiance
 results.col.shrine = Devotion
 results.col.duration = Time alive
 
-# Queue / ready screen (the shared QueuePage). The player stays here after queueing.
-queue.screen.title = The Gathering
+# Play screen - live roster / ready chrome (the shared PlayModePage, queued state). The
+# countdown line ticks down live on screen. The player stays here after queueing.
 queue.screen.count = {0}/{1} survivors
 queue.screen.waiting = Waiting for more to answer the call...
 queue.screen.countdown = The grove pulls you in... {0}
 queue.screen.launching = The Blighted Grove takes you...
 queue.screen.wait = up to ~{0}s
 queue.screen.leave = Leave the Gathering
-queue.screen.refresh = Refresh
 queue.screen.not_queued = You are not in a gathering.
 queue.screen.toast_queued = You join the gathering ({0}/{1}).
+
+# Play screen - the mode chooser (the shared PlayModePage, not-queued state): how to enter.
+play.title = Enter the Nightmare
+play.difficulty = Difficulty: {0}
+play.mode.public = Public
+play.mode.public.desc = Brave the grove with whoever answers the call.
+play.mode.party = Coven
+play.mode.party.desc = Gather your own survivors first.
+play.mode.solo = Alone
+play.mode.solo.desc = Step into the dark by yourself, right now.
 
 # Party + invite screen (the shared PartyInvitePage).
 party.title = Your Coven

@@ -51,6 +51,8 @@ public final class Lang {
     public static final String TOAST_TEAMMATE_DOWN = "kweebecnightmare.toast.teammate_down";
     public static final String TOAST_HUNTER_LOCKED = "kweebecnightmare.toast.hunter_locked";
     public static final String TOAST_TIME_LOW = "kweebecnightmare.toast.time_low";
+    /** Shown when an asset-driven spawn rule pulls extra hunters in near the party. */
+    public static final String TOAST_HUNTERS_DRAWN = "kweebecnightmare.toast.hunters_drawn";
 
     // Custom HUD labels.
     public static final String HUD_TIMER = "kweebecnightmare.hud.timer";
@@ -62,6 +64,15 @@ public final class Lang {
 
     // World-map / compass marker names (the exit POI placed when the Heartwood Gate opens).
     public static final String MARKER_EXIT = "kweebecnightmare.marker.exit";
+
+    // Boss capstone (the corrupted-Kweebec Warden): NPC name, the boss HUD label + phase indicator, and
+    // the spawn banner + roar toast. The phase indicator interpolates {0}=current phase, {1}=total phases.
+    public static final String NPC_WARDEN = "kweebecnightmare.npc.warden.name";
+    public static final String BOSS_HUD_PHASE = "kweebecnightmare.boss.hud.phase";
+    public static final String BOSS_TITLE_AWAKENS = "kweebecnightmare.boss.title.awakens";
+    public static final String BOSS_TITLE_AWAKENS_SUB = "kweebecnightmare.boss.title.awakens.sub";
+    public static final String BOSS_TOAST_PHASE = "kweebecnightmare.boss.toast.phase";
+    public static final String BOSS_TOAST_DEFEATED = "kweebecnightmare.boss.toast.defeated";
 
     // Command + system feedback.
     public static final String CMD_PLAYERS_ONLY = "kweebecnightmare.cmd.players_only";
@@ -166,17 +177,26 @@ public final class Lang {
     public static final String RESULTS_COL_SHRINE = "kweebecnightmare.results.col.shrine";
     public static final String RESULTS_COL_DURATION = "kweebecnightmare.results.col.duration";
 
-    // Queue / ready screen (the common QueuePage).
-    public static final String QUEUE_SCREEN_TITLE = "kweebecnightmare.queue.screen.title";
+    // Play screen - the live roster / ready chrome (the common PlayModePage, queued state).
     public static final String QUEUE_SCREEN_COUNT = "kweebecnightmare.queue.screen.count";
     public static final String QUEUE_SCREEN_WAITING = "kweebecnightmare.queue.screen.waiting";
     public static final String QUEUE_SCREEN_COUNTDOWN = "kweebecnightmare.queue.screen.countdown";
     public static final String QUEUE_SCREEN_LAUNCHING = "kweebecnightmare.queue.screen.launching";
     public static final String QUEUE_SCREEN_WAIT = "kweebecnightmare.queue.screen.wait";
     public static final String QUEUE_SCREEN_LEAVE = "kweebecnightmare.queue.screen.leave";
-    public static final String QUEUE_SCREEN_REFRESH = "kweebecnightmare.queue.screen.refresh";
     public static final String QUEUE_SCREEN_NOT_QUEUED = "kweebecnightmare.queue.screen.not_queued";
     public static final String QUEUE_SCREEN_TOAST_QUEUED = "kweebecnightmare.queue.screen.toast_queued";
+
+    // Play screen - the mode chooser (the common PlayModePage, not-queued state): title, the chosen
+    // difficulty line, and the Public / Party / Solo card labels + one-line descriptions.
+    public static final String PLAY_TITLE = "kweebecnightmare.play.title";
+    public static final String PLAY_DIFFICULTY = "kweebecnightmare.play.difficulty";
+    public static final String MODE_PUBLIC = "kweebecnightmare.play.mode.public";
+    public static final String MODE_PUBLIC_DESC = "kweebecnightmare.play.mode.public.desc";
+    public static final String MODE_PARTY = "kweebecnightmare.play.mode.party";
+    public static final String MODE_PARTY_DESC = "kweebecnightmare.play.mode.party.desc";
+    public static final String MODE_SOLO = "kweebecnightmare.play.mode.solo";
+    public static final String MODE_SOLO_DESC = "kweebecnightmare.play.mode.solo.desc";
 
     // Party + invite screen (the common PartyInvitePage).
     public static final String PARTY_TITLE = "kweebecnightmare.party.title";

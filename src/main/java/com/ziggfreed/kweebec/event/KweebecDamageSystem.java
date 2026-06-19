@@ -1,6 +1,8 @@
 package com.ziggfreed.kweebec.event;
 
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.annotation.Nonnull;
@@ -24,8 +26,10 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.narwhals.perfectutils.api.StunMobAPI;
+import com.ziggfreed.common.instance.effect.EntityEffectService;
 import com.ziggfreed.common.sound.Sound3D;
 import com.ziggfreed.common.util.EntityIdentifierUtil;
+import com.ziggfreed.kweebec.hunter.OnHitConfig;
 import com.ziggfreed.kweebec.round.PlayerRoundState;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.round.RoundService;
@@ -73,6 +77,19 @@ public final class KweebecDamageSystem extends DamageEventSystem {
 
     /** Resolved index of the Moonbloom damage cause; cached ONLY once positive (the asset loads after this class). */
     private volatile int moonbloomCauseIndex = -1;
+
+    /** Minimum gap (ms) between re-applying the on-hit slow to the SAME victim (so rapid hits do not thrash it). */
+    private static final long SLOW_REAPPLY_COOLDOWN_MS = 500L;
+    /**
+     * Per-victim on-hit punishment state, STATIC so {@code ChaseMode.lightShrine} can clear it without
+     * holding a reference to the single registered observer instance. Keyed by victim UUID; written on the
+     * world thread but {@link ConcurrentHashMap} for the cross-call clear. {@code lastSlowAppliedMs} is the
+     * slow re-apply cooldown gate; {@code proximityStack} is the 1..cap stack level; {@code lastHitMs} is
+     * the stack-window anchor (the time of the last hunter hit on that victim).
+     */
+    private static final Map<UUID, Long> lastSlowAppliedMs = new ConcurrentHashMap<>();
+    private static final Map<UUID, Integer> proximityStack = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> lastHitMs = new ConcurrentHashMap<>();
 
     @Override
     public SystemGroup<EntityStore> getGroup() {
@@ -124,6 +141,16 @@ public final class KweebecDamageSystem extends DamageEventSystem {
             if (isMoonbloom) {
                 return; // a friendly Moonbloom splash on a teammate - do not count it as damage taken
             }
+            // HUNTER ON-HIT PUNISHMENT: when the attacker is a live hunter, scale its outgoing damage and
+            // slap a proximity-escalating slow on the victim BEFORE scoring, so the score reflects the
+            // punished amount. resolveOnHitConfigFor returns null for a non-hunter (or stale) attacker.
+            Ref<EntityStore> hunterAttacker = hunterAttackerOf(store, damage);
+            OnHitConfig cfg = hunterAttacker != null && round.hunterController() != null
+                    ? round.hunterController().resolveOnHitConfigFor(hunterAttacker) : null;
+            if (cfg != null) {
+                applyOnHitPunishment(store, targetRef, commandBuffer, damage, uuid, cfg, hunterAttacker, round);
+            }
+
             PlayerRoundState st = round.playerState(uuid);
             if (st != null && damage.getAmount() > 0f) {
                 st.addDamageTaken(damage.getAmount());
@@ -147,19 +174,136 @@ public final class KweebecDamageSystem extends DamageEventSystem {
         if (ThreadLocalRandom.current().nextDouble() >= SNICKER_ON_HIT_CHANCE) {
             return;
         }
-        if (!(damage.getSource() instanceof Damage.EntitySource es)) {
-            return;
-        }
-        Ref<EntityStore> attacker = es.getRef();
-        if (attacker == null || !attacker.isValid()) {
-            return;
-        }
-        String mobId = EntityIdentifierUtil.getMobId(store, attacker);
-        if (mobId == null || !mobId.startsWith(HUNTER_MODEL_PREFIX)) {
+        Ref<EntityStore> attacker = hunterAttackerOf(store, damage);
+        if (attacker == null) {
             return; // not one of our hunters
         }
         Sound3D.playAt(SNICKER_SOUND_ID, SoundCategory.SFX, attacker,
                 Sound3D.onlyEntity(victimRef), store, "SNICKER_HIT", false);
+    }
+
+    /**
+     * The hunter that dealt this damage, identified by its model asset id prefix (the same self-contained
+     * technique the snicker uses), or {@code null} when the source is not an entity / not one of our
+     * hunters. World-thread only.
+     */
+    @Nullable
+    private Ref<EntityStore> hunterAttackerOf(@Nonnull Store<EntityStore> store, @Nonnull Damage damage) {
+        if (!(damage.getSource() instanceof Damage.EntitySource es)) {
+            return null;
+        }
+        Ref<EntityStore> attacker = es.getRef();
+        if (attacker == null || !attacker.isValid()) {
+            return null;
+        }
+        String mobId = EntityIdentifierUtil.getMobId(store, attacker);
+        return (mobId != null && mobId.startsWith(HUNTER_MODEL_PREFIX)) ? attacker : null;
+    }
+
+    /**
+     * Apply the hunter on-hit punishment to a survivor victim, BEFORE the hit is scored:
+     *
+     * <ol>
+     *   <li><b>Bonus damage</b>: scale the hit by {@code cfg.damageMult() + cfg.damageFlat()} (the enrage
+     *       bonus is already folded into {@code damageMult()} when the hunter is enraged).</li>
+     *   <li><b>Proximity stacking</b>: escalate the victim's stack level while repeated hits land within
+     *       {@code cfg.stackWindowSeconds()} (capped at {@code cfg.stackCap()}); a hit after the window
+     *       lapses resets to tier 1. The slow effect id is the base id with the stack tier suffix
+     *       ({@code KweebecNightmare_HunterSlow_<tier>}).</li>
+     *   <li><b>Slow</b>: apply that tiered slow for {@code cfg.slowSeconds()} (OVERWRITE), gated by a
+     *       per-victim {@value #SLOW_REAPPLY_COOLDOWN_MS} ms cooldown so rapid hits do not thrash it.</li>
+     *   <li><b>Enrage idle reset</b>: tell the controller this hunter connected, so its desperation timer
+     *       restarts.</li>
+     * </ol>
+     *
+     * World-thread only; best-effort (a missing effect asset degrades to no slow).
+     */
+    private void applyOnHitPunishment(@Nonnull Store<EntityStore> store, @Nonnull Ref<EntityStore> victimRef,
+                                      @Nonnull CommandBuffer<EntityStore> cb, @Nonnull Damage damage,
+                                      @Nonnull UUID victimId, @Nonnull OnHitConfig cfg,
+                                      @Nonnull Ref<EntityStore> hunterAttacker, @Nonnull RoundInstance round) {
+        long now = System.currentTimeMillis();
+
+        // 1) Bonus damage (mult already carries the enrage bonus when this hunter is enraged).
+        float base = damage.getAmount();
+        if (base > 0f) {
+            double scaled = base * cfg.damageMult() + cfg.damageFlat();
+            damage.setAmount((float) Math.max(0.0, scaled));
+        }
+
+        // 2) Proximity stacking: escalate within the window, reset if the window lapsed.
+        int cap = Math.max(1, cfg.stackCap());
+        long windowMs = (long) (Math.max(0.0, cfg.stackWindowSeconds()) * 1000.0);
+        Long prevHit = lastHitMs.get(victimId);
+        int tier;
+        if (prevHit != null && windowMs > 0L && (now - prevHit) <= windowMs) {
+            tier = Math.min(cap, proximityStack.getOrDefault(victimId, 0) + 1);
+        } else {
+            tier = 1; // first hit, or the window lapsed -> reset to tier 1
+        }
+        proximityStack.put(victimId, tier);
+        lastHitMs.put(victimId, now);
+
+        // 3) Tiered slow, gated by the per-victim re-apply cooldown.
+        String baseId = cfg.slowEffectId();
+        if (baseId != null && !baseId.isBlank()) {
+            Long lastApplied = lastSlowAppliedMs.get(victimId);
+            if (lastApplied == null || (now - lastApplied) >= SLOW_REAPPLY_COOLDOWN_MS) {
+                String tieredId = tieredSlowId(baseId, tier);
+                boolean applied = EntityEffectService.applyTimed(victimRef, tieredId,
+                        (float) Math.max(0.0, cfg.slowSeconds()), OverlapBehavior.OVERWRITE, cb);
+                if (applied) {
+                    lastSlowAppliedMs.put(victimId, now);
+                }
+            }
+        }
+
+        // 4) Reset this hunter's desperation idle timer (it connected).
+        if (round.hunterController() != null) {
+            round.hunterController().noteHunterLandedHit(hunterAttacker, now);
+        }
+    }
+
+    /**
+     * The stack-tiered slow effect id for a base id and a tier. Tier 1 -> the base id as-authored
+     * ({@code KweebecNightmare_HunterSlow_1}); higher tiers swap the trailing {@code _N} suffix for the
+     * tier ({@code _2/_3/_4}). A base id with no numeric suffix appends {@code _<tier>}. The pack ships
+     * {@code KweebecNightmare_HunterSlow_1..4}.
+     */
+    @Nonnull
+    private static String tieredSlowId(@Nonnull String baseId, int tier) {
+        int us = baseId.lastIndexOf('_');
+        if (us > 0 && us < baseId.length() - 1 && isAllDigits(baseId.substring(us + 1))) {
+            return baseId.substring(0, us + 1) + tier;
+        }
+        return baseId + "_" + tier;
+    }
+
+    private static boolean isAllDigits(@Nonnull String s) {
+        for (int i = 0; i < s.length(); i++) {
+            if (!Character.isDigit(s.charAt(i))) {
+                return false;
+            }
+        }
+        return !s.isEmpty();
+    }
+
+    /**
+     * Clear a victim's proximity stack (called when a shrine is lit - the party catches its breath). The
+     * stack and its window anchor reset so the next hit starts fresh at tier 1. Thread-safe; safe to call
+     * for a player with no live stack.
+     */
+    public static void clearProximityStack(@Nonnull UUID victimId) {
+        proximityStack.remove(victimId);
+        lastHitMs.remove(victimId);
+        lastSlowAppliedMs.remove(victimId);
+    }
+
+    /** Clear every victim's proximity stack (a shrine light relieves the whole party). Thread-safe. */
+    public static void clearAllProximityStacks() {
+        proximityStack.clear();
+        lastHitMs.clear();
+        lastSlowAppliedMs.clear();
     }
 
     /** Whether this damage carries the custom Moonbloom cause (resolved + cached lazily). */

@@ -1,0 +1,303 @@
+{
+  "$Comment": "Boss-capstone role template for the corrupted-Kweebec Warden. Cloned from Template_KweebecNightmare_Blight (the proven hostile Kweebec spear AI that already chases relentlessly in this arena, with huge sight/alerted/hearing ranges and the de-leashed pursuit), adapted for a multi-phase BOSS: it adds UseCombatActionEvaluator + a _CombatConfig param (the Goblin_Duke pattern) and a Burn param (mirrors Goblin_Duke_Phase_3) so each phase Variant can flip them. The three phase Variants (KweebecNightmare_Warden / _Phase2 / _Phase3) differ by MaxHealth, _CombatConfig, and Burn. Phase SWAPS are driven from Java (boss/BossController) on HP thresholds, NOT a self-driving ActionRole, because this role does not replicate the Goblin_Duke arena prefab-path instruction tree (Throne/Arena markers) that the native ActionRole/TriggerSpawnBeacon mechanics depend on. SPIKE: verify UseCombatActionEvaluator coexists with the inherited Razorleaf AttackSequence instruction tree in-game; if the CAE conflicts, drop UseCombatActionEvaluator and let the inherited spear combat carry the fight (the Blight already fights correctly without a CAE).",
+  "Type": "Abstract",
+  "StartState": "Idle",
+  "Parameters": {
+    "Appearance": {
+      "Value": "KweebecNightmare_Warden",
+      "Description": "Model to be used (the large dark corrupted Warden reskin)"
+    },
+    "WanderRadius": {
+      "Value": 8,
+      "Description": "General wander radius"
+    },
+    "ViewRange": {
+      "Value": 512,
+      "Description": "View range"
+    },
+    "ViewSector": {
+      "Value": 360,
+      "Description": "View sector"
+    },
+    "HearingRange": {
+      "Value": 512,
+      "Description": "Hearing range"
+    },
+    "AlertedRange": {
+      "Value": 512,
+      "Description": "A range within which the player can be seen/sensed when the NPC is alerted to their presence"
+    },
+    "WatchRange": {
+      "Value": 3,
+      "Description": "The range at which the Warden will look at nearby (non-hostile) targets"
+    },
+    "DropList": {
+      "Value": "Empty",
+      "Description": "Drop Items (boss drops are granted via the round reward pipeline, not a vanilla drop list)"
+    },
+    "MaxSpeed": {
+      "Value": 6.5,
+      "Description": "Maximum walking speed (boss is deliberate; the corruption ramp + enrage layer on top of this)"
+    },
+    "AttitudeGroup": {
+      "Value": "Kweebec",
+      "Description": "This NPCs attitude group"
+    },
+    "DefaultPlayerAttitude": {
+      "Value": "Hostile",
+      "Description": "Default attitude towards players"
+    },
+    "Weapons": {
+      "Value": [ "Weapon_Spear_Leaf" ],
+      "TypeHint": "String",
+      "Description": "NPC Weapons"
+    },
+    "AttackSequence": {
+      "Value": "Component_Instruction_Attack_Sequence_Kweebec_Sapling_Razorleaf",
+      "Description": "The attack sequence to use in combat"
+    },
+    "AttackDistance": {
+      "Value": 3.5,
+      "Description": "The distance at which an NPC will execute attacks"
+    },
+    "MotionComponent": {
+      "Value": "Component_Instruction_Intelligent_Idle_Motion_Wander",
+      "Description": "The component to use for motion"
+    },
+    "CombatRelativeTurnSpeed": {
+      "Value": 1.5,
+      "Description": "Modifier that decides turn speed difference in combat"
+    },
+    "MaxHealth": {
+      "Value": 600,
+      "Description": "Max health for the Warden (per-phase Variant overrides this: 600 / 450 / 300)"
+    },
+    "CombatConfig": {
+      "Value": "CAE_KweebecNightmare_Warden_Phase_1",
+      "Description": "The CombatActionEvaluator config for this phase"
+    },
+    "Burn": {
+      "Value": false,
+      "Description": "Whether the Warden is wreathed in fire (the Phase 3 enrage signal)"
+    },
+    "IsMemory": {
+      "Value": false,
+      "Description": "Defines if the NPC is a memory"
+    },
+    "MemoriesCategory": {
+      "Value": "Other",
+      "Description": "Defines the category of the memory"
+    },
+    "MemoriesNameOverride": {
+      "Value": "",
+      "Description": "Overrides the memory name if set"
+    },
+    "NameTranslationKey": {
+      "Value": "kweebecnightmare.npc.warden.name",
+      "Description": "Translation key for NPC name display"
+    }
+  },
+  "IsMemory": { "Compute": "IsMemory" },
+  "MemoriesCategory": { "Compute": "MemoriesCategory" },
+  "MemoriesNameOverride": { "Compute": "MemoriesNameOverride" },
+  "Appearance": { "Compute": "Appearance" },
+  "DropList": { "Compute": "DropList" },
+  "DisableDamageGroups": [ "Self" ],
+  "HotbarItems": { "Compute": "Weapons" },
+  "DefaultNPCAttitude": "Ignore",
+  "DefaultPlayerAttitude": { "Compute": "DefaultPlayerAttitude" },
+  "AttitudeGroup": { "Compute": "AttitudeGroup" },
+  "UseCombatActionEvaluator": true,
+  "_CombatConfig": { "Compute": "CombatConfig" },
+  "Burn": { "Compute": "Burn" },
+  "KnockbackScale": 0.25,
+  "MotionControllerList": [
+    {
+      "Type": "Walk",
+      "MaxWalkSpeed": { "Compute": "MaxSpeed" },
+      "Gravity": 10,
+      "RunThreshold": 0.3,
+      "MaxFallSpeed": 15,
+      "MaxRotationSpeed": 360,
+      "Acceleration": 10
+    }
+  ],
+  "MaxHealth": { "Compute": "MaxHealth" },
+  "CombatConfig": {
+    "EntityEffect": "Immunity_Environmental"
+  },
+  "$Comment_Melee": "Heavy boss spear hit: same override pattern as the Blight (Replaces NPC_Attack_Melee_Damage's calculator + knockback) but tuned harder for a capstone. Absolute Physical so the boss is dangerous regardless of armor; a strong launch keeps the survivors honest.",
+  "InteractionVars": {
+    "Melee_Damage": {
+      "Interactions": [
+        {
+          "Parent": "NPC_Attack_Melee_Damage",
+          "DamageCalculator": {
+            "Type": "Absolute",
+            "BaseDamage": {
+              "Physical": 16
+            }
+          },
+          "DamageEffects": {
+            "Knockback": {
+              "Force": 5,
+              "RelativeX": 0,
+              "RelativeZ": -1,
+              "VelocityY": 5,
+              "VelocityType": "Set"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "Instructions": [
+    {
+      "Instructions": [
+        {
+          "$Comment": "Persistent Burn while the Phase-3 Variant flips Burn=true (mirrors Goblin_Duke_Phase_3_Fast). A no-op for Phases 1/2 (Burn=false disables the sensor).",
+          "Sensor": {
+            "Type": "Any",
+            "Enabled": { "Compute": "Burn" }
+          },
+          "Continue": true,
+          "ActionsBlocking": true,
+          "Actions": [
+            {
+              "Type": "Timeout",
+              "Delay": [ 1, 1 ]
+            },
+            {
+              "Type": "ApplyEntityEffect",
+              "EntityEffect": "Burn",
+              "UseTarget": false
+            }
+          ]
+        },
+        {
+          "Sensor": {
+            "Type": "State",
+            "State": "Idle"
+          },
+          "Instructions": [
+            {
+              "Reference": "Component_Instruction_Clear_Status_Animation"
+            },
+            {
+              "Sensor": {
+                "Type": "Or",
+                "Sensors": [
+                  {
+                    "Reference": "Component_Sensor_Sight_By_Attitude",
+                    "Modify": {
+                      "ViewRange": { "Compute": "AlertedRange" },
+                      "ViewSector": { "Compute": "ViewSector" },
+                      "Attitudes": [ "Hostile" ]
+                    }
+                  },
+                  {
+                    "Reference": "Component_Sensor_Sound_By_Attitude",
+                    "Modify": {
+                      "HearingRange": { "Compute": "HearingRange" },
+                      "Attitudes": [ "Hostile" ]
+                    }
+                  },
+                  {
+                    "Type": "Player",
+                    "Range": { "Compute": "ViewRange" },
+                    "LockOnTarget": true,
+                    "Filters": [
+                      {
+                        "Type": "LineOfSight"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "Actions": [
+                {
+                  "Type": "State",
+                  "State": "Attack"
+                }
+              ]
+            },
+            {
+              "Reference": "Component_Instruction_Damage_Check",
+              "Modify": {
+                "_ExportStates": [ "Attack", "Search" ],
+                "AlertedRange": { "Compute": "AlertedRange" }
+              }
+            },
+            {
+              "Type": "Random",
+              "Name": "Warden_Idle_Random",
+              "ResetOnStateChange": false,
+              "Instructions": [
+                {
+                  "Weight": 50,
+                  "Instructions": [
+                    {
+                      "Reference": { "Compute": "MotionComponent" },
+                      "Interfaces": [ "Hytale.Instruction.Intelligent.Idle.Motion" ],
+                      "Nullable": true
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "Sensor": {
+            "Type": "State",
+            "State": "Search"
+          },
+          "Instructions": [
+            {
+              "Reference": "Component_Kweebec_Instruction_Search",
+              "Modify": {
+                "_ExportStates": [ "Alerted", "Attack", "Search", "Idle" ],
+                "ViewRange": { "Compute": "ViewRange" },
+                "ViewSector": { "Compute": "ViewSector" },
+                "HearingRange": { "Compute": "HearingRange" },
+                "AlertedRange": { "Compute": "AlertedRange" }
+              }
+            }
+          ]
+        },
+        {
+          "Sensor": {
+            "Type": "State",
+            "State": "Attack"
+          },
+          "Instructions": [
+            {
+              "Reference": "Component_Instruction_Clear_Status_Animation"
+            },
+            {
+              "Reference": "Component_Instruction_Target_Adjusted_Attack_Melee",
+              "Modify": {
+                "TargetSwitchTimer": [ 5, 5 ],
+                "AttackSequence": { "Compute": "AttackSequence" },
+                "AttackDistance": { "Compute": "AttackDistance" },
+                "TargetRange": 5,
+                "CombatRelativeTurnSpeed": { "Compute": "CombatRelativeTurnSpeed" }
+              }
+            },
+            {
+              "$Comment": "Relentless boss chase: no soft leash, pursues the nearest survivor across the bounded arena (same intent as the Blight).",
+              "Reference": "Component_Instruction_Intelligent_Chase",
+              "Modify": {
+                "_ExportStates": [ "Search", "Search", "Search" ],
+                "ViewRange": { "Compute": "AlertedRange" },
+                "HearingRange": { "Compute": "HearingRange" },
+                "RelativeSpeed": 0.85
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "NameTranslationKey": { "Compute": "NameTranslationKey" }
+}

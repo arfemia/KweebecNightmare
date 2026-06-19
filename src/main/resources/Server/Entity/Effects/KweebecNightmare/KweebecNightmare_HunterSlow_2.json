@@ -1,0 +1,12 @@
+{
+  "ApplicationEffects": {
+    "EntityTopTint": "#2e2040",
+    "EntityBottomTint": "#4a2c5e",
+    "HorizontalSpeedMultiplier": 0.55,
+    "ScreenEffect": "ScreenEffects/Snow.png"
+  },
+  "Duration": 1.5,
+  "OverlapBehavior": "Overwrite",
+  "Debuff": true,
+  "StatusEffectIcon": "UI/StatusEffects/Icon_Slow.png"
+}

@@ -24,7 +24,11 @@ public final class RuleSet {
      */
     public static final int ARENA_MAX_PARTY = 4;
 
+    /** The default worldgen biome (WorldStructure) a round generates in - the baseline Nightmare grove. */
+    public static final String DEFAULT_WORLD_STRUCTURE = "KweebecNightmare_Grove";
+
     private final String presetId;
+    private final String worldStructure;
     private final ReviveStyle reviveStyle;
     private final int maxDowns;
     private final int bleedOutSeconds;
@@ -51,10 +55,25 @@ public final class RuleSet {
     private final int minParty;
     private final int maxParty;
     private final boolean exitMarker;
+    private final boolean bossEnabled;
+    @Nullable private final String bossId;
     private final ScoringConfig scoring;
+    // On-hit punishment baseline (applies to every hunter unless its archetype overrides a field).
+    private final String onHitSlowEffectId;
+    private final double onHitSlowSeconds;
+    private final double onHitDamageMult;
+    private final double onHitDamageFlat;
+    private final int onHitStackCap;
+    private final double onHitStackWindowSeconds;
+    private final double enrageAfterSeconds;
+    private final double enrageSpeedMult;
+    private final double enrageDamageMult;
+    private final double enrageDurationSeconds;
+    private final String enrageSoundId;
 
     private RuleSet(Builder b) {
         this.presetId = b.presetId;
+        this.worldStructure = b.worldStructure;
         this.reviveStyle = b.reviveStyle;
         this.maxDowns = b.maxDowns;
         this.bleedOutSeconds = b.bleedOutSeconds;
@@ -81,7 +100,20 @@ public final class RuleSet {
         this.minParty = b.minParty;
         this.maxParty = b.maxParty;
         this.exitMarker = b.exitMarker;
+        this.bossEnabled = b.bossEnabled;
+        this.bossId = b.bossId;
         this.scoring = b.scoring;
+        this.onHitSlowEffectId = b.onHitSlowEffectId;
+        this.onHitSlowSeconds = b.onHitSlowSeconds;
+        this.onHitDamageMult = b.onHitDamageMult;
+        this.onHitDamageFlat = b.onHitDamageFlat;
+        this.onHitStackCap = b.onHitStackCap;
+        this.onHitStackWindowSeconds = b.onHitStackWindowSeconds;
+        this.enrageAfterSeconds = b.enrageAfterSeconds;
+        this.enrageSpeedMult = b.enrageSpeedMult;
+        this.enrageDamageMult = b.enrageDamageMult;
+        this.enrageDurationSeconds = b.enrageDurationSeconds;
+        this.enrageSoundId = b.enrageSoundId;
     }
 
     /**
@@ -258,6 +290,24 @@ public final class RuleSet {
     }
 
     /**
+     * Whether this round spawns the multi-phase boss capstone (the corrupted-Kweebec Warden) at the escape
+     * climax (all shrines lit, gate open). Default off; the harder presets author it on. Asset-driven via the
+     * preset's {@code BossEnabled} knob. {@code boss/BossController} reads this in {@code ChaseMode.openGate}.
+     */
+    public boolean bossEnabled() {
+        return bossEnabled;
+    }
+
+    /**
+     * The boss id this round spawns when {@link #bossEnabled()} (resolved against {@link com.ziggfreed.kweebec.asset.BossConfig});
+     * {@code null}/blank = the default Warden. Asset-driven via the preset's {@code BossId} knob.
+     */
+    @Nullable
+    public String bossId() {
+        return bossId;
+    }
+
+    /**
      * The per-preset scoring weights used to score a round of this preset (the base the runtime
      * tier may still override/scale). Authored via the preset's {@code Baseline}/{@code StunBonusPer}/
      * {@code ShrineBonusPer}/{@code AllShrinesBonus}/... knobs; absent fields keep the
@@ -266,6 +316,76 @@ public final class RuleSet {
     @Nonnull
     public ScoringConfig scoring() {
         return scoring;
+    }
+
+    // --- on-hit punishment baseline (per-archetype non-null/non-zero overrides win) ---
+
+    /** Baseline EntityEffect id applied to a victim on a hunter hit (the tier-1 slow), or blank for none. */
+    @Nullable
+    public String onHitSlowEffectId() {
+        return onHitSlowEffectId;
+    }
+
+    /** Baseline slow duration in seconds. */
+    public double onHitSlowSeconds() {
+        return onHitSlowSeconds;
+    }
+
+    /** Baseline multiplier applied to a hunter's outgoing damage (1.0 = unchanged). */
+    public double onHitDamageMult() {
+        return onHitDamageMult;
+    }
+
+    /** Baseline flat bonus added to a hunter's outgoing damage. */
+    public double onHitDamageFlat() {
+        return onHitDamageFlat;
+    }
+
+    /** Baseline highest proximity-stack tier the slow escalates to (clamped to at least 1 by the consumer). */
+    public int onHitStackCap() {
+        return onHitStackCap;
+    }
+
+    /** Baseline window (seconds) within which repeated hits keep escalating the proximity stack. */
+    public double onHitStackWindowSeconds() {
+        return onHitStackWindowSeconds;
+    }
+
+    /** Baseline seconds without landing a hit before a hunter enrages; {@code 0} = enrage off. */
+    public double enrageAfterSeconds() {
+        return enrageAfterSeconds;
+    }
+
+    /** Baseline speed multiplier while enraged. */
+    public double enrageSpeedMult() {
+        return enrageSpeedMult;
+    }
+
+    /** Baseline damage multiplier while enraged. */
+    public double enrageDamageMult() {
+        return enrageDamageMult;
+    }
+
+    /** Baseline enrage duration in seconds. */
+    public double enrageDurationSeconds() {
+        return enrageDurationSeconds;
+    }
+
+    /** Baseline sound id played when a hunter enrages, or blank for none. */
+    @Nullable
+    public String enrageSoundId() {
+        return enrageSoundId;
+    }
+
+    /**
+     * The worldgen biome (WorldStructure) this round generates in - the per-difficulty world
+     * flavor. Default {@link #DEFAULT_WORLD_STRUCTURE}; the per-difficulty presets author
+     * {@code KweebecNightmare_Grove_Calm} / {@code _Dread}. {@code RoundService} maps this to the
+     * matching instance asset to spawn.
+     */
+    @Nonnull
+    public String worldStructure() {
+        return worldStructure;
     }
 
     @Nonnull
@@ -282,6 +402,7 @@ public final class RuleSet {
     @Nonnull
     public Builder toBuilder() {
         Builder b = new Builder(presetId);
+        b.worldStructure = this.worldStructure;
         b.reviveStyle = this.reviveStyle;
         b.maxDowns = this.maxDowns;
         b.bleedOutSeconds = this.bleedOutSeconds;
@@ -308,13 +429,27 @@ public final class RuleSet {
         b.minParty = this.minParty;
         b.maxParty = this.maxParty;
         b.exitMarker = this.exitMarker;
+        b.bossEnabled = this.bossEnabled;
+        b.bossId = this.bossId;
         b.scoring = this.scoring;
+        b.onHitSlowEffectId = this.onHitSlowEffectId;
+        b.onHitSlowSeconds = this.onHitSlowSeconds;
+        b.onHitDamageMult = this.onHitDamageMult;
+        b.onHitDamageFlat = this.onHitDamageFlat;
+        b.onHitStackCap = this.onHitStackCap;
+        b.onHitStackWindowSeconds = this.onHitStackWindowSeconds;
+        b.enrageAfterSeconds = this.enrageAfterSeconds;
+        b.enrageSpeedMult = this.enrageSpeedMult;
+        b.enrageDamageMult = this.enrageDamageMult;
+        b.enrageDurationSeconds = this.enrageDurationSeconds;
+        b.enrageSoundId = this.enrageSoundId;
         return b;
     }
 
     /** Fluent builder with the design defaults (the Nightmare baseline) pre-seeded. */
     public static final class Builder {
         private final String presetId;
+        private String worldStructure = DEFAULT_WORLD_STRUCTURE;
         private ReviveStyle reviveStyle = ReviveStyle.COOP_RESCUE;
         private int maxDowns = 1;
         private int bleedOutSeconds = 30;
@@ -342,12 +477,27 @@ public final class RuleSet {
         private int minParty = 1;
         private int maxParty = ARENA_MAX_PARTY;
         private boolean exitMarker = true;
+        private boolean bossEnabled = false;
+        @Nullable private String bossId = null;
         private ScoringConfig scoring = ScoringConfig.DEFAULT;
+        // On-hit punishment baseline defaults (the zero-pack floor; presets / packs may override).
+        @Nullable private String onHitSlowEffectId = "KweebecNightmare_HunterSlow_1";
+        private double onHitSlowSeconds = 1.5;
+        private double onHitDamageMult = 1.0;
+        private double onHitDamageFlat = 0.0;
+        private int onHitStackCap = 4;
+        private double onHitStackWindowSeconds = 8.0;
+        private double enrageAfterSeconds = 0.0; // 0 = enrage off by default; a preset/archetype enables it
+        private double enrageSpeedMult = 1.3;
+        private double enrageDamageMult = 1.25;
+        private double enrageDurationSeconds = 5.0;
+        @Nullable private String enrageSoundId = null;
 
         private Builder(@Nonnull String presetId) {
             this.presetId = presetId;
         }
 
+        @Nonnull public Builder worldStructure(@Nonnull String v) { this.worldStructure = v; return this; }
         @Nonnull public Builder reviveStyle(@Nonnull ReviveStyle v) { this.reviveStyle = v; return this; }
         @Nonnull public Builder maxDowns(int v) { this.maxDowns = v; return this; }
         @Nonnull public Builder bleedOutSeconds(int v) { this.bleedOutSeconds = v; return this; }
@@ -372,7 +522,20 @@ public final class RuleSet {
         @Nonnull public Builder minParty(int v) { this.minParty = v; return this; }
         @Nonnull public Builder maxParty(int v) { this.maxParty = v; return this; }
         @Nonnull public Builder exitMarker(boolean v) { this.exitMarker = v; return this; }
+        @Nonnull public Builder bossEnabled(boolean v) { this.bossEnabled = v; return this; }
+        @Nonnull public Builder bossId(@Nullable String v) { this.bossId = v; return this; }
         @Nonnull public Builder scoring(@Nonnull ScoringConfig v) { this.scoring = v; return this; }
+        @Nonnull public Builder onHitSlowEffectId(@Nullable String v) { this.onHitSlowEffectId = v; return this; }
+        @Nonnull public Builder onHitSlowSeconds(double v) { this.onHitSlowSeconds = v; return this; }
+        @Nonnull public Builder onHitDamageMult(double v) { this.onHitDamageMult = v; return this; }
+        @Nonnull public Builder onHitDamageFlat(double v) { this.onHitDamageFlat = v; return this; }
+        @Nonnull public Builder onHitStackCap(int v) { this.onHitStackCap = v; return this; }
+        @Nonnull public Builder onHitStackWindowSeconds(double v) { this.onHitStackWindowSeconds = v; return this; }
+        @Nonnull public Builder enrageAfterSeconds(double v) { this.enrageAfterSeconds = v; return this; }
+        @Nonnull public Builder enrageSpeedMult(double v) { this.enrageSpeedMult = v; return this; }
+        @Nonnull public Builder enrageDamageMult(double v) { this.enrageDamageMult = v; return this; }
+        @Nonnull public Builder enrageDurationSeconds(double v) { this.enrageDurationSeconds = v; return this; }
+        @Nonnull public Builder enrageSoundId(@Nullable String v) { this.enrageSoundId = v; return this; }
 
         @Nonnull
         public RuleSet build() {

@@ -1,0 +1,15 @@
+{
+  "Name": "corruption_wave",
+  "Trigger": "CORRUPTION_TIER",
+  "Placement": "RING_AROUND_PLAYERS",
+  "ArchetypeId": "",
+  "Count": 1,
+  "Weight": 1.0,
+  "Cap": 0,
+  "CooldownSeconds": 0.0,
+  "MinCorruptionTier": 1,
+  "MaxPerRound": 1,
+  "RingRadius": 18.0,
+  "AtSeconds": 0,
+  "AtTier": 0
+}

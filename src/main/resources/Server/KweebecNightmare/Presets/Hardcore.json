@@ -20,6 +20,8 @@
   "HunterArchetype": "stalker",
   "CleanseCost": 4,
   "ExitMarker": false,
+  "BossEnabled": true,
+  "BossId": "warden",
   "ShrineBonusPer": 120,
   "AllShrinesBonus": 1000
 }

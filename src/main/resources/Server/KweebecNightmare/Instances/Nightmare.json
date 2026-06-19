@@ -11,5 +11,10 @@
   "RewardOnExit": "ON_WIN",
   "Rewards": [
     "item KweebecNightmare_Moonbloom 3"
-  ]
+  ],
+  "QueueModes": {
+    "Public": { "Enabled": true, "IconItemId": "Tool_Map", "Order": 0 },
+    "Party":  { "Enabled": true, "IconItemId": "Furniture_Outlander_Banner", "Order": 1 },
+    "Solo":   { "Enabled": true, "IconItemId": "Deco_Lantern", "Order": 2 }
+  }
 }

@@ -23,7 +23,7 @@
   "IsTicking": true,
   "IsBlockTicking": true,
   "IsPvpEnabled": false,
-  "IsFallDamageEnabled": false,
+  "IsFallDamageEnabled": true,
   "IsGameTimePaused": true,
   "GameTime": "0001-01-04T00:00:00.000000000Z",
   "RequiredPlugins": {},

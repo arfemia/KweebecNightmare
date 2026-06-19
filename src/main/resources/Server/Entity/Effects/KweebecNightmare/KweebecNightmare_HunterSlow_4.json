@@ -1,0 +1,14 @@
+{
+  "ApplicationEffects": {
+    "EntityTopTint": "#1a1226",
+    "EntityBottomTint": "#2c1840",
+    "HorizontalSpeedMultiplier": 0.3,
+    "ScreenEffect": "ScreenEffects/Snow.png",
+    "MouseSensitivityAdjustmentTarget": 0.45,
+    "MouseSensitivityAdjustmentDuration": 0.25
+  },
+  "Duration": 1.5,
+  "OverlapBehavior": "Overwrite",
+  "Debuff": true,
+  "StatusEffectIcon": "UI/StatusEffects/Icon_Slow.png"
+}

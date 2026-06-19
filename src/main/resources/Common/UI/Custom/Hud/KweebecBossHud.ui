@@ -1,0 +1,42 @@
+// Kweebec Nightmare BOSS health bar HUD: the Warden's name, a phase indicator, and an
+// HP bar. Mirrors KweebecNightmareHud.ui's texture-free (colour-only) approach so it
+// cannot red-X on a missing asset. The HP "fill" is a coloured Group whose Anchor width
+// BossHud rewrites per tick (#BossHpFill.Anchor.Width), over a darker track Group.
+// Element ids (#BossName / #BossPhase / #BossHpFill) are the contract BossHud pushes
+// partial updates against. Anchored top-center, below the round HUD.
+
+@KnBossNameStyle  = (FontSize: 20, TextColor: #ff5a5a, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
+@KnBossPhaseStyle = (FontSize: 13, TextColor: #c8b0ff, RenderBold: false, HorizontalAlignment: Center, VerticalAlignment: Start);
+
+Group {
+  Group #KweebecBossHud {
+    Anchor: (Top: 150, Width: 420, Height: 70, Horizontal: 0);
+    LayoutMode: Top;
+
+    // #BossName / #BossPhase Text is DRIVEN BY CODE (BossHud.pushHealth sets the
+    // localized Message each tick); the empty literal here is a placeholder, never shown.
+    Label #BossName {
+      Text: "";
+      Anchor: (Height: 24);
+      Style: @KnBossNameStyle;
+    }
+
+    Label #BossPhase {
+      Text: "";
+      Anchor: (Height: 18);
+      Style: @KnBossPhaseStyle;
+    }
+
+    // HP bar: a dark track holding a red fill. BossHud sets #BossHpFill.Anchor.Width
+    // each tick to (currentFraction * trackWidth). The track is the full 400 wide.
+    Group #BossHpTrack {
+      Anchor: (Width: 400, Height: 14, Horizontal: 0);
+      Background: (Color: #1a0a0a);
+
+      Group #BossHpFill {
+        Anchor: (Left: 0, Width: 400, Height: 14, Vertical: 0);
+        Background: (Color: #d83a3a);
+      }
+    }
+  }
+}

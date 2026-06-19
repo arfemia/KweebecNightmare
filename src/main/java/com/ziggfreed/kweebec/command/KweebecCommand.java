@@ -21,7 +21,7 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.ziggfreed.common.instance.leaderboard.Leaderboard;
 import com.ziggfreed.common.instance.leaderboard.LeaderboardEntry;
 import com.ziggfreed.common.instance.leaderboard.LeaderboardPage;
-import com.ziggfreed.common.instance.queue.QueuePage;
+import com.ziggfreed.common.instance.play.PlayModePage;
 import com.ziggfreed.common.inventory.InventoryUtil;
 import com.ziggfreed.common.lobby.JoinResult;
 import com.ziggfreed.common.party.page.PartyInvitePage;
@@ -105,8 +105,8 @@ public final class KweebecCommand extends CommandBase {
         switch (KweebecLobby.join(initiator, presetId)) {
             case JOINED -> {
                 ctx.sendMessage(Lang.msg(Lang.CMD_QUEUED));
-                // Keep the player on a still-closable queue screen after queueing.
-                openPage(player, new QueuePage(player, KweebecExperience.queueDeps()));
+                // Keep the player on a still-closable Play screen (live roster) after queueing.
+                openPage(player, new PlayModePage(player, KweebecExperience.playModeDeps(), presetId));
             }
             case ALREADY_QUEUED -> ctx.sendMessage(Lang.msg(Lang.CMD_ALREADY_QUEUED));
             case ALREADY_ENGAGED -> ctx.sendMessage(Lang.msg(Lang.CMD_ALREADY_IN_ROUND));

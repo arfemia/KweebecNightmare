@@ -3,13 +3,17 @@ package com.ziggfreed.kweebec.hunter;
 import java.util.List;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.joml.Vector3d;
 
+import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.ziggfreed.kweebec.asset.SpawnRuleAsset;
 import com.ziggfreed.kweebec.round.RoundInstance;
+import com.ziggfreed.kweebec.round.RuleSet;
 
 /**
  * The hunter seam: everything the round engine needs to drive a pursuer without
@@ -49,4 +53,54 @@ public interface HunterController {
      */
     @Nonnull
     List<Vector3d> hunterPositions(@Nonnull Store<EntityStore> store);
+
+    /**
+     * Resolve the on-hit punishment bundle for the hunter {@code attacker} - the slow + outgoing-damage
+     * scaling + proximity-stack window/cap + the desperation-enrage knobs, folded from the hunter's
+     * archetype over the round's {@link RuleSet} baseline (a non-null/non-zero archetype field wins).
+     * The enrage damage multiplier is already baked into {@link OnHitConfig#damageMult()} when this unit
+     * is currently enraged (the controller tracks enrage per live hunter).
+     *
+     * <p>Returns {@code null} when {@code attacker} is not one of this controller's live hunters, so the
+     * damage observer applies no punishment to a non-hunter (or stale) attacker. World-thread only.
+     *
+     * @param attacker the entity that landed the hit (the damage source ref)
+     * @return the resolved on-hit config, or {@code null} if {@code attacker} is not a live hunter here
+     */
+    @Nullable
+    OnHitConfig resolveOnHitConfigFor(@Nullable Ref<EntityStore> attacker);
+
+    /**
+     * Record that the hunter {@code attacker} just landed a hit on a survivor (resets that hunter's
+     * desperation-enrage idle timer, so a hunter only enrages after going {@code enrageAfterSeconds}
+     * WITHOUT connecting). A no-op for a non-hunter ref. Called from the damage observer on the world
+     * thread.
+     *
+     * @param attacker the hunter that landed the hit
+     * @param nowMs    the wall-clock time of the hit (the same clock {@code tick} compares against)
+     */
+    void noteHunterLandedHit(@Nullable Ref<EntityStore> attacker, long nowMs);
+
+    /**
+     * Evaluate the asset-driven EXTRA-SPAWN RULES for the given {@code trigger} and spawn any extra
+     * hunters whose rule fires now (placed NEAR the survivors per the rule's placement, respecting each
+     * rule's cooldown / max-per-round / cap and the controller's global hunter cap). A no-op by default
+     * (the human-driven mode has no roster); the AI controller implements it.
+     *
+     * <p>Called from {@link com.ziggfreed.kweebec.mode.chase.ChaseMode} on the instance world thread at
+     * each trigger moment (round start, a shrine lit, a corruption-tier crossing, time elapsed, a survivor
+     * nearing the gate).
+     *
+     * @param round   the live round
+     * @param world   the instance world (world thread)
+     * @param store   the entity store (world thread)
+     * @param trigger the gameplay moment that just occurred
+     * @param tierOrSeconds context for the trigger: the new corruption tier (CORRUPTION_TIER), the
+     *                      round-elapsed seconds (TIME_ELAPSED), else ignored (pass 0)
+     */
+    default void evaluateSpawnRules(@Nonnull RoundInstance round, @Nonnull World world,
+                                    @Nonnull Store<EntityStore> store,
+                                    @Nonnull SpawnRuleAsset.Trigger trigger, int tierOrSeconds) {
+        // no-op default - the human-driven hunter mode has no asset roster
+    }
 }

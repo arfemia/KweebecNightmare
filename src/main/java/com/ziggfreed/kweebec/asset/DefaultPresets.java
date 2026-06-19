@@ -44,6 +44,7 @@ public final class DefaultPresets {
     @Nonnull
     public static RuleSet amateur() {
         return RuleSet.builder("amateur")
+                .worldStructure("KweebecNightmare_Grove_Calm")
                 .reviveStyle(ReviveStyle.FORGIVING)
                 .maxDowns(Integer.MAX_VALUE)
                 .bleedOutSeconds(45)
@@ -76,6 +77,7 @@ public final class DefaultPresets {
     @Nonnull
     public static RuleSet hardcore() {
         return RuleSet.builder("hardcore")
+                .worldStructure("KweebecNightmare_Grove_Dread")
                 .reviveStyle(ReviveStyle.HARDCORE)
                 .maxDowns(0)
                 .bleedOutSeconds(20)
@@ -86,6 +88,8 @@ public final class DefaultPresets {
                 .shrineRelightSeconds(7.0)
                 .hunterArchetype("stalker")
                 .exitMarker(false)
+                .bossEnabled(true)
+                .bossId("warden")
                 .build();
     }
 

@@ -10,14 +10,14 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import com.ziggfreed.common.instance.leaderboard.LeaderboardPage;
+import com.ziggfreed.common.instance.play.PlayModePage;
 import com.ziggfreed.common.instance.result.ResultsActions;
 import com.ziggfreed.kweebec.asset.PresetConfig;
-import com.ziggfreed.kweebec.lobby.KweebecLobby;
 
 /**
  * The results-screen footer handlers: "View Leaderboard" deep-links the generic
- * {@link LeaderboardPage} to the just-played bucket; "Play Again" re-queues the default
- * preset and shows the queue screen.
+ * {@link LeaderboardPage} to the just-played bucket; "Play Again" re-opens the Play screen
+ * (the Public / Party / Solo mode chooser) for the default preset.
  */
 public final class KweebecResultsActions implements ResultsActions {
 
@@ -37,7 +37,13 @@ public final class KweebecResultsActions implements ResultsActions {
     @Override
     public void playAgain(@Nonnull PlayerRef player, @Nonnull Ref<EntityStore> ref,
                           @Nonnull Store<EntityStore> store) {
-        KweebecLobby.join(player.getUuid(), PresetConfig.DEFAULT);
-        KweebecParty.openQueue(player, ref, store);
+        try {
+            Player p = store.getComponent(ref, Player.getComponentType());
+            if (p != null) {
+                p.getPageManager().openCustomPage(ref, store,
+                        new PlayModePage(player, KweebecExperience.playModeDeps(), PresetConfig.DEFAULT));
+            }
+        } catch (Throwable ignored) {
+        }
     }
 }

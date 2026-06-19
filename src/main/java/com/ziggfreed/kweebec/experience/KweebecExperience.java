@@ -25,10 +25,11 @@ import com.ziggfreed.common.instance.leaderboard.Leaderboard;
 import com.ziggfreed.common.instance.leaderboard.LeaderboardBucketTab;
 import com.ziggfreed.common.instance.leaderboard.LeaderboardPageDeps;
 import com.ziggfreed.common.instance.leaderboard.StatColumnDef;
+import com.ziggfreed.common.instance.play.PlayModePageDeps;
 import com.ziggfreed.common.instance.preset.InstancePreset;
 import com.ziggfreed.common.instance.preset.InstancePresetAsset;
 import com.ziggfreed.common.instance.preset.InstancePresetConfig;
-import com.ziggfreed.common.instance.queue.QueuePageDeps;
+import com.ziggfreed.common.instance.preset.QueueModeSet;
 import com.ziggfreed.common.instance.result.ColumnFormat;
 import com.ziggfreed.common.instance.result.MatchResult;
 import com.ziggfreed.common.instance.result.PlayerResultRow;
@@ -48,6 +49,7 @@ import com.ziggfreed.common.party.PartyService;
 import com.ziggfreed.common.party.page.PartyPageDeps;
 import com.ziggfreed.kweebec.api.PlayerScore;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
+import com.ziggfreed.kweebec.asset.PresetConfig;
 import com.ziggfreed.kweebec.i18n.Lang;
 import com.ziggfreed.kweebec.lobby.KweebecLobby;
 import com.ziggfreed.kweebec.round.PlayerRoundState;
@@ -79,7 +81,7 @@ public final class KweebecExperience {
     private static LeaderboardPageDeps leaderboardDeps;
     private static ResultsPageDeps resultsDeps;
     private static PartyPageDeps partyDeps;
-    private static QueuePageDeps queueDeps;
+    private static PlayModePageDeps playModeDeps;
 
     private KweebecExperience() {
     }
@@ -114,7 +116,18 @@ public final class KweebecExperience {
                 new KweebecLeaderboardScreenMessages());
         resultsDeps = new ResultsPageDeps(new KweebecResultsMessages(), new KweebecResultsActions());
         partyDeps = new PartyPageDeps(partyService, new KweebecPartyScreenMessages(), KweebecParty::queueParty);
-        queueDeps = new QueuePageDeps(KweebecLobby.service(), new KweebecQueueScreenMessages());
+        playModeDeps = new PlayModePageDeps(
+                KweebecLobby.service(),
+                id -> {
+                    InstancePreset ip = InstancePresetConfig.getInstance()
+                            .resolve(id == null || id.isBlank() ? PresetConfig.DEFAULT : id);
+                    return ip != null ? ip.queueModes() : QueueModeSet.fallback();
+                },
+                id -> Lang.msg(PresetConfig.getInstance()
+                        .nameKey(id == null || id.isBlank() ? PresetConfig.DEFAULT : id)),
+                Lang::msg,
+                new KweebecPlayMode(),
+                new KweebecPlayScreenMessages());
         SafeLog.info("[Kweebec] instance-experience layer ready (results / party / queue / leaderboard).");
     }
 
@@ -148,8 +161,8 @@ public final class KweebecExperience {
         return partyDeps;
     }
 
-    @Nonnull public static QueuePageDeps queueDeps() {
-        return queueDeps;
+    @Nonnull public static PlayModePageDeps playModeDeps() {
+        return playModeDeps;
     }
 
     /** Fold pack-authored {@link InstancePresetAsset}s into the cross-cutting config. */

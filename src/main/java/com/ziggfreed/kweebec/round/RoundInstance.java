@@ -13,6 +13,7 @@ import javax.annotation.Nullable;
 
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
+import com.ziggfreed.kweebec.boss.BossController;
 import com.ziggfreed.kweebec.hunter.HunterController;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
 
@@ -63,6 +64,8 @@ public final class RoundInstance {
     private volatile ChaseState chaseState;
     @Nullable
     private volatile HunterController hunterController;
+    @Nullable
+    private volatile BossController bossController;
 
     public RoundInstance(@Nonnull String roundId, @Nonnull KweebecMode mode,
                          @Nonnull RuleSet ruleSet, long startedAtMs) {
@@ -256,5 +259,18 @@ public final class RoundInstance {
 
     public void setHunterController(@Nullable HunterController hunterController) {
         this.hunterController = hunterController;
+    }
+
+    /**
+     * The boss-capstone controller for this round, set when {@code ChaseMode.openGate} spawns the multi-phase
+     * Warden (only on a {@code bossEnabled} round). {@code null} on a round without a boss.
+     */
+    @Nullable
+    public BossController bossController() {
+        return bossController;
+    }
+
+    public void setBossController(@Nullable BossController bossController) {
+        this.bossController = bossController;
     }
 }

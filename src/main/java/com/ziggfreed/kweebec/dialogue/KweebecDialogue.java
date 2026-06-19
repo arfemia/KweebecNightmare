@@ -24,7 +24,8 @@ import com.ziggfreed.kweebec.experience.KweebecExperience;
 /**
  * Kweebec's consumer-side wiring of the generic {@code ziggfreed-common} dialogue
  * engine. Builds ONE {@link DialogueEngine} with the generics PLUS kweebec's own
- * {@link StartRoundAction} (queue a preset) and {@link NotInRoundCondition}/
+ * {@link OpenPlayAction} (open the Play / queue-mode chooser for a preset) and
+ * {@link NotInRoundCondition}/
  * {@link EngagedCondition} (gate launch options on engagement), an in-memory
  * {@link KweebecDialogueFlags} store, the {@code kweebecnightmare.} i18n namespace,
  * and a context-aware name header; folds two authored dialogues (the {@code /kntalk}
@@ -59,7 +60,7 @@ public final class KweebecDialogue {
 
     private static void init() {
         DialogueEngine engine = DialogueEngine.builder()
-                .action(StartRoundAction.type())
+                .action(OpenPlayAction.type())
                 .condition(NotInRoundCondition.type())
                 .condition(EngagedCondition.type())
                 .router(KweebecDialogue::route)
@@ -158,7 +159,8 @@ public final class KweebecDialogue {
     /**
      * The guide NPC's dialogue ("The Grove Warden"): introduces the nightmare, a lore
      * branch telling the backstory, then a {@code preset_pick} node whose options each
-     * queue a Chase preset via {@link StartRoundAction} - gated by
+     * open the Play / queue-mode chooser for a Chase preset via {@link OpenPlayAction} -
+     * gated by
      * {@link NotInRoundCondition} so they vanish once the player commits. An
      * {@link EngagedCondition}-gated branch points an already-queued player at an
      * {@code already_engaged} note. Launch options are the three canonical difficulties;
@@ -184,9 +186,9 @@ public final class KweebecDialogue {
                 },
                 "preset_pick": {
                   "Options": [
-                    { "Conditions": [{ "Type": "NotInRound" }], "StartRound": "amateur" },
-                    { "Conditions": [{ "Type": "NotInRound" }], "StartRound": "nightmare" },
-                    { "Conditions": [{ "Type": "NotInRound" }], "StartRound": "hardcore" },
+                    { "Conditions": [{ "Type": "NotInRound" }], "Play": "amateur" },
+                    { "Conditions": [{ "Type": "NotInRound" }], "Play": "nightmare" },
+                    { "Conditions": [{ "Type": "NotInRound" }], "Play": "hardcore" },
                     { "Goto": "greet" }
                   ]
                 },

@@ -1,0 +1,40 @@
+{
+  "$Comment": "The corrupted-Kweebec WARDEN boss appearance. Extends the vanilla Razorleaf sapling (so the spear silhouette + the entire Kweebec attack/locomotion animation set the Warden role's instruction tree drives resolves correctly, exactly like the working Blight/HunterCorrupted reskin), swaps to the darkest vanilla Kweebec body texture as a corrupted stopgap, enlarges the HitBox so the boss reads BIGGER than a hunter, and wreathes it in a persistent Void-aura particle on the eye + chest + hand bones so it reads as the dread capstone (mechanism mirrors vanilla Golem_Guardian_Void and the existing KweebecNightmare_HunterCorrupted model: Particles[] with TargetNodeName). SPIKE - bone names: the eye bones (L-Eye-Attachment / R-Eye-Attachment) are the documented Kweebec names reused from KweebecNightmare_HunterCorrupted; the body/hand bone names below (Chest / L-Arm / R-Arm) are a BEST GUESS from the standard humanoid skeleton and MUST be verified against the Razorleaf .blockymodel in-game - a wrong TargetNodeName no-ops that one particle (no crash), so fall back to the eye-only set if the body bones are absent. SPIKE - true model SCALE: vanilla model JSON has no verified top-level scale field (Goblin_Duke only scales per-attachment particles), so the boss is enlarged via the HitBox + the aura here; if a real mesh upscale is wanted, author a dedicated larger .blockymodel or confirm a model-level Scale key. Body + eye TEXTURE art (a bespoke dark-corrupted body PNG and a white emissive eye PNG) is a pending art swap: drop the PNGs in and point Texture / an Eyes override at them, no Java change needed.",
+  "Parent": "Kweebec_Sapling_Razorleaf",
+  "Texture": "NPC/Intelligent/Kweebec_Sapling/Models/Model_Textures/Brown.png",
+  "HitBox": {
+    "Min": {
+      "X": -0.55,
+      "Y": 0,
+      "Z": -0.55
+    },
+    "Max": {
+      "X": 0.55,
+      "Y": 2.6,
+      "Z": 0.55
+    }
+  },
+  "EyeHeight": 1.9,
+  "Particles": [
+    {
+      "SystemId": "Spectre_Void_Hands",
+      "TargetNodeName": "L-Eye-Attachment"
+    },
+    {
+      "SystemId": "Spectre_Void_Hands",
+      "TargetNodeName": "R-Eye-Attachment"
+    },
+    {
+      "SystemId": "Spectre_Void_Hands",
+      "TargetNodeName": "Chest"
+    },
+    {
+      "SystemId": "Spectre_Void_Hands",
+      "TargetNodeName": "L-Arm"
+    },
+    {
+      "SystemId": "Spectre_Void_Hands",
+      "TargetNodeName": "R-Arm"
+    }
+  ]
+}

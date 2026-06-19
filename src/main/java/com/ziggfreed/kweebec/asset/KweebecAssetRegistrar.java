@@ -52,6 +52,8 @@ public final class KweebecAssetRegistrar {
     private static final String PRESETS_PATH = "KweebecNightmare/Presets";
     private static final String HUNTERS_PATH = "KweebecNightmare/Hunters";
     private static final String MUTATORS_PATH = "KweebecNightmare/Mutators";
+    private static final String SPAWNRULES_PATH = "KweebecNightmare/SpawnRules";
+    private static final String BOSSES_PATH = "KweebecNightmare/Bosses";
     private static final String STRUCTURES_PATH = "KweebecNightmare/Structures";
     private static final String SCAREBEATS_PATH = "KweebecNightmare/ScareBeats";
     private static final String INSTANCES_PATH = "KweebecNightmare/Instances";
@@ -86,6 +88,20 @@ public final class KweebecAssetRegistrar {
         plugin.getEventRegistry().register(LoadedAssetsEvent.class, MutatorAsset.class,
                 KweebecAssetRegistrar::onMutatorAssetsLoaded);
 
+        // Extra-spawn rules (Pattern A) - loadsAfter the control store.
+        registerStore(SpawnRuleAsset.class, new DefaultAssetMap<String, SpawnRuleAsset>(),
+                SPAWNRULES_PATH, SpawnRuleAsset::getId, SpawnRuleAsset.CODEC,
+                new Class<?>[]{KweebecPackControlAsset.class});
+        plugin.getEventRegistry().register(LoadedAssetsEvent.class, SpawnRuleAsset.class,
+                KweebecAssetRegistrar::onSpawnRuleAssetsLoaded);
+
+        // Boss capstones (Pattern A) - loadsAfter the control store.
+        registerStore(BossAsset.class, new DefaultAssetMap<String, BossAsset>(),
+                BOSSES_PATH, BossAsset::getId, BossAsset.CODEC,
+                new Class<?>[]{KweebecPackControlAsset.class});
+        plugin.getEventRegistry().register(LoadedAssetsEvent.class, BossAsset.class,
+                KweebecAssetRegistrar::onBossAssetsLoaded);
+
         // Corrupted-structure placements (Pattern A) - loadsAfter the control store.
         registerStore(StructurePlacementAsset.class, new DefaultAssetMap<String, StructurePlacementAsset>(),
                 STRUCTURES_PATH, StructurePlacementAsset::getId, StructurePlacementAsset.CODEC,
@@ -110,7 +126,7 @@ public final class KweebecAssetRegistrar {
         plugin.getEventRegistry().register(LoadedAssetsEvent.class, InstancePresetAsset.class,
                 KweebecExperience::onInstanceAssetsLoaded);
 
-        SafeLog.info("[Kweebec][AssetPacks] Registered Kweebec content asset stores (Presets, Hunters, Mutators, Structures, ScareBeats, Instances, Control)");
+        SafeLog.info("[Kweebec][AssetPacks] Registered Kweebec content asset stores (Presets, Hunters, Mutators, SpawnRules, Bosses, Structures, ScareBeats, Instances, Control)");
     }
 
     // ==================== load listeners (Pattern A typed-map fold) ====================
@@ -171,6 +187,55 @@ public final class KweebecAssetRegistrar {
         // (mirroring its Presets/Hunters fields) and this line becomes
         // KweebecPackControlRegistry.isReplace(KweebecPackControlAsset.MUTATORS).
         MutatorConfig.getInstance().mergePackLayer(layer, false);
+    }
+
+    /**
+     * Fold pack {@link SpawnRuleAsset}s into {@link SpawnRuleConfig}. Pattern A typed-map fold (the rule
+     * is already the consumer's value type, so no extra decode step) - the same shape as
+     * {@link #onMutatorAssetsLoaded}. The per-type replace mode is honored via the
+     * {@link KweebecPackControlAsset#SPAWNRULES} control key.
+     */
+    static void onSpawnRuleAssetsLoaded(
+            LoadedAssetsEvent<String, SpawnRuleAsset, DefaultAssetMap<String, SpawnRuleAsset>> event) {
+        DefaultAssetMap<String, SpawnRuleAsset> assetMap = event.getAssetMap();
+        Map<String, SpawnRuleAsset> layer = new LinkedHashMap<>();
+        for (Map.Entry<String, SpawnRuleAsset> entry : assetMap.getAssetMap().entrySet()) {
+            String key = entry.getKey();
+            if (DefaultAssetMap.DEFAULT_PACK_KEY.equals(assetMap.getAssetPack(key))) {
+                continue;
+            }
+            SpawnRuleAsset asset = entry.getValue();
+            if (asset == null) {
+                continue;
+            }
+            layer.put(key.toLowerCase(Locale.ROOT), asset);
+        }
+        boolean replace = KweebecPackControlRegistry.isReplace(KweebecPackControlAsset.SPAWNRULES);
+        SpawnRuleConfig.getInstance().mergePackLayer(layer, replace);
+    }
+
+    /**
+     * Fold pack {@link BossAsset}s into {@link BossConfig}. Pattern A typed-map fold (the boss is already
+     * the consumer's value type, so no extra decode step) - the same shape as {@link #onSpawnRuleAssetsLoaded}.
+     * The per-type replace mode is honored via the {@link KweebecPackControlAsset#BOSSES} control key.
+     */
+    static void onBossAssetsLoaded(
+            LoadedAssetsEvent<String, BossAsset, DefaultAssetMap<String, BossAsset>> event) {
+        DefaultAssetMap<String, BossAsset> assetMap = event.getAssetMap();
+        Map<String, BossAsset> layer = new LinkedHashMap<>();
+        for (Map.Entry<String, BossAsset> entry : assetMap.getAssetMap().entrySet()) {
+            String key = entry.getKey();
+            if (DefaultAssetMap.DEFAULT_PACK_KEY.equals(assetMap.getAssetPack(key))) {
+                continue;
+            }
+            BossAsset asset = entry.getValue();
+            if (asset == null) {
+                continue;
+            }
+            layer.put(key.toLowerCase(Locale.ROOT), asset);
+        }
+        boolean replace = KweebecPackControlRegistry.isReplace(KweebecPackControlAsset.BOSSES);
+        BossConfig.getInstance().mergePackLayer(layer, replace);
     }
 
     /**

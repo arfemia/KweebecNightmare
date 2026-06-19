@@ -4,14 +4,36 @@ import javax.annotation.Nonnull;
 
 import com.hypixel.hytale.server.core.Message;
 
-import com.ziggfreed.common.instance.queue.QueueScreenMessages;
+import com.ziggfreed.common.instance.play.PlayScreenMessages;
+import com.ziggfreed.common.instance.preset.QueueModeId;
 import com.ziggfreed.kweebec.i18n.Lang;
 
-/** Lang-backed chrome for the queue / ready screen. */
-public final class KweebecQueueScreenMessages implements QueueScreenMessages {
+/** Lang-backed chrome for the Play screen (mode chooser + live roster). */
+public final class KweebecPlayScreenMessages implements PlayScreenMessages {
 
     @Override @Nonnull public Message title() {
-        return Lang.msg(Lang.QUEUE_SCREEN_TITLE);
+        return Lang.msg(Lang.PLAY_TITLE);
+    }
+
+    @Override @Nonnull public Message difficulty(@Nonnull Message presetName) {
+        // presetName is a NESTED Message so the difficulty name resolves per-locale too.
+        return Lang.msg(Lang.PLAY_DIFFICULTY).param("0", presetName);
+    }
+
+    @Override @Nonnull public Message modeLabel(@Nonnull QueueModeId mode) {
+        return Lang.msg(switch (mode) {
+            case PUBLIC -> Lang.MODE_PUBLIC;
+            case PARTY -> Lang.MODE_PARTY;
+            case SOLO -> Lang.MODE_SOLO;
+        });
+    }
+
+    @Override @Nonnull public Message modeDesc(@Nonnull QueueModeId mode) {
+        return Lang.msg(switch (mode) {
+            case PUBLIC -> Lang.MODE_PUBLIC_DESC;
+            case PARTY -> Lang.MODE_PARTY_DESC;
+            case SOLO -> Lang.MODE_SOLO_DESC;
+        });
     }
 
     @Override @Nonnull public Message playerCount(int size, int maxSize) {
@@ -36,10 +58,6 @@ public final class KweebecQueueScreenMessages implements QueueScreenMessages {
 
     @Override @Nonnull public Message leaveButton() {
         return Lang.msg(Lang.QUEUE_SCREEN_LEAVE);
-    }
-
-    @Override @Nonnull public Message refreshButton() {
-        return Lang.msg(Lang.QUEUE_SCREEN_REFRESH);
     }
 
     @Override @Nonnull public Message notInQueue() {

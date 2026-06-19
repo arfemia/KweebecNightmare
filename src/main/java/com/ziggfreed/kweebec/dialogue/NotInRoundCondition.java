@@ -14,7 +14,7 @@ import com.ziggfreed.kweebec.round.RoundService;
 /**
  * Kweebec's dialogue condition: an option is shown only while the player is NOT
  * already engaged - neither in a live round nor sitting in a queue. Gates every
- * preset-launch ({@link StartRoundAction}) option off the moment the player commits,
+ * preset-launch ({@link OpenPlayAction}) option off the moment the player commits,
  * so the guide offers an {@code already_engaged} branch instead of a dead button.
  *
  * <p>A field-less {@link DialogueCondition} (authored {@code {"Type":"NotInRound"}}).

@@ -56,6 +56,12 @@ public final class ChaseState {
     private volatile long prepEndsAtMs;
     /** How many mid-match Moonbloom respawn waves have already fired (indexes RuleSet.moonbloomRespawnAtSeconds). */
     private int moonbloomRespawnsFired;
+    /**
+     * The corruption tier last OBSERVED by {@link #pollTierIncrease()}, so a tier crossing fires its
+     * spawn-rule hook exactly once. {@code -1} = not yet observed (the first poll at tier 0 is not a
+     * crossing). World-thread only.
+     */
+    private int previousTier = -1;
 
     /**
      * Build chase state for a round. {@code totalShrines} is the KNOWN total furnace count
@@ -232,5 +238,27 @@ public final class ChaseState {
     /** Convenience: corruption fraction mapped to a hunter speed multiplier. */
     public double hunterSpeed(@Nonnull RuleSet rules) {
         return rules.hunterSpeedAt(corruption);
+    }
+
+    /**
+     * Detect a corruption-tier INCREASE since the last poll, returning the NEW tier exactly once per
+     * crossing (else {@code -1} for no increase). The first poll establishes the baseline (no crossing).
+     * Drives the {@code CORRUPTION_TIER} spawn-rule hook in {@code ChaseMode} so a wave fires once per
+     * tier step. World-thread only.
+     *
+     * @return the new (higher) tier when it just increased, or {@code -1} if unchanged/decreased
+     */
+    public int pollTierIncrease() {
+        int tier = corruptionTier();
+        if (previousTier < 0) {
+            previousTier = tier;
+            return -1;
+        }
+        if (tier > previousTier) {
+            previousTier = tier;
+            return tier;
+        }
+        previousTier = tier;
+        return -1;
     }
 }

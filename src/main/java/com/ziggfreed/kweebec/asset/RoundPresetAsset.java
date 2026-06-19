@@ -69,6 +69,7 @@ public final class RoundPresetAsset
 
     private boolean enabled = true;
     @Nullable private String nameKey;
+    @Nullable private String worldStructure;
     @Nullable private String reviveStyle;
     @Nullable private String inventoryMode;
     @Nullable private String rewardOnExit;
@@ -100,6 +101,10 @@ public final class RoundPresetAsset
     private int maxParty = UNSET_INT;
     // Exit map marker toggle (null = absent = the RuleSet default = on; Hardcore authors false).
     @Nullable private Boolean exitMarker;
+    // Boss capstone toggle + id (null = absent = the RuleSet default = off / default Warden). The harder
+    // presets author BossEnabled=true; BossId selects a non-default boss from the BossConfig fold.
+    @Nullable private Boolean bossEnabled;
+    @Nullable private String bossId;
     // Per-preset scoring weights (each absent = the ScoringConfig default). The asset-driven
     // scoring calculation: a preset may reward speed/caution/aggression/devotion differently.
     private int scoreBaseline = UNSET_INT;
@@ -129,6 +134,8 @@ public final class RoundPresetAsset
             .append(new KeyedCodec<>("Enabled", Codec.BOOLEAN, false), (a, v) -> a.enabled = v, a -> a.enabled)
             .add()
             .append(new KeyedCodec<>("NameKey", Codec.STRING, false), (a, v) -> a.nameKey = v, a -> a.nameKey)
+            .add()
+            .append(new KeyedCodec<>("WorldStructure", Codec.STRING, false), (a, v) -> a.worldStructure = v, a -> a.worldStructure)
             .add()
             .append(new KeyedCodec<>("ReviveStyle", Codec.STRING, false), (a, v) -> a.reviveStyle = v, a -> a.reviveStyle)
             .add()
@@ -183,6 +190,10 @@ public final class RoundPresetAsset
             .append(new KeyedCodec<>("MaxParty", Codec.INTEGER, false), (a, v) -> a.maxParty = v, a -> a.maxParty)
             .add()
             .append(new KeyedCodec<>("ExitMarker", Codec.BOOLEAN, false), (a, v) -> a.exitMarker = v, a -> a.exitMarker)
+            .add()
+            .append(new KeyedCodec<>("BossEnabled", Codec.BOOLEAN, false), (a, v) -> a.bossEnabled = v, a -> a.bossEnabled)
+            .add()
+            .append(new KeyedCodec<>("BossId", Codec.STRING, false), (a, v) -> a.bossId = v, a -> a.bossId)
             .add()
             .append(new KeyedCodec<>("Baseline", Codec.INTEGER, false), (a, v) -> a.scoreBaseline = v, a -> a.scoreBaseline)
             .add()
@@ -249,6 +260,9 @@ public final class RoundPresetAsset
     @Nonnull
     public RuleSet toRuleSet(@Nonnull String presetId) {
         RuleSet.Builder b = RuleSet.builder(presetId.toLowerCase());
+        if (worldStructure != null && !worldStructure.isBlank()) {
+            b.worldStructure(worldStructure);
+        }
         if (reviveStyle != null) {
             b.reviveStyle(ReviveStyle.fromString(reviveStyle));
         }
@@ -323,6 +337,12 @@ public final class RoundPresetAsset
         }
         if (exitMarker != null) {
             b.exitMarker(exitMarker);
+        }
+        if (bossEnabled != null) {
+            b.bossEnabled(bossEnabled);
+        }
+        if (bossId != null && !bossId.isBlank()) {
+            b.bossId(bossId.toLowerCase());
         }
         b.scoring(buildScoring());
         return b.build();
