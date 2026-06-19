@@ -329,7 +329,11 @@ public final class RoundService {
     private Map<UUID, PlayerScore> computeScores(@Nonnull RoundInstance round,
                                                  @Nonnull RoundCompletedEvent.Outcome outcome,
                                                  boolean win, int duration) {
-        ScoringConfig scoring = KweebecNightmareAPI.resolveScoring();
+        // Base scoring comes from the round's PRESET (asset-driven, per-difficulty); the runtime tier
+        // may still override/scale it. The all-shrines completion bonus uses the shrine-discovery total.
+        ScoringConfig scoring = KweebecNightmareAPI.resolveScoring(round.ruleSet().scoring());
+        ChaseState chase = round.chaseState();
+        boolean allShrinesLit = chase != null && chase.allShrinesLit();
         Map<UUID, PlayerScore> scores = new HashMap<>();
         for (PlayerRoundState st : round.playerStates()) {
             boolean playerWin = win && (st.hasEscaped()
@@ -337,7 +341,7 @@ public final class RoundService {
                         && !st.isCocooned() && !st.hasLeftRound()));
             scores.put(st.playerId(), ScoreCalculator.compute(
                     duration, st.damageTaken(), st.mobsStunned(),
-                    st.moonbloomCollected(), st.shrinesLit(), playerWin, scoring));
+                    st.moonbloomCollected(), st.shrinesLit(), allShrinesLit, playerWin, scoring));
         }
         return scores;
     }

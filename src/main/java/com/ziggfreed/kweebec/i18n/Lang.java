@@ -158,6 +158,7 @@ public final class Lang {
     public static final String RESULTS_COL_TIME = "kweebecnightmare.results.col.time";
     public static final String RESULTS_COL_DAMAGE = "kweebecnightmare.results.col.damage";
     public static final String RESULTS_COL_STUN = "kweebecnightmare.results.col.stun";
+    public static final String RESULTS_COL_SHRINE = "kweebecnightmare.results.col.shrine";
     public static final String RESULTS_COL_DURATION = "kweebecnightmare.results.col.duration";
 
     // Queue / ready screen (the common QueuePage).

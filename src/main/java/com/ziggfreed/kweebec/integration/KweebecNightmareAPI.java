@@ -147,15 +147,25 @@ public final class KweebecNightmareAPI {
     }
 
     /**
-     * Resolve the effective {@link ScoringConfig} for a round: the runtime override (or
-     * {@link ScoringConfig#DEFAULT}), then the runtime scale if registered. Always non-null. Used by
-     * {@code RoundService.resolve} when it computes each player's score.
+     * Resolve the effective {@link ScoringConfig} for a round against the {@link ScoringConfig#DEFAULT}
+     * base. Equivalent to {@link #resolveScoring(ScoringConfig)} with the default base.
      */
     @Nonnull
     public static ScoringConfig resolveScoring() {
+        return resolveScoring(ScoringConfig.DEFAULT);
+    }
+
+    /**
+     * Resolve the effective {@link ScoringConfig} for a round: the runtime override (if set) ELSE the
+     * given per-preset {@code presetScoring} base, then the runtime scale if registered. Always
+     * non-null. Used by {@code RoundService.resolve}, which passes the round's preset scoring so each
+     * difficulty can score differently while an installed MMO can still force/scale it at runtime.
+     */
+    @Nonnull
+    public static ScoringConfig resolveScoring(@Nonnull ScoringConfig presetScoring) {
         ScoringConfig base = SCORING_OVERRIDE.get();
         if (base == null) {
-            base = ScoringConfig.DEFAULT;
+            base = presetScoring;
         }
         UnaryOperator<ScoringConfig> scale = SCORING_SCALE.get();
         if (scale == null) {

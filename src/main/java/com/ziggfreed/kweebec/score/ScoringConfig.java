@@ -9,7 +9,9 @@ import javax.annotation.Nonnull;
  * <ul>
  *   <li><b>speed</b> - points for every second UNDER {@link #parTimeSeconds()};</li>
  *   <li><b>caution</b> - points for every HP of {@link #damageBudget()} NOT taken;</li>
- *   <li><b>aggression</b> - a small flat {@link #stunBonusPer()} bonus per hunter stunned.</li>
+ *   <li><b>aggression</b> - a small flat {@link #stunBonusPer()} bonus per hunter stunned;</li>
+ *   <li><b>devotion</b> - a {@link #shrineBonusPer()} bonus per shrine the player personally lit,
+ *       plus a flat {@link #allShrinesBonus()} when the round lit EVERY discovered shrine.</li>
  * </ul>
  *
  * <p>It is the single configurable scoring surface. The runtime tier
@@ -26,6 +28,8 @@ public final class ScoringConfig {
     private final double damagePointsPerHp;
     private final double damageBudget;
     private final int stunBonusPer;
+    private final int shrineBonusPer;
+    private final int allShrinesBonus;
 
     private ScoringConfig(Builder b) {
         this.baseline = b.baseline;
@@ -34,6 +38,8 @@ public final class ScoringConfig {
         this.damagePointsPerHp = b.damagePointsPerHp;
         this.damageBudget = b.damageBudget;
         this.stunBonusPer = b.stunBonusPer;
+        this.shrineBonusPer = b.shrineBonusPer;
+        this.allShrinesBonus = b.allShrinesBonus;
     }
 
     /** The design-default scoring weights. */
@@ -69,6 +75,16 @@ public final class ScoringConfig {
         return stunBonusPer;
     }
 
+    /** Flat bonus points per shrine the player personally lit (devotion to the objective). */
+    public int shrineBonusPer() {
+        return shrineBonusPer;
+    }
+
+    /** Flat bonus awarded to each scored player when the round lit EVERY discovered shrine (full cleanse). */
+    public int allShrinesBonus() {
+        return allShrinesBonus;
+    }
+
     @Nonnull
     public static Builder builder() {
         return new Builder();
@@ -84,6 +100,8 @@ public final class ScoringConfig {
         b.damagePointsPerHp = this.damagePointsPerHp;
         b.damageBudget = this.damageBudget;
         b.stunBonusPer = this.stunBonusPer;
+        b.shrineBonusPer = this.shrineBonusPer;
+        b.allShrinesBonus = this.allShrinesBonus;
         return b;
     }
 
@@ -95,6 +113,8 @@ public final class ScoringConfig {
         private double damagePointsPerHp = 8.0;     // +8 / HP not taken
         private double damageBudget = 200.0;        // measured against 200 HP of damage
         private int stunBonusPer = 50;              // small flat bonus per stun
+        private int shrineBonusPer = 75;            // bonus per shrine personally lit (the core objective)
+        private int allShrinesBonus = 500;          // flat completion bonus when the round lit every shrine
 
         private Builder() {
         }
@@ -105,6 +125,8 @@ public final class ScoringConfig {
         @Nonnull public Builder damagePointsPerHp(double v) { this.damagePointsPerHp = v; return this; }
         @Nonnull public Builder damageBudget(double v) { this.damageBudget = v; return this; }
         @Nonnull public Builder stunBonusPer(int v) { this.stunBonusPer = v; return this; }
+        @Nonnull public Builder shrineBonusPer(int v) { this.shrineBonusPer = v; return this; }
+        @Nonnull public Builder allShrinesBonus(int v) { this.allShrinesBonus = v; return this; }
 
         @Nonnull
         public ScoringConfig build() {

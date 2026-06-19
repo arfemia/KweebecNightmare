@@ -18,5 +18,7 @@
   "InventoryMode": "PRESERVE_AND_STRIP",
   "RewardOnExit": "ON_WIN",
   "HunterArchetype": "stalker",
-  "CleanseCost": 3
+  "CleanseCost": 3,
+  "ShrineBonusPer": 40,
+  "AllShrinesBonus": 250
 }

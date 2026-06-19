@@ -3,6 +3,8 @@ package com.ziggfreed.kweebec.round;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.ziggfreed.kweebec.score.ScoringConfig;
+
 /**
  * The configurable stakes of a round - the replayability pillar. Every knob the
  * design calls out (rescue style, lives, bleed-out, hunter count + speed, shrine
@@ -49,6 +51,7 @@ public final class RuleSet {
     private final int minParty;
     private final int maxParty;
     private final boolean exitMarker;
+    private final ScoringConfig scoring;
 
     private RuleSet(Builder b) {
         this.presetId = b.presetId;
@@ -78,6 +81,7 @@ public final class RuleSet {
         this.minParty = b.minParty;
         this.maxParty = b.maxParty;
         this.exitMarker = b.exitMarker;
+        this.scoring = b.scoring;
     }
 
     /**
@@ -253,6 +257,17 @@ public final class RuleSet {
         return exitMarker;
     }
 
+    /**
+     * The per-preset scoring weights used to score a round of this preset (the base the runtime
+     * tier may still override/scale). Authored via the preset's {@code Baseline}/{@code StunBonusPer}/
+     * {@code ShrineBonusPer}/{@code AllShrinesBonus}/... knobs; absent fields keep the
+     * {@link ScoringConfig} defaults. Never null.
+     */
+    @Nonnull
+    public ScoringConfig scoring() {
+        return scoring;
+    }
+
     @Nonnull
     public static Builder builder(@Nonnull String presetId) {
         return new Builder(presetId);
@@ -293,6 +308,7 @@ public final class RuleSet {
         b.minParty = this.minParty;
         b.maxParty = this.maxParty;
         b.exitMarker = this.exitMarker;
+        b.scoring = this.scoring;
         return b;
     }
 
@@ -326,6 +342,7 @@ public final class RuleSet {
         private int minParty = 1;
         private int maxParty = ARENA_MAX_PARTY;
         private boolean exitMarker = true;
+        private ScoringConfig scoring = ScoringConfig.DEFAULT;
 
         private Builder(@Nonnull String presetId) {
             this.presetId = presetId;
@@ -355,6 +372,7 @@ public final class RuleSet {
         @Nonnull public Builder minParty(int v) { this.minParty = v; return this; }
         @Nonnull public Builder maxParty(int v) { this.maxParty = v; return this; }
         @Nonnull public Builder exitMarker(boolean v) { this.exitMarker = v; return this; }
+        @Nonnull public Builder scoring(@Nonnull ScoringConfig v) { this.scoring = v; return this; }
 
         @Nonnull
         public RuleSet build() {

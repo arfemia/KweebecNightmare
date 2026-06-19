@@ -18,6 +18,8 @@ public final class PlayerScore {
     private final int timeComponent;
     private final int damageComponent;
     private final int stunBonus;
+    private final int shrineBonus;
+    private final int allShrinesBonus;
     private final int durationSeconds;
     private final float damageTaken;
     private final int mobsStunned;
@@ -26,12 +28,14 @@ public final class PlayerScore {
     private final boolean win;
 
     public PlayerScore(int total, int timeComponent, int damageComponent, int stunBonus,
-                       int durationSeconds, float damageTaken, int mobsStunned,
-                       int moonbloomCollected, int shrinesLit, boolean win) {
+                       int shrineBonus, int allShrinesBonus, int durationSeconds, float damageTaken,
+                       int mobsStunned, int moonbloomCollected, int shrinesLit, boolean win) {
         this.total = total;
         this.timeComponent = timeComponent;
         this.damageComponent = damageComponent;
         this.stunBonus = stunBonus;
+        this.shrineBonus = shrineBonus;
+        this.allShrinesBonus = allShrinesBonus;
         this.durationSeconds = durationSeconds;
         this.damageTaken = damageTaken;
         this.mobsStunned = mobsStunned;
@@ -58,6 +62,16 @@ public final class PlayerScore {
     /** Points from hunters stunned. */
     public int stunBonus() {
         return stunBonus;
+    }
+
+    /** Points from shrines this player personally lit (per-shrine devotion bonus). */
+    public int shrineBonus() {
+        return shrineBonus;
+    }
+
+    /** Flat completion bonus awarded when the round lit every discovered shrine (0 otherwise). */
+    public int allShrinesBonus() {
+        return allShrinesBonus;
     }
 
     /** Round length in seconds this player experienced. */
@@ -95,6 +109,7 @@ public final class PlayerScore {
     public String toString() {
         return "PlayerScore{total=" + total + ", time=" + timeComponent
                 + ", dmg=" + damageComponent + ", stun=" + stunBonus
+                + ", shrineBonus=" + shrineBonus + ", allShrines=" + allShrinesBonus
                 + ", dur=" + durationSeconds + "s, dmgTaken=" + damageTaken
                 + ", stuns=" + mobsStunned + ", bloom=" + moonbloomCollected
                 + ", shrines=" + shrinesLit + ", win=" + win + "}";

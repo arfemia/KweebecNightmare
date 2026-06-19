@@ -14,6 +14,7 @@ import com.ziggfreed.kweebec.round.RewardOnExit;
 import com.ziggfreed.kweebec.round.ReviveStyle;
 import com.ziggfreed.kweebec.round.RuleSet;
 import com.ziggfreed.kweebec.round.ThrowMode;
+import com.ziggfreed.kweebec.score.ScoringConfig;
 
 /**
  * A pack-authorable round preset, loaded from a pack's
@@ -44,8 +45,16 @@ import com.ziggfreed.kweebec.round.ThrowMode;
  *   "RoundCapSeconds": 900, "CorruptionPerSecond": 0.0014,
  *   "CorruptionPerShrine": 0.12, "ShrineRelightSeconds": 6.0,
  *   "InventoryMode": "PRESERVE_AND_STRIP", "RewardOnExit": "ON_WIN",
- *   "HunterArchetype": "stalker" }
+ *   "HunterArchetype": "stalker",
+ *   "Baseline": 1000, "ParTimeSeconds": 420, "TimePointsPerSecond": 5.0,
+ *   "DamagePointsPerHp": 8.0, "DamageBudget": 200.0, "StunBonusPer": 50,
+ *   "ShrineBonusPer": 75, "AllShrinesBonus": 500 }
  * }</pre>
+ *
+ * <p>The 8 scoring knobs ({@code Baseline}..{@code AllShrinesBonus}) drive the asset-driven,
+ * per-difficulty round scoring (see {@code score/ScoringConfig}): each absent keeps the
+ * {@link ScoringConfig} default, so a preset can reward speed/caution/aggression/devotion
+ * differently. {@code toRuleSet} folds them into the {@link RuleSet}'s {@link RuleSet#scoring()}.
  */
 public final class RoundPresetAsset
         implements JsonAssetWithMap<String, DefaultAssetMap<String, RoundPresetAsset>> {
@@ -91,6 +100,16 @@ public final class RoundPresetAsset
     private int maxParty = UNSET_INT;
     // Exit map marker toggle (null = absent = the RuleSet default = on; Hardcore authors false).
     @Nullable private Boolean exitMarker;
+    // Per-preset scoring weights (each absent = the ScoringConfig default). The asset-driven
+    // scoring calculation: a preset may reward speed/caution/aggression/devotion differently.
+    private int scoreBaseline = UNSET_INT;
+    private int parTimeSeconds = UNSET_INT;
+    private double timePointsPerSecond = UNSET_DOUBLE;
+    private double damagePointsPerHp = UNSET_DOUBLE;
+    private double damageBudget = UNSET_DOUBLE;
+    private int stunBonusPer = UNSET_INT;
+    private int shrineBonusPer = UNSET_INT;
+    private int allShrinesBonus = UNSET_INT;
 
     public static final AssetBuilderCodec<String, RoundPresetAsset> CODEC = AssetBuilderCodec.builder(
                     RoundPresetAsset.class,
@@ -164,6 +183,22 @@ public final class RoundPresetAsset
             .append(new KeyedCodec<>("MaxParty", Codec.INTEGER, false), (a, v) -> a.maxParty = v, a -> a.maxParty)
             .add()
             .append(new KeyedCodec<>("ExitMarker", Codec.BOOLEAN, false), (a, v) -> a.exitMarker = v, a -> a.exitMarker)
+            .add()
+            .append(new KeyedCodec<>("Baseline", Codec.INTEGER, false), (a, v) -> a.scoreBaseline = v, a -> a.scoreBaseline)
+            .add()
+            .append(new KeyedCodec<>("ParTimeSeconds", Codec.INTEGER, false), (a, v) -> a.parTimeSeconds = v, a -> a.parTimeSeconds)
+            .add()
+            .append(new KeyedCodec<>("TimePointsPerSecond", Codec.DOUBLE, false), (a, v) -> a.timePointsPerSecond = v, a -> a.timePointsPerSecond)
+            .add()
+            .append(new KeyedCodec<>("DamagePointsPerHp", Codec.DOUBLE, false), (a, v) -> a.damagePointsPerHp = v, a -> a.damagePointsPerHp)
+            .add()
+            .append(new KeyedCodec<>("DamageBudget", Codec.DOUBLE, false), (a, v) -> a.damageBudget = v, a -> a.damageBudget)
+            .add()
+            .append(new KeyedCodec<>("StunBonusPer", Codec.INTEGER, false), (a, v) -> a.stunBonusPer = v, a -> a.stunBonusPer)
+            .add()
+            .append(new KeyedCodec<>("ShrineBonusPer", Codec.INTEGER, false), (a, v) -> a.shrineBonusPer = v, a -> a.shrineBonusPer)
+            .add()
+            .append(new KeyedCodec<>("AllShrinesBonus", Codec.INTEGER, false), (a, v) -> a.allShrinesBonus = v, a -> a.allShrinesBonus)
             .add()
             .build();
 
@@ -289,6 +324,42 @@ public final class RoundPresetAsset
         if (exitMarker != null) {
             b.exitMarker(exitMarker);
         }
+        b.scoring(buildScoring());
         return b.build();
+    }
+
+    /**
+     * Build this preset's {@link ScoringConfig} from its authored scoring knobs, each absent field
+     * keeping the {@link ScoringConfig} default. Returns {@link ScoringConfig#DEFAULT} unchanged when
+     * the preset authors no scoring (the common case).
+     */
+    @Nonnull
+    private ScoringConfig buildScoring() {
+        ScoringConfig.Builder s = ScoringConfig.DEFAULT.toBuilder();
+        if (scoreBaseline != UNSET_INT) {
+            s.baseline(scoreBaseline);
+        }
+        if (parTimeSeconds != UNSET_INT) {
+            s.parTimeSeconds(parTimeSeconds);
+        }
+        if (!Double.isNaN(timePointsPerSecond)) {
+            s.timePointsPerSecond(timePointsPerSecond);
+        }
+        if (!Double.isNaN(damagePointsPerHp)) {
+            s.damagePointsPerHp(damagePointsPerHp);
+        }
+        if (!Double.isNaN(damageBudget)) {
+            s.damageBudget(damageBudget);
+        }
+        if (stunBonusPer != UNSET_INT) {
+            s.stunBonusPer(stunBonusPer);
+        }
+        if (shrineBonusPer != UNSET_INT) {
+            s.shrineBonusPer(shrineBonusPer);
+        }
+        if (allShrinesBonus != UNSET_INT) {
+            s.allShrinesBonus(allShrinesBonus);
+        }
+        return s.build();
     }
 }

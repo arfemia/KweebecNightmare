@@ -255,6 +255,8 @@ public final class KweebecExperience {
                     new ScoreColumn(Lang.msg(Lang.RESULTS_COL_TIME), ps.timeComponent(), ColumnFormat.GROUPED),
                     new ScoreColumn(Lang.msg(Lang.RESULTS_COL_DAMAGE), ps.damageComponent(), ColumnFormat.GROUPED),
                     new ScoreColumn(Lang.msg(Lang.RESULTS_COL_STUN), ps.stunBonus(), ColumnFormat.GROUPED),
+                    new ScoreColumn(Lang.msg(Lang.RESULTS_COL_SHRINE),
+                            ps.shrineBonus() + ps.allShrinesBonus(), ColumnFormat.GROUPED),
                     new ScoreColumn(Lang.msg(Lang.RESULTS_COL_DURATION), ps.durationSeconds(), ColumnFormat.TIME));
             rows.add(new PlayerResultRow(st.playerId(), ps.total(), cols, false, false));
         }

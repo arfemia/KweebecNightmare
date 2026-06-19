@@ -201,6 +201,7 @@ results.team_total = Grove total: {0}
 results.col.time = Swiftness
 results.col.damage = Caution
 results.col.stun = Defiance
+results.col.shrine = Devotion
 results.col.duration = Time alive
 
 # Queue / ready screen (the shared QueuePage). The player stays here after queueing.

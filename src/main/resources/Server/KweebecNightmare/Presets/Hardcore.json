@@ -19,5 +19,7 @@
   "RewardOnExit": "ON_WIN",
   "HunterArchetype": "stalker",
   "CleanseCost": 4,
-  "ExitMarker": false
+  "ExitMarker": false,
+  "ShrineBonusPer": 120,
+  "AllShrinesBonus": 1000
 }
