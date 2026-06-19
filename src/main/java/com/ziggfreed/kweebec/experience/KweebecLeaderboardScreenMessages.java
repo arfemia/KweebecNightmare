@@ -15,6 +15,22 @@ public final class KweebecLeaderboardScreenMessages implements LeaderboardScreen
         return Lang.msg(Lang.LB_TITLE);
     }
 
+    @Override @Nonnull public Message primaryAxisLabel() {
+        return Lang.msg(Lang.LB_AXIS_DIFFICULTY);
+    }
+
+    @Override @Nonnull public Message secondaryAxisLabel() {
+        return Lang.msg(Lang.LB_AXIS_PLAYERS);
+    }
+
+    @Override @Nonnull public Message sortLabel() {
+        return Lang.msg(Lang.LB_AXIS_SORT);
+    }
+
+    @Override @Nonnull public Message viewLabel() {
+        return Lang.msg(Lang.LB_AXIS_VIEW);
+    }
+
     @Override @Nonnull public Message colRank() {
         return Lang.msg(Lang.LB_COL_RANK);
     }

@@ -173,6 +173,11 @@ leaderboard.col.plays = Runs
 leaderboard.empty = No survivors have been recorded in this bracket yet. Be the first.
 leaderboard.your_rank = Your best: #{0}  ({1})
 leaderboard.your_rank_none = You have no ranked run in this bracket yet.
+# Leading filter-row labels.
+leaderboard.axis.difficulty = Difficulty
+leaderboard.axis.players = Players
+leaderboard.axis.sort = Sort
+leaderboard.axis.view = View
 # Sort toggle + Rankings/Stats view toggle buttons.
 leaderboard.sort.score = Best Score
 leaderboard.sort.total = Total Points

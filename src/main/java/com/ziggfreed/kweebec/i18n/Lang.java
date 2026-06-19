@@ -132,6 +132,11 @@ public final class Lang {
     public static final String LB_SORT_TIME = "kweebecnightmare.leaderboard.sort.time";
     public static final String LB_VIEW_RANKINGS = "kweebecnightmare.leaderboard.view.rankings";
     public static final String LB_VIEW_STATS = "kweebecnightmare.leaderboard.view.stats";
+    // Leading filter-row labels (clarify which axis each selector row drives).
+    public static final String LB_AXIS_DIFFICULTY = "kweebecnightmare.leaderboard.axis.difficulty";
+    public static final String LB_AXIS_PLAYERS = "kweebecnightmare.leaderboard.axis.players";
+    public static final String LB_AXIS_SORT = "kweebecnightmare.leaderboard.axis.sort";
+    public static final String LB_AXIS_VIEW = "kweebecnightmare.leaderboard.axis.view";
     // Lifetime stat column labels (Stats view).
     public static final String LB_STAT_STUNNED = "kweebecnightmare.leaderboard.stat.stunned";
     public static final String LB_STAT_MOONBLOOM = "kweebecnightmare.leaderboard.stat.moonbloom";
