@@ -43,7 +43,6 @@ public final class RuleSet {
     private final double corruptionPerShrine;
     private final double shrineRelightSeconds;
     private final InventoryMode inventoryMode;
-    private final RewardOnExit rewardOnExit;
     @Nullable private final String hunterArchetype;
     private final int cleanseCost;
     private final long stunDurationMs;
@@ -88,7 +87,6 @@ public final class RuleSet {
         this.corruptionPerShrine = b.corruptionPerShrine;
         this.shrineRelightSeconds = b.shrineRelightSeconds;
         this.inventoryMode = b.inventoryMode;
-        this.rewardOnExit = b.rewardOnExit;
         this.hunterArchetype = b.hunterArchetype;
         this.cleanseCost = b.cleanseCost;
         this.stunDurationMs = b.stunDurationMs;
@@ -215,15 +213,6 @@ public final class RuleSet {
     }
 
     /**
-     * When the round's exit reward is granted. DATA ONLY this pass (Phase 1B):
-     * authored + overridable, but no reward-granting behavior is wired yet.
-     */
-    @Nonnull
-    public RewardOnExit rewardOnExit() {
-        return rewardOnExit;
-    }
-
-    /**
      * Id of the {@code HunterArchetypeAsset} the hunter roster draws from, or
      * {@code null} for the built-in baseline. The schema is authored now so
      * Phase-2A hunter variety reads it as data; {@code AiHunterController} does not
@@ -299,7 +288,9 @@ public final class RuleSet {
     }
 
     /**
-     * The boss id this round spawns when {@link #bossEnabled()} (resolved against {@link com.ziggfreed.kweebec.asset.BossConfig});
+     * The boss id this round spawns when {@link #bossEnabled()} (resolved against ziggfreed-common's
+     * {@link com.ziggfreed.common.instance.encounter.MultiPhaseBossConfig} via
+     * {@link com.ziggfreed.kweebec.integration.KweebecNightmareAPI#resolveBoss});
      * {@code null}/blank = the default Warden. Asset-driven via the preset's {@code BossId} knob.
      */
     @Nullable
@@ -417,7 +408,6 @@ public final class RuleSet {
         b.corruptionPerShrine = this.corruptionPerShrine;
         b.shrineRelightSeconds = this.shrineRelightSeconds;
         b.inventoryMode = this.inventoryMode;
-        b.rewardOnExit = this.rewardOnExit;
         b.hunterArchetype = this.hunterArchetype;
         b.cleanseCost = this.cleanseCost;
         b.stunDurationMs = this.stunDurationMs;
@@ -464,7 +454,6 @@ public final class RuleSet {
         private double corruptionPerShrine = 0.12;
         private double shrineRelightSeconds = 6.0;
         private InventoryMode inventoryMode = InventoryMode.DEFAULT;
-        private RewardOnExit rewardOnExit = RewardOnExit.DEFAULT;
         @Nullable private String hunterArchetype = null;
         // The shipped preset JSONs author CleanseCost per preset; this is only the zero-pack fallback.
         private int cleanseCost = 1;
@@ -510,7 +499,6 @@ public final class RuleSet {
         @Nonnull public Builder corruptionPerShrine(double v) { this.corruptionPerShrine = v; return this; }
         @Nonnull public Builder shrineRelightSeconds(double v) { this.shrineRelightSeconds = v; return this; }
         @Nonnull public Builder inventoryMode(@Nonnull InventoryMode v) { this.inventoryMode = v; return this; }
-        @Nonnull public Builder rewardOnExit(@Nonnull RewardOnExit v) { this.rewardOnExit = v; return this; }
         @Nonnull public Builder hunterArchetype(@Nullable String v) { this.hunterArchetype = v; return this; }
         @Nonnull public Builder cleanseCost(int v) { this.cleanseCost = Math.max(0, v); return this; }
         @Nonnull public Builder stunDurationMs(long v) { this.stunDurationMs = Math.max(0L, v); return this; }

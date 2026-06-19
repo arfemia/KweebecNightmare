@@ -1,0 +1,36 @@
+{
+  "Name": "nightmares_intro",
+  "Owner": "kweebec",
+  "Payload": {
+    "Start": [{ "Node": "greet" }],
+    "Nodes": {
+      "greet": {
+        "Options": [
+          { "Goto": "lore" },
+          { "Conditions": [{ "Type": "NotInRound" }], "Goto": "preset_pick" },
+          { "Conditions": [{ "Type": "Engaged" }], "Goto": "already_engaged" },
+          { "Open": "leaderboard" }
+        ]
+      },
+      "lore": {
+        "Options": [
+          { "Conditions": [{ "Type": "NotInRound" }], "Goto": "preset_pick" },
+          { "Goto": "greet" }
+        ]
+      },
+      "preset_pick": {
+        "Options": [
+          { "Conditions": [{ "Type": "NotInRound" }], "Play": "amateur" },
+          { "Conditions": [{ "Type": "NotInRound" }], "Play": "nightmare" },
+          { "Conditions": [{ "Type": "NotInRound" }], "Play": "hardcore" },
+          { "Goto": "greet" }
+        ]
+      },
+      "already_engaged": {
+        "Options": [
+          { "Goto": "greet" }
+        ]
+      }
+    }
+  }
+}

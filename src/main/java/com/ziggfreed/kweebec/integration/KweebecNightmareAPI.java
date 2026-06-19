@@ -7,11 +7,11 @@ import java.util.function.UnaryOperator;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.ziggfreed.kweebec.asset.BossAsset;
-import com.ziggfreed.kweebec.asset.BossConfig;
+import com.ziggfreed.common.instance.encounter.MultiPhaseBossAsset;
+import com.ziggfreed.common.instance.encounter.MultiPhaseBossConfig;
 import com.ziggfreed.kweebec.asset.PresetConfig;
-import com.ziggfreed.kweebec.asset.SpawnRuleAsset;
-import com.ziggfreed.kweebec.asset.SpawnRuleConfig;
+import com.ziggfreed.common.instance.encounter.EncounterRuleAsset;
+import com.ziggfreed.common.instance.encounter.EncounterRuleConfig;
 import com.ziggfreed.kweebec.round.RuleSet;
 import com.ziggfreed.kweebec.score.ScoringConfig;
 import com.ziggfreed.kweebec.util.SafeLog;
@@ -57,17 +57,20 @@ public final class KweebecNightmareAPI {
     /** Runtime scoring-config scale; {@code null} = identity. */
     private static final AtomicReference<UnaryOperator<ScoringConfig>> SCORING_SCALE = new AtomicReference<>(null);
 
-    /** Runtime spawn-rules override; {@code null} = use the {@link SpawnRuleConfig} fold. */
-    private static final AtomicReference<List<SpawnRuleAsset>> SPAWN_RULES_OVERRIDE = new AtomicReference<>(null);
+    /** Runtime spawn-rules override; {@code null} = use the common {@link EncounterRuleConfig} fold. */
+    private static final AtomicReference<List<EncounterRuleAsset>> SPAWN_RULES_OVERRIDE = new AtomicReference<>(null);
 
     /** Runtime spawn-rules scale (post-transform of the resolved list); {@code null} = identity. */
-    private static final AtomicReference<UnaryOperator<List<SpawnRuleAsset>>> SPAWN_RULES_SCALE = new AtomicReference<>(null);
+    private static final AtomicReference<UnaryOperator<List<EncounterRuleAsset>>> SPAWN_RULES_SCALE = new AtomicReference<>(null);
 
     /** Runtime boss-id override; {@code null} = use the boss id the round requested (or the default). */
     private static final AtomicReference<String> BOSS_OVERRIDE = new AtomicReference<>(null);
 
     /** Runtime boss scale (post-transform of the resolved boss); {@code null} = identity. */
-    private static final AtomicReference<UnaryOperator<BossAsset>> BOSS_SCALE = new AtomicReference<>(null);
+    private static final AtomicReference<UnaryOperator<MultiPhaseBossAsset>> BOSS_SCALE = new AtomicReference<>(null);
+
+    /** Kweebec's default boss id (the corrupted-Kweebec Warden), the resolve fallback. */
+    private static final String DEFAULT_BOSS = "warden";
 
     private KweebecNightmareAPI() {
     }
@@ -201,13 +204,13 @@ public final class KweebecNightmareAPI {
 
     /**
      * Force the EXTRA-SPAWN RULE set for every subsequent round, replacing whatever the
-     * {@code defaults < pack} {@link SpawnRuleConfig} fold yields (e.g. an MMO scripting a bespoke
+     * {@code defaults < pack} {@link EncounterRuleConfig} fold yields (e.g. an MMO scripting a bespoke
      * escalation for a capstone run, or disabling extra spawns by passing an empty list). Pass
      * {@code null} to clear the override and honor the static fold again. The list is copied defensively.
      *
      * @param rules the rule set to force, or {@code null} to clear (empty list = no extra spawns)
      */
-    public static void overrideSpawnRules(@Nullable List<SpawnRuleAsset> rules) {
+    public static void overrideSpawnRules(@Nullable List<EncounterRuleAsset> rules) {
         SPAWN_RULES_OVERRIDE.set(rules == null ? null : List.copyOf(rules));
         SafeLog.info("[Kweebec][API] spawn-rules override "
                 + (rules == null ? "cleared" : "set to " + rules.size() + " rule(s)"));
@@ -215,7 +218,7 @@ public final class KweebecNightmareAPI {
 
     /** The active spawn-rules override, or {@code null} when none is set. */
     @Nullable
-    public static List<SpawnRuleAsset> spawnRulesOverride() {
+    public static List<EncounterRuleAsset> spawnRulesOverride() {
         return SPAWN_RULES_OVERRIDE.get();
     }
 
@@ -226,35 +229,35 @@ public final class KweebecNightmareAPI {
      *
      * @param scale the per-round transform, or {@code null} to clear
      */
-    public static void scaleSpawnRules(@Nullable UnaryOperator<List<SpawnRuleAsset>> scale) {
+    public static void scaleSpawnRules(@Nullable UnaryOperator<List<EncounterRuleAsset>> scale) {
         SPAWN_RULES_SCALE.set(scale);
         SafeLog.info("[Kweebec][API] spawn-rules scale " + (scale == null ? "cleared" : "registered"));
     }
 
     /** The active spawn-rules scale operator, or {@code null} when none is set. */
     @Nullable
-    public static UnaryOperator<List<SpawnRuleAsset>> spawnRulesScale() {
+    public static UnaryOperator<List<EncounterRuleAsset>> spawnRulesScale() {
         return SPAWN_RULES_SCALE.get();
     }
 
     /**
      * Resolve the effective EXTRA-SPAWN RULE list for a round, composing all tiers: the runtime override
-     * (if set) ELSE the static {@code defaults < pack} fold via {@link SpawnRuleConfig#all()}, then the
+     * (if set) ELSE the static {@code defaults < pack < owner} fold via {@link EncounterRuleConfig}, then the
      * registered runtime scale (if any). Always returns a non-null (possibly empty) list. Consumed by
      * {@code AiHunterController.evaluateSpawnRules}.
      */
     @Nonnull
-    public static List<SpawnRuleAsset> resolveSpawnRules() {
-        List<SpawnRuleAsset> base = SPAWN_RULES_OVERRIDE.get();
+    public static List<EncounterRuleAsset> resolveSpawnRules() {
+        List<EncounterRuleAsset> base = SPAWN_RULES_OVERRIDE.get();
         if (base == null) {
-            base = SpawnRuleConfig.getInstance().all();
+            base = List.copyOf(EncounterRuleConfig.getInstance().all().values());
         }
-        UnaryOperator<List<SpawnRuleAsset>> scale = SPAWN_RULES_SCALE.get();
+        UnaryOperator<List<EncounterRuleAsset>> scale = SPAWN_RULES_SCALE.get();
         if (scale == null) {
             return base;
         }
         try {
-            List<SpawnRuleAsset> scaled = scale.apply(base);
+            List<EncounterRuleAsset> scaled = scale.apply(base);
             return scaled != null ? scaled : base;
         } catch (Throwable t) {
             SafeLog.warn("[Kweebec][API] spawn-rules scale threw; using unscaled list: " + t.getMessage());
@@ -280,41 +283,46 @@ public final class KweebecNightmareAPI {
     }
 
     /**
-     * Register a runtime transform applied to the resolved {@link BossAsset} (after any override, over the
-     * static fold). Pass {@code null} to clear.
+     * Register a runtime transform applied to the resolved {@link MultiPhaseBossAsset} (after any override,
+     * over the static fold). Pass {@code null} to clear.
      */
-    public static void scaleBoss(@Nullable UnaryOperator<BossAsset> scale) {
+    public static void scaleBoss(@Nullable UnaryOperator<MultiPhaseBossAsset> scale) {
         BOSS_SCALE.set(scale);
         SafeLog.info("[Kweebec][API] boss scale " + (scale == null ? "cleared" : "registered"));
     }
 
     /** The active boss scale operator, or {@code null} when none is set. */
     @Nullable
-    public static UnaryOperator<BossAsset> bossScale() {
+    public static UnaryOperator<MultiPhaseBossAsset> bossScale() {
         return BOSS_SCALE.get();
     }
 
     /**
-     * Resolve the boss id a round requested to its effective {@link BossAsset}, composing all tiers: the
-     * runtime boss-id override (if any) replaces the requested id, the static {@link BossConfig} fold
-     * ({@code defaults < pack}) resolves it (falling back to the default Warden for an unknown id), then
-     * the registered runtime scale (if any) post-transforms the result. May return {@code null} only if no
-     * boss is registered at all (the default Warden ships in the jar, so in practice non-null). Consumed by
-     * {@code boss/BossController}.
+     * Resolve the boss id a round requested to its effective {@link MultiPhaseBossAsset}, composing all
+     * tiers: the runtime boss-id override (if any) replaces the requested id, the ziggfreed-common
+     * {@link MultiPhaseBossConfig} fold ({@code defaults < pack < owner}) resolves it (falling back to the
+     * default Warden for an unknown id), then the registered runtime scale (if any) post-transforms the
+     * result. May return {@code null} when neither the requested id nor the Warden is authored (the boss is
+     * pack JSON now, so a missing pack yields no boss - {@code BossController.forRound} skips it gracefully).
+     * Consumed by {@code boss/BossController}.
      *
      * @param bossId the boss id the round requested ({@code null}/blank = the default Warden)
      */
     @Nullable
-    public static BossAsset resolveBoss(@Nullable String bossId) {
+    public static MultiPhaseBossAsset resolveBoss(@Nullable String bossId) {
         String override = BOSS_OVERRIDE.get();
         String effectiveId = override != null ? override : bossId;
-        BossAsset resolved = BossConfig.getInstance().resolve(effectiveId);
-        UnaryOperator<BossAsset> scale = BOSS_SCALE.get();
+        MultiPhaseBossConfig config = MultiPhaseBossConfig.getInstance();
+        MultiPhaseBossAsset resolved = config.resolve(effectiveId == null || effectiveId.isBlank() ? DEFAULT_BOSS : effectiveId);
+        if (resolved == null) {
+            resolved = config.resolve(DEFAULT_BOSS); // common has no built-in fallback; pin Kweebec's Warden
+        }
+        UnaryOperator<MultiPhaseBossAsset> scale = BOSS_SCALE.get();
         if (scale == null || resolved == null) {
             return resolved;
         }
         try {
-            BossAsset scaled = scale.apply(resolved);
+            MultiPhaseBossAsset scaled = scale.apply(resolved);
             return scaled != null ? scaled : resolved;
         } catch (Throwable t) {
             SafeLog.warn("[Kweebec][API] boss scale threw; using unscaled boss: " + t.getMessage());

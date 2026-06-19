@@ -10,6 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.ziggfreed.common.instance.preset.InstancePreset;
+import com.ziggfreed.common.instance.preset.InstancePresetConfig;
 import com.ziggfreed.kweebec.round.RuleSet;
 import com.ziggfreed.kweebec.util.SafeLog;
 
@@ -47,8 +49,6 @@ public final class PresetConfig {
     private final ConcurrentHashMap<String, RuleSet> presets = new ConcurrentHashMap<>();
     /** Authored mutator ids per preset (lowercase id -> ordered mutator ids), stacked at resolve. */
     private final ConcurrentHashMap<String, String[]> mutatorIds = new ConcurrentHashMap<>();
-    /** Display name keys by lowercase id. */
-    private final ConcurrentHashMap<String, String> nameKeys = new ConcurrentHashMap<>();
 
     /**
      * Cached pack layer (already-decoded RuleSets handed in by the asset load
@@ -56,7 +56,6 @@ public final class PresetConfig {
      */
     @Nullable private Map<String, RuleSet> packLayer = null;
     @Nullable private Map<String, String[]> packMutatorIds = null;
-    @Nullable private Map<String, String> packNameKeys = null;
     private boolean packReplace = false;
 
     private PresetConfig() {
@@ -83,12 +82,10 @@ public final class PresetConfig {
     private synchronized void loadDefaults() {
         presets.clear();
         mutatorIds.clear();
-        nameKeys.clear();
         for (DefaultPresets.Preset p : DefaultPresets.all()) {
             RuleSet rs = p.ruleSet();
             presets.put(rs.presetId(), rs);
             mutatorIds.put(rs.presetId(), p.mutatorIds());
-            nameKeys.put(rs.presetId(), "kweebecnightmare.preset." + rs.presetId() + ".name");
         }
     }
 
@@ -101,16 +98,13 @@ public final class PresetConfig {
      *
      * @param layer       decoded BASE RuleSets by lowercase id (un-mutated)
      * @param mutatorIds  authored mutator ids per preset (stacked at resolve time)
-     * @param nameKeys    display name keys by lowercase id
      * @param replace     {@code true} to drop the jar defaults for the presets type
      */
     public synchronized void mergePackLayer(@Nonnull Map<String, RuleSet> layer,
                                             @Nonnull Map<String, String[]> mutatorIds,
-                                            @Nonnull Map<String, String> nameKeys,
                                             boolean replace) {
         this.packLayer = layer;
         this.packMutatorIds = mutatorIds;
-        this.packNameKeys = nameKeys;
         this.packReplace = replace;
         applyPackLayer();
         SafeLog.info("[Kweebec][AssetPacks] Preset layer applied (" + layer.size()
@@ -121,14 +115,12 @@ public final class PresetConfig {
     private synchronized void applyPackLayer() {
         Map<String, RuleSet> effPresets = new LinkedHashMap<>();
         Map<String, String[]> effMutators = new LinkedHashMap<>();
-        Map<String, String> effNames = new LinkedHashMap<>();
         // (a) jar defaults floor, unless the pack declares replace.
         if (!packReplace) {
             for (DefaultPresets.Preset p : DefaultPresets.all()) {
                 RuleSet rs = p.ruleSet();
                 effPresets.put(rs.presetId(), rs);
                 effMutators.put(rs.presetId(), p.mutatorIds());
-                effNames.put(rs.presetId(), "kweebecnightmare.preset." + rs.presetId() + ".name");
             }
         }
         // (b) pack layer overlays by id.
@@ -138,22 +130,16 @@ public final class PresetConfig {
         if (packMutatorIds != null) {
             effMutators.putAll(packMutatorIds);
         }
-        if (packNameKeys != null) {
-            effNames.putAll(packNameKeys);
-        }
         presets.clear();
         presets.putAll(effPresets);
         mutatorIds.clear();
         mutatorIds.putAll(effMutators);
-        nameKeys.clear();
-        nameKeys.putAll(effNames);
         // Guarantee the default preset always resolves (a replace pack without
         // "nightmare" falls back to the jar baseline so a round can always start).
         if (!presets.containsKey(DEFAULT)) {
             RuleSet fallback = DefaultPresets.nightmare();
             presets.put(DEFAULT, fallback);
             mutatorIds.putIfAbsent(DEFAULT, new String[0]);
-            nameKeys.putIfAbsent(DEFAULT, "kweebecnightmare.preset." + DEFAULT + ".name");
             SafeLog.warn("[Kweebec][AssetPacks] no '" + DEFAULT
                     + "' preset after fold; restored jar baseline so rounds can start.");
         }
@@ -223,11 +209,20 @@ public final class PresetConfig {
         return presets.get(id.toLowerCase(Locale.ROOT));
     }
 
-    /** Display name key for a preset id, falling back to the by-convention key. */
+    /**
+     * Display name key for a preset id. The name is a CROSS-CUTTING field owned by the
+     * co-keyed common {@link InstancePreset} ({@code Server/ZiggfreedCommon/Instances/}); this
+     * delegates to its authored {@code NameKey}, falling back to the by-convention key
+     * {@code kweebecnightmare.preset.<id>.name} when the InstancePreset is absent / authors none.
+     */
     @Nonnull
     public String nameKey(@Nonnull String id) {
-        String key = nameKeys.get(id.toLowerCase(Locale.ROOT));
-        return key != null ? key : "kweebecnightmare.preset." + id.toLowerCase(Locale.ROOT) + ".name";
+        String key = id.toLowerCase(Locale.ROOT);
+        InstancePreset ip = InstancePresetConfig.getInstance().resolve(key);
+        if (ip != null && ip.nameKey() != null && !ip.nameKey().isBlank()) {
+            return ip.nameKey();
+        }
+        return "kweebecnightmare.preset." + key + ".name";
     }
 
     /** All effective preset ids (lowercase), sorted for stable listing. */

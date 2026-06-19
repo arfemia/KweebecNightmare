@@ -1,7 +1,7 @@
 {
   "Name": "dread_2",
   "Band": 2,
-  "MinCorruptionTier": 0,
+  "MinTier": 0,
   "EffectId": "KweebecNightmare_Dread_2",
   "SoundId": "",
   "OneShot": false

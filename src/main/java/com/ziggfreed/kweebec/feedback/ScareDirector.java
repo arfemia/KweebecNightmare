@@ -28,12 +28,12 @@ import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.ziggfreed.common.camera.CameraShakeService;
+import com.ziggfreed.common.instance.effect.BandedEffectAsset;
+import com.ziggfreed.common.instance.effect.BandedEffectConfig;
 import com.ziggfreed.common.sound.Sound3D;
 import com.ziggfreed.common.util.AssetIndexCache;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.atmosphere.MusicBedService;
-import com.ziggfreed.kweebec.asset.ScareBeatAsset;
-import com.ziggfreed.kweebec.asset.ScareBeatConfig;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
 import com.ziggfreed.kweebec.round.PlayerRoundState;
 import com.ziggfreed.kweebec.round.RoundInstance;
@@ -42,8 +42,8 @@ import com.ziggfreed.kweebec.round.RoundInstance;
  * The horror conductor: a 1 Hz fan-out (called from {@code ChaseMode.tick} on the
  * instance world thread) that turns the round's corruption tier and each survivor's
  * nearest-hunter distance into PRE-AUTHORED scare beats. The band/tier-to-effect
- * mapping is DATA ({@link ScareBeatConfig} / {@link ScareBeatAsset}), never hardcoded
- * here.
+ * mapping is DATA (ziggfreed-common's {@link BandedEffectConfig} / {@link BandedEffectAsset}),
+ * never hardcoded here.
  *
  * <p>Three layers, all best-effort + validated, none of which can throw into the round
  * loop:
@@ -51,7 +51,7 @@ import com.ziggfreed.kweebec.round.RoundInstance;
  *   <li><b>Proximity vignette</b> ({@link #tick}): per active survivor, the minimum
  *       distance to any hunter ({@code round.hunterController().hunterPositions(store)})
  *       maps to a band (3 closest, 2 mid, 1 far, 0 none), raised to a floor by the
- *       corruption tier; the band's {@link ScareBeatAsset} {@code EntityEffect} is
+ *       corruption tier; the band's {@link BandedEffectAsset} {@code EntityEffect} is
  *       applied to the survivor via {@link EffectControllerComponent} WITH HYSTERESIS
  *       (the applied band + effect index are tracked per UUID, swapped only on a change,
  *       removed on band 0 / inactive) - mirroring {@code AiHunterController.applySpeed}
@@ -94,8 +94,8 @@ public final class ScareDirector {
     /** Extra distance (blocks) a survivor must move OUT before a band drops (anti-flicker). */
     private static final double HYSTERESIS_BLOCKS = 3.0;
 
-    /** Closest proximity band (= {@link ScareBeatAsset#MAX_BAND}); entering it triggers the jumpscare. */
-    private static final int CLOSEST_BAND = ScareBeatAsset.MAX_BAND;
+    /** Closest proximity band (band 3); entering it triggers the jumpscare. ScareDirector's own band scheme. */
+    private static final int CLOSEST_BAND = 3;
 
     /** Minimum gap (ms) between jumpscares for one survivor, so a catch cannot spam every tick. */
     private static final long JUMPSCARE_COOLDOWN_MS = 12_000L;
@@ -416,8 +416,8 @@ public final class ScareDirector {
             return; // unchanged - the common case; no per-tick effect churn
         }
 
-        ScareBeatAsset beat = targetBand <= 0 ? null
-                : ScareBeatConfig.getInstance().bandBeat(targetBand, tier);
+        BandedEffectAsset beat = targetBand <= 0 ? null
+                : BandedEffectConfig.getInstance().bandFor(targetBand, tier);
 
         var assetMap = EntityEffect.getAssetMap();
         String newId = beat == null ? null : beat.effectId();
@@ -499,7 +499,7 @@ public final class ScareDirector {
         }
         LAST_JUMPSCARE_MS.put(uuid, now);
 
-        ScareBeatAsset beat = ScareBeatConfig.getInstance().jumpscareBeat();
+        BandedEffectAsset beat = BandedEffectConfig.getInstance().oneShot();
 
         Vector3d pos = positionOf(store, ref);
         PlayerRef pr = store.getComponent(ref, PlayerRef.getComponentType());

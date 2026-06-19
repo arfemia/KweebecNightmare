@@ -10,7 +10,6 @@ import com.hypixel.hytale.assetstore.map.JsonAssetWithMap;
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.ziggfreed.kweebec.round.InventoryMode;
-import com.ziggfreed.kweebec.round.RewardOnExit;
 import com.ziggfreed.kweebec.round.ReviveStyle;
 import com.ziggfreed.kweebec.round.RuleSet;
 import com.ziggfreed.kweebec.round.ThrowMode;
@@ -31,21 +30,22 @@ import com.ziggfreed.kweebec.score.ScoringConfig;
  * <p>Every {@code KeyedCodec} field name is PascalCase (the constructor rejects a
  * lower-case first letter at static init, throwing at server start). The 13
  * {@link RuleSet} knobs map straight onto the unchanged {@link RuleSet} builder via
- * {@link #toRuleSet(String)}; {@code NameKey} / {@code Enabled} /
- * {@code InventoryMode} / {@code RewardOnExit} / {@code HunterArchetype} are the
- * preset-level metadata.
+ * {@link #toRuleSet(String)}; {@code InventoryMode} / {@code HunterArchetype} are the
+ * preset-level gameplay metadata. The CROSS-CUTTING {@code NameKey} / {@code Enabled} /
+ * {@code RewardOnExit} live ONLY on the co-keyed common {@code InstancePresetAsset}
+ * ({@code Server/ZiggfreedCommon/Instances/}), never here - the two are field-disjoint
+ * over the shared preset id.
  *
  * <p>Pack JSON shape (all fields optional; absent = the Nightmare-baseline default
  * from the {@link RuleSet} builder):
  * <pre>{@code
- * { "Name": "nightmare", "Enabled": true, "NameKey": "preset.nightmare.name",
+ * { "Name": "nightmare",
  *   "ReviveStyle": "COOP_RESCUE", "MaxDowns": 1, "BleedOutSeconds": 30,
  *   "HunterCount": 1, "HunterSpeedBase": 1.0, "HunterSpeedMax": 1.35,
  *   "ShrineBase": 2, "ShrinePerPlayer": 1, "CaveShrineCount": 2,
  *   "RoundCapSeconds": 900, "CorruptionPerSecond": 0.0014,
  *   "CorruptionPerShrine": 0.12, "ShrineRelightSeconds": 6.0,
- *   "InventoryMode": "PRESERVE_AND_STRIP", "RewardOnExit": "ON_WIN",
- *   "HunterArchetype": "stalker",
+ *   "InventoryMode": "PRESERVE_AND_STRIP", "HunterArchetype": "stalker",
  *   "Baseline": 1000, "ParTimeSeconds": 420, "TimePointsPerSecond": 5.0,
  *   "DamagePointsPerHp": 8.0, "DamageBudget": 200.0, "StunBonusPer": 50,
  *   "ShrineBonusPer": 75, "AllShrinesBonus": 500 }
@@ -67,12 +67,9 @@ public final class RoundPresetAsset
     private String id;
     private AssetExtraInfo.Data data;
 
-    private boolean enabled = true;
-    @Nullable private String nameKey;
     @Nullable private String worldStructure;
     @Nullable private String reviveStyle;
     @Nullable private String inventoryMode;
-    @Nullable private String rewardOnExit;
     @Nullable private String hunterArchetype;
     @Nullable private String[] mutators;
 
@@ -131,10 +128,6 @@ public final class RoundPresetAsset
                     (a, name) -> { /* no-op - id already comes from the filename */ },
                     a -> a.id)
             .add()
-            .append(new KeyedCodec<>("Enabled", Codec.BOOLEAN, false), (a, v) -> a.enabled = v, a -> a.enabled)
-            .add()
-            .append(new KeyedCodec<>("NameKey", Codec.STRING, false), (a, v) -> a.nameKey = v, a -> a.nameKey)
-            .add()
             .append(new KeyedCodec<>("WorldStructure", Codec.STRING, false), (a, v) -> a.worldStructure = v, a -> a.worldStructure)
             .add()
             .append(new KeyedCodec<>("ReviveStyle", Codec.STRING, false), (a, v) -> a.reviveStyle = v, a -> a.reviveStyle)
@@ -164,8 +157,6 @@ public final class RoundPresetAsset
             .append(new KeyedCodec<>("ShrineRelightSeconds", Codec.DOUBLE, false), (a, v) -> a.shrineRelightSeconds = v, a -> a.shrineRelightSeconds)
             .add()
             .append(new KeyedCodec<>("InventoryMode", Codec.STRING, false), (a, v) -> a.inventoryMode = v, a -> a.inventoryMode)
-            .add()
-            .append(new KeyedCodec<>("RewardOnExit", Codec.STRING, false), (a, v) -> a.rewardOnExit = v, a -> a.rewardOnExit)
             .add()
             .append(new KeyedCodec<>("HunterArchetype", Codec.STRING, false), (a, v) -> a.hunterArchetype = v, a -> a.hunterArchetype)
             .add()
@@ -219,23 +210,6 @@ public final class RoundPresetAsset
     @Override
     public String getId() {
         return id;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    /**
-     * Lang key for the preset's display name. Falls back to the by-convention key
-     * {@code preset.<id>.name} (note: the {@code kweebecnightmare.} namespace is
-     * supplied by the .lang filename) when no explicit {@code NameKey} is authored.
-     */
-    @Nonnull
-    public String nameKey(@Nonnull String presetId) {
-        if (nameKey != null && !nameKey.isBlank()) {
-            return nameKey;
-        }
-        return "kweebecnightmare.preset." + presetId.toLowerCase() + ".name";
     }
 
     /**
@@ -303,7 +277,6 @@ public final class RoundPresetAsset
             b.shrineRelightSeconds(shrineRelightSeconds);
         }
         b.inventoryMode(InventoryMode.fromString(inventoryMode));
-        b.rewardOnExit(RewardOnExit.fromString(rewardOnExit));
         if (hunterArchetype != null && !hunterArchetype.isBlank()) {
             b.hunterArchetype(hunterArchetype.toLowerCase());
         }

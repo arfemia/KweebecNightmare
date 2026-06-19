@@ -1,0 +1,22 @@
+{
+  "Name": "kweebec_intro",
+  "Owner": "kweebec",
+  "Payload": {
+    "Start": [{ "Node": "greet" }],
+    "Nodes": {
+      "greet": {
+        "Options": [
+          { "Goto": "lore" },
+          { "Actions": [
+              { "Type": "SetFlag", "Flag": "warned" },
+              { "Type": "Goto", "Node": "warning" }
+          ] },
+          { "Conditions": [{ "Type": "Flag", "Flag": "warned" }], "Goto": "secret" }
+        ]
+      },
+      "lore":    { "Options": [ { "Goto": "greet" } ] },
+      "warning": { "Options": [ { "Goto": "greet" } ] },
+      "secret":  { "Options": [ { "Goto": "greet" } ] }
+    }
+  }
+}

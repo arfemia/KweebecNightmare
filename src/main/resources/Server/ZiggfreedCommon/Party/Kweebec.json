@@ -1,0 +1,6 @@
+{
+  "Name": "kweebec",
+  "MaxSize": 4,
+  "InviteTimeoutSeconds": 60,
+  "OwnerOnlyInvite": false
+}

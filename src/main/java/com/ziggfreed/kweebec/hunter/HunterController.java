@@ -11,7 +11,6 @@ import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import com.ziggfreed.kweebec.asset.SpawnRuleAsset;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.round.RuleSet;
 
@@ -100,7 +99,7 @@ public interface HunterController {
      */
     default void evaluateSpawnRules(@Nonnull RoundInstance round, @Nonnull World world,
                                     @Nonnull Store<EntityStore> store,
-                                    @Nonnull SpawnRuleAsset.Trigger trigger, int tierOrSeconds) {
+                                    @Nonnull SpawnTrigger trigger, int tierOrSeconds) {
         // no-op default - the human-driven hunter mode has no asset roster
     }
 }

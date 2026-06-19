@@ -9,8 +9,6 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.hypixel.hytale.assetstore.event.LoadedAssetsEvent;
-import com.hypixel.hytale.assetstore.map.DefaultAssetMap;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.entity.entities.Player;
@@ -20,14 +18,14 @@ import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
-import com.ziggfreed.common.asset.AssetMergeAdapter;
 import com.ziggfreed.common.instance.leaderboard.Leaderboard;
 import com.ziggfreed.common.instance.leaderboard.LeaderboardBucketTab;
+import com.ziggfreed.common.instance.leaderboard.LeaderboardLayout;
+import com.ziggfreed.common.instance.leaderboard.LeaderboardLayoutConfig;
 import com.ziggfreed.common.instance.leaderboard.LeaderboardPageDeps;
 import com.ziggfreed.common.instance.leaderboard.StatColumnDef;
 import com.ziggfreed.common.instance.play.PlayModePageDeps;
 import com.ziggfreed.common.instance.preset.InstancePreset;
-import com.ziggfreed.common.instance.preset.InstancePresetAsset;
 import com.ziggfreed.common.instance.preset.InstancePresetConfig;
 import com.ziggfreed.common.instance.preset.QueueModeSet;
 import com.ziggfreed.common.instance.result.ColumnFormat;
@@ -46,6 +44,7 @@ import com.ziggfreed.common.instance.reward.InstanceRewardGranter;
 import com.ziggfreed.common.instance.reward.PendingRewardStore;
 import com.ziggfreed.common.party.PartyConfig;
 import com.ziggfreed.common.party.PartyService;
+import com.ziggfreed.common.party.PartySettingsConfig;
 import com.ziggfreed.common.party.page.PartyPageDeps;
 import com.ziggfreed.kweebec.api.PlayerScore;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
@@ -75,6 +74,7 @@ public final class KweebecExperience {
     private static final String STAT_MOONBLOOM = "moonbloom";
     private static final String STAT_SHRINES = "shrines";
 
+    private static Path dataDir;
     private static Leaderboard board;
     private static PartyService partyService;
     private static PendingRewardStore pendingRewards;
@@ -86,36 +86,18 @@ public final class KweebecExperience {
     private KweebecExperience() {
     }
 
-    /** Build + load the experience layer. Call once at plugin setup (after KweebecLobby.init). */
-    public static void init(@Nullable Path dataDir) {
-        // One board PER game-mode (Survival later adds "leaderboard-survival"); buckets within it
-        // are "<difficulty>_<partySize>". The old party-size-only "leaderboard.json" is left orphaned
-        // (pre-release; the bucket scheme changed).
-        board = new Leaderboard("leaderboard-chase");
-        board.init(dataDir);
+    /**
+     * Build the config-independent experience deps (pending rewards, results, play/queue). Call once
+     * at plugin setup (after KweebecLobby.init). The leaderboard board + party + leaderboard layout
+     * are built LAZILY by {@link #ensureLoaded()} because they read the ziggfreed-common asset configs
+     * (LeaderboardLayout / PartySettings), which are only populated by the LoadedAssetsEvent fold AFTER
+     * setup() - the hyMMO first-player-connect deferral applied to a minigame.
+     */
+    public static void init(@Nullable Path dir) {
+        dataDir = dir;
         pendingRewards = new PendingRewardStore("pending-rewards");
-        pendingRewards.init(dataDir);
-        partyService = new PartyService(GAME_ID, new PartyConfig(ARENA_MAX_PARTY, INVITE_TIMEOUT_SECONDS, false),
-                new KweebecPartyMessages());
-
-        // PRIMARY axis = difficulty (preset ids; labels reuse the preset names), SECONDARY = party size.
-        leaderboardDeps = new LeaderboardPageDeps(board,
-                List.of(
-                        new LeaderboardBucketTab("amateur", Lang.msg(Lang.PRESET_AMATEUR)),
-                        new LeaderboardBucketTab("nightmare", Lang.msg(Lang.PRESET_NIGHTMARE)),
-                        new LeaderboardBucketTab("hardcore", Lang.msg(Lang.PRESET_HARDCORE))),
-                List.of(
-                        new LeaderboardBucketTab("1", Lang.msg(Lang.LB_TAB_SOLO)),
-                        new LeaderboardBucketTab("2", Lang.msg(Lang.LB_TAB_DUO)),
-                        new LeaderboardBucketTab("3", Lang.msg(Lang.LB_TAB_TRIO)),
-                        new LeaderboardBucketTab("4", Lang.msg(Lang.LB_TAB_SQUAD))),
-                List.of(
-                        StatColumnDef.grouped(STAT_STUNNED, Lang.msg(Lang.LB_STAT_STUNNED)),
-                        StatColumnDef.grouped(STAT_MOONBLOOM, Lang.msg(Lang.LB_STAT_MOONBLOOM)),
-                        StatColumnDef.grouped(STAT_SHRINES, Lang.msg(Lang.LB_STAT_SHRINES))),
-                new KweebecLeaderboardScreenMessages());
+        pendingRewards.init(dir);
         resultsDeps = new ResultsPageDeps(new KweebecResultsMessages(), new KweebecResultsActions());
-        partyDeps = new PartyPageDeps(partyService, new KweebecPartyScreenMessages(), KweebecParty::queueParty);
         playModeDeps = new PlayModePageDeps(
                 KweebecLobby.service(),
                 id -> {
@@ -128,7 +110,55 @@ public final class KweebecExperience {
                 Lang::msg,
                 new KweebecPlayMode(),
                 new KweebecPlayScreenMessages());
-        SafeLog.info("[Kweebec] instance-experience layer ready (results / party / queue / leaderboard).");
+        SafeLog.info("[Kweebec] instance-experience layer ready (results + queue eager; leaderboard + party lazy from common pack configs).");
+    }
+
+    /**
+     * Build the config-dependent deps (board + party + leaderboard layout) once, from the
+     * ziggfreed-common asset configs. Idempotent (guarded on {@code board != null}) and synchronized.
+     * Called on first access + on first PlayerReady, both of which are AFTER the asset fold, so the
+     * configs are populated; if the pack JSON is absent it degrades to the built-in axes
+     * ({@link #fallbackLayout()}) so the leaderboard still works.
+     */
+    private static synchronized void ensureLoaded() {
+        if (board != null) {
+            return;
+        }
+        LeaderboardLayout layout = LeaderboardLayoutConfig.getInstance().resolve("chase");
+        if (layout == null) {
+            layout = fallbackLayout();
+        }
+        Leaderboard b = new Leaderboard(layout.boardId());
+        b.init(dataDir);
+        partyService = new PartyService(GAME_ID,
+                PartySettingsConfig.getInstance().resolveOrDefault(GAME_ID,
+                        new PartyConfig(ARENA_MAX_PARTY, INVITE_TIMEOUT_SECONDS, false)),
+                new KweebecPartyMessages());
+        leaderboardDeps = new LeaderboardPageDeps(b, layout.primaryTabs(), layout.secondaryTabs(),
+                layout.statColumns(), new KweebecLeaderboardScreenMessages());
+        partyDeps = new PartyPageDeps(partyService, new KweebecPartyScreenMessages(), KweebecParty::queueParty);
+        board = b; // set LAST: it is the ensureLoaded guard.
+        SafeLog.info("[Kweebec] leaderboard + party built from common pack configs (board=" + layout.boardId() + ").");
+    }
+
+    /** The built-in leaderboard layout used when no pack authored {@code ZiggfreedCommon/Leaderboard/Chase.json}. */
+    @Nonnull
+    private static LeaderboardLayout fallbackLayout() {
+        return new LeaderboardLayout("chase", "leaderboard-chase",
+                Lang.msg(Lang.LB_AXIS_DIFFICULTY), Lang.msg(Lang.LB_AXIS_PLAYERS),
+                List.of(
+                        new LeaderboardBucketTab("amateur", Lang.msg(Lang.PRESET_AMATEUR)),
+                        new LeaderboardBucketTab("nightmare", Lang.msg(Lang.PRESET_NIGHTMARE)),
+                        new LeaderboardBucketTab("hardcore", Lang.msg(Lang.PRESET_HARDCORE))),
+                List.of(
+                        new LeaderboardBucketTab("1", Lang.msg(Lang.LB_TAB_SOLO)),
+                        new LeaderboardBucketTab("2", Lang.msg(Lang.LB_TAB_DUO)),
+                        new LeaderboardBucketTab("3", Lang.msg(Lang.LB_TAB_TRIO)),
+                        new LeaderboardBucketTab("4", Lang.msg(Lang.LB_TAB_SQUAD))),
+                List.of(
+                        StatColumnDef.grouped(STAT_STUNNED, Lang.msg(Lang.LB_STAT_STUNNED)),
+                        StatColumnDef.grouped(STAT_MOONBLOOM, Lang.msg(Lang.LB_STAT_MOONBLOOM)),
+                        StatColumnDef.grouped(STAT_SHRINES, Lang.msg(Lang.LB_STAT_SHRINES))));
     }
 
     public static void shutdown() {
@@ -138,10 +168,12 @@ public final class KweebecExperience {
     }
 
     @Nonnull public static Leaderboard board() {
+        ensureLoaded();
         return board;
     }
 
     @Nonnull public static PartyService partyService() {
+        ensureLoaded();
         return partyService;
     }
 
@@ -150,6 +182,7 @@ public final class KweebecExperience {
     }
 
     @Nonnull public static LeaderboardPageDeps leaderboardDeps() {
+        ensureLoaded();
         return leaderboardDeps;
     }
 
@@ -158,18 +191,12 @@ public final class KweebecExperience {
     }
 
     @Nonnull public static PartyPageDeps partyDeps() {
+        ensureLoaded();
         return partyDeps;
     }
 
     @Nonnull public static PlayModePageDeps playModeDeps() {
         return playModeDeps;
-    }
-
-    /** Fold pack-authored {@link InstancePresetAsset}s into the cross-cutting config. */
-    public static void onInstanceAssetsLoaded(
-            @Nonnull LoadedAssetsEvent<String, InstancePresetAsset, DefaultAssetMap<String, InstancePresetAsset>> ev) {
-        InstancePresetConfig.getInstance().mergePackLayer(
-                AssetMergeAdapter.layer(ev.getAssetMap(), (id, asset) -> asset.toPreset(id)));
     }
 
     /**
@@ -178,6 +205,7 @@ public final class KweebecExperience {
      */
     public static void recordScores(int partySize, @Nonnull RoundInstance round,
                                     @Nonnull Map<UUID, PlayerScore> scores) {
+        ensureLoaded();
         String bucket = bucketKey(round.ruleSet().presetId(), partySize);
         for (PlayerRoundState st : round.playerStates()) {
             if (st.hasLeftRound()) {
@@ -309,6 +337,9 @@ public final class KweebecExperience {
 
     /** On player-ready, re-attempt any rewards that were blocked by a full inventory last time. */
     public static void onPlayerReady(@Nonnull PlayerReadyEvent event) {
+        // First player connect = the deferral point: the common asset configs are populated by
+        // now, so warm the leaderboard board + party from them (the hyMMO first-player-connect pattern).
+        ensureLoaded();
         Player player = event.getPlayer();
         if (player == null) {
             return;

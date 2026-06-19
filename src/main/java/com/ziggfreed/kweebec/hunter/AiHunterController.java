@@ -38,7 +38,7 @@ import com.ziggfreed.kweebec.arena.Anchor;
 import com.ziggfreed.kweebec.arena.ArenaLayout;
 import com.ziggfreed.kweebec.asset.HunterArchetypeAsset;
 import com.ziggfreed.kweebec.asset.HunterArchetypeConfig;
-import com.ziggfreed.kweebec.asset.SpawnRuleAsset;
+import com.ziggfreed.common.instance.encounter.EncounterRuleAsset;
 import com.ziggfreed.kweebec.integration.KweebecNightmareAPI;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
 import com.ziggfreed.kweebec.round.PlayerRoundState;
@@ -501,8 +501,8 @@ public final class AiHunterController implements HunterController {
     @Override
     public void evaluateSpawnRules(@Nonnull RoundInstance round, @Nonnull World world,
                                    @Nonnull Store<EntityStore> store,
-                                   @Nonnull SpawnRuleAsset.Trigger trigger, int tierOrSeconds) {
-        List<SpawnRuleAsset> rules = KweebecNightmareAPI.resolveSpawnRules();
+                                   @Nonnull SpawnTrigger trigger, int tierOrSeconds) {
+        List<EncounterRuleAsset> rules = KweebecNightmareAPI.resolveSpawnRules();
         if (rules.isEmpty()) {
             return;
         }
@@ -512,8 +512,8 @@ public final class AiHunterController implements HunterController {
         }
         int tier = currentTier(round);
         long now = System.currentTimeMillis();
-        for (SpawnRuleAsset rule : rules) {
-            if (rule == null || rule.trigger() != trigger) {
+        for (EncounterRuleAsset rule : rules) {
+            if (rule == null || SpawnTrigger.fromString(rule.trigger()) != trigger) {
                 continue;
             }
             fireRuleIfReady(round, world, store, npc, rule, tier, tierOrSeconds, now);
@@ -525,15 +525,15 @@ public final class AiHunterController implements HunterController {
      * (CORRUPTION_TIER's {@code AtTier}, TIME_ELAPSED's {@code AtSeconds}, PLAYER_PROXIMITY's gate-near
      * check), and the shared {@link EncounterDirector}'s cooldown + max-per-round gate. The wave size is
      * clamped to the room under the rule's cap and the global {@link #MAX_HUNTERS}, then each extra hunter
-     * is placed NEAR the survivors per the rule's {@link SpawnRuleAsset.Placement}. World-thread only.
+     * is placed NEAR the survivors per the rule's {@link SpawnPlacementKind}. World-thread only.
      */
     private void fireRuleIfReady(@Nonnull RoundInstance round, @Nonnull World world,
                                  @Nonnull Store<EntityStore> store, @Nonnull NPCPlugin npc,
-                                 @Nonnull SpawnRuleAsset rule, int tier, int tierOrSeconds, long now) {
-        if (tier < rule.minCorruptionTier()) {
+                                 @Nonnull EncounterRuleAsset rule, int tier, int tierOrSeconds, long now) {
+        if (tier < rule.minTier()) {
             return;
         }
-        switch (rule.trigger()) {
+        switch (SpawnTrigger.fromString(rule.trigger())) {
             case CORRUPTION_TIER -> {
                 if (rule.atTier() > 0 && tierOrSeconds != rule.atTier()) {
                     return; // this rule only fires on a specific tier crossing
@@ -568,7 +568,7 @@ public final class AiHunterController implements HunterController {
         if (targets.isEmpty()) {
             return;
         }
-        HunterArchetypeAsset primary = HunterArchetypeConfig.getInstance().byId(rule.archetypeId());
+        HunterArchetypeAsset primary = HunterArchetypeConfig.getInstance().byId(rule.unitId());
         int before = hunters.size();
         for (Vector3d pos : targets) {
             HunterArchetypeAsset a = pickRuleArchetype(round, rule, tier, primary, now);
@@ -592,7 +592,7 @@ public final class AiHunterController implements HunterController {
      * so each fire varies while a given round is reproducible.
      */
     @Nullable
-    private HunterArchetypeAsset pickRuleArchetype(@Nonnull RoundInstance round, @Nonnull SpawnRuleAsset rule,
+    private HunterArchetypeAsset pickRuleArchetype(@Nonnull RoundInstance round, @Nonnull EncounterRuleAsset rule,
                                                    int tier, @Nullable HunterArchetypeAsset primary, long now) {
         if (primary != null && primary.spawnTier() <= tier
                 && primary.roleName() != null && !primary.roleName().isBlank()) {
@@ -604,7 +604,7 @@ public final class AiHunterController implements HunterController {
 
     /**
      * Resolve {@code count} floor-snapped spawn positions for a rule, NEAR the survivors per its
-     * {@link SpawnRuleAsset.Placement}: a ring band around one random active survivor, a surrounding ring
+     * {@link SpawnPlacementKind}: a ring band around one random active survivor, a surrounding ring
      * around the survivors' centroid, a scatter around the centroid, or the fixed den. All player-relative
      * placements use the shared {@link SpawnPlacement} (foliage-skipping so a spawn lands on the genuine
      * ground under the grove canopy) and are seeded off the round world seed XOR the rule id + the fire
@@ -612,7 +612,7 @@ public final class AiHunterController implements HunterController {
      */
     @Nonnull
     private List<Vector3d> placementTargets(@Nonnull RoundInstance round, @Nonnull World world,
-                                            @Nonnull Store<EntityStore> store, @Nonnull SpawnRuleAsset rule,
+                                            @Nonnull Store<EntityStore> store, @Nonnull EncounterRuleAsset rule,
                                             int count, long now) {
         List<Vector3d> out = new ArrayList<>(count);
         long seed = round.worldSeed() ^ ((long) rule.getId().hashCode() << 8) ^ now;
@@ -620,7 +620,7 @@ public final class AiHunterController implements HunterController {
         int fallbackY = (int) ArenaLayout.STAND_Y;
         double radius = Math.max(2.0, rule.ringRadius());
 
-        switch (rule.placement()) {
+        switch (SpawnPlacementKind.fromString(rule.placement())) {
             case DEN -> {
                 Anchor den = ArenaLayout.HUNTER_DEN;
                 int denZ = (int) Math.floor(den.z());
@@ -640,7 +640,7 @@ public final class AiHunterController implements HunterController {
                 // The 0.6 (and the SCATTER 0.4 below) are FIXED ring-band geometry, NOT author-tunable
                 // difficulty knobs: they shape the inner edge of the scatter pattern relative to the
                 // rule-defined ringRadius. If a future pack needs per-rule placement geometry, add
-                // minRadiusFraction()/maxRadiusFraction() to SpawnRuleAsset rather than editing these.
+                // minRadiusFraction()/maxRadiusFraction() to EncounterRuleAsset rather than editing these.
                 double minR = radius * 0.6;
                 for (int i = 0; i < count; i++) {
                     out.add(SpawnPlacement.nearPlayer(world, player.x(), player.z(),

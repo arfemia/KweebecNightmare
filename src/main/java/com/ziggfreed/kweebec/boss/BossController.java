@@ -25,11 +25,11 @@ import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.npc.NPCPlugin;
+import com.ziggfreed.common.instance.encounter.MultiPhaseBossAsset;
 import com.ziggfreed.common.sound.Sound3D;
 import com.ziggfreed.common.world.SpawnPlacement;
 import com.ziggfreed.kweebec.arena.Anchor;
 import com.ziggfreed.kweebec.arena.ArenaLayout;
-import com.ziggfreed.kweebec.asset.BossAsset;
 import com.ziggfreed.kweebec.feedback.BossHud;
 import com.ziggfreed.kweebec.feedback.RoundFeedback;
 import com.ziggfreed.kweebec.i18n.Lang;
@@ -47,8 +47,8 @@ import com.ziggfreed.kweebec.util.SafeLog;
  * <p><b>Why Java-driven phase swaps.</b> The native Goblin_Duke phase system self-drives through ActionRole
  * + TriggerSpawnBeacon over arena prefab-path markers (Throne / Arena). This Warden does NOT replicate that
  * arena instruction tree (that asset surface is owned by the worldgen/arena session), so the swap is a Java
- * backstop: when the live phase entity's HP fraction drops at/below {@link BossAsset#phase2ThresholdFraction()}
- * / {@link BossAsset#phase3ThresholdFraction()}, the controller DESPAWNS the current phase entity and SPAWNS
+ * backstop: when the live phase entity's HP fraction drops at/below {@link MultiPhaseBossAsset#phase2ThresholdFraction()}
+ * / {@link MultiPhaseBossAsset#phase3ThresholdFraction()}, the controller DESPAWNS the current phase entity and SPAWNS
  * the next phase role at the same position (re-rolling HP to the next phase's MaxHealth), plays the roar cue,
  * and summons that phase's adds. The HUD shows the per-phase HP fraction + a "Phase X/Y" indicator.
  *
@@ -72,7 +72,7 @@ public final class BossController {
     /** Add-spawn ring radius (blocks) around the boss for the per-phase Blight summons. */
     private static final double ADD_RING_RADIUS = 6.0;
 
-    private final BossAsset boss;
+    private final MultiPhaseBossAsset boss;
 
     /** The live boss entity (current phase), or {@code null} before spawn / after death. World-thread only. */
     @Nullable private Ref<EntityStore> bossRef;
@@ -86,7 +86,7 @@ public final class BossController {
     /** True once the boss has been defeated (so we resolve/teardown exactly once). World-thread only. */
     private boolean defeated = false;
 
-    private BossController(@Nonnull BossAsset boss) {
+    private BossController(@Nonnull MultiPhaseBossAsset boss) {
         this.boss = boss;
     }
 
@@ -97,7 +97,7 @@ public final class BossController {
      */
     @Nullable
     public static BossController forRound(@Nonnull RoundInstance round) {
-        BossAsset asset = KweebecNightmareAPI.resolveBoss(round.ruleSet().bossId());
+        MultiPhaseBossAsset asset = KweebecNightmareAPI.resolveBoss(round.ruleSet().bossId());
         if (asset == null || asset.phase1Role() == null || asset.phase1Role().isBlank()) {
             SafeLog.warn("[Kweebec][boss] no usable boss resolved for round " + round.roundId()
                     + "; capstone skipped.");

@@ -16,10 +16,12 @@ import com.hypixel.hytale.codec.KeyedCodec;
  * content) or {@code "replace"} (drop the built-in default layer for that type).
  * Absent fields default to {@code add}.
  *
- * <p>Mirrors hyMMO's {@code PackControlAsset}, scoped to Kweebec's content
- * types ({@code Presets}, {@code Hunters}, {@code SpawnRules}). The Control store is registered FIRST
+ * <p>Mirrors hyMMO's {@code PackControlAsset}, scoped to Kweebec's remaining own-codec
+ * content types ({@code Presets}, {@code Hunters}). The Control store is registered FIRST
  * and every content store {@code loadsAfter(KweebecPackControlAsset.class)} so the
- * per-type modes resolve before any content merge handler runs.
+ * per-type modes resolve before any content merge handler runs. (The encounter content -
+ * bosses, banded effects, encounter rules, prefab placements - moved to ziggfreed-common,
+ * which ships zero defaults so it needs no add/replace control.)
  *
  * <p>Author example:
  * <pre>{@code { "Name": "MyKweebecPack", "Presets": "replace", "Hunters": "add" } }</pre>
@@ -31,18 +33,12 @@ public final class KweebecPackControlAsset
     public static final String PRESETS = "presets";
     /** Content-type key for the hunter archetypes store. */
     public static final String HUNTERS = "hunters";
-    /** Content-type key for the extra-spawn-rules store. */
-    public static final String SPAWNRULES = "spawnrules";
-    /** Content-type key for the boss-capstone store. */
-    public static final String BOSSES = "bosses";
 
     private String id;
     private AssetExtraInfo.Data data;
 
     private String presets;
     private String hunters;
-    private String spawnRules;
-    private String bosses;
 
     public static final AssetBuilderCodec<String, KweebecPackControlAsset> CODEC = AssetBuilderCodec.builder(
                     KweebecPackControlAsset.class,
@@ -62,10 +58,6 @@ public final class KweebecPackControlAsset
             .add()
             .append(new KeyedCodec<>("Hunters", Codec.STRING, false), (a, v) -> a.hunters = v, a -> a.hunters)
             .add()
-            .append(new KeyedCodec<>("SpawnRules", Codec.STRING, false), (a, v) -> a.spawnRules = v, a -> a.spawnRules)
-            .add()
-            .append(new KeyedCodec<>("Bosses", Codec.STRING, false), (a, v) -> a.bosses = v, a -> a.bosses)
-            .add()
             .build();
 
     public KweebecPackControlAsset() {
@@ -82,8 +74,6 @@ public final class KweebecPackControlAsset
         String value = switch (typeKey) {
             case PRESETS -> presets;
             case HUNTERS -> hunters;
-            case SPAWNRULES -> spawnRules;
-            case BOSSES -> bosses;
             default -> null;
         };
         return (value == null || value.isBlank()) ? "add" : value;

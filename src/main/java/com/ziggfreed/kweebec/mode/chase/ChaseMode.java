@@ -23,7 +23,7 @@ import com.ziggfreed.common.sound.BlockStateSound;
 import com.ziggfreed.common.worldmap.WorldMapMarkers;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
-import com.ziggfreed.kweebec.asset.SpawnRuleAsset;
+import com.ziggfreed.kweebec.hunter.SpawnTrigger;
 import com.ziggfreed.kweebec.atmosphere.MusicBedService;
 import com.ziggfreed.kweebec.boss.BossController;
 import com.ziggfreed.kweebec.arena.Anchor;
@@ -126,12 +126,12 @@ public final class ChaseMode {
                 int newTier = chase.pollTierIncrease();
                 if (newTier >= 0) {
                     hunter.evaluateSpawnRules(round, world, store,
-                            SpawnRuleAsset.Trigger.CORRUPTION_TIER, newTier);
+                            SpawnTrigger.CORRUPTION_TIER, newTier);
                 }
                 hunter.evaluateSpawnRules(round, world, store,
-                        SpawnRuleAsset.Trigger.TIME_ELAPSED, round.durationSeconds());
+                        SpawnTrigger.TIME_ELAPSED, round.durationSeconds());
                 hunter.evaluateSpawnRules(round, world, store,
-                        SpawnRuleAsset.Trigger.PLAYER_PROXIMITY, 0);
+                        SpawnTrigger.PLAYER_PROXIMITY, 0);
             }
             // Per-survivor horror conductor: proximity vignette (hysteresis) + jumpscare +
             // whisper layer + tier music escalation. Best-effort; never throws into the loop.
@@ -249,7 +249,7 @@ public final class ChaseMode {
         if (hunter != null) {
             hunter.spawn(round, world, store);
             // Round-start extra-spawn rules (e.g. an opening flanker near the party). Best-effort.
-            hunter.evaluateSpawnRules(round, world, store, SpawnRuleAsset.Trigger.ROUND_START, 0);
+            hunter.evaluateSpawnRules(round, world, store, SpawnTrigger.ROUND_START, 0);
         }
         HeartbeatService.start(round);
         forEachPresent(round, pr -> RoundFeedback.title(pr,
@@ -311,7 +311,7 @@ public final class ChaseMode {
         if (hunter != null) {
             int liveBefore = hunter.hunterPositions(world.getEntityStore().getStore()).size();
             hunter.evaluateSpawnRules(round, world, world.getEntityStore().getStore(),
-                    SpawnRuleAsset.Trigger.SHRINE_LIT, 0);
+                    SpawnTrigger.SHRINE_LIT, 0);
             int liveAfter = hunter.hunterPositions(world.getEntityStore().getStore()).size();
             if (liveAfter > liveBefore) {
                 forEachPresent(round, pr -> RoundFeedback.dangerToast(pr, Lang.TOAST_HUNTERS_DRAWN));

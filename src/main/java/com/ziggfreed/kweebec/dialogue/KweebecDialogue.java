@@ -11,6 +11,7 @@ import com.hypixel.hytale.server.core.Message;
 import com.ziggfreed.common.dialogue.DialogueEngine;
 import com.ziggfreed.common.dialogue.DialogueExecContext;
 import com.ziggfreed.common.dialogue.NpcDialogue;
+import com.ziggfreed.common.dialogue.asset.DialogueAssetStore;
 import com.ziggfreed.common.dialogue.i18n.DialogueI18n;
 import com.ziggfreed.common.dialogue.i18n.I18nModuleDialogueI18n;
 import com.ziggfreed.common.dialogue.page.DialoguePageDeps;
@@ -67,8 +68,13 @@ public final class KweebecDialogue {
                 .warn(KweebecDialogue::warn)
                 .build();
 
-        decodeInto(engine, INTRO_ID, INTRO_JSON);
-        decodeInto(engine, NIGHTMARES_INTRO_ID, NIGHTMARES_INTRO_JSON);
+        // Pull the authored bodies from the common dialogue store (pack JSON under
+        // Server/ZiggfreedCommon/Dialogues/, filtered to this game's Owner) and decode them
+        // through THIS engine (its domain Play/NotInRound/Engaged types). Runs lazily on first
+        // use (an NPC/command opening a dialogue), which is after the LoadedAssetsEvent fold, so
+        // the store is populated. Re-call to pick up a hot re-import.
+        DIALOGUES.clear();
+        DIALOGUES.putAll(DialogueAssetStore.getInstance().resolveAll(engine, "kweebec"));
 
         DialogueI18n i18n = new I18nModuleDialogueI18n("kweebecnightmare.");
         deps = new DialoguePageDeps(
@@ -81,14 +87,6 @@ public final class KweebecDialogue {
                 i18n,
                 KweebecDialogue::npcName,
                 null);
-    }
-
-    /** Decode an authored body and key it on the canonical (engine-lowercased) id. */
-    private static void decodeInto(@Nonnull DialogueEngine engine, @Nonnull String id, @Nonnull String json) {
-        NpcDialogue d = engine.decodeAuthored(id, json);
-        if (d != null) {
-            DIALOGUES.put(d.getId(), d);
-        }
     }
 
     /** The dialogue header name, chosen by the opening NPC's context id. */
@@ -127,77 +125,4 @@ public final class KweebecDialogue {
             // log-manager-less unit JVM; swallow.
         }
     }
-
-    /**
-     * The demo dialogue (the "Whispering Sapling"): a greeting with a lore branch, a
-     * warning branch that SETS a flag, and a flag-gated "secret" option that only
-     * appears after the warning. Demonstrates greet/goto/close, option sugar
-     * ({@code Goto}), canonical {@code SetFlag} actions, and {@code Flag}-gated
-     * conditions - the full generic feature set, with no MMO domain types.
-     */
-    private static final String INTRO_JSON = """
-            {
-              "Start": [{ "Node": "greet" }],
-              "Nodes": {
-                "greet": {
-                  "Options": [
-                    { "Goto": "lore" },
-                    { "Actions": [
-                        { "Type": "SetFlag", "Flag": "warned" },
-                        { "Type": "Goto", "Node": "warning" }
-                    ] },
-                    { "Conditions": [{ "Type": "Flag", "Flag": "warned" }], "Goto": "secret" }
-                  ]
-                },
-                "lore":    { "Options": [ { "Goto": "greet" } ] },
-                "warning": { "Options": [ { "Goto": "greet" } ] },
-                "secret":  { "Options": [ { "Goto": "greet" } ] }
-              }
-            }
-            """;
-
-    /**
-     * The guide NPC's dialogue ("The Grove Warden"): introduces the nightmare, a lore
-     * branch telling the backstory, then a {@code preset_pick} node whose options each
-     * open the Play / queue-mode chooser for a Chase preset via {@link OpenPlayAction} -
-     * gated by
-     * {@link NotInRoundCondition} so they vanish once the player commits. An
-     * {@link EngagedCondition}-gated branch points an already-queued player at an
-     * {@code already_engaged} note. Launch options are the three canonical difficulties;
-     * the variety presets stay reachable via {@code /kweebec start <preset>}.
-     */
-    private static final String NIGHTMARES_INTRO_JSON = """
-            {
-              "Start": [{ "Node": "greet" }],
-              "Nodes": {
-                "greet": {
-                  "Options": [
-                    { "Goto": "lore" },
-                    { "Conditions": [{ "Type": "NotInRound" }], "Goto": "preset_pick" },
-                    { "Conditions": [{ "Type": "Engaged" }], "Goto": "already_engaged" },
-                    { "Open": "leaderboard" }
-                  ]
-                },
-                "lore": {
-                  "Options": [
-                    { "Conditions": [{ "Type": "NotInRound" }], "Goto": "preset_pick" },
-                    { "Goto": "greet" }
-                  ]
-                },
-                "preset_pick": {
-                  "Options": [
-                    { "Conditions": [{ "Type": "NotInRound" }], "Play": "amateur" },
-                    { "Conditions": [{ "Type": "NotInRound" }], "Play": "nightmare" },
-                    { "Conditions": [{ "Type": "NotInRound" }], "Play": "hardcore" },
-                    { "Goto": "greet" }
-                  ]
-                },
-                "already_engaged": {
-                  "Options": [
-                    { "Goto": "greet" }
-                  ]
-                }
-              }
-            }
-            """;
 }
