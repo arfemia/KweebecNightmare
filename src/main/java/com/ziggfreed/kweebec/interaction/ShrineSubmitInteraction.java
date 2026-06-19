@@ -25,6 +25,7 @@ import com.ziggfreed.kweebec.mode.chase.ChaseState;
 import com.ziggfreed.kweebec.mode.chase.ShrineState;
 import com.ziggfreed.kweebec.moonbloom.Moonbloom;
 import com.ziggfreed.kweebec.round.ChasePhase;
+import com.ziggfreed.kweebec.round.PlayerRoundState;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.round.RoundService;
 
@@ -122,6 +123,7 @@ public final class ShrineSubmitInteraction extends SimpleInstantInteraction {
             if (required <= 0) {
                 // Supply-free dial (cleanseCost 0): light on the first press.
                 ChaseMode.lightShrine(round, world, chase, shrine);
+                creditShrineLit(round, uuid);
                 ctx.getState().state = InteractionState.Finished;
                 return;
             }
@@ -144,6 +146,7 @@ public final class ShrineSubmitInteraction extends SimpleInstantInteraction {
             shrine.addSubmitted(taken);
             if (shrine.submitted() >= required) {
                 ChaseMode.lightShrine(round, world, chase, shrine);
+                creditShrineLit(round, uuid);
             } else {
                 RoundFeedback.infoToast(pr,
                         Lang.msg(Lang.TOAST_SHRINE_SUBMIT).param("0", shrine.submitted()).param("1", required));
@@ -152,6 +155,14 @@ public final class ShrineSubmitInteraction extends SimpleInstantInteraction {
         } catch (Throwable t) {
             KweebecNightmarePlugin.LOGGER.atWarning().log("[Kweebec] shrine submit failed: " + t.getMessage());
             ctx.getState().state = InteractionState.Failed;
+        }
+    }
+
+    /** Credit the player who lit a shrine on their round state (lifetime-stat input; world thread). */
+    private static void creditShrineLit(@Nonnull RoundInstance round, @Nonnull UUID uuid) {
+        PlayerRoundState st = round.playerState(uuid);
+        if (st != null) {
+            st.incrementShrinesLit();
         }
     }
 }

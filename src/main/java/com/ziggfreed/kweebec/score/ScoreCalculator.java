@@ -21,7 +21,8 @@ public final class ScoreCalculator {
 
     @Nonnull
     public static PlayerScore compute(int durationSeconds, float damageTaken, int mobsStunned,
-                                      boolean win, @Nonnull ScoringConfig cfg) {
+                                      int moonbloomCollected, int shrinesLit, boolean win,
+                                      @Nonnull ScoringConfig cfg) {
         int safeDuration = Math.max(0, durationSeconds);
         float safeDamage = Math.max(0.0f, damageTaken);
         int safeStuns = Math.max(0, mobsStunned);
@@ -33,7 +34,9 @@ public final class ScoreCalculator {
         int stunBonus = safeStuns * cfg.stunBonusPer();
 
         int total = Math.max(0, cfg.baseline() + timeComponent + damageComponent + stunBonus);
+        // moonbloomCollected + shrinesLit are carried as lifetime-stat inputs only (not weighted into total).
         return new PlayerScore(total, timeComponent, damageComponent, stunBonus,
-                safeDuration, safeDamage, safeStuns, win);
+                safeDuration, safeDamage, safeStuns, Math.max(0, moonbloomCollected),
+                Math.max(0, shrinesLit), win);
     }
 }

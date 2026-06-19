@@ -17,6 +17,7 @@ import com.ziggfreed.kweebec.command.KweebecTalkCommand;
 import com.ziggfreed.kweebec.death.CocoonOnDeathSystem;
 import com.ziggfreed.kweebec.dialogue.KweebecDialogue;
 import com.ziggfreed.kweebec.event.KweebecDamageSystem;
+import com.ziggfreed.kweebec.event.MoonbloomCollectSystem;
 import com.ziggfreed.kweebec.interaction.ShrineSubmitInteraction;
 import com.ziggfreed.kweebec.lobby.KweebecLobby;
 import com.ziggfreed.kweebec.npc.KweebecGuideConfig;
@@ -71,6 +72,10 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // Damage observer: thrown-Moonbloom stun attribution + per-survivor damage-taken
         // scoring. Read-only outside in-round players (never alters damage elsewhere).
         getEntityStoreRegistry().registerSystem(new KweebecDamageSystem());
+
+        // Moonbloom-gathered observer: credits a lifetime stat when an in-round player harvests
+        // a Moonbloom plant (gather is asset-only, so this supplies the Java seam). Read-only.
+        getEntityStoreRegistry().registerSystem(new MoonbloomCollectSystem());
 
         // Round entry command (the first of the designed-for triggers).
         getCommandRegistry().registerCommand(new KweebecCommand());

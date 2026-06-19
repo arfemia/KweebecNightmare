@@ -120,11 +120,26 @@ public final class Lang {
     public static final String LB_COL_RANK = "kweebecnightmare.leaderboard.col.rank";
     public static final String LB_COL_PLAYER = "kweebecnightmare.leaderboard.col.player";
     public static final String LB_COL_SCORE = "kweebecnightmare.leaderboard.col.score";
+    public static final String LB_COL_TOTAL = "kweebecnightmare.leaderboard.col.total";
     public static final String LB_COL_TIME = "kweebecnightmare.leaderboard.col.time";
     public static final String LB_COL_PLAYS = "kweebecnightmare.leaderboard.col.plays";
     public static final String LB_EMPTY = "kweebecnightmare.leaderboard.empty";
     public static final String LB_YOUR_RANK = "kweebecnightmare.leaderboard.your_rank";
     public static final String LB_YOUR_RANK_NONE = "kweebecnightmare.leaderboard.your_rank_none";
+    // Sort toggle + Rankings/Stats view toggle button labels.
+    public static final String LB_SORT_SCORE = "kweebecnightmare.leaderboard.sort.score";
+    public static final String LB_SORT_TOTAL = "kweebecnightmare.leaderboard.sort.total";
+    public static final String LB_SORT_TIME = "kweebecnightmare.leaderboard.sort.time";
+    public static final String LB_VIEW_RANKINGS = "kweebecnightmare.leaderboard.view.rankings";
+    public static final String LB_VIEW_STATS = "kweebecnightmare.leaderboard.view.stats";
+    // Lifetime stat column labels (Stats view).
+    public static final String LB_STAT_STUNNED = "kweebecnightmare.leaderboard.stat.stunned";
+    public static final String LB_STAT_MOONBLOOM = "kweebecnightmare.leaderboard.stat.moonbloom";
+    public static final String LB_STAT_SHRINES = "kweebecnightmare.leaderboard.stat.shrines";
+    // Difficulty tab labels reuse the existing preset names.
+    public static final String PRESET_AMATEUR = "kweebecnightmare.preset.amateur.name";
+    public static final String PRESET_NIGHTMARE = "kweebecnightmare.preset.nightmare.name";
+    public static final String PRESET_HARDCORE = "kweebecnightmare.preset.hardcore.name";
 
     // End-of-game results screen (the common instance-experience ResultsPage).
     public static final String RESULTS_WIN = "kweebecnightmare.results.win";

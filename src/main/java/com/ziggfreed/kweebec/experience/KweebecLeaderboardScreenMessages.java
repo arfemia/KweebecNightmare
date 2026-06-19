@@ -27,6 +27,10 @@ public final class KweebecLeaderboardScreenMessages implements LeaderboardScreen
         return Lang.msg(Lang.LB_COL_SCORE);
     }
 
+    @Override @Nonnull public Message colTotal() {
+        return Lang.msg(Lang.LB_COL_TOTAL);
+    }
+
     @Override @Nonnull public Message colTime() {
         return Lang.msg(Lang.LB_COL_TIME);
     }
@@ -37,6 +41,26 @@ public final class KweebecLeaderboardScreenMessages implements LeaderboardScreen
 
     @Override @Nonnull public Message empty() {
         return Lang.msg(Lang.LB_EMPTY);
+    }
+
+    @Override @Nonnull public Message sortScore() {
+        return Lang.msg(Lang.LB_SORT_SCORE);
+    }
+
+    @Override @Nonnull public Message sortTotal() {
+        return Lang.msg(Lang.LB_SORT_TOTAL);
+    }
+
+    @Override @Nonnull public Message sortTime() {
+        return Lang.msg(Lang.LB_SORT_TIME);
+    }
+
+    @Override @Nonnull public Message viewRankings() {
+        return Lang.msg(Lang.LB_VIEW_RANKINGS);
+    }
+
+    @Override @Nonnull public Message viewStats() {
+        return Lang.msg(Lang.LB_VIEW_STATS);
     }
 
     @Override @Nonnull public Message yourRank(int rank, long bestScore) {

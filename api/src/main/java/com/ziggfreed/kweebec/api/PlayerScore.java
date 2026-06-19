@@ -21,10 +21,13 @@ public final class PlayerScore {
     private final int durationSeconds;
     private final float damageTaken;
     private final int mobsStunned;
+    private final int moonbloomCollected;
+    private final int shrinesLit;
     private final boolean win;
 
     public PlayerScore(int total, int timeComponent, int damageComponent, int stunBonus,
-                       int durationSeconds, float damageTaken, int mobsStunned, boolean win) {
+                       int durationSeconds, float damageTaken, int mobsStunned,
+                       int moonbloomCollected, int shrinesLit, boolean win) {
         this.total = total;
         this.timeComponent = timeComponent;
         this.damageComponent = damageComponent;
@@ -32,6 +35,8 @@ public final class PlayerScore {
         this.durationSeconds = durationSeconds;
         this.damageTaken = damageTaken;
         this.mobsStunned = mobsStunned;
+        this.moonbloomCollected = moonbloomCollected;
+        this.shrinesLit = shrinesLit;
         this.win = win;
     }
 
@@ -70,6 +75,16 @@ public final class PlayerScore {
         return mobsStunned;
     }
 
+    /** Moonbloom charges this player gathered this round (a lifetime-stat input; not weighted into total). */
+    public int moonbloomCollected() {
+        return moonbloomCollected;
+    }
+
+    /** Shrines this player personally lit this round (a lifetime-stat input; not weighted into total). */
+    public int shrinesLit() {
+        return shrinesLit;
+    }
+
     /** Whether this player's round ended in a win (escaped / survived). */
     public boolean win() {
         return win;
@@ -81,6 +96,7 @@ public final class PlayerScore {
         return "PlayerScore{total=" + total + ", time=" + timeComponent
                 + ", dmg=" + damageComponent + ", stun=" + stunBonus
                 + ", dur=" + durationSeconds + "s, dmgTaken=" + damageTaken
-                + ", stuns=" + mobsStunned + ", win=" + win + "}";
+                + ", stuns=" + mobsStunned + ", bloom=" + moonbloomCollected
+                + ", shrines=" + shrinesLit + ", win=" + win + "}";
     }
 }

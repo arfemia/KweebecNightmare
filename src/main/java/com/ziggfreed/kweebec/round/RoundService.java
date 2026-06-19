@@ -336,7 +336,8 @@ public final class RoundService {
                     || (outcome == RoundCompletedEvent.Outcome.SURVIVED
                         && !st.isCocooned() && !st.hasLeftRound()));
             scores.put(st.playerId(), ScoreCalculator.compute(
-                    duration, st.damageTaken(), st.mobsStunned(), playerWin, scoring));
+                    duration, st.damageTaken(), st.mobsStunned(),
+                    st.moonbloomCollected(), st.shrinesLit(), playerWin, scoring));
         }
         return scores;
     }

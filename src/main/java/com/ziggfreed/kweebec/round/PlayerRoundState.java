@@ -38,6 +38,10 @@ public final class PlayerRoundState {
     private float damageTaken;
     /** How many hunters this player has stunned with a thrown Moonbloom this round (scoring bonus input). */
     private int mobsStunned;
+    /** How many Moonbloom charges this player gathered this round (lifetime-stat input). */
+    private int moonbloomCollected;
+    /** How many shrines this player personally lit this round (lifetime-stat input). */
+    private int shrinesLit;
 
     public PlayerRoundState(@Nonnull UUID playerId) {
         this.playerId = playerId;
@@ -157,6 +161,28 @@ public final class PlayerRoundState {
     /** Record one hunter stunned by this player (world thread). */
     public void incrementMobsStunned() {
         this.mobsStunned++;
+    }
+
+    /** Moonbloom charges this player gathered this round (lifetime-stat input). */
+    public int moonbloomCollected() {
+        return moonbloomCollected;
+    }
+
+    /** Record gathered Moonbloom charges (world thread; from the harvest hook). Non-positive deltas ignored. */
+    public void addMoonbloomCollected(int delta) {
+        if (delta > 0) {
+            this.moonbloomCollected += delta;
+        }
+    }
+
+    /** Shrines this player personally lit this round (lifetime-stat input). */
+    public int shrinesLit() {
+        return shrinesLit;
+    }
+
+    /** Record one shrine lit by this player (world thread; from the shrine-submit interaction). */
+    public void incrementShrinesLit() {
+        this.shrinesLit++;
     }
 
     /**

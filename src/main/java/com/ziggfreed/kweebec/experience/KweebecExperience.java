@@ -24,6 +24,7 @@ import com.ziggfreed.common.asset.AssetMergeAdapter;
 import com.ziggfreed.common.instance.leaderboard.Leaderboard;
 import com.ziggfreed.common.instance.leaderboard.LeaderboardBucketTab;
 import com.ziggfreed.common.instance.leaderboard.LeaderboardPageDeps;
+import com.ziggfreed.common.instance.leaderboard.StatColumnDef;
 import com.ziggfreed.common.instance.preset.InstancePreset;
 import com.ziggfreed.common.instance.preset.InstancePresetAsset;
 import com.ziggfreed.common.instance.preset.InstancePresetConfig;
@@ -67,6 +68,11 @@ public final class KweebecExperience {
     private static final int ARENA_MAX_PARTY = 4;
     private static final int INVITE_TIMEOUT_SECONDS = 60;
 
+    /** Lifetime-stat bucket keys (shared by the recorded deltas and the Stats-view columns). */
+    private static final String STAT_STUNNED = "stunned";
+    private static final String STAT_MOONBLOOM = "moonbloom";
+    private static final String STAT_SHRINES = "shrines";
+
     private static Leaderboard board;
     private static PartyService partyService;
     private static PendingRewardStore pendingRewards;
@@ -80,18 +86,31 @@ public final class KweebecExperience {
 
     /** Build + load the experience layer. Call once at plugin setup (after KweebecLobby.init). */
     public static void init(@Nullable Path dataDir) {
-        board = new Leaderboard("leaderboard");
+        // One board PER game-mode (Survival later adds "leaderboard-survival"); buckets within it
+        // are "<difficulty>_<partySize>". The old party-size-only "leaderboard.json" is left orphaned
+        // (pre-release; the bucket scheme changed).
+        board = new Leaderboard("leaderboard-chase");
         board.init(dataDir);
         pendingRewards = new PendingRewardStore("pending-rewards");
         pendingRewards.init(dataDir);
         partyService = new PartyService(GAME_ID, new PartyConfig(ARENA_MAX_PARTY, INVITE_TIMEOUT_SECONDS, false),
                 new KweebecPartyMessages());
 
-        leaderboardDeps = new LeaderboardPageDeps(board, List.of(
-                new LeaderboardBucketTab("1", Lang.msg(Lang.LB_TAB_SOLO)),
-                new LeaderboardBucketTab("2", Lang.msg(Lang.LB_TAB_DUO)),
-                new LeaderboardBucketTab("3", Lang.msg(Lang.LB_TAB_TRIO)),
-                new LeaderboardBucketTab("4", Lang.msg(Lang.LB_TAB_SQUAD))),
+        // PRIMARY axis = difficulty (preset ids; labels reuse the preset names), SECONDARY = party size.
+        leaderboardDeps = new LeaderboardPageDeps(board,
+                List.of(
+                        new LeaderboardBucketTab("amateur", Lang.msg(Lang.PRESET_AMATEUR)),
+                        new LeaderboardBucketTab("nightmare", Lang.msg(Lang.PRESET_NIGHTMARE)),
+                        new LeaderboardBucketTab("hardcore", Lang.msg(Lang.PRESET_HARDCORE))),
+                List.of(
+                        new LeaderboardBucketTab("1", Lang.msg(Lang.LB_TAB_SOLO)),
+                        new LeaderboardBucketTab("2", Lang.msg(Lang.LB_TAB_DUO)),
+                        new LeaderboardBucketTab("3", Lang.msg(Lang.LB_TAB_TRIO)),
+                        new LeaderboardBucketTab("4", Lang.msg(Lang.LB_TAB_SQUAD))),
+                List.of(
+                        StatColumnDef.grouped(STAT_STUNNED, Lang.msg(Lang.LB_STAT_STUNNED)),
+                        StatColumnDef.grouped(STAT_MOONBLOOM, Lang.msg(Lang.LB_STAT_MOONBLOOM)),
+                        StatColumnDef.grouped(STAT_SHRINES, Lang.msg(Lang.LB_STAT_SHRINES))),
                 new KweebecLeaderboardScreenMessages());
         resultsDeps = new ResultsPageDeps(new KweebecResultsMessages(), new KweebecResultsActions());
         partyDeps = new PartyPageDeps(partyService, new KweebecPartyScreenMessages(), KweebecParty::queueParty);
@@ -146,7 +165,7 @@ public final class KweebecExperience {
      */
     public static void recordScores(int partySize, @Nonnull RoundInstance round,
                                     @Nonnull Map<UUID, PlayerScore> scores) {
-        String bucket = String.valueOf(partySize);
+        String bucket = bucketKey(round.ruleSet().presetId(), partySize);
         for (PlayerRoundState st : round.playerStates()) {
             if (st.hasLeftRound()) {
                 continue;
@@ -157,8 +176,18 @@ public final class KweebecExperience {
             }
             PlayerRef pr = Universe.get().getPlayer(st.playerId());
             String name = pr != null ? pr.getUsername() : null;
-            board.record(bucket, st.playerId(), name, ps.total(), ps.durationSeconds(), ps.win());
+            Map<String, Long> statDeltas = Map.of(
+                    STAT_STUNNED, (long) ps.mobsStunned(),
+                    STAT_MOONBLOOM, (long) ps.moonbloomCollected(),
+                    STAT_SHRINES, (long) ps.shrinesLit());
+            board.record(bucket, st.playerId(), name, ps.total(), ps.durationSeconds(), ps.win(), statDeltas);
         }
+    }
+
+    /** The leaderboard bucket key for a round: {@code "<difficulty>_<partySize>"}. */
+    @Nonnull
+    public static String bucketKey(@Nonnull String presetId, int partySize) {
+        return presetId + "_" + partySize;
     }
 
     /**
@@ -172,7 +201,8 @@ public final class KweebecExperience {
                                    @Nonnull Map<UUID, PlayerScore> scores) {
         ResultKind kind = win ? ResultKind.WIN
                 : (outcome == RoundCompletedEvent.Outcome.ABORTED ? ResultKind.ABORT : ResultKind.LOSS);
-        String bucket = String.valueOf(round.partySize());
+        // The leaderboard CTA deep-links to the just-played difficulty + party-size bucket.
+        String bucket = bucketKey(round.ruleSet().presetId(), round.partySize());
         TeamResult team = buildTeam(round, scores);
         InstancePreset preset = InstancePresetConfig.getInstance().resolve(round.ruleSet().presetId());
 

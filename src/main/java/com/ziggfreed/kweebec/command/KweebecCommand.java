@@ -245,14 +245,15 @@ public final class KweebecCommand extends CommandBase {
         }
         UUID uuid = player.getUuid();
         boolean any = false;
-        for (int ps = 1; ps <= MAX_PARTY_SIZE; ps++) {
-            LeaderboardEntry e = KweebecExperience.board().forBucket(String.valueOf(ps)).get(uuid);
+        // Buckets are now "<difficulty>_<partySize>"; scan every recorded bucket the caller appears in.
+        for (String bucket : new java.util.TreeSet<>(KweebecExperience.board().bucketKeys())) {
+            LeaderboardEntry e = KweebecExperience.board().forBucket(bucket).get(uuid);
             if (e != null) {
                 if (!any) {
                     ctx.sendMessage(Lang.msg(Lang.CMD_SCORE_HEADER));
                     any = true;
                 }
-                ctx.sendMessage(Message.raw(formatEntry(ps + "p", e)));
+                ctx.sendMessage(Message.raw(formatEntry(bucket, e)));
             }
         }
         if (!any) {
@@ -268,9 +269,6 @@ public final class KweebecCommand extends CommandBase {
         }
         openPage(player, new LeaderboardPage(player, KweebecExperience.leaderboardDeps()));
     }
-
-    /** Largest party size the score chat surface scans. */
-    private static final int MAX_PARTY_SIZE = 8;
 
     @Nonnull
     private static String formatEntry(@Nonnull String label, @Nonnull LeaderboardEntry e) {

@@ -166,12 +166,23 @@ leaderboard.tab.trio = Trio
 leaderboard.tab.squad = Squad
 leaderboard.col.rank = Rank
 leaderboard.col.player = Survivor
-leaderboard.col.score = Score
+leaderboard.col.score = Best Score
+leaderboard.col.total = Total
 leaderboard.col.time = Best Time
 leaderboard.col.plays = Runs
 leaderboard.empty = No survivors have been recorded in this bracket yet. Be the first.
-leaderboard.your_rank = Your best: #{0}  ({1} pts)
+leaderboard.your_rank = Your best: #{0}  ({1})
 leaderboard.your_rank_none = You have no ranked run in this bracket yet.
+# Sort toggle + Rankings/Stats view toggle buttons.
+leaderboard.sort.score = Best Score
+leaderboard.sort.total = Total Points
+leaderboard.sort.time = Fastest
+leaderboard.view.rankings = Rankings
+leaderboard.view.stats = Stats
+# Lifetime stat columns (Stats view).
+leaderboard.stat.stunned = Stunned
+leaderboard.stat.moonbloom = Moonbloom
+leaderboard.stat.shrines = Shrines Lit
 
 # End-of-game results screen (the shared instance-experience ResultsPage).
 results.win = You Survived
