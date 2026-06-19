@@ -87,11 +87,12 @@ public final class ArenaLayout {
     public static final int SURFACE_WORLDGEN_SHRINES = 3;
 
     /**
-     * The fixed (X, Z) of each worldgen surface shrine host - the biome {@code List}-prop positions, spread
-     * across quadrants clear of spawn (r6 courtyard), the gate corridor (-Z), and the cave anchors (r~38).
-     * Y floor-snaps at gen time. Used ONLY to cluster the Moonbloom SUPPLY near each shrine; the shrine
-     * OBJECTIVE is discovered via its furnace interaction (see {@code ChaseState.shrineForBlock}), never these
-     * coords. MUST match the biome JSON's shrine-host List positions.
+     * FALLBACK (X, Z) spots for clustering the Moonbloom SUPPLY when the real shrine positions are not yet
+     * known. The surface shrine hosts SCATTER randomly (biome {@code Mesh2D} props), so these fixed guesses
+     * rarely sit on an actual shrine; {@code ShrinePlacement} detects the real positions at round start and
+     * publishes them to {@code ChaseState.surfaceShrinePositions()}, which {@code ArenaBuilder.plantMoonbloom}
+     * prefers - these coords are used only until that detection completes. The shrine OBJECTIVE is discovered
+     * via its furnace interaction (see {@code ChaseState.shrineForBlock}), never these coords.
      */
     public static final double[][] WORLDGEN_SHRINE_XZ = {
             {52.0, 58.0},

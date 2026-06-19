@@ -48,12 +48,28 @@ public final class ExclusionMask {
     }
 
     /**
-     * Build the mask from the fixed {@link ArenaLayout} gameplay anchors. Track B will
-     * extend this (a per-round variant fed the seeded shrine ring + cave anchors); for
-     * now the static layout discs are exact because the cycle-2 layout is deterministic.
+     * Build the mask from the fixed {@link ArenaLayout} gameplay anchors. Used to keep DECORATIVE
+     * structures off the gameplay beats, so it includes the whole surface-shrine ring band.
      */
     @Nonnull
     public static ExclusionMask defaultMask() {
+        return build(true);
+    }
+
+    /**
+     * The keep-clear mask for placing SHRINES themselves (the runtime top-up of missing surface
+     * shrines - see {@code ShrinePlacement}): identical to {@link #defaultMask()} but WITHOUT the
+     * surface-shrine ring band disc. A shrine is SUPPOSED to live in that band, so excluding it would
+     * reject every ring candidate; this variant still keeps top-up shrines off the spawn courtyard,
+     * the gate -> escape corridor, the hunter den, and the cave-shaft entrances.
+     */
+    @Nonnull
+    public static ExclusionMask shrinePlacementMask() {
+        return build(false);
+    }
+
+    @Nonnull
+    private static ExclusionMask build(boolean includeShrineRingBand) {
         List<Disc> out = new ArrayList<>();
 
         // Spawn courtyard: the r6 flat spawn clearing plus a comfortable walk-out buffer,
@@ -62,10 +78,13 @@ public final class ExclusionMask {
         out.add(new Disc(ArenaLayout.SPAWN.x(), ArenaLayout.SPAWN.z(), SPAWN_COURTYARD_RADIUS));
 
         // The whole surface shrine ring band: ring radius + the channel reach + a buffer, as ONE
-        // disc centered on spawn. Structures live in the mid grove OUTSIDE this, so swallowing the
-        // inner ring with a single disc is correct and avoids per-shrine bookkeeping at this stage.
-        out.add(new Disc(ArenaLayout.SPAWN.x(), ArenaLayout.SPAWN.z(),
-                SHRINE_RING_RADIUS + ArenaLayout.INTERACT_RADIUS + SHRINE_RING_BUFFER));
+        // disc centered on spawn. Decorative structures live in the mid grove OUTSIDE this, so
+        // swallowing the inner ring with a single disc is correct; shrine TOP-UP placement omits it
+        // (the ring is exactly where a shrine belongs).
+        if (includeShrineRingBand) {
+            out.add(new Disc(ArenaLayout.SPAWN.x(), ArenaLayout.SPAWN.z(),
+                    SHRINE_RING_RADIUS + ArenaLayout.INTERACT_RADIUS + SHRINE_RING_BUFFER));
+        }
 
         // The gate -> escape corridor on the -z axis: a string of overlapping discs from the gate
         // (and a little south of spawn) out past the escape pad, so nothing blocks the climactic run.

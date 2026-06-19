@@ -310,8 +310,8 @@
   "Props": [
     {
       "Skip": false,
-      "Runtime": 0,
-      "$Comment": "1C: ambient blight trees scattered by WORLDGEN (replaces the runtime ArenaBuilder foliage ring, per the design's 'trees from worldgen, not manual paste'). A sparse Mesh2D grid of weighted native dead/poisoned tree prefabs (FULL ATMOSPHERIC PASS: ash/poisoned/petrified/burnt-dead stages plus rare Ash_twisted Large/Giant canopy landmarks; density unchanged, only the variety widened - all paths verified to resolve to native prefab folders), floor-snapped to the rolling surface by the ColumnLinear scanner; BlockMask.DontReplace keeps trunks from gouging the soil. A malformed Prefab prop fails the WHOLE biome decode (= all air), so this mirrors the proven vanilla Example_Prop 'Hills' Prefab-prop shape exactly. Validate in-game (the biome JSON is not gradle-compiled).",
+      "Runtime": 1,
+      "$Comment": "TREE COLLISION FIX (Runtime 1): trees run in a LATER prop runtime than the structures (which stay Runtime 0). PropStage copies the previous runtime's material output as this runtime's input (PropStage.run:180), so a Runtime-1 tree READS the placed Runtime-0 crypts/houses/ruins; its Floor pattern (Soil_Grass_Dry under Empty) then FAILS on a structure footprint (now rock/brick) and the tree skips it, instead of growing through the building. Trees still place normally on open grass. 1C: ambient blight trees scattered by WORLDGEN (replaces the runtime ArenaBuilder foliage ring, per the design's 'trees from worldgen, not manual paste'). A sparse Mesh2D grid of weighted native dead/poisoned tree prefabs (FULL ATMOSPHERIC PASS: ash/poisoned/petrified/burnt-dead stages plus rare Ash_twisted Large/Giant canopy landmarks; density unchanged, only the variety widened - all paths verified to resolve to native prefab folders), floor-snapped to the rolling surface by the ColumnLinear scanner; BlockMask.DontReplace keeps trunks from gouging the soil. A malformed Prefab prop fails the WHOLE biome decode (= all air), so this mirrors the proven vanilla Example_Prop 'Hills' Prefab-prop shape exactly. Validate in-game (the biome JSON is not gradle-compiled).",
       "Positions": {
         "Type": "Mesh2D",
         "Skip": false,
@@ -887,8 +887,8 @@
     },
     {
       "Skip": false,
-      "Runtime": 0,
-      "$Comment": "FULL ATMOSPHERIC PASS: forest-floor DEBRIS - fallen logs, stumps, petrified logs, mossy boulders strewn through the dead grove for cover + decay texture. CLONED from the Corrupted_* ruins prop (the proven Type:Prefab scatter shape; a malformed Prefab prop fails the WHOLE biome decode = all air), repointed at verified native prefab folders (each folder resolves to a random child variant). Sparser than trees (Mesh Scale 14 + SkipChance 0.7). LoadEntities:false; the Floor pattern + ColumnLinear scanner floor-snap each piece onto Soil_Grass_Dry under Empty so nothing gouges soil or floats; Random rotation. Validate in-game (this JSON is not gradle-compiled).",
+      "Runtime": 1,
+      "$Comment": "Runtime 1 (same as trees) so debris reads the placed Runtime-0 structures and its Floor pattern skips their footprints instead of landing logs on/through the crypts + houses. FULL ATMOSPHERIC PASS: forest-floor DEBRIS - fallen logs, stumps, petrified logs, mossy boulders strewn through the dead grove for cover + decay texture. CLONED from the Corrupted_* ruins prop (the proven Type:Prefab scatter shape; a malformed Prefab prop fails the WHOLE biome decode = all air), repointed at verified native prefab folders (each folder resolves to a random child variant). Sparser than trees (Mesh Scale 14 + SkipChance 0.7). LoadEntities:false; the Floor pattern + ColumnLinear scanner floor-snap each piece onto Soil_Grass_Dry under Empty so nothing gouges soil or floats; Random rotation. Validate in-game (this JSON is not gradle-compiled).",
       "Positions": {
         "Type": "Mesh2D",
         "Skip": false,
@@ -1173,7 +1173,7 @@
     {
       "Skip": false,
       "Runtime": 0,
-      "$Comment": "WORLDGEN SHRINE HOSTS (scatter): the 3 furnace-baked copied-vanilla crypt/ruin host prefabs, scattered at RANDOM grove positions via the proven Mesh2D+Weighted shape (the trees/debris use this). FIXED List positions do NOT work for a biome prop - the prop position pass runs in buffer-LOCAL voxel-grid coords, so world coords never match (decompile: PropStage localPositionsBounds_voxelGrid). Over-provisioned (Scale 50 + SkipChance 0.5 ~5-6) so >=5 furnaces exist with the 2 cave shrines; ChaseState.totalShrines caps the win at 5, so a survivor lights ANY 5 (the furnace is discovered via its interaction). Furnace is a baked 4-cell multiblock (renders correct). IN-GAME GATE: confirm hosts generate + the round is winnable. Not gradle-compiled.",
+      "$Comment": "WORLDGEN SHRINE HOSTS - SMALL CRYPTS (scatter): the furnace-baked copied-vanilla Tomb_Small crypts (Shrine_Crypt_01/02), scattered FREQUENTLY via the proven Mesh2D+Weighted shape (the trees/debris use this). The large crypt + the two corrupted houses scatter via the next two props (sparser, big footprints; the houses carry LoadEntities:true for their corrupted-Kweebec spawn markers). Scatter is best-effort now (LoadEntities:true so each host spawns a baked hidden shrine MARKER entity): ShrinePlacement force-loads the play core, queries the markers to learn the real count + positions, and runtime-tops-up only the MISSING ones (spaced) to guarantee >=ArenaLayout.SURFACE_WORLDGEN_SHRINES; the furnace is discovered via its interaction. Furnace is a baked 4-cell multiblock (renders correct). IN-GAME GATE: confirm hosts generate, the marker is detected, the round is winnable, and the biome is not all-air (a malformed Prefab prop airs out the whole biome). Not gradle-compiled.",
       "Positions": {
         "Type": "Mesh2D",
         "Skip": false,
@@ -1201,23 +1201,197 @@
                 "Skip": false,
                 "WeightedPrefabPaths": [
                   {
-                    "Path": "KweebecNightmare/Shrine_Cave_Alcove",
+                    "Path": "KweebecNightmare/Shrine_Crypt_01",
                     "Weight": 1
                   },
                   {
-                    "Path": "KweebecNightmare/Shrine_Crypt_Alcove",
-                    "Weight": 1
-                  },
-                  {
-                    "Path": "KweebecNightmare/Shrine_Slate_Ruin",
+                    "Path": "KweebecNightmare/Shrine_Crypt_02",
                     "Weight": 1
                   }
                 ],
                 "LegacyPath": false,
-                "LoadEntities": false,
+                "LoadEntities": true,
                 "Directionality": {
                   "Type": "Random",
                   "Seed": "KN_ShrineHostRot",
+                  "Pattern": {
+                    "Type": "Floor",
+                    "Skip": false,
+                    "Origin": {
+                      "Type": "BlockSet",
+                      "Skip": false,
+                      "BlockSet": {
+                        "Inclusive": true,
+                        "Materials": [
+                          {
+                            "Solid": "Empty"
+                          }
+                        ]
+                      }
+                    },
+                    "Floor": {
+                      "Type": "BlockSet",
+                      "Skip": false,
+                      "BlockSet": {
+                        "Inclusive": true,
+                        "Materials": [
+                          {
+                            "Solid": "Soil_Grass_Dry"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "Scanner": {
+                  "Type": "ColumnLinear",
+                  "Skip": false,
+                  "MaxY": 40,
+                  "MinY": -20,
+                  "RelativeToPosition": false,
+                  "BaseHeightName": "Base",
+                  "TopDownOrder": true,
+                  "ResultCap": 1
+                },
+                "MoldingDirection": "None",
+                "MoldingChildren": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "Skip": false,
+      "Runtime": 0,
+      "$Comment": "WORLDGEN SHRINE HOSTS - LARGE CRYPT (scatter): the big furnace-baked Shrine_Crypt_Large, scattered (Scale 80 + SkipChance 0.65, ~2-3 per round - reliable presence without crowding) on its own prop so its ~29x29 footprint does not crowd/overlap the frequent small crypts. Same proven Prefab-prop shape; LoadEntities:true so the baked hidden shrine MARKER entity spawns (ShrinePlacement queries it to detect this host + top up any missing shrines); Floor pattern + ColumnLinear floor-snaps it onto Soil_Grass_Dry under Empty. A landmark shrine. IN-GAME GATE: confirm it floor-snaps without burying/floating on rolling terrain, and the marker is detected. Not gradle-compiled.",
+      "Positions": {
+        "Type": "Mesh2D",
+        "Skip": false,
+        "PointsY": 0,
+        "PointGenerator": {
+          "Type": "Mesh",
+          "Jitter": 0.5,
+          "ScaleX": 80,
+          "ScaleY": 80,
+          "ScaleZ": 80,
+          "Seed": "KN_ShrineLarge"
+        }
+      },
+      "Assignments": {
+        "Type": "Weighted",
+        "SkipChance": 0.65,
+        "Seed": "KN_ShrineLargeW",
+        "WeightedAssignments": [
+          {
+            "Weight": 1,
+            "Assignments": {
+              "Type": "Constant",
+              "Prop": {
+                "Type": "Prefab",
+                "Skip": false,
+                "WeightedPrefabPaths": [
+                  {
+                    "Path": "KweebecNightmare/Shrine_Crypt_Large",
+                    "Weight": 1
+                  }
+                ],
+                "LegacyPath": false,
+                "LoadEntities": true,
+                "Directionality": {
+                  "Type": "Random",
+                  "Seed": "KN_ShrineLargeRot",
+                  "Pattern": {
+                    "Type": "Floor",
+                    "Skip": false,
+                    "Origin": {
+                      "Type": "BlockSet",
+                      "Skip": false,
+                      "BlockSet": {
+                        "Inclusive": true,
+                        "Materials": [
+                          {
+                            "Solid": "Empty"
+                          }
+                        ]
+                      }
+                    },
+                    "Floor": {
+                      "Type": "BlockSet",
+                      "Skip": false,
+                      "BlockSet": {
+                        "Inclusive": true,
+                        "Materials": [
+                          {
+                            "Solid": "Soil_Grass_Dry"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "Scanner": {
+                  "Type": "ColumnLinear",
+                  "Skip": false,
+                  "MaxY": 40,
+                  "MinY": -20,
+                  "RelativeToPosition": false,
+                  "BaseHeightName": "Base",
+                  "TopDownOrder": true,
+                  "ResultCap": 1
+                },
+                "MoldingDirection": "None",
+                "MoldingChildren": false
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "Skip": true,
+      "Runtime": 0,
+      "$Comment": "DISABLED (Skip:true): the Kweebec houses were too big and the worldgen-spawned ambient corrupted Kweebecs (NPC_Spawn_Marker via LoadEntities:true) did not appear in-round, so the large crypt is the big landmark host instead. Kept here (skipped) for easy re-enable. WORLDGEN SHRINE HOSTS - CORRUPTED HOUSES (scatter, LoadEntities:true): the two furnace-baked copied-vanilla Kweebec medium houses (Shrine_House_01/02), scattered RARELY (Scale 80 + SkipChance 0.6) on their own prop so their tall ~25x33 footprint stays sparse. UNLIKE every other host prop this one sets LoadEntities:TRUE so the houses' baked NPC_Spawn_Marker entities spawn AMBIENT corrupted Kweebecs (their SpawnMarker ids were repointed to KweebecNightmare_Husk_Patrol -> KweebecNightmare_Blight) plus their patrol-path markers; the per-round instance is DeleteOnRemove so teardown cleans them. The baked Block_Spawner_Block (native Zone1_Kweebec_Tier1) randomizes a loot chest. IN-GAME GATE: confirm houses generate, corrupted Kweebecs spawn + despawn on teardown, and they do not swamp the controlled-hunter difficulty (tune weight / SkipChance / ExclusionRadius if so). Not gradle-compiled.",
+      "Positions": {
+        "Type": "Mesh2D",
+        "Skip": false,
+        "PointsY": 0,
+        "PointGenerator": {
+          "Type": "Mesh",
+          "Jitter": 0.5,
+          "ScaleX": 80,
+          "ScaleY": 80,
+          "ScaleZ": 80,
+          "Seed": "KN_ShrineHouses"
+        }
+      },
+      "Assignments": {
+        "Type": "Weighted",
+        "SkipChance": 0.6,
+        "Seed": "KN_ShrineHousesW",
+        "WeightedAssignments": [
+          {
+            "Weight": 1,
+            "Assignments": {
+              "Type": "Constant",
+              "Prop": {
+                "Type": "Prefab",
+                "Skip": false,
+                "WeightedPrefabPaths": [
+                  {
+                    "Path": "KweebecNightmare/Shrine_House_01",
+                    "Weight": 1
+                  },
+                  {
+                    "Path": "KweebecNightmare/Shrine_House_02",
+                    "Weight": 1
+                  }
+                ],
+                "LegacyPath": false,
+                "LoadEntities": true,
+                "Directionality": {
+                  "Type": "Random",
+                  "Seed": "KN_ShrineHouseRot",
                   "Pattern": {
                     "Type": "Floor",
                     "Skip": false,

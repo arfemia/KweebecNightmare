@@ -1,0 +1,13 @@
+{
+  "Model": "NPC_Spawn_Marker",
+  "NPCs": [
+    {
+      "Name": "KweebecNightmare_Blight",
+      "Weight": 100,
+      "SpawnAfterGameTime": "P1D"
+    }
+  ],
+  "ExclusionRadius": 12,
+  "MaxDropHeight": 6,
+  "DeactivationDistance": 80
+}

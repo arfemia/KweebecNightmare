@@ -1,0 +1,15 @@
+{
+  "Entries": [
+    {
+      "Name": "Furniture_Dungeon_Chest_Epic",
+      "Weight": 100,
+      "Components": {
+        "Components": {
+          "ItemContainerBlock": {
+            "Droplist": "Zone1_Encounters_Tier3"
+          }
+        }
+      }
+    }
+  ]
+}

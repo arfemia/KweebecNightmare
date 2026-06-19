@@ -37,6 +37,13 @@ public final class ChaseState {
     private final Map<Vector3i, ShrineState> discovered = new HashMap<>();
     /** Per-cave resolved surface top-Y (cave anchor index -> Y), so {@code ArenaBuilder}'s +4s/+9s re-carve reuses the same Y instead of re-probing the already-carved surface (which would stack shafts). World-thread only. */
     private final Map<Integer, Integer> caveCarveY = new HashMap<>();
+    /**
+     * The resolved SURFACE shrine world positions for this round (worldgen-detected hosts plus any
+     * runtime top-up), published by {@code ShrinePlacement} once the play core is force-loaded and the
+     * baked shrine markers are queried. Drives Moonbloom clustering at the REAL shrines (replacing the
+     * old guessed {@code ArenaLayout.WORLDGEN_SHRINE_XZ}). Empty until detection completes. World-thread only.
+     */
+    private List<Vector3i> surfaceShrinePositions = new ArrayList<>();
     /** Synthetic ShrineState index base for discovered shrines (kept distinct from any future fixed indices, for logs). */
     private static final int DISCOVERED_INDEX_BASE = 100;
 
@@ -126,6 +133,21 @@ public final class ChaseState {
 
     public void setCaveCarveY(int caveIndex, int topY) {
         caveCarveY.put(caveIndex, topY);
+    }
+
+    /**
+     * The resolved SURFACE shrine world positions (worldgen-detected + runtime top-up), or an empty
+     * list until {@code ShrinePlacement} has detected them. Used to cluster Moonbloom at the real
+     * shrines. World-thread only.
+     */
+    @Nonnull
+    public List<Vector3i> surfaceShrinePositions() {
+        return surfaceShrinePositions;
+    }
+
+    /** Publish the resolved surface shrine positions (copied defensively). World-thread only. */
+    public void setSurfaceShrinePositions(@Nonnull List<Vector3i> positions) {
+        this.surfaceShrinePositions = new ArrayList<>(positions);
     }
 
     /**

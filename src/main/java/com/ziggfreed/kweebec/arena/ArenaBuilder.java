@@ -1,6 +1,7 @@
 package com.ziggfreed.kweebec.arena;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -54,19 +55,21 @@ public final class ArenaBuilder {
     private static final String CENTERPIECE_PREFAB = "KweebecNightmare/Corrupted_Well";
     private static final double CENTERPIECE_Z_OFFSET = 10.0;
     /**
-     * The underground-objective prefabs: a carved descent shaft + lit chamber + the cave shrine pillar.
-     * Two interchangeable descent styles, alternated per cave shrine (by index) for variety - a
-     * facing-independent spiral staircase and the playtest-proven ladder.
+     * The underground-objective prefabs: a carved descent shaft + lit chamber + the cave shrine furnace,
+     * with the furnace baked deep at the chamber. Two interchangeable descent styles, alternated per cave
+     * shrine (by index) for variety - a facing-independent spiral staircase and a multi-level underground
+     * DUNGEON (a copied vanilla crypt, re-anchored so its top is the surface entrance and its body
+     * descends ~36 blocks to the furnace; it supersedes the old plain ladder). Both are force-carved into
+     * the solid grove; {@link #pasteCaveShaft} ignores the anchor Y and surface-snaps the prefab top, so a
+     * deeper descent just carves deeper.
      */
     private static final String[] SHAFT_PREFABS = {
-            "KweebecNightmare/Relight_Shaft",          // [0] spiral staircase
-            "KweebecNightmare/Relight_Shaft_Ladder",   // [1] ladder
+            "KweebecNightmare/Relight_Shaft",                  // [0] spiral staircase
+            "KweebecNightmare/Shrine_Dungeon_Underground_01",  // [1] underground dungeon descent (replaces the ladder)
     };
 
     /** The single Moonbloom plant prefab (one harvestable glowing-mushroom block, floor-snapped per paste). */
     private static final String MOONBLOOM_PREFAB = "KweebecNightmare/Moonbloom";
-    /** Seconds after build to stamp the initial Moonbloom supply (after PREP chunk-gen, so the surface probe hits). */
-    private static final long MOONBLOOM_INITIAL_DELAY_SEC = 5L;
     /** Cluster ring radius (blocks) Moonbloom plants ring a surface shrine at. */
     private static final double MOONBLOOM_CLUSTER_RADIUS = 2.5;
     /** Min / max scatter radius (blocks) from spawn for grove-scattered Moonbloom (inside the r112 edge cliff, clear of the r6 spawn courtyard). */
@@ -130,19 +133,13 @@ public final class ArenaBuilder {
                 }
             }, delay, TimeUnit.SECONDS);
         }
-        // Stamp the initial Moonbloom supply once the PREP chunk-gen has settled (so the surface probe
-        // hits real ground, like the objective re-paste): a guaranteed cluster at each surface shrine
-        // plus a seed-deterministic grove scatter. Amounts are rule-set knobs (pack/runtime tunable).
-        HytaleServer.SCHEDULED_EXECUTOR.schedule(() -> {
-            if (round.isResolved()) {
-                return;
-            }
-            World w = round.world();
-            if (w != null) {
-                plantMoonbloom(round, w, round.ruleSet().moonbloomPerShrine(),
-                        round.ruleSet().moonbloomScatter(), 0L);
-            }
-        }, MOONBLOOM_INITIAL_DELAY_SEC, TimeUnit.SECONDS);
+        // Detect the WORLDGEN-scattered surface shrines, top up ONLY the missing ones (spaced),
+        // publish their real positions onto ChaseState, and THEN plant the initial Moonbloom supply
+        // clustered at those real shrines. Self-sequences off a force-load of the play core (so it runs
+        // after chunk-gen has placed the shrine hosts); see ShrinePlacement. Best-effort and
+        // degrade-to-deterministic: if detection finds nothing it places the full target at spaced
+        // anchors, so the round is always winnable and Moonbloom always gets valid positions.
+        ShrinePlacement.detectAndTopUp(round, world);
     }
 
     /**
@@ -164,15 +161,28 @@ public final class ArenaBuilder {
                 if (buffer == null) {
                     return; // load() already WARNs the missing key
                 }
-                // Cluster the guaranteed supply near each WORLDGEN surface shrine host (the known biome List
-                // positions; the shrine OBJECTIVE itself is discovered via its furnace interaction, not these
-                // coords). Cave shrines get no surface cluster - survivors carry charges down the shaft.
+                // Cluster the guaranteed supply at the REAL surface shrines resolved by ShrinePlacement
+                // (worldgen-detected hosts + any runtime top-up), so the supply always rings the actual
+                // furnaces. Falls back to the authored WORLDGEN_SHRINE_XZ guesses only if detection has
+                // not published positions yet. Cave shrines get no surface cluster - survivors carry
+                // charges down the shaft. (The shrine OBJECTIVE is still discovered via its interaction.)
                 if (perShrine > 0) {
-                    for (double[] xz : ArenaLayout.WORLDGEN_SHRINE_XZ) {
+                    ChaseState chase = round.chaseState();
+                    List<double[]> centers = new ArrayList<>();
+                    if (chase != null && !chase.surfaceShrinePositions().isEmpty()) {
+                        for (Vector3i s : chase.surfaceShrinePositions()) {
+                            centers.add(new double[]{s.x() + 0.5, s.z() + 0.5});
+                        }
+                    } else {
+                        for (double[] xz : ArenaLayout.WORLDGEN_SHRINE_XZ) {
+                            centers.add(xz);
+                        }
+                    }
+                    for (double[] c : centers) {
                         for (int i = 0; i < perShrine; i++) {
                             double theta = 2.0 * Math.PI * i / perShrine;
-                            double px = xz[0] + MOONBLOOM_CLUSTER_RADIUS * Math.sin(theta);
-                            double pz = xz[1] + MOONBLOOM_CLUSTER_RADIUS * Math.cos(theta);
+                            double px = c[0] + MOONBLOOM_CLUSTER_RADIUS * Math.sin(theta);
+                            double pz = c[1] + MOONBLOOM_CLUSTER_RADIUS * Math.cos(theta);
                             paste(world, buffer, new Anchor(px, ArenaLayout.STAND_Y, pz, 0f), false, false);
                         }
                     }
@@ -325,7 +335,7 @@ public final class ArenaBuilder {
     }
 
     @Nullable
-    private static IPrefabBuffer load(@Nonnull String key) {
+    static IPrefabBuffer load(@Nonnull String key) {
         try {
             // findAssetPrefabPath does Files.exists on the literal key, so the
             // extension-less key never matches '<name>.prefab.json'. Mirror the
@@ -367,8 +377,8 @@ public final class ArenaBuilder {
      * thread (after PREP chunk-gen, so the column is queryable) and land the anchor there. If the probe
      * misses (unloaded chunk) it degrades to the anchor's authored floor block ({@code at.y - 1}).
      */
-    private static void paste(@Nonnull World world, @Nonnull IPrefabBuffer buffer, @Nonnull Anchor at,
-                              boolean verbose, boolean force) {
+    static void paste(@Nonnull World world, @Nonnull IPrefabBuffer buffer, @Nonnull Anchor at,
+                      boolean verbose, boolean force) {
         paste(world, buffer, at, verbose, force, Rotation.None);
     }
 
