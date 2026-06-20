@@ -19,5 +19,7 @@
   "RewardOnExit": "ON_WIN",
   "HunterArchetype": "stalker",
   "CleanseCost": 4,
+  "JumpscareShakeIntensity": 0.12,
+  "JumpscareCooldownSeconds": 9,
   "Mutators": ["decay"]
 }

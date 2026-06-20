@@ -20,6 +20,8 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.ziggfreed.common.worldmap.DiscoveryMode;
+import com.ziggfreed.common.worldmap.MapDiscovery;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.api.PlayerScore;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
@@ -271,6 +273,13 @@ public final class RoundService {
                 // terrain, shrine ring, cave anchors, and ruin subset all vary off ONE coherent seed.
                 round.setWorldSeed(instWorld.getWorldConfig().getSeed());
                 round.setHunterController(new AiHunterController(HUNTER_ROLE));
+                // Shrine-discovery markers: stand up the per-player tracker BEFORE the first interaction so a
+                // found shrine surfaces on the map (attach also enables the compass). OFF presets pay nothing.
+                if (round.ruleSet().shrineDiscovery() != DiscoveryMode.OFF) {
+                    MapDiscovery discovery = new MapDiscovery("kweebec_discovery");
+                    round.setMapDiscovery(discovery);
+                    discovery.attach(instWorld);
+                }
                 ChaseMode.onStart(round);
                 round.setState(InstanceState.ACTIVE);
 
@@ -335,10 +344,11 @@ public final class RoundService {
                     duration, difficultyScore, scores);
             recordScores(partySize, round, scores);
             showResult(round, outcome);
-            // Open the end-of-game results screen (team breakdown + asset-driven rewards
-            // with the full-inventory guard + leaderboard CTA) during the result hold,
-            // before finalizeAndEject tears the in-memory round state down.
-            KweebecExperience.openResults(round, outcome, win, duration, difficultyScore, scores);
+            // Stash the per-player results snapshot + open the BUTTON-LESS in-instance preview during the
+            // hold. The reward grant + the full interactive page are deferred to openDeferredResults on
+            // overworld return (scheduleOverworldResync), so spoils are not dropped by the inventory
+            // restore and the page is not closed by the cross-world exit.
+            KweebecExperience.stashResults(round, outcome, win, duration, difficultyScore, scores);
             teardown(round, world);
         });
 
@@ -411,6 +421,11 @@ public final class RoundService {
             // round. No-op on a round without a boss. Best-effort (guarded by the surrounding try).
             if (round.bossController() != null) {
                 round.bossController().despawnAll(world, store);
+            }
+            // Drop the shrine-discovery marker provider. The instance world is destroyed right after, so this
+            // is defensive - it releases the per-round closure a tick early and keeps the lifecycle symmetric.
+            if (round.mapDiscovery() != null) {
+                round.mapDiscovery().detach(world);
             }
             // Clear every survivor's scare vignette + jumpscare throttle + the whisper schedule,
             // so a lingering dread EntityEffect never rides out of the instance on an ejected player.
@@ -573,6 +588,9 @@ public final class RoundService {
                         // Restore the inventory snapshot taken on entry, now that the player is back
                         // in the overworld (drops any loot gained in-round; no-op in KEEP mode).
                         RoundInventoryGuard.restore(ws, r, uuid);
+                        // NOTE: the deferred results page is opened from KweebecExperience.onPlayerReady
+                        // (PlayerReadyEvent = the client-ready signal), NOT here - a server-side open at
+                        // this teleport-complete point is too early and the still-loading client drops it.
                     }
                 });
             } catch (Throwable t) {

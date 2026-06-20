@@ -1,0 +1,52 @@
+{
+  "Type": "Selector",
+  "Selector": {
+    "Id": "AOECircle",
+    "Range": 3.0
+  },
+  "Effects": {
+    "Particles": [
+      {
+        "SystemId": "Explosion_Medium",
+        "TargetEntityPart": "Entity"
+      }
+    ]
+  },
+  "HitEntity": {
+    "Interactions": [
+      {
+        "Parent": "DamageEntityParent",
+        "DamageCalculator": {
+          "BaseDamage": {
+            "KweebecNightmare_GustHit": 1
+          }
+        },
+        "DamageEffects": {
+          "Knockback": {
+            "Type": "Point",
+            "Force": 14,
+            "VelocityY": 6,
+            "VelocityType": "Set",
+            "VelocityConfig": {
+              "AirResistance": 0.97,
+              "AirResistanceMax": 0.96,
+              "GroundResistance": 0.94,
+              "GroundResistanceMax": 0.3,
+              "Threshold": 3.0
+            }
+          },
+          "WorldParticles": [
+            {
+              "SystemId": "Impact_Mace_Charged",
+              "Scale": 1
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "Next": {
+    "Type": "Simple",
+    "RunTime": 0.1
+  }
+}

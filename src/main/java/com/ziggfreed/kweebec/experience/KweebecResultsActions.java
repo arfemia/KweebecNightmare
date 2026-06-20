@@ -46,4 +46,10 @@ public final class KweebecResultsActions implements ResultsActions {
         } catch (Throwable ignored) {
         }
     }
+
+    @Override
+    public boolean claimRewards(@Nonnull PlayerRef player, @Nonnull Ref<EntityStore> ref,
+                                @Nonnull Store<EntityStore> store) {
+        return KweebecExperience.claimPending(player, ref, store);
+    }
 }

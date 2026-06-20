@@ -39,9 +39,14 @@ public final class NightmareHud extends CustomUIHud {
      * @param total        total shrines
      * @param alive        survivors still up
      * @param corruption   0..1 corruption fraction
+     * @param extracting   whether the co-op extraction is live (ESCAPE phase, gate open)
+     * @param onPad        survivors currently standing on the extraction platform
+     * @param required     survivors required on the platform to extract
+     * @param holdRemain   seconds left in the current continuous hold (full hold when not yet assembled)
      */
     public void pushState(int remainingSec, @Nonnull ChasePhase phase,
-                          int lit, int total, int alive, double corruption) {
+                          int lit, int total, int alive, double corruption,
+                          boolean extracting, int onPad, int required, int holdRemain) {
         UICommandBuilder cb = new UICommandBuilder();
 
         int rs = Math.max(0, remainingSec);
@@ -58,6 +63,18 @@ public final class NightmareHud extends CustomUIHud {
 
         int pct = (int) Math.round(Math.max(0.0, Math.min(1.0, corruption)) * 100.0);
         cb.set("#Corruption.Text", Lang.msg(Lang.HUD_CORRUPTION).param("0", pct));
+
+        // Extraction line: the live "X / Y on the platform" count plus the hold countdown, shown only during
+        // the gate-open ESCAPE climax. When the whole required group is on the platform the hold is ticking
+        // (HOLD line); otherwise it prompts the party to gather (WAIT line). The #Extraction element's
+        // .ui default is empty, so it stays blank through PREP/RITUAL with no per-tick clear needed.
+        if (extracting) {
+            Message ext = (required > 0 && onPad >= required)
+                    ? Lang.msg(Lang.HUD_EXTRACTION_HOLD)
+                            .param("0", onPad).param("1", required).param("2", Math.max(0, holdRemain))
+                    : Lang.msg(Lang.HUD_EXTRACTION_WAIT).param("0", onPad).param("1", required);
+            cb.set("#Extraction.Text", ext);
+        }
 
         update(false, cb);
     }

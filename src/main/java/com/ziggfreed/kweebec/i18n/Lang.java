@@ -31,6 +31,16 @@ public final class Lang {
     public static final String ITEM_MOONBLOOM_PLANT = "kweebecnightmare.item.moonbloom_plant.name";
     public static final String ITEM_SHRINE = "kweebecnightmare.item.shrine.name";
 
+    // Glow-throwable variant display names (the charge item + its harvestable grove plant): Gustbloom
+    // (knockback), Mirebloom (slow), Emberbloom (boss-phase damage). Asset-referenced (the item JSON
+    // TranslationProperties.Name), registered here so every key has one home.
+    public static final String ITEM_GUSTBLOOM = "kweebecnightmare.item.gustbloom.name";
+    public static final String ITEM_GUSTBLOOM_PLANT = "kweebecnightmare.item.gustbloom_plant.name";
+    public static final String ITEM_MIREBLOOM = "kweebecnightmare.item.mirebloom.name";
+    public static final String ITEM_MIREBLOOM_PLANT = "kweebecnightmare.item.mirebloom_plant.name";
+    public static final String ITEM_EMBERBLOOM = "kweebecnightmare.item.emberbloom.name";
+    public static final String ITEM_EMBERBLOOM_PLANT = "kweebecnightmare.item.emberbloom_plant.name";
+
     // Block interaction hints (the F-prompt shown when looking at an interactable block).
     public static final String INTERACTION_SHRINE_HINT = "kweebecnightmare.interaction.shrine.hint";
 
@@ -51,6 +61,8 @@ public final class Lang {
     public static final String TOAST_TEAMMATE_DOWN = "kweebecnightmare.toast.teammate_down";
     public static final String TOAST_HUNTER_LOCKED = "kweebecnightmare.toast.hunter_locked";
     public static final String TOAST_TIME_LOW = "kweebecnightmare.toast.time_low";
+    /** Cue when the whole required group first assembles on the extraction platform and the hold begins. */
+    public static final String TOAST_EXTRACTION_HOLD = "kweebecnightmare.toast.extraction_hold";
     /** Shown when an asset-driven spawn rule pulls extra hunters in near the party. */
     public static final String TOAST_HUNTERS_DRAWN = "kweebecnightmare.toast.hunters_drawn";
 
@@ -61,9 +73,15 @@ public final class Lang {
     public static final String HUD_CORRUPTION = "kweebecnightmare.hud.corruption";
     public static final String HUD_OBJECTIVE_RITUAL = "kweebecnightmare.hud.objective.ritual";
     public static final String HUD_OBJECTIVE_ESCAPE = "kweebecnightmare.hud.objective.escape";
+    // Co-op extraction HUD line (ESCAPE phase): the live "{0}/{1} on the platform" count, plus the {2}s hold
+    // countdown when the whole group is assembled, or a gather prompt while it is not.
+    public static final String HUD_EXTRACTION_HOLD = "kweebecnightmare.hud.extraction.hold";
+    public static final String HUD_EXTRACTION_WAIT = "kweebecnightmare.hud.extraction.wait";
 
     // World-map / compass marker names (the exit POI placed when the Heartwood Gate opens).
     public static final String MARKER_EXIT = "kweebecnightmare.marker.exit";
+    /** The shrine-discovery marker placed on a survivor's map when they first touch a shrine furnace. */
+    public static final String MARKER_SHRINE = "kweebecnightmare.marker.shrine";
 
     // Boss capstone (the corrupted-Kweebec Warden): NPC name, the boss HUD label + phase indicator, and
     // the spawn banner + roar toast. The phase indicator interpolates {0}=current phase, {1}=total phases.
@@ -176,6 +194,21 @@ public final class Lang {
     public static final String RESULTS_COL_STUN = "kweebecnightmare.results.col.stun";
     public static final String RESULTS_COL_SHRINE = "kweebecnightmare.results.col.shrine";
     public static final String RESULTS_COL_DURATION = "kweebecnightmare.results.col.duration";
+    public static final String RESULTS_COL_BASE = "kweebecnightmare.results.col.base";
+    // Run-stats section (raw per-run activity, a second breakdown below the points).
+    public static final String RESULTS_STATS = "kweebecnightmare.results.stats";
+    public static final String RESULTS_STAT_DMG_TAKEN = "kweebecnightmare.results.stat.damage_taken";
+    public static final String RESULTS_STAT_STUNNED = "kweebecnightmare.results.stat.stunned";
+    public static final String RESULTS_STAT_MOONBLOOM = "kweebecnightmare.results.stat.moonbloom";
+    // Shown in the in-instance preview where the spoils chips would be (rewards grant on overworld return).
+    public static final String RESULTS_SPOILS_PENDING = "kweebecnightmare.results.spoils_pending";
+    // Manual claim: the results-screen Claim button + the post-claim confirmation note.
+    public static final String RESULTS_BTN_CLAIM = "kweebecnightmare.results.btn.claim";
+    public static final String RESULTS_CLAIMED = "kweebecnightmare.results.claimed";
+
+    // Play screen - the "Claim Rewards" button (chooser) for spoils missed earlier + its toast.
+    public static final String PLAY_BTN_CLAIM = "kweebecnightmare.play.btn.claim";
+    public static final String PLAY_TOAST_CLAIMED = "kweebecnightmare.play.toast.claimed";
 
     // Play screen - the live roster / ready chrome (the common PlayModePage, queued state).
     public static final String QUEUE_SCREEN_COUNT = "kweebecnightmare.queue.screen.count";

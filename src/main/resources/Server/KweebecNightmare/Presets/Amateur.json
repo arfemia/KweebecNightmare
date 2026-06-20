@@ -19,6 +19,11 @@
   "RewardOnExit": "ON_WIN",
   "HunterArchetype": "stalker",
   "CleanseCost": 3,
+  "ShrineDiscoveryVisibility": "ALL",
+  "JumpscareShakeIntensity": 0.06,
+  "JumpscareCooldownSeconds": 18,
+  "ExtractionMode": "ALL_MOBILE",
+  "ExtractionHoldSeconds": 4.0,
   "ShrineBonusPer": 40,
   "AllShrinesBonus": 250
 }

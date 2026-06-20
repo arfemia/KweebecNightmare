@@ -13,9 +13,11 @@ A standalone co-op horror minigame for Hytale, set in a Void-blighted Emerald Gr
 
 1. **Nightfall** - spawn into a dim grove, scout, and claim a hiding spot (hollow logs and bushes hide tree-folk well).
 2. **The ritual** - relight the grove-shrines. Each is a hold-in-place ritual that pins you in place and makes noise the hunter can hear. The longer the night runs and the more shrines you light, the faster and darker it gets.
-3. **The escape** - the final shrine opens the Heartwood Gate and sounds an alarm that locks the hunter onto the nearest sapling. Run.
+3. **The escape** - the final shrine opens the Heartwood Gate and sounds an alarm that locks the hunter onto the nearest sapling. Beyond the gate is the Heartwood platform: the party must gather on it and HOLD it together until extraction completes, and the timer resets if anyone is dragged off. How many of you have to make it depends on the difficulty (the survivors still on their feet, or on the hardest night the whole party rescued and assembled).
 
-Caught saplings are cocooned in roots and can be cut free by a teammate. Anyone who reaches the exit wins the night. Plays solo (one survivor, one AI hunter) or co-op for up to four.
+Caught saplings are cocooned in roots and can be cut free by a teammate. Plays solo (one survivor, one AI hunter) or co-op for up to four.
+
+**Glowing mushrooms** scattered through the grove (and stashed in the deep crypt) can be gathered and thrown, each bursting differently: stun a hunter, knock it flying, slow it to a slog, or blast it for real damage. When the corrupted Warden rises, damage-bursting mushrooms keep sprouting around it so you can wear the boss down.
 
 ## Standalone, with optional MMO Skill Tree integration
 

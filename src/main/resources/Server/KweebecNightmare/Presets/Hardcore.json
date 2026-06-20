@@ -20,8 +20,14 @@
   "HunterArchetype": "stalker",
   "CleanseCost": 4,
   "ExitMarker": false,
+  "ShrineDiscovery": "OFF",
   "BossEnabled": true,
   "BossId": "warden",
+  "BossBarsGate": true,
+  "JumpscareShakeIntensity": 0.15,
+  "JumpscareCooldownSeconds": 8,
+  "ExtractionMode": "ALL_MOBILE",
+  "ExtractionHoldSeconds": 8.0,
   "ShrineBonusPer": 120,
   "AllShrinesBonus": 1000
 }

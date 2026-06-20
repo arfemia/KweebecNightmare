@@ -1,0 +1,6 @@
+{
+  "$Comment": "Spitter ranged spit, prep/tell step. No item-anim Effects (the Kweebec model has no spit clip; a missing clip logs a warning) - the template SpawnParticles tell + the projectile trail carry the read. Next -> the AimingReference projectile step.",
+  "Type": "Simple",
+  "RunTime": 0.333,
+  "Next": "KweebecNightmare_Spit_Projectile"
+}

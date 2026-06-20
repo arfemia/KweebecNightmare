@@ -5,12 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -25,6 +27,7 @@ import com.ziggfreed.common.instance.leaderboard.LeaderboardLayoutConfig;
 import com.ziggfreed.common.instance.leaderboard.LeaderboardPageDeps;
 import com.ziggfreed.common.instance.leaderboard.StatColumnDef;
 import com.ziggfreed.common.instance.play.PlayModePageDeps;
+import com.ziggfreed.common.instance.play.PlayRewardClaim;
 import com.ziggfreed.common.instance.preset.InstancePreset;
 import com.ziggfreed.common.instance.preset.InstancePresetConfig;
 import com.ziggfreed.common.instance.preset.QueueModeSet;
@@ -80,8 +83,24 @@ public final class KweebecExperience {
     private static PendingRewardStore pendingRewards;
     private static LeaderboardPageDeps leaderboardDeps;
     private static ResultsPageDeps resultsDeps;
+    private static ResultsPageDeps resultsDepsPreview;
     private static PartyPageDeps partyDeps;
     private static PlayModePageDeps playModeDeps;
+
+    /**
+     * Per-player deferred results snapshot: stashed in the instance at resolve, drained on the player's
+     * return to the overworld ({@link #openDeferredResults}) to grant rewards + open the full page THERE
+     * (never in the instance, where the reward grant would be dropped by the inventory restore and the
+     * page closed by the world change). In-memory: a server restart during the ~6s hold loses it
+     * (accepted; the leaderboard score is already recorded and rewards re-attempt on next login).
+     */
+    private static final Map<UUID, PendingResult> pendingResults = new ConcurrentHashMap<>();
+
+    /** Everything needed to rebuild + grant a player's results page once they are back in the overworld. */
+    private record PendingResult(@Nonnull ResultKind kind, int duration, @Nonnull List<PlayerResultRow> rows,
+                                 long teamTotal, int difficultyScore, @Nonnull String bucket,
+                                 @Nonnull String presetId, boolean win) {
+    }
 
     private KweebecExperience() {
     }
@@ -98,6 +117,8 @@ public final class KweebecExperience {
         pendingRewards = new PendingRewardStore("pending-rewards");
         pendingRewards.init(dir);
         resultsDeps = new ResultsPageDeps(new KweebecResultsMessages(), new KweebecResultsActions());
+        // Button-less (null actions) deps for the in-instance PREVIEW open; the full overworld open uses resultsDeps.
+        resultsDepsPreview = new ResultsPageDeps(new KweebecResultsMessages(), null);
         playModeDeps = new PlayModePageDeps(
                 KweebecLobby.service(),
                 id -> {
@@ -109,7 +130,8 @@ public final class KweebecExperience {
                         .nameKey(id == null || id.isBlank() ? PresetConfig.DEFAULT : id)),
                 Lang::msg,
                 new KweebecPlayMode(),
-                new KweebecPlayScreenMessages());
+                new KweebecPlayScreenMessages(),
+                new KweebecRewardClaim());
         SafeLog.info("[Kweebec] instance-experience layer ready (results + queue eager; leaderboard + party lazy from common pack configs).");
     }
 
@@ -232,26 +254,36 @@ public final class KweebecExperience {
     }
 
     /**
-     * Build the shared team breakdown, grant the asset-driven rewards (with the
-     * full-inventory guard), and open the {@link ResultsPage} for every present player.
-     * Runs inside the resolve {@code world.execute} (on the instance world thread), before
-     * the round tears down.
+     * Build the shared team breakdown, persist the owed spoils to the claim store, stash a per-player
+     * {@link PendingResult}, and open the BUTTON-LESS in-instance PREVIEW page for every present player.
+     * Runs inside the resolve {@code world.execute} (instance world thread), before the round tears down.
+     * NO reward grant here: the full interactive page is deferred to {@link #openResultsPage} on overworld
+     * return, where the player CLAIMS the spoils (so nothing is dropped by the inventory restore and the
+     * page is not closed by the world change).
      */
-    public static void openResults(@Nonnull RoundInstance round, @Nonnull RoundCompletedEvent.Outcome outcome,
-                                   boolean win, int duration, int difficultyScore,
-                                   @Nonnull Map<UUID, PlayerScore> scores) {
+    public static void stashResults(@Nonnull RoundInstance round, @Nonnull RoundCompletedEvent.Outcome outcome,
+                                    boolean win, int duration, int difficultyScore,
+                                    @Nonnull Map<UUID, PlayerScore> scores) {
         ResultKind kind = win ? ResultKind.WIN
                 : (outcome == RoundCompletedEvent.Outcome.ABORTED ? ResultKind.ABORT : ResultKind.LOSS);
         // The leaderboard CTA deep-links to the just-played difficulty + party-size bucket.
         String bucket = bucketKey(round.ruleSet().presetId(), round.partySize());
+        String presetId = round.ruleSet().presetId();
+        InstancePreset preset = InstancePresetConfig.getInstance().resolve(presetId);
         TeamResult team = buildTeam(round, scores);
-        InstancePreset preset = InstancePresetConfig.getInstance().resolve(round.ruleSet().presetId());
+        Message previewNote = Lang.msg(Lang.RESULTS_SPOILS_PENDING);
 
         for (PlayerRoundState st : round.playerStates()) {
             if (st.hasLeftRound()) {
                 continue;
             }
-            PlayerRef pr = Universe.get().getPlayer(st.playerId());
+            UUID uuid = st.playerId();
+            // Persist the owed spoils to the claim store now (NO grant): they survive disconnect/restart
+            // and are delivered only when the player presses Claim (results page or play-menu button).
+            queuePending(uuid, preset, win);
+            pendingResults.put(uuid, new PendingResult(kind, duration, team.rows(), team.teamTotal(),
+                    difficultyScore, bucket, presetId, win));
+            PlayerRef pr = Universe.get().getPlayer(uuid);
             if (pr == null) {
                 continue;
             }
@@ -260,16 +292,49 @@ public final class KweebecExperience {
                 continue;
             }
             Store<EntityStore> store = ref.getStore();
-            List<RewardChip> chips = grantRewards(preset, win, pr, ref, store);
-            MatchResult result = new MatchResult(kind, duration, List.of(team), difficultyScore, chips, bucket);
+            // In-instance preview: viewer-flagged rows, NO rewards, NO leaderboard bucket (button-less via
+            // resultsDepsPreview's null actions), the "spoils on return" note in place of the reward strip.
+            MatchResult preview = new MatchResult(kind, duration,
+                    List.of(TeamResult.single(team.teamTotal(), rowsForViewer(team.rows(), uuid))),
+                    difficultyScore, List.of(), null);
             try {
                 Player player = store.getComponent(ref, Player.getComponentType());
                 if (player != null) {
-                    player.getPageManager().openCustomPage(ref, store, new ResultsPage(pr, result, resultsDeps));
+                    player.getPageManager().openCustomPage(ref, store,
+                            new ResultsPage(pr, preview, resultsDepsPreview, previewNote));
                 }
             } catch (Throwable t) {
-                SafeLog.warn("[Kweebec] failed to open results page: " + t.getMessage());
+                SafeLog.warn("[Kweebec] failed to open results preview: " + t.getMessage());
             }
+        }
+    }
+
+    /**
+     * Open the full interactive {@link ResultsPage} for a player who is now CLIENT-READY back in the
+     * overworld (the deferred page-open, fired from {@link #onPlayerReady} on {@code PlayerReadyEvent}).
+     * Shows the run's score breakdown + the run's UNCLAIMED spoils + a Claim button + the leaderboard
+     * CTA. NOTHING is granted here - the player claims via the button ({@link #claimPending}). One-shot:
+     * the atomic {@code remove} makes a second call a no-op. No snapshot = nothing to do (e.g. a
+     * PlayerReadyEvent for the instance entry, or a player who never finished a run).
+     */
+    public static void openResultsPage(@Nonnull PlayerRef pr, @Nonnull Ref<EntityStore> ref,
+                                       @Nonnull Store<EntityStore> store) {
+        PendingResult pend = pendingResults.remove(pr.getUuid());
+        if (pend == null) {
+            return;
+        }
+        InstancePreset preset = InstancePresetConfig.getInstance().resolve(pend.presetId());
+        List<RewardChip> chips = previewChips(preset, pend.win());
+        MatchResult result = new MatchResult(pend.kind(), pend.duration(),
+                List.of(TeamResult.single(pend.teamTotal(), rowsForViewer(pend.rows(), pr.getUuid()))),
+                pend.difficultyScore(), chips, pend.bucket());
+        try {
+            Player player = store.getComponent(ref, Player.getComponentType());
+            if (player != null) {
+                player.getPageManager().openCustomPage(ref, store, new ResultsPage(pr, result, resultsDeps));
+            }
+        } catch (Throwable t) {
+            SafeLog.warn("[Kweebec] failed to open results page: " + t.getMessage());
         }
     }
 
@@ -292,37 +357,60 @@ public final class KweebecExperience {
                 mvpBest = ps.total();
                 mvp = st.playerId();
             }
-            List<ScoreColumn> cols = List.of(
+            // Point breakdown (sums to the headline total): Base + the four score components.
+            int base = Math.max(0, ps.total() - (ps.timeComponent() + ps.damageComponent()
+                    + ps.stunBonus() + ps.shrineBonus() + ps.allShrinesBonus()));
+            List<ScoreColumn> pointCols = List.of(
+                    new ScoreColumn(Lang.msg(Lang.RESULTS_COL_BASE), base, ColumnFormat.GROUPED),
                     new ScoreColumn(Lang.msg(Lang.RESULTS_COL_TIME), ps.timeComponent(), ColumnFormat.GROUPED),
                     new ScoreColumn(Lang.msg(Lang.RESULTS_COL_DAMAGE), ps.damageComponent(), ColumnFormat.GROUPED),
                     new ScoreColumn(Lang.msg(Lang.RESULTS_COL_STUN), ps.stunBonus(), ColumnFormat.GROUPED),
                     new ScoreColumn(Lang.msg(Lang.RESULTS_COL_SHRINE),
-                            ps.shrineBonus() + ps.allShrinesBonus(), ColumnFormat.GROUPED),
-                    new ScoreColumn(Lang.msg(Lang.RESULTS_COL_DURATION), ps.durationSeconds(), ColumnFormat.TIME));
-            rows.add(new PlayerResultRow(st.playerId(), ps.total(), cols, false, false));
+                            ps.shrineBonus() + ps.allShrinesBonus(), ColumnFormat.GROUPED));
+            // Run-stats (raw per-run activity): time survived, damage taken, hunters stunned, moonbloom gathered.
+            List<ScoreColumn> statCols = List.of(
+                    new ScoreColumn(Lang.msg(Lang.RESULTS_COL_DURATION), ps.durationSeconds(), ColumnFormat.TIME),
+                    new ScoreColumn(Lang.msg(Lang.RESULTS_STAT_DMG_TAKEN), Math.round(ps.damageTaken()), ColumnFormat.GROUPED),
+                    new ScoreColumn(Lang.msg(Lang.RESULTS_STAT_STUNNED), ps.mobsStunned(), ColumnFormat.GROUPED),
+                    new ScoreColumn(Lang.msg(Lang.RESULTS_STAT_MOONBLOOM), ps.moonbloomCollected(), ColumnFormat.GROUPED));
+            rows.add(new PlayerResultRow(st.playerId(), ps.total(), pointCols, statCols, false, false));
         }
         List<PlayerResultRow> finalRows = new ArrayList<>(rows.size());
         for (PlayerResultRow r : rows) {
-            finalRows.add(new PlayerResultRow(r.uuid(), r.primaryScore(), r.columns(), false, r.uuid().equals(mvp)));
+            finalRows.add(new PlayerResultRow(r.uuid(), r.primaryScore(), r.columns(), r.statColumns(),
+                    false, r.uuid().equals(mvp)));
         }
         return TeamResult.single(teamTotal, finalRows);
     }
 
-    /** Grant the preset's reward list to one player (item-fit guarded), returning the result chips. */
+    /** A copy of {@code rows} with the row matching {@code viewer} flagged isViewer (for the per-player open). */
     @Nonnull
-    private static List<RewardChip> grantRewards(@Nullable InstancePreset preset, boolean win,
-                                                 @Nonnull PlayerRef pr, @Nonnull Ref<EntityStore> ref,
-                                                 @Nonnull Store<EntityStore> store) {
+    private static List<PlayerResultRow> rowsForViewer(@Nonnull List<PlayerResultRow> rows, @Nonnull UUID viewer) {
+        List<PlayerResultRow> out = new ArrayList<>(rows.size());
+        for (PlayerResultRow r : rows) {
+            out.add(new PlayerResultRow(r.uuid(), r.primaryScore(), r.columns(), r.statColumns(),
+                    r.uuid().equals(viewer), r.isMvp()));
+        }
+        return out;
+    }
+
+    /** Persist a preset's owed spoils to the claim store (NO grant) when the outcome grants rewards. */
+    private static void queuePending(@Nonnull UUID uuid, @Nullable InstancePreset preset, boolean win) {
+        if (preset == null || !preset.rewardOnExit().grantsOn(win) || preset.rewards().isEmpty()) {
+            return;
+        }
+        pendingRewards.queue(uuid, preset.rewards());
+    }
+
+    /** Build display chips for a preset's owed spoils WITHOUT granting (the page's unclaimed preview). */
+    @Nonnull
+    private static List<RewardChip> previewChips(@Nullable InstancePreset preset, boolean win) {
         if (preset == null || !preset.rewardOnExit().grantsOn(win) || preset.rewards().isEmpty()) {
             return List.of();
         }
-        GrantOutcome outcome = InstanceRewardGranter.grantAll(preset.rewards(), pr, ref, store, KweebecRewardSink.INSTANCE);
-        if (!outcome.pending().isEmpty()) {
-            pendingRewards.queue(pr.getUuid(), outcome.pending());
-        }
         List<RewardChip> chips = new ArrayList<>();
         for (InstanceReward r : preset.rewards()) {
-            chips.add(toChip(r, outcome.pending().contains(r)));
+            chips.add(toChip(r, false));
         }
         return chips;
     }
@@ -335,10 +423,15 @@ public final class KweebecExperience {
         return RewardChipRenderer.toChip(r, pending, (key, qty) -> Lang.msg(key).param("0", qty));
     }
 
-    /** On player-ready, re-attempt any rewards that were blocked by a full inventory last time. */
+    /**
+     * On client-ready in a world ({@code PlayerReadyEvent} = the reliable post-teleport / post-login
+     * signal), open any deferred results page the player earned. A finished run stashes a snapshot at
+     * resolve; the FIRST ready event after that (the overworld arrival) opens the full page here. A
+     * server-side open at teleport-complete was too early and got dropped by the still-loading client.
+     * Rewards are NOT auto-granted - the player claims them from the page (or the play-menu button).
+     */
     public static void onPlayerReady(@Nonnull PlayerReadyEvent event) {
-        // First player connect = the deferral point: the common asset configs are populated by
-        // now, so warm the leaderboard board + party from them (the hyMMO first-player-connect pattern).
+        // First player connect also warms the lazy leaderboard + party from the common pack configs.
         ensureLoaded();
         Player player = event.getPlayer();
         if (player == null) {
@@ -356,24 +449,47 @@ public final class KweebecExperience {
                 }
                 PlayerRef pr = Universe.get().getPlayer(player.getUuid());
                 if (pr != null) {
-                    deliverPendingRewards(pr, ref, ref.getStore());
+                    openResultsPage(pr, ref, ref.getStore());
                 }
             } catch (Throwable t) {
-                SafeLog.warn("[Kweebec] pending-reward drain failed: " + t.getMessage());
+                SafeLog.warn("[Kweebec] deferred results open failed: " + t.getMessage());
             }
         });
     }
 
-    /** Re-deliver any rewards that were blocked by a full inventory, on next login (with the same guard). */
-    public static void deliverPendingRewards(@Nonnull PlayerRef pr, @Nonnull Ref<EntityStore> ref,
-                                             @Nonnull Store<EntityStore> store) {
+    /**
+     * Claim a player's pending spoils NOW (drain the claim store + grant with the full-inventory guard,
+     * re-queuing anything that still does not fit). Returns {@code true} when everything was delivered.
+     * Shared by the results-page Claim button and the play-menu Claim button.
+     */
+    public static boolean claimPending(@Nonnull PlayerRef pr, @Nonnull Ref<EntityStore> ref,
+                                       @Nonnull Store<EntityStore> store) {
         if (pendingRewards == null || !pendingRewards.has(pr.getUuid())) {
-            return;
+            return true; // nothing to claim
         }
         List<InstanceReward> due = pendingRewards.drain(pr.getUuid());
         GrantOutcome outcome = InstanceRewardGranter.grantAll(due, pr, ref, store, KweebecRewardSink.INSTANCE);
         if (!outcome.pending().isEmpty()) {
             pendingRewards.queue(pr.getUuid(), outcome.pending()); // still no space -> hold again
+            return false;
+        }
+        return true;
+    }
+
+    /** Whether the player has unclaimed spoils (drives the play-screen Claim button). */
+    public static boolean hasPendingRewards(@Nonnull UUID uuid) {
+        return pendingRewards != null && pendingRewards.has(uuid);
+    }
+
+    /** Adapts the pending-reward claim to the common play-screen Claim button (hasPending + claim). */
+    private static final class KweebecRewardClaim implements PlayRewardClaim {
+        @Override public boolean hasPending(@Nonnull UUID uuid) {
+            return hasPendingRewards(uuid);
+        }
+
+        @Override public boolean claim(@Nonnull PlayerRef player, @Nonnull Ref<EntityStore> ref,
+                                       @Nonnull Store<EntityStore> store) {
+            return claimPending(player, ref, store);
         }
     }
 }

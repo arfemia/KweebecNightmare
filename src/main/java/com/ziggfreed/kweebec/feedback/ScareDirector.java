@@ -37,6 +37,7 @@ import com.ziggfreed.kweebec.atmosphere.MusicBedService;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
 import com.ziggfreed.kweebec.round.PlayerRoundState;
 import com.ziggfreed.kweebec.round.RoundInstance;
+import com.ziggfreed.kweebec.round.RuleSet;
 
 /**
  * The horror conductor: a 1 Hz fan-out (called from {@code ChaseMode.tick} on the
@@ -97,13 +98,20 @@ public final class ScareDirector {
     /** Closest proximity band (band 3); entering it triggers the jumpscare. ScareDirector's own band scheme. */
     private static final int CLOSEST_BAND = 3;
 
-    /** Minimum gap (ms) between jumpscares for one survivor, so a catch cannot spam every tick. */
-    private static final long JUMPSCARE_COOLDOWN_MS = 12_000L;
-
-    /** Camera-effect id for the jumpscare shake (validated by CameraShakeService; missing = no-op). */
+    /**
+     * Fallback camera-effect id for the jumpscare shake, used only when the resolved scare
+     * BEAT authors no {@code ShakeId}. The per-preset beat (ziggfreed-common
+     * {@code BandedEffectAsset.shakeId()}) is the primary source; this matches the shipped
+     * {@code KweebecNightmare_JumpscareShake} CameraEffect. Validated by CameraShakeService
+     * (missing = no-op).
+     */
     private static final String JUMPSCARE_SHAKE_ID = "KweebecNightmare_JumpscareShake";
-    /** Shake intensity in the engine's 0..1 space. */
-    private static final float JUMPSCARE_SHAKE_INTENSITY = 1.0f;
+    /**
+     * Fallback shake intensity (0..1) when neither the preset nor the beat supplies one. Kept low:
+     * vanilla weapon/scream shakes pass ~0.05 in this context space, so a jumpscare jolt stays a small
+     * multiple of that, not a screen-wrecking value. The per-preset / beat value is the real source.
+     */
+    private static final float JUMPSCARE_SHAKE_INTENSITY = 0.1f;
 
     /**
      * Full lang keys for the jumpscare title banner. Defined here (the same full-key form
@@ -244,7 +252,7 @@ public final class ScareDirector {
 
             // Jumpscare on first entry into the closest band (throttled per survivor).
             if (targetBand >= CLOSEST_BAND && prevBand < CLOSEST_BAND) {
-                fireJumpscare(uuid, ref, store);
+                fireJumpscare(uuid, ref, round.ruleSet(), store);
             }
 
             // Snicker: a random chance for the nearest hunter to cackle while it is close.
@@ -330,7 +338,7 @@ public final class ScareDirector {
         if (ref == null || !ref.isValid()) {
             return;
         }
-        fireJumpscare(survivorId, ref, store);
+        fireJumpscare(survivorId, ref, round.ruleSet(), store);
     }
 
     // =====================================================================
@@ -486,27 +494,47 @@ public final class ScareDirector {
     // =====================================================================
 
     /**
-     * Fire the one-shot jumpscare for one survivor (subject to the per-player cooldown):
-     * a camera shake + a 3D scream stinger + the {@code KweebecNightmare_Jumpscare} hard
-     * tint + a title banner. Every channel is validated/try-guarded.
+     * Fire the one-shot jumpscare for one survivor, configured by the round's preset
+     * ({@link RuleSet}): a camera shake + a 3D scream stinger + the screen-overlay hard
+     * tint + a title banner. The scare BEAT (overlay {@code EntityEffect} + scream +
+     * shake) is the ziggfreed-common {@code BandedEffectAsset} named by
+     * {@link RuleSet#jumpscareBeatId()} (else the first authored one-shot); the shake
+     * intensity is the preset override ({@link RuleSet#jumpscareShakeIntensity()}) or the
+     * beat's own. No-op when {@link RuleSet#jumpscareEnabled()} is false. Every channel is
+     * validated/try-guarded, so a missing asset degrades to a no-op, never a throw.
      */
     private static void fireJumpscare(@Nonnull UUID uuid, @Nonnull Ref<EntityStore> ref,
-                                      @Nonnull Store<EntityStore> store) {
+                                      @Nonnull RuleSet ruleSet, @Nonnull Store<EntityStore> store) {
+        if (!ruleSet.jumpscareEnabled()) {
+            return;
+        }
         long now = System.currentTimeMillis();
         Long last = LAST_JUMPSCARE_MS.get(uuid);
-        if (last != null && now - last < JUMPSCARE_COOLDOWN_MS) {
+        long cooldownMs = Math.max(0L, ruleSet.jumpscareCooldownSeconds() * 1000L);
+        if (last != null && now - last < cooldownMs) {
             return;
         }
         LAST_JUMPSCARE_MS.put(uuid, now);
 
-        BandedEffectAsset beat = BandedEffectConfig.getInstance().oneShot();
+        // Resolve the scare beat: a preset may name a specific beat, else the first authored one-shot.
+        BandedEffectConfig beats = BandedEffectConfig.getInstance();
+        BandedEffectAsset beat = beats.byId(ruleSet.jumpscareBeatId());
+        if (beat == null) {
+            beat = beats.oneShot();
+        }
 
         Vector3d pos = positionOf(store, ref);
         PlayerRef pr = store.getComponent(ref, PlayerRef.getComponentType());
 
-        // 1) Camera shake (validated inside CameraShakeService; missing asset = no-op).
+        // 1) Camera shake: the beat's ShakeId (fallback to the shipped id), at the preset's
+        //    intensity override or the beat's own (validated inside CameraShakeService; missing = no-op).
         if (pr != null) {
-            CameraShakeService.shake(pr, JUMPSCARE_SHAKE_ID, JUMPSCARE_SHAKE_INTENSITY);
+            String shakeId = beat != null && beat.shakeId() != null && !beat.shakeId().isBlank()
+                    ? beat.shakeId() : JUMPSCARE_SHAKE_ID;
+            double presetIntensity = ruleSet.jumpscareShakeIntensity();
+            float intensity = !Double.isNaN(presetIntensity) ? (float) presetIntensity
+                    : (beat != null ? beat.shakeIntensity() : JUMPSCARE_SHAKE_INTENSITY);
+            CameraShakeService.shake(pr, shakeId, intensity);
         }
 
         // 2) 3D scream stinger, private to this survivor (Sound3D validates the id).

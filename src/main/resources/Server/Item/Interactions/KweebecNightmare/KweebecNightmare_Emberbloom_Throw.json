@@ -1,0 +1,39 @@
+{
+  "Type": "Serial",
+  "Interactions": [
+    {
+      "Type": "Simple",
+      "RunTime": 0.25,
+      "Effects": {
+        "ItemAnimationId": "Throw"
+      }
+    },
+    {
+      "Type": "ResetCooldown",
+      "Cooldown": {
+        "Cooldown": 1
+      }
+    },
+    {
+      "Type": "Parallel",
+      "Interactions": [
+        {
+          "Interactions": [
+            {
+              "Type": "Projectile",
+              "Config": "Projectile_Config_KweebecNightmare_Emberbloom"
+            }
+          ]
+        },
+        {
+          "Interactions": [
+            {
+              "Type": "ModifyInventory",
+              "AdjustHeldItemQuantity": -1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

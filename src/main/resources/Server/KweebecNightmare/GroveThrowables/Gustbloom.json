@@ -1,0 +1,10 @@
+{
+  "Name": "gustbloom",
+  "Enabled": false,
+  "PrefabKey": "KweebecNightmare/Gustbloom",
+  "PerShrineCount": 0,
+  "ScatterCount": 6,
+  "RespawnWithWaves": true,
+  "MinCorruptionTier": 0,
+  "NameKey": "kweebecnightmare.item.gustbloom.name"
+}

@@ -1,0 +1,74 @@
+{
+  "$Comment": "The Spitter's Void glob. Cloned from vanilla Projectile_Config_Scarak_Seeker_Spitball (flat/fast/sticks) - NOT parented to the bomb base (that adds a fuse + bounce, wrong for a direct spit). Reuses the vanilla Scarak_Seeker_Spitball green-acid model + Impact_Poison splat (reads as corruption). Deals the custom KweebecNightmare_VoidSpit cause so it routes through KweebecDamageSystem's hunter on-hit punishment + scoring; removes itself on hit/miss.",
+  "Model": "Scarak_Seeker_Spitball",
+  "Physics": {
+    "Type": "Standard",
+    "Gravity": 4,
+    "TerminalVelocityAir": 160,
+    "TerminalVelocityWater": 15,
+    "RotationMode": "Velocity",
+    "Bounciness": 0.0,
+    "SticksVertically": true
+  },
+  "LaunchForce": 170,
+  "SpawnOffset": {
+    "X": 0,
+    "Y": 1.4,
+    "Z": 0.5
+  },
+  "Interactions": {
+    "ProjectileHit": {
+      "Cooldown": {
+        "Cooldown": 0
+      },
+      "Interactions": [
+        {
+          "Type": "DamageEntity",
+          "Entity": "Target",
+          "DamageCalculator": {
+            "Type": "Absolute",
+            "BaseDamage": {
+              "KweebecNightmare_VoidSpit": 6
+            },
+            "RandomPercentageModifier": 0.1
+          },
+          "DamageEffects": {
+            "WorldSoundEventId": "SFX_Scarak_Seeker_Spitball_Death",
+            "WorldParticles": [
+              {
+                "SystemId": "Impact_Poison"
+              }
+            ]
+          }
+        },
+        {
+          "Type": "RemoveEntity",
+          "Entity": "User"
+        }
+      ]
+    },
+    "ProjectileMiss": {
+      "Cooldown": {
+        "Cooldown": 0
+      },
+      "Interactions": [
+        {
+          "Type": "Simple",
+          "RunTime": 0,
+          "Effects": {
+            "WorldSoundEventId": "SFX_Scarak_Seeker_Spitball_Death",
+            "WorldParticles": [
+              {
+                "SystemId": "Impact_Poison"
+              }
+            ]
+          }
+        },
+        {
+          "Type": "RemoveEntity",
+          "Entity": "User"
+        }
+      ]
+    }
+  }
+}

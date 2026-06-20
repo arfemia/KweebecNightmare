@@ -9,6 +9,9 @@ import com.hypixel.hytale.assetstore.map.DefaultAssetMap;
 import com.hypixel.hytale.assetstore.map.JsonAssetWithMap;
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
+import com.ziggfreed.common.worldmap.DiscoveryMode;
+import com.ziggfreed.common.worldmap.MapDiscovery;
+import com.ziggfreed.kweebec.round.ExtractionMode;
 import com.ziggfreed.kweebec.round.InventoryMode;
 import com.ziggfreed.kweebec.round.ReviveStyle;
 import com.ziggfreed.kweebec.round.RuleSet;
@@ -48,8 +51,16 @@ import com.ziggfreed.kweebec.score.ScoringConfig;
  *   "InventoryMode": "PRESERVE_AND_STRIP", "HunterArchetype": "stalker",
  *   "Baseline": 1000, "ParTimeSeconds": 420, "TimePointsPerSecond": 5.0,
  *   "DamagePointsPerHp": 8.0, "DamageBudget": 200.0, "StunBonusPer": 50,
- *   "ShrineBonusPer": 75, "AllShrinesBonus": 500 }
+ *   "ShrineBonusPer": 75, "AllShrinesBonus": 500,
+ *   "JumpscareEnabled": true, "JumpscareBeatId": "jumpscare",
+ *   "JumpscareShakeIntensity": 0.7, "JumpscareCooldownSeconds": 12 }
  * }</pre>
+ *
+ * <p>The 4 jumpscare knobs are per-game-mode: {@code JumpscareEnabled} toggles the proximity/alert
+ * scare; {@code JumpscareBeatId} names a ziggfreed-common {@code BandedEffect} one-shot (overlay
+ * {@code EntityEffect} + scream + camera shake bundled), so a preset can use a different overlay/shake
+ * beat per mode (absent = the first authored one-shot); {@code JumpscareShakeIntensity} overrides that
+ * beat's shake strength (0..1); {@code JumpscareCooldownSeconds} throttles it. Read by {@code ScareDirector}.
  *
  * <p>The 8 scoring knobs ({@code Baseline}..{@code AllShrinesBonus}) drive the asset-driven,
  * per-difficulty round scoring (see {@code score/ScoringConfig}): each absent keeps the
@@ -98,10 +109,31 @@ public final class RoundPresetAsset
     private int maxParty = UNSET_INT;
     // Exit map marker toggle (null = absent = the RuleSet default = on; Hardcore authors false).
     @Nullable private Boolean exitMarker;
+    // Shrine-discovery marker knobs (null/NaN = absent = the RuleSet default). ShrineDiscovery is the
+    // trigger (OFF/ON_INTERACT/PROXIMITY); ShrineDiscoveryVisibility is who sees it (SELF/ALL aliases,
+    // or PER_PLAYER/SHARED); ShrineDiscoveryRadius is the PROXIMITY reveal distance.
+    @Nullable private String shrineDiscovery;
+    @Nullable private String shrineDiscoveryVisibility;
+    private double shrineDiscoveryRadius = UNSET_DOUBLE;
+    // Co-op extraction knobs (null/NaN = absent = the RuleSet default). ExtractionMode is WHO must hold
+    // the platform (ALL_MOBILE / EVERYONE); ExtractionHoldSeconds is how long the group holds it together.
+    @Nullable private String extractionMode;
+    private double extractionHoldSeconds = UNSET_DOUBLE;
     // Boss capstone toggle + id (null = absent = the RuleSet default = off / default Warden). The harder
-    // presets author BossEnabled=true; BossId selects a non-default boss from the BossConfig fold.
+    // presets author BossEnabled=true; BossId selects a non-default boss from the BossConfig fold;
+    // BossBarsGate=true holds the Heartwood Gate shut until the boss is defeated (else the boss is a
+    // pure obstacle beside an already-open gate).
     @Nullable private Boolean bossEnabled;
     @Nullable private String bossId;
+    @Nullable private Boolean bossBarsGate;
+    // Jumpscare beat knobs (null/UNSET = absent = the RuleSet default). JumpscareEnabled toggles the
+    // proximity/alert scare; JumpscareBeatId names a ziggfreed-common BandedEffect one-shot (overlay
+    // EntityEffect + scream + camera shake) so a preset can use a different overlay/intensity per mode;
+    // JumpscareShakeIntensity overrides the beat's shake strength; JumpscareCooldownSeconds throttles it.
+    @Nullable private Boolean jumpscareEnabled;
+    @Nullable private String jumpscareBeatId;
+    private double jumpscareShakeIntensity = UNSET_DOUBLE;
+    private int jumpscareCooldownSeconds = UNSET_INT;
     // Per-preset scoring weights (each absent = the ScoringConfig default). The asset-driven
     // scoring calculation: a preset may reward speed/caution/aggression/devotion differently.
     private int scoreBaseline = UNSET_INT;
@@ -182,9 +214,29 @@ public final class RoundPresetAsset
             .add()
             .append(new KeyedCodec<>("ExitMarker", Codec.BOOLEAN, false), (a, v) -> a.exitMarker = v, a -> a.exitMarker)
             .add()
+            .append(new KeyedCodec<>("ShrineDiscovery", Codec.STRING, false), (a, v) -> a.shrineDiscovery = v, a -> a.shrineDiscovery)
+            .add()
+            .append(new KeyedCodec<>("ShrineDiscoveryVisibility", Codec.STRING, false), (a, v) -> a.shrineDiscoveryVisibility = v, a -> a.shrineDiscoveryVisibility)
+            .add()
+            .append(new KeyedCodec<>("ShrineDiscoveryRadius", Codec.DOUBLE, false), (a, v) -> a.shrineDiscoveryRadius = v, a -> a.shrineDiscoveryRadius)
+            .add()
+            .append(new KeyedCodec<>("ExtractionMode", Codec.STRING, false), (a, v) -> a.extractionMode = v, a -> a.extractionMode)
+            .add()
+            .append(new KeyedCodec<>("ExtractionHoldSeconds", Codec.DOUBLE, false), (a, v) -> a.extractionHoldSeconds = v, a -> a.extractionHoldSeconds)
+            .add()
             .append(new KeyedCodec<>("BossEnabled", Codec.BOOLEAN, false), (a, v) -> a.bossEnabled = v, a -> a.bossEnabled)
             .add()
             .append(new KeyedCodec<>("BossId", Codec.STRING, false), (a, v) -> a.bossId = v, a -> a.bossId)
+            .add()
+            .append(new KeyedCodec<>("BossBarsGate", Codec.BOOLEAN, false), (a, v) -> a.bossBarsGate = v, a -> a.bossBarsGate)
+            .add()
+            .append(new KeyedCodec<>("JumpscareEnabled", Codec.BOOLEAN, false), (a, v) -> a.jumpscareEnabled = v, a -> a.jumpscareEnabled)
+            .add()
+            .append(new KeyedCodec<>("JumpscareBeatId", Codec.STRING, false), (a, v) -> a.jumpscareBeatId = v, a -> a.jumpscareBeatId)
+            .add()
+            .append(new KeyedCodec<>("JumpscareShakeIntensity", Codec.DOUBLE, false), (a, v) -> a.jumpscareShakeIntensity = v, a -> a.jumpscareShakeIntensity)
+            .add()
+            .append(new KeyedCodec<>("JumpscareCooldownSeconds", Codec.INTEGER, false), (a, v) -> a.jumpscareCooldownSeconds = v, a -> a.jumpscareCooldownSeconds)
             .add()
             .append(new KeyedCodec<>("Baseline", Codec.INTEGER, false), (a, v) -> a.scoreBaseline = v, a -> a.scoreBaseline)
             .add()
@@ -311,14 +363,71 @@ public final class RoundPresetAsset
         if (exitMarker != null) {
             b.exitMarker(exitMarker);
         }
+        if (shrineDiscovery != null && !shrineDiscovery.isBlank()) {
+            try {
+                b.shrineDiscovery(DiscoveryMode.valueOf(shrineDiscovery.trim().toUpperCase()));
+            } catch (IllegalArgumentException ignored) {
+                // Unknown trigger -> keep the builder default (ON_INTERACT).
+            }
+        }
+        MapDiscovery.Visibility vis = parseVisibility(shrineDiscoveryVisibility);
+        if (vis != null) {
+            b.shrineDiscoveryVisibility(vis);
+        }
+        if (!Double.isNaN(shrineDiscoveryRadius)) {
+            b.shrineDiscoveryRadius(shrineDiscoveryRadius);
+        }
+        if (extractionMode != null && !extractionMode.isBlank()) {
+            b.extractionMode(ExtractionMode.fromString(extractionMode));
+        }
+        if (!Double.isNaN(extractionHoldSeconds)) {
+            b.extractionHoldSeconds(extractionHoldSeconds);
+        }
         if (bossEnabled != null) {
             b.bossEnabled(bossEnabled);
         }
         if (bossId != null && !bossId.isBlank()) {
             b.bossId(bossId.toLowerCase());
         }
+        if (bossBarsGate != null) {
+            b.bossBarsGate(bossBarsGate);
+        }
+        if (jumpscareEnabled != null) {
+            b.jumpscareEnabled(jumpscareEnabled);
+        }
+        if (jumpscareBeatId != null && !jumpscareBeatId.isBlank()) {
+            b.jumpscareBeatId(jumpscareBeatId);
+        }
+        if (!Double.isNaN(jumpscareShakeIntensity)) {
+            b.jumpscareShakeIntensity(jumpscareShakeIntensity);
+        }
+        if (jumpscareCooldownSeconds != UNSET_INT) {
+            b.jumpscareCooldownSeconds(jumpscareCooldownSeconds);
+        }
         b.scoring(buildScoring());
         return b.build();
+    }
+
+    /**
+     * Parse the {@code ShrineDiscoveryVisibility} knob: the author's {@code SELF}/{@code ALL} vocabulary
+     * (plus the {@code PER_PLAYER}/{@code SHARED} enum names), case-insensitive. Returns {@code null} for
+     * absent / blank / unknown so the caller keeps the {@link RuleSet} builder default.
+     */
+    @Nullable
+    private static MapDiscovery.Visibility parseVisibility(@Nullable String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        switch (raw.trim().toUpperCase()) {
+            case "SELF":
+            case "PER_PLAYER":
+                return MapDiscovery.Visibility.PER_PLAYER;
+            case "ALL":
+            case "SHARED":
+                return MapDiscovery.Visibility.SHARED;
+            default:
+                return null;
+        }
     }
 
     /**

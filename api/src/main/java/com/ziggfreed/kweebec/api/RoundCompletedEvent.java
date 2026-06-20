@@ -25,7 +25,7 @@ public final class RoundCompletedEvent implements IEvent<Void> {
 
     /** How the round ended. */
     public enum Outcome {
-        /** Chase: at least one survivor reached the Heartwood Gate exit. */
+        /** Chase: the required survivor group held the Heartwood extraction platform together long enough to escape. */
         ESCAPED,
         /** Survival: the party reached dawn. */
         SURVIVED,

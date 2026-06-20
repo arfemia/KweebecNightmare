@@ -146,9 +146,11 @@ public final class ShrinePlacement {
             SafeLog.info("[Kweebec] surface shrines: detected=" + (resolved.size() - deficit)
                     + " target=" + target + " toppedUp=" + deficit + " round=" + round.roundId());
 
-            // Positions are known: plant the initial Moonbloom supply clustered at the REAL shrines.
+            // Positions are known: plant the initial Moonbloom supply clustered at the REAL shrines, plus
+            // the initial supply of any ENABLED grove throwable (Gust/Mire; dormant by default).
             ArenaBuilder.plantMoonbloom(round, world, round.ruleSet().moonbloomPerShrine(),
                     round.ruleSet().moonbloomScatter(), 0L);
+            ArenaBuilder.plantGroveThrowables(round, world, 0L, false);
         } catch (Throwable t) {
             SafeLog.warn("[Kweebec] shrine detect/top-up failed: " + t.getMessage());
         }

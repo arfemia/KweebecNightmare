@@ -7,7 +7,6 @@
     "Appearance": "KweebecNightmare_Warden",
     "DropList": "Empty",
     "MaxHealth": 300,
-    "CombatConfig": "CAE_KweebecNightmare_Warden_Phase_3",
     "Burn": true,
     "IsMemory": false,
     "MaxSpeed": 7.5,

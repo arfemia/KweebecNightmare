@@ -29,6 +29,7 @@ import com.ziggfreed.common.instance.encounter.MultiPhaseBossAsset;
 import com.ziggfreed.common.sound.Sound3D;
 import com.ziggfreed.common.world.SpawnPlacement;
 import com.ziggfreed.kweebec.arena.Anchor;
+import com.ziggfreed.kweebec.arena.ArenaBuilder;
 import com.ziggfreed.kweebec.arena.ArenaLayout;
 import com.ziggfreed.kweebec.feedback.BossHud;
 import com.ziggfreed.kweebec.feedback.RoundFeedback;
@@ -85,6 +86,12 @@ public final class BossController {
     private int phase = 0;
     /** True once the boss has been defeated (so we resolve/teardown exactly once). World-thread only. */
     private boolean defeated = false;
+    /**
+     * Wall-clock (ms) of the last Emberbloom helper-throwable cluster placement, the cooldown anchor for the
+     * asset's {@link MultiPhaseBossAsset#throwableRespawnSeconds()} regrow timer. Stamped on every placement
+     * (phase entry + each respawn). World-thread only.
+     */
+    private long lastThrowableSpawnMs = 0L;
 
     private BossController(@Nonnull MultiPhaseBossAsset boss) {
         this.boss = boss;
@@ -108,19 +115,22 @@ public final class BossController {
 
     /**
      * Spawn the Phase-1 Warden at the gate (barring the escape), install the boss HUD for every survivor,
-     * play the spawn cue, and summon Phase-1 adds. World-thread only; best-effort.
+     * play the spawn cue, and summon Phase-1 adds. World-thread only; best-effort. Returns {@code true} when
+     * the phase-1 entity actually spawned (so a barring round can hold the gate shut on it), {@code false}
+     * when no boss entity exists (NPCPlugin missing / role unregistered) - the caller must then NOT defer
+     * the gate or it would soft-lock the escape.
      */
-    public void spawn(@Nonnull RoundInstance round, @Nonnull World world, @Nonnull Store<EntityStore> store) {
+    public boolean spawn(@Nonnull RoundInstance round, @Nonnull World world, @Nonnull Store<EntityStore> store) {
         NPCPlugin npc = NPCPlugin.get();
         if (npc == null) {
             SafeLog.warn("[Kweebec][boss] NPCPlugin unavailable; no boss.");
-            return;
+            return false;
         }
         Vector3d pos = bossSpawnPos(world);
         Ref<EntityStore> spawned = spawnRole(npc, store, boss.phase1Role(), pos, ArenaLayout.GATE.yaw());
         if (spawned == null) {
             SafeLog.warn("[Kweebec][boss] phase-1 spawn failed; capstone aborted.");
-            return;
+            return false;
         }
         this.bossRef = spawned;
         this.phase = 1;
@@ -130,9 +140,11 @@ public final class BossController {
             Sound3D.playAt(spawnSound, SoundCategory.SFX, spawned, store, "BOSS_SPAWN", false);
         }
         summonAdds(npc, store, world, Math.max(0, boss.phase1AddCount()));
+        placeThrowableClusters(world, store, boss.throwableCountForPhase(1));
         forEachSurvivor(round, pr -> RoundFeedback.title(pr,
                 Lang.BOSS_TITLE_AWAKENS, Lang.BOSS_TITLE_AWAKENS_SUB, true));
         SafeLog.info("[Kweebec][boss] Warden spawned (phase 1) in round " + round.roundId());
+        return true;
     }
 
     /**
@@ -158,6 +170,7 @@ public final class BossController {
             return false; // cannot read HP this tick; hold the current phase
         }
         maybeSwapPhase(round, world, store, hp);
+        maybeRespawnThrowables(world, store);
         pushHuds(round, hp);
         return false;
     }
@@ -212,6 +225,7 @@ public final class BossController {
             Sound3D.playAt(roar, SoundCategory.SFX, spawned, store, "BOSS_PHASE", false);
         }
         summonAdds(npc, store, world, addCount);
+        placeThrowableClusters(world, store, boss.throwableCountForPhase(newPhase));
         forEachSurvivor(round, pr -> RoundFeedback.dangerToast(pr, Lang.BOSS_TOAST_PHASE));
         SafeLog.info("[Kweebec][boss] Warden -> phase " + newPhase + " in round " + round.roundId());
     }
@@ -262,6 +276,47 @@ public final class BossController {
             if (add != null) {
                 adds.add(add);
             }
+        }
+    }
+
+    // --- helper throwables (the boss-phase Emberbloom supply) ---
+
+    /**
+     * Place {@code count} harvestable Emberbloom clusters in a ring around the boss (the asset's
+     * {@link MultiPhaseBossAsset#throwableClusterId()} prefab at {@link MultiPhaseBossAsset#throwableRingRadius()}),
+     * so survivors can gather + throw them at the Warden for the burst damage that makes a high-HP boss
+     * killable. Stamps {@link #lastThrowableSpawnMs} so the respawn timer measures from this placement.
+     * No-op when the boss authors no throwable cluster (the default). World-thread; best-effort via
+     * {@code ArenaBuilder} (blocking load off-thread, each paste hops back on).
+     */
+    private void placeThrowableClusters(@Nonnull World world, @Nonnull Store<EntityStore> store, int count) {
+        String prefab = boss.throwableClusterId();
+        if (count <= 0 || prefab == null || prefab.isBlank()) {
+            return;
+        }
+        Vector3d center = positionOf(store, bossRef);
+        if (center == null) {
+            center = bossSpawnPos(world);
+        }
+        ArenaBuilder.plantClusterRing(world, prefab, center.x(), center.z(), boss.throwableRingRadius(), count);
+        lastThrowableSpawnMs = System.currentTimeMillis();
+    }
+
+    /**
+     * Replenish the current phase's Emberbloom clusters once {@link MultiPhaseBossAsset#throwableRespawnSeconds()}
+     * has elapsed since the last placement - the configurable supply timer that keeps the Warden killable as
+     * survivors spend throwables on it. No-op when respawn is off ({@code 0}) or the current phase places no
+     * throwables. World-thread only.
+     */
+    private void maybeRespawnThrowables(@Nonnull World world, @Nonnull Store<EntityStore> store) {
+        int respawnSec = boss.throwableRespawnSeconds();
+        int count = boss.throwableCountForPhase(phase);
+        String prefab = boss.throwableClusterId();
+        if (respawnSec <= 0 || count <= 0 || prefab == null || prefab.isBlank()) {
+            return;
+        }
+        if (System.currentTimeMillis() - lastThrowableSpawnMs >= respawnSec * 1000L) {
+            placeThrowableClusters(world, store, count);
         }
     }
 

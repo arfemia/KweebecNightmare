@@ -60,6 +60,14 @@ public final class KweebecPlayScreenMessages implements PlayScreenMessages {
         return Lang.msg(Lang.QUEUE_SCREEN_LEAVE);
     }
 
+    @Override @Nonnull public Message claimButton() {
+        return Lang.msg(Lang.PLAY_BTN_CLAIM);
+    }
+
+    @Override @Nonnull public Message toastClaimed() {
+        return Lang.msg(Lang.PLAY_TOAST_CLAIMED);
+    }
+
     @Override @Nonnull public Message notInQueue() {
         return Lang.msg(Lang.QUEUE_SCREEN_NOT_QUEUED);
     }

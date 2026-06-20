@@ -38,7 +38,12 @@ public final class ArenaLayout {
     /** The Heartwood Gate that opens when the final shrine is lit. */
     public static final Anchor GATE = new Anchor(0.5, STAND_Y, -44.0, (float) Math.PI);
 
-    /** The exit just past the gate - reaching it (in ESCAPE) wins the round. */
+    /**
+     * The co-op extraction platform just past the gate: the survivor group must HOLD it together (all required
+     * survivors standing within {@link #ESCAPE_RADIUS}) for {@code RuleSet.extractionHoldSeconds()} to win
+     * (see {@code ChaseMode.checkExtraction}). The {@code KweebecNightmare/Extraction_Pad} prefab (a vanilla
+     * Frost Elemental Circle) is pasted here at gate-open, its walkable plane floor-snapped flush.
+     */
     public static final Anchor ESCAPE = new Anchor(0.5, STAND_Y, -56.0, (float) Math.PI);
 
     /** The hunter's containment / entry point during PREP, away from the party. */
@@ -143,13 +148,16 @@ public final class ArenaLayout {
     /** Radius of the shrine ring around spawn. */
     private static final double SHRINE_RING_RADIUS = 26.0;
 
-    /** Proximity radius (blocks) a player must be within to channel a shrine or reach the exit. */
+    /** Proximity radius (blocks) for adjacency checks (rescuing a cocooned teammate). The extraction platform
+     *  uses the separate {@link #ESCAPE_RADIUS}; shrine cleanse is an F-press furnace, not proximity. */
     public static final double INTERACT_RADIUS = 3.0;
     public static final double INTERACT_RADIUS_SQ = INTERACT_RADIUS * INTERACT_RADIUS;
 
     /**
-     * Reaching within this of {@link #ESCAPE} counts as an escape. Generous (the exit pad
-     * is 3 blocks across) so a player who clearly reached the exit always resolves the win.
+     * Standing within this (horizontal) of {@link #ESCAPE} counts as being ON the extraction platform for the
+     * co-op hold. Sized to the {@code Extraction_Pad} prefab's standable footprint (the 11x11 Frost circle,
+     * half-extent ~5), so the whole party can gather on it; generous enough that a survivor clearly on the
+     * platform always counts toward the hold.
      */
     public static final double ESCAPE_RADIUS = 6.0;
     public static final double ESCAPE_RADIUS_SQ = ESCAPE_RADIUS * ESCAPE_RADIUS;

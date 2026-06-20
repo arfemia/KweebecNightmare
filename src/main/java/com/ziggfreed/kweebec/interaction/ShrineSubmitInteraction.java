@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
+import org.joml.Vector3i;
+
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
@@ -17,11 +19,13 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.ziggfreed.common.inventory.InventoryUtil;
+import com.ziggfreed.common.worldmap.MapDiscovery;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.feedback.RoundFeedback;
 import com.ziggfreed.kweebec.i18n.Lang;
 import com.ziggfreed.kweebec.mode.chase.ChaseMode;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
+import com.ziggfreed.kweebec.mode.chase.Shrine;
 import com.ziggfreed.kweebec.mode.chase.ShrineState;
 import com.ziggfreed.kweebec.moonbloom.Moonbloom;
 import com.ziggfreed.kweebec.round.ChasePhase;
@@ -117,6 +121,19 @@ public final class ShrineSubmitInteraction extends SimpleInstantInteraction {
                 // Beyond the expected shrine count, or already cleansed: no-op (no Moonbloom consumed).
                 ctx.getState().state = InteractionState.Finished;
                 return;
+            }
+
+            // DISCOVERY: mark this shrine on the player's world map the instant they FIRST touch it - the
+            // dark-navigation aid. Fires BEFORE the Moonbloom gate below, so a found-but-can't-afford shrine
+            // is still marked. The POI's visibility (self / shared) follows the preset; an OFF preset has no
+            // tracker (null), so this is skipped entirely.
+            MapDiscovery discovery = round.mapDiscovery();
+            Vector3i sp = shrine.blockPos();
+            if (discovery != null && sp != null) {
+                String poiId = ShrineState.markerPoiId(sp);
+                discovery.register(poiId, Shrine.MARKER_ICON, sp.x() + 0.5, sp.y(), sp.z() + 0.5,
+                        Lang.msg(Lang.MARKER_SHRINE), round.ruleSet().shrineDiscoveryVisibility());
+                discovery.discover(poiId, uuid);
             }
 
             int required = round.ruleSet().cleanseCost();

@@ -32,7 +32,7 @@ npc.warden.name = The Blight Warden
 title.hunt_begins = The Hunt Begins
 title.hunt_begins.sub = Relight the grove shrines
 title.gate_open = The Heartwood Gate Opens
-title.gate_open.sub = Run for the light
+title.gate_open.sub = Gather on the platform and hold it together
 title.you_survived = You Escaped
 title.you_survived.sub = The grove releases you
 title.caught = The Grove Claims You
@@ -44,6 +44,12 @@ title.jumpscare.sub = Tear free and run
 
 item.moonbloom.name = Moonbloom
 item.moonbloom_plant.name = Moonbloom Cluster
+item.gustbloom.name = Gustbloom
+item.gustbloom_plant.name = Gustbloom Cluster
+item.mirebloom.name = Mirebloom
+item.mirebloom_plant.name = Mirebloom Cluster
+item.emberbloom.name = Emberbloom
+item.emberbloom_plant.name = Emberbloom Cluster
 item.shrine.name = Blighted Shrine
 
 interaction.shrine.hint = Offer Moonbloom
@@ -64,15 +70,20 @@ toast.teammate_down = A teammate has been cocooned
 toast.hunter_locked = It has your scent
 toast.time_low = The night is almost over
 toast.hunters_drawn = The light draws more of them in
+toast.extraction_hold = The platform hums. Hold it together until the grove releases you.
 
 hud.timer = Time {0}
 hud.shrines = Shrines {0}/{1}
 hud.alive = Alive {0}
 hud.corruption = Corruption {0}%
 hud.objective.ritual = Relight the grove shrines
-hud.objective.escape = Flee through the Heartwood Gate
+hud.objective.escape = Gather on the Heartwood platform
+# Co-op extraction line (ESCAPE phase). {0}=survivors on the platform, {1}=required, {2}=hold seconds left.
+hud.extraction.hold = Extraction {0}/{1}  {2}s
+hud.extraction.wait = Extraction {0}/{1}  gather on the platform
 
 marker.exit = Exit
+marker.shrine = Shrine
 
 boss.hud.phase = Phase {0}/{1}
 boss.title.awakens = The Warden Awakens
@@ -115,7 +126,7 @@ dialogue.kweebec_intro.lore.text = "Once the Emerald Grove sang. The Void crept 
 dialogue.kweebec_intro.lore.opt.0 = Go back
 dialogue.kweebec_intro.warning.text = "It wears our bark and our faces. It does not tire. When a shrine flares, it turns toward the light, and toward you."
 dialogue.kweebec_intro.warning.opt.0 = Go back
-dialogue.kweebec_intro.secret.text = The sapling leans close. "The Heartwood Gate is not an exit. It is a mouth. Relight every shrine, or it swallows whoever runs last."
+dialogue.kweebec_intro.secret.text = The sapling leans close. "The Heartwood Gate is not an exit. It is a mouth. Relight every shrine and step onto the platform together, or it keeps the ones who linger."
 dialogue.kweebec_intro.secret.opt.0 = Go back
 
 # Matchmaking queue feedback. Toasts (Notify) are coloured by their NotificationStyle
@@ -154,7 +165,7 @@ dialogue.nightmares_intro.greet.opt.0 = What happened to this place?
 dialogue.nightmares_intro.greet.opt.1 = I am ready. Send me into the grove.
 dialogue.nightmares_intro.greet.opt.2 = About the hunt I have already chosen...
 dialogue.nightmares_intro.greet.opt.3 = Who has survived the most?
-dialogue.nightmares_intro.lore.text = <i>"Once the Emerald Grove <b>sang</b>. The <color is="#a06cff">Void</color> seeped up through the roots, and the song became screaming. My kin wear our faces now, and they <color is="#ff6b6b">hunt</color>. Relight the grove-shrines and the Heartwood Gate will open; linger too long, and the dark takes whoever runs last."</i>
+dialogue.nightmares_intro.lore.text = <i>"Once the Emerald Grove <b>sang</b>. The <color is="#a06cff">Void</color> seeped up through the roots, and the song became screaming. My kin wear our faces now, and they <color is="#ff6b6b">hunt</color>. Relight the grove-shrines and the Heartwood Gate will open; gather on the platform beyond it <b>together</b>, or the dark keeps the ones left behind."</i>
 dialogue.nightmares_intro.lore.opt.0 = Enough. I am ready to hunt.
 dialogue.nightmares_intro.lore.opt.1 = Tell me something else.
 dialogue.nightmares_intro.preset_pick.text = <i>"How deep will you go?"</i> The warden's eyes flicker like dying embers. <i>"Choose, and I will open a way into the dark."</i>
@@ -206,16 +217,27 @@ results.duration = Total time: {0}
 results.breakdown = Your run
 results.rewards = Spoils of the Grove
 results.no_rewards = No spoils this night.
-results.pending = Some spoils are waiting - make inventory space to claim them.
+results.pending = Some spoils need inventory space - claim the rest from the Play menu.
 results.btn.leaderboard = View Leaderboard
 results.btn.again = Play Again
 results.btn.close = Leave
 results.team_total = Grove total: {0}
-results.col.time = Swiftness
-results.col.damage = Caution
-results.col.stun = Defiance
-results.col.shrine = Devotion
-results.col.duration = Time alive
+results.col.base = Base score
+results.col.time = Speed bonus
+results.col.damage = Damage avoided
+results.col.stun = Stun bonus
+results.col.shrine = Shrine bonus
+results.col.duration = Time survived
+# Run-stats section - raw per-run activity, shown below the point breakdown.
+results.stats = Run stats
+results.stat.damage_taken = Damage taken
+results.stat.stunned = Hunters stunned
+results.stat.moonbloom = Moonbloom gathered
+# In-instance preview note where the spoils chips would be (you claim them once back in the overworld).
+results.spoils_pending = Claim your spoils once you escape the Grove.
+# Manual claim: the results-screen Claim button + the post-claim confirmation note.
+results.btn.claim = Claim Spoils
+results.claimed = Spoils claimed.
 
 # Play screen - live roster / ready chrome (the shared PlayModePage, queued state). The
 # countdown line ticks down live on screen. The player stays here after queueing.
@@ -228,48 +250,53 @@ queue.screen.leave = Leave the Gathering
 queue.screen.not_queued = You are not in a gathering.
 queue.screen.toast_queued = You join the gathering ({0}/{1}).
 
+# Play screen - "Claim Rewards" button (chooser) for spoils missed earlier (closed the results
+# screen, or a full inventory) + the toast shown after claiming.
+play.btn.claim = Claim Rewards
+play.toast.claimed = Spoils claimed.
+
 # Play screen - the mode chooser (the shared PlayModePage, not-queued state): how to enter.
 play.title = Enter the Nightmare
 play.difficulty = Difficulty: {0}
 play.mode.public = Public
 play.mode.public.desc = Brave the grove with whoever answers the call.
-play.mode.party = Coven
+play.mode.party = Party
 play.mode.party.desc = Gather your own survivors first.
 play.mode.solo = Alone
 play.mode.solo.desc = Step into the dark by yourself, right now.
 
 # Party + invite screen (the shared PartyInvitePage).
-party.title = Your Coven
-party.tab.party = Coven
+party.title = Your Party
+party.tab.party = Party
 party.tab.invite = Invite
 party.empty.invite = No one else is online to invite.
-party.empty.party = You have no coven. Invite survivors to brave the grove together.
+party.empty.party = You have no party. Invite survivors to brave the grove together.
 party.btn.invite = Invite
 party.btn.kick = Remove
-party.btn.leave = Leave Coven
+party.btn.leave = Leave Party
 party.btn.disband = Disband
-party.btn.queue = Queue Coven
+party.btn.queue = Queue Party
 party.btn.accept = Accept
 party.btn.decline = Decline
 party.owner_badge = Leader
 party.count = {0}/{1}
-party.privacy.public = Open Coven
-party.privacy.private = Sealed Coven
-party.toast.invite_failed = That survivor cannot join your coven.
+party.privacy.public = Open Party
+party.privacy.private = Sealed Party
+party.toast.invite_failed = That survivor cannot join your party.
 
 # Party feedback toasts + the invite banner.
-party.msg.invited = {0} invites you into their coven ({1}/{2}).
+party.msg.invited = {0} invites you into their party ({1}/{2}).
 party.msg.banner = {0} invites you
-party.msg.banner.sub = Open your coven to accept.
+party.msg.banner.sub = Open your party to accept.
 party.msg.sent = Invite sent to {0}.
 party.msg.declined = {0} declined your invite.
 party.msg.expired = The invite faded into the dark.
-party.msg.joined = {0} joins the coven ({1}/{2}).
-party.msg.left = {0} left the coven.
-party.msg.kicked = You were removed from the coven.
-party.msg.kicked_member = {0} was removed from the coven.
-party.msg.disbanded = The coven scatters.
-party.msg.owner = {0} now leads the coven.
+party.msg.joined = {0} joins the party ({1}/{2}).
+party.msg.left = {0} left the party.
+party.msg.kicked = You were removed from the party.
+party.msg.kicked_member = {0} was removed from the party.
+party.msg.disbanded = The party scatters.
+party.msg.owner = {0} now leads the party.
 
 # Command feedback.
-cmd.party_opened = Opening your coven...
+cmd.party_opened = Opening your party...

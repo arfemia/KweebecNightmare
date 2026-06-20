@@ -19,6 +19,11 @@
   "RewardOnExit": "ON_WIN",
   "HunterArchetype": "stalker",
   "CleanseCost": 3,
+  "BossEnabled": true,
+  "BossId": "warden",
+  "BossBarsGate": true,
+  "ExtractionMode": "EVERYONE",
+  "ExtractionHoldSeconds": 6.0,
   "ShrineBonusPer": 75,
   "AllShrinesBonus": 500
 }

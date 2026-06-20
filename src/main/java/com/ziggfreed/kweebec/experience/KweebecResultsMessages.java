@@ -32,6 +32,10 @@ public final class KweebecResultsMessages implements ResultsMessages {
         return Lang.msg(Lang.RESULTS_BREAKDOWN);
     }
 
+    @Override @Nonnull public Message statsTitle() {
+        return Lang.msg(Lang.RESULTS_STATS);
+    }
+
     @Override @Nonnull public Message rewardsTitle() {
         return Lang.msg(Lang.RESULTS_REWARDS);
     }
@@ -42,6 +46,14 @@ public final class KweebecResultsMessages implements ResultsMessages {
 
     @Override @Nonnull public Message pendingNote() {
         return Lang.msg(Lang.RESULTS_PENDING);
+    }
+
+    @Override @Nonnull public Message claimButton() {
+        return Lang.msg(Lang.RESULTS_BTN_CLAIM);
+    }
+
+    @Override @Nonnull public Message claimedNote() {
+        return Lang.msg(Lang.RESULTS_CLAIMED);
     }
 
     @Override @Nonnull public Message viewLeaderboardButton() {

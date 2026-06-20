@@ -1,5 +1,5 @@
 {
-  "$Comment": "Boss-capstone role template for the corrupted-Kweebec Warden. Cloned from Template_KweebecNightmare_Blight (the proven hostile Kweebec spear AI that already chases relentlessly in this arena, with huge sight/alerted/hearing ranges and the de-leashed pursuit), adapted for a multi-phase BOSS: it adds UseCombatActionEvaluator + a _CombatConfig param (the Goblin_Duke pattern) and a Burn param (mirrors Goblin_Duke_Phase_3) so each phase Variant can flip them. The three phase Variants (KweebecNightmare_Warden / _Phase2 / _Phase3) differ by MaxHealth, _CombatConfig, and Burn. Phase SWAPS are driven from Java (boss/BossController) on HP thresholds, NOT a self-driving ActionRole, because this role does not replicate the Goblin_Duke arena prefab-path instruction tree (Throne/Arena markers) that the native ActionRole/TriggerSpawnBeacon mechanics depend on. SPIKE: verify UseCombatActionEvaluator coexists with the inherited Razorleaf AttackSequence instruction tree in-game; if the CAE conflicts, drop UseCombatActionEvaluator and let the inherited spear combat carry the fight (the Blight already fights correctly without a CAE).",
+  "$Comment": "Boss-capstone role template for the corrupted-Kweebec Warden. Cloned from Template_KweebecNightmare_Blight (the proven hostile Kweebec spear AI that already chases relentlessly in this arena, with huge sight/alerted/hearing ranges and the de-leashed pursuit), adapted for a multi-phase BOSS by raising MaxHealth/MaxSpeed and enlarging the model. The boss FIGHTS via the inherited Razorleaf instruction tree below (Target_Adjusted_Attack_Melee + Intelligent_Chase), exactly like the Blight - NO CombatActionEvaluator. The Goblin_Duke CAE pattern (UseCombatActionEvaluator + a _CombatConfig top-level field) is NOT supported on this Kweebec-Razorleaf-derived role builder: those keys parse as 'Unknown JSON attribute' and REJECT the whole Abstract builder, which then fails every phase Variant that References it (the boss could not spawn). They were removed; the CAE_KweebecNightmare_Warden_Phase_* balancing assets are now unreferenced. The three phase Variants (KweebecNightmare_Warden / _Phase2 / _Phase3) differ by MaxHealth, MaxSpeed, and Burn only. Phase SWAPS are driven from Java (boss/BossController) on HP thresholds. Burn is a PARAMETER (not a top-level attribute): the Burn instruction block reads it via Enabled:{Compute:Burn}, so the Phase-3 Variant flipping Burn=true wreathes it in fire (mirrors the native Goblin_Duke_Phase_3 Burn-param pattern).",
   "Type": "Abstract",
   "StartState": "Idle",
   "Parameters": {
@@ -72,13 +72,9 @@
       "Value": 600,
       "Description": "Max health for the Warden (per-phase Variant overrides this: 600 / 450 / 300)"
     },
-    "CombatConfig": {
-      "Value": "CAE_KweebecNightmare_Warden_Phase_1",
-      "Description": "The CombatActionEvaluator config for this phase"
-    },
     "Burn": {
       "Value": false,
-      "Description": "Whether the Warden is wreathed in fire (the Phase 3 enrage signal)"
+      "Description": "Whether the Warden is wreathed in fire (the Phase 3 enrage signal; consumed by the Burn instruction's Enabled compute, NOT a top-level role attribute)"
     },
     "IsMemory": {
       "Value": false,
@@ -107,9 +103,6 @@
   "DefaultNPCAttitude": "Ignore",
   "DefaultPlayerAttitude": { "Compute": "DefaultPlayerAttitude" },
   "AttitudeGroup": { "Compute": "AttitudeGroup" },
-  "UseCombatActionEvaluator": true,
-  "_CombatConfig": { "Compute": "CombatConfig" },
-  "Burn": { "Compute": "Burn" },
   "KnockbackScale": 0.25,
   "MotionControllerList": [
     {
@@ -293,6 +286,19 @@
                 "HearingRange": { "Compute": "HearingRange" },
                 "RelativeSpeed": 0.85
               }
+            }
+          ]
+        },
+        {
+          "$Comment": "Alerted-state handler. REQUIRED: the Search component above exports the Alerted state in its _ExportStates, and the role builder REJECTS the whole template if a set state has no matching handler (the 'State setter ... without accompanying state/setter: Alerted' validation failure that kept the Warden from registering - every phase Variant then failed as 'unknown builder', so the boss never spawned and the gate opened with no Warden). The Warden has no investigate/converge phase (unlike the Blight it was cloned from): anything sensed escalates straight to Attack, its relentless-boss design with 512 sight/hearing.",
+          "Sensor": {
+            "Type": "State",
+            "State": "Alerted"
+          },
+          "Actions": [
+            {
+              "Type": "State",
+              "State": "Attack"
             }
           ]
         }

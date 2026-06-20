@@ -12,5 +12,11 @@
   "AddRole": "KweebecNightmare_Blight",
   "AddCap": 4,
   "SpawnSoundId": "",
-  "PhaseSwapSoundId": ""
+  "PhaseSwapSoundId": "",
+  "ThrowableClusterId": "KweebecNightmare/Emberbloom",
+  "Phase1ThrowableCount": 4,
+  "Phase2ThrowableCount": 5,
+  "Phase3ThrowableCount": 6,
+  "ThrowableRingRadius": 8.0,
+  "ThrowableRespawnSeconds": 20
 }

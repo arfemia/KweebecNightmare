@@ -11,6 +11,7 @@ import javax.annotation.Nullable;
 
 import org.joml.Vector3i;
 
+import com.ziggfreed.common.instance.zone.ZoneHoldTimer;
 import com.ziggfreed.kweebec.arena.Anchor;
 import com.ziggfreed.kweebec.round.ChasePhase;
 import com.ziggfreed.kweebec.round.RuleSet;
@@ -62,6 +63,15 @@ public final class ChaseState {
      * crossing). World-thread only.
      */
     private int previousTier = -1;
+
+    // --- co-op extraction hold (ESCAPE phase; world-thread only) ---
+    /** The reusable continuous-hold timer (ziggfreed-common primitive), built in {@code ChaseMode.onStart}. */
+    @Nullable
+    private ZoneHoldTimer extractionHold;
+    /** HUD snapshot: how many required survivors are currently standing on the platform. */
+    private int extractionOnPad;
+    /** HUD snapshot: how many survivors are required on the platform to extract this round. */
+    private int extractionRequired;
 
     /**
      * Build chase state for a round. {@code totalShrines} is the KNOWN total furnace count
@@ -260,5 +270,37 @@ public final class ChaseState {
         }
         previousTier = tier;
         return -1;
+    }
+
+    // --- co-op extraction hold ---
+
+    /**
+     * The co-op extraction hold timer for this round (the reusable {@link ZoneHoldTimer} primitive), built
+     * in {@code ChaseMode.onStart} from {@code RuleSet.extractionHoldSeconds()}. {@code null} only before
+     * the round has started. World-thread only.
+     */
+    @Nullable
+    public ZoneHoldTimer extractionHold() {
+        return extractionHold;
+    }
+
+    public void setExtractionHold(@Nonnull ZoneHoldTimer extractionHold) {
+        this.extractionHold = extractionHold;
+    }
+
+    /** HUD snapshot: survivors currently on the platform. */
+    public int extractionOnPad() {
+        return extractionOnPad;
+    }
+
+    /** HUD snapshot: survivors required on the platform to extract. */
+    public int extractionRequired() {
+        return extractionRequired;
+    }
+
+    /** Publish the per-tick extraction counts for the HUD. World-thread only. */
+    public void setExtractionCounts(int onPad, int required) {
+        this.extractionOnPad = onPad;
+        this.extractionRequired = required;
     }
 }

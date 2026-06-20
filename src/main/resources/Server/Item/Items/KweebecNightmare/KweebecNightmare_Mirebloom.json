@@ -1,0 +1,39 @@
+{
+  "TranslationProperties": {
+    "Name": "kweebecnightmare.item.mirebloom.name"
+  },
+  "Categories": [
+    "Items.Weapons"
+  ],
+  "Quality": "Uncommon",
+  "ItemLevel": 1,
+  "MaxStack": 16,
+  "PlayerAnimationsId": "Item",
+  "Interactions": {
+    "Primary": {
+      "Interactions": [
+        "KweebecNightmare_Mirebloom_Throw"
+      ]
+    }
+  },
+  "Model": "Blocks/Foliage/Plants/Mushroom_Thin.blockymodel",
+  "Texture": "Blocks/Foliage/Plants/Mushroom_Thin_Textures/Green.png",
+  "Icon": "Icons/ItemsGenerated/Plant_Crop_Mushroom_Glowing_Green.png",
+  "Particles": [
+    {
+      "SystemId": "Fuse_Bomb",
+      "TargetNodeName": "Fuse_Lit",
+      "TargetEntityPart": "PrimaryItem"
+    }
+  ],
+  "Tags": {
+    "Type": [
+      "Weapon"
+    ],
+    "Family": [
+      "Bomb"
+    ]
+  },
+  "Weapon": {},
+  "ItemSoundSetId": "ISS_Items_Foliage"
+}

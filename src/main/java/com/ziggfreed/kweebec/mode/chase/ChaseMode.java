@@ -19,7 +19,9 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.ziggfreed.common.instance.zone.ZoneHoldTimer;
 import com.ziggfreed.common.sound.BlockStateSound;
+import com.ziggfreed.common.worldmap.MapDiscovery;
 import com.ziggfreed.common.worldmap.WorldMapMarkers;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
@@ -38,18 +40,21 @@ import com.ziggfreed.kweebec.feedback.ScareDirector;
 import com.ziggfreed.kweebec.hunter.HunterController;
 import com.ziggfreed.kweebec.i18n.Lang;
 import com.ziggfreed.kweebec.round.ChasePhase;
+import com.ziggfreed.kweebec.round.ExtractionMode;
 import com.ziggfreed.kweebec.round.PlayerResync;
 import com.ziggfreed.kweebec.round.PlayerRoundState;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.round.RoundService;
+import com.ziggfreed.kweebec.round.RuleSet;
 
 /**
  * The Chase round loop ("Relight & Escape"), driven once per second from the
  * state machine on the instance world thread. PREP gives the party a breath, then
  * RITUAL spawns the hunter and the heartbeat while survivors channel the grove
  * shrines (corruption climbs with time + per shrine). Lighting the last shrine
- * opens the Heartwood Gate and locks the hunter onto the nearest survivor; anyone
- * reaching the exit wins, all-cocooned or the cap loses.
+ * opens the Heartwood Gate and locks the hunter onto the nearest survivor; the party
+ * then escapes by HOLDING the Heartwood platform together for {@code RuleSet.extractionHoldSeconds()}
+ * (the co-op extraction, {@link #checkExtraction}); all-cocooned or the cap loses.
  *
  * <p>Stateless: all per-round state lives on {@link RoundInstance}/{@link ChaseState}.
  */
@@ -83,6 +88,9 @@ public final class ChaseMode {
                 ArenaLayout.SURFACE_WORLDGEN_SHRINES + round.ruleSet().caveShrineCount());
         chase.setPhase(ChasePhase.PREP);
         chase.setPrepEndsAtMs(System.currentTimeMillis() + PREP_SECONDS * 1000L);
+        // The co-op extraction hold (the reusable ziggfreed-common ZoneHoldTimer); duration is the
+        // per-difficulty RuleSet.extractionHoldSeconds(). Fed each ESCAPE tick by checkExtraction.
+        chase.setExtractionHold(new ZoneHoldTimer(round.ruleSet().extractionHoldSeconds()));
         round.setChaseState(chase);
     }
 
@@ -140,18 +148,28 @@ public final class ChaseMode {
 
         handleRescues(round, world, store);
 
-        // Gate / escape.
+        // Gate / escape. Lighting the last shrine enters the ESCAPE climax; whether the gate OPENS
+        // immediately or stays barred until a capstone boss falls is decided in enterEscape.
         if (chase.phase() == ChasePhase.RITUAL && chase.allShrinesLit() && !chase.isGateOpen()) {
-            openGate(round, world, store, chase);
+            enterEscape(round, world, store, chase);
         }
         if (chase.phase() == ChasePhase.ESCAPE) {
-            checkEscapes(round, world, store);
             // Boss capstone tick: track the Warden's HP, backstop its phase swaps, drive the boss HUD.
-            // Best-effort; never throws into the loop. The boss is purely an obstacle - the escape win in
-            // checkEscapes is unchanged whether or not it is defeated, so the boss never soft-locks the round.
+            // Best-effort; never throws into the loop.
             BossController boss = round.bossController();
             if (boss != null) {
                 boss.tick(round, world, store);
+            }
+            // A BARRING boss (RuleSet.bossBarsGate) holds the Heartwood Gate shut until it falls: open the
+            // gate the instant the Warden is defeated. boss == null here means either a non-barring round
+            // (enterEscape already opened the gate) or a barring boss that failed to spawn (enterEscape
+            // opened the gate as the no-soft-lock fallback) - in both cases isGateOpen() is already true.
+            if (!chase.isGateOpen() && (boss == null || boss.isDefeated())) {
+                openGate(round, world, store, chase);
+            }
+            // Escape is only possible once the gate is physically open (a barring boss blocks it until dead).
+            if (chase.isGateOpen()) {
+                checkExtraction(round, world, store, chase, now);
             }
         }
 
@@ -299,6 +317,12 @@ public final class ChaseMode {
         if (firePos != null) {
             BlockStateSound.playInteractionSound(world, firePos.x(), firePos.y(), firePos.z(),
                     Shrine.LIT_STATE, SoundCategory.SFX, world.getEntityStore().getStore(), "SHRINE_IGNITE");
+            // Swap this shrine's map marker to its cleansed "done" icon for anyone who discovered it
+            // (no-op when discovery is off / the marker was never registered).
+            MapDiscovery discovery = round.mapDiscovery();
+            if (discovery != null) {
+                discovery.updateIcon(ShrineState.markerPoiId(firePos), Shrine.LIT_MARKER_ICON);
+            }
         }
         KweebecNightmarePlugin.LOGGER.atInfo().log(
                 "[Kweebec][win] shrine " + shrine.index() + " CLEANSED ("
@@ -359,6 +383,8 @@ public final class ChaseMode {
                 && elapsed >= times[chase.moonbloomRespawnsFired()]) {
             long wave = chase.moonbloomRespawnsFired() + 1L;
             ArenaBuilder.plantMoonbloom(round, world, 1, respawnCount, wave);
+            // Regrow any ENABLED grove throwable (Gust/Mire) on the same wave (RespawnWithWaves entries).
+            ArenaBuilder.plantGroveThrowables(round, world, wave, true);
             chase.incrementMoonbloomRespawnsFired();
             forEachPresent(round, pr -> RoundFeedback.warningToast(pr, Lang.TOAST_MOONBLOOM_RESPAWN));
         }
@@ -397,20 +423,71 @@ public final class ChaseMode {
 
     // --- gate + escape ---
 
+    /**
+     * Enter the ESCAPE climax (the last shrine just lit): raise corruption to max and decide how the gate
+     * behaves. A BARRING boss round (bossEnabled + bossBarsGate, e.g. Nightmare / Hardcore) spawns the
+     * Warden and holds the Heartwood Gate SHUT - the gate opens later in {@link #tick} the instant the boss
+     * falls. Every other round (no boss, or a non-barring obstacle boss) opens the gate immediately here. If
+     * a barring boss fails to spawn we open the gate anyway, so the escape is never soft-locked.
+     */
+    private static void enterEscape(@Nonnull RoundInstance round, @Nonnull World world,
+                                    @Nonnull Store<EntityStore> store, @Nonnull ChaseState chase) {
+        chase.setPhase(ChasePhase.ESCAPE);
+        chase.setCorruption(1.0);
+        boolean barring = round.ruleSet().bossEnabled() && round.ruleSet().bossBarsGate();
+        boolean bossUp = spawnBossIfEnabled(round, world, store);
+        if (barring && bossUp) {
+            // The Warden rose to bar the gate: leave it SHUT. boss.spawn already cued the
+            // "The Warden Awakens / It rose to bar the gate" title; the gate opens on the boss's defeat.
+            KweebecNightmarePlugin.LOGGER.atInfo().log(
+                    "[Kweebec][win] all shrines lit (" + chase.litShrines() + "/" + chase.totalShrines()
+                            + "); the Warden BARS the Heartwood Gate - defeat it to open the escape.");
+            return;
+        }
+        // No barring boss (or it failed to spawn): open the gate now. A non-barring obstacle boss that just
+        // spawned simply stands beside the open gate.
+        openGate(round, world, store, chase);
+    }
+
+    /**
+     * Spawn the round's capstone boss when the rule-set enables one and none is live yet. Returns
+     * {@code true} only when a phase-1 boss entity actually spawned (so a barring round can defer the gate
+     * on it); {@code false} when no boss is enabled, none resolves, or the spawn no-shows - the caller must
+     * then open the gate normally rather than wait on a boss that will never die. World-thread; best-effort.
+     */
+    private static boolean spawnBossIfEnabled(@Nonnull RoundInstance round, @Nonnull World world,
+                                              @Nonnull Store<EntityStore> store) {
+        if (!round.ruleSet().bossEnabled() || round.bossController() != null) {
+            return false;
+        }
+        BossController boss = BossController.forRound(round);
+        if (boss == null) {
+            return false;
+        }
+        round.setBossController(boss);
+        return boss.spawn(round, world, store);
+    }
+
+    /**
+     * Physically open the Heartwood Gate: reveal the gate prefab, place the exit marker, lock the hunter
+     * onto the nearest survivor, and cue the "gate open" beat. Called immediately by {@link #enterEscape}
+     * for a non-barring round, or from {@link #tick} the moment a barring boss is defeated. Idempotent.
+     */
     private static void openGate(@Nonnull RoundInstance round, @Nonnull World world,
                                  @Nonnull Store<EntityStore> store, @Nonnull ChaseState chase) {
+        if (chase.isGateOpen()) {
+            return;
+        }
         chase.setGateOpen(true);
-        chase.setPhase(ChasePhase.ESCAPE);
         chase.setAlertFired(true);
-        chase.setCorruption(1.0);
         KweebecNightmarePlugin.LOGGER.atInfo().log(
-                "[Kweebec][win] all shrines lit (" + chase.litShrines() + "/" + chase.totalShrines()
-                        + "); GATE OPEN, phase -> ESCAPE. Reach ESCAPE z=" + ArenaLayout.ESCAPE.z()
-                        + " within " + ArenaLayout.ESCAPE_RADIUS + " to win.");
-        // The Heartwood Gate did NOT exist during the round; reveal it now (the dramatic "the gate
-        // opens" beat). The escape win is pure-anchor logic (checkEscapes crossing GATE.z), so this
-        // prefab is purely cosmetic - the win works with or without it.
-        ArenaBuilder.pasteGate(world);
+                "[Kweebec][win] GATE OPEN. Hold ESCAPE z=" + ArenaLayout.ESCAPE.z()
+                        + " (radius " + ArenaLayout.ESCAPE_RADIUS + ") as a group for "
+                        + fmt(round.ruleSet().extractionHoldSeconds()) + "s to extract.");
+        // The gate "opens" logically here (the dramatic beat) - there is no separate gate-arch prefab to
+        // reveal any more (the old purple light archway was removed). The escape goal is the extraction
+        // platform + its void-portal, already standing at ArenaLayout.ESCAPE; the win is the co-op hold
+        // (checkExtraction). The titles / exit marker / hunter alert below carry the beat.
         // Place the exit map marker (a world-map / compass POI at the escape) so survivors can find
         // the way out in the dark. Game-mode-asset-driven: the RuleSet.exitMarker() knob (Hardcore
         // ships it off, so its survivors get no marker). The marker lives on this round's own
@@ -427,63 +504,96 @@ public final class ChaseMode {
         if (hunter != null) {
             hunter.onAlert(round, world, store);
         }
-        // Boss capstone: a bossEnabled round spawns the multi-phase corrupted-Kweebec Warden at the gate as
-        // the escape climax. Preset/RuleSet-gated (the BossEnabled knob) + asset-driven (the resolved
-        // BossAsset). Best-effort; a missing boss asset/role just yields no boss (the escape still works).
-        if (round.ruleSet().bossEnabled() && round.bossController() == null) {
-            BossController boss = BossController.forRound(round);
-            if (boss != null) {
-                round.setBossController(boss);
-                boss.spawn(round, world, store);
-            }
-        }
         forEachPresent(round, pr -> {
             RoundFeedback.title(pr, Lang.TITLE_GATE_OPEN, Lang.TITLE_GATE_OPEN_SUB, true);
             RoundFeedback.dangerToast(pr, Lang.TOAST_HUNTER_LOCKED);
         });
     }
 
-    private static void checkEscapes(@Nonnull RoundInstance round, @Nonnull World world,
-                                     @Nonnull Store<EntityStore> store) {
+    /**
+     * Co-op extraction hold - the reworked escape (replaces the old "any single survivor reaching the
+     * exit / crossing the gate wins"). Each ESCAPE-phase tick (gate open), count the survivors REQUIRED
+     * on the Heartwood platform and how many are currently standing on it (within {@link ArenaLayout#ESCAPE}
+     * by {@link ArenaLayout#ESCAPE_RADIUS_SQ}). The required set depends on {@link RuleSet#extractionMode()}:
+     * <ul>
+     *   <li>{@link ExtractionMode#ALL_MOBILE} - every ACTIVE (mobile) survivor; a cocooned teammate does
+     *       not block (the team can extract and leave them behind).</li>
+     *   <li>{@link ExtractionMode#EVERYONE} - every survivor still able to take part: active OR a
+     *       still-rescuable cocoon (which BLOCKS the hold until revived); a PERMANENTLY cocooned teammate
+     *       ({@code !isReviveAllowed}) is excused so the round can never soft-lock.</li>
+     * </ul>
+     * While the WHOLE required group holds the platform, a continuous timer accrues; it RESETS to zero the
+     * instant the group breaks (someone steps off or is caught). When the hold reaches
+     * {@link RuleSet#extractionHoldSeconds()}, every active survivor is marked escaped at once and the round
+     * resolves {@code ESCAPED} next tick (via {@link #resolveOutcome} -> {@code anyEscaped()}).
+     *
+     * <p><b>Escaped is set ONLY at completion</b>, never per-tick on contact: an on-pad survivor must stay
+     * a valid hunter target / scare subject during the hold (setting escaped flips {@code isActive()} to
+     * false, which would drop them from hunter targeting and let the group cheese the hold by parking on
+     * the platform unthreatened).
+     */
+    private static void checkExtraction(@Nonnull RoundInstance round, @Nonnull World world,
+                                        @Nonnull Store<EntityStore> store, @Nonnull ChaseState chase, long now) {
         UUID worldUuid = world.getWorldConfig().getUuid();
-        double nearestSq = Double.MAX_VALUE;
-        UUID nearest = null;
+        RuleSet rules = round.ruleSet();
+        boolean everyone = rules.extractionMode() == ExtractionMode.EVERYONE;
+        int required = 0;
+        int onPad = 0;
         for (PlayerRoundState st : round.playerStates()) {
-            if (!st.isActive()) {
+            if (st.hasLeftRound() || st.hasEscaped()) {
                 continue;
             }
+            if (st.isCocooned()) {
+                // A cocooned teammate can never be ON the platform. In EVERYONE mode a STILL-RESCUABLE cocoon is
+                // required (so it blocks extraction until a teammate revives them); a cocoon that can no
+                // longer be rescued is EXCUSED so the hold can never soft-lock. Gate on canRescue (not just
+                // isReviveAllowed) so a BLED-OUT cocoon - downs remaining but past its rescue deadline,
+                // which handleRescues will never revive - is excused too, not left blocking forever. In
+                // ALL_MOBILE mode a cocoon never counts toward the requirement.
+                if (everyone && CocoonService.canRescue(round, st)) {
+                    required++;
+                }
+                continue;
+            }
+            // Active (mobile) survivor: always required, on the platform iff within the extraction radius.
+            required++;
             Ref<EntityStore> ref = presentRef(st.playerId(), worldUuid);
             Vector3d pos = positionOf(store, ref);
-            if (pos == null) {
-                continue;
-            }
-            double distSq = ArenaLayout.ESCAPE.horizontalDistanceSq(pos.x(), pos.z());
-            if (distSq < nearestSq) {
-                nearestSq = distSq;
-                nearest = st.playerId();
-            }
-            // Win on EITHER reaching the exit pad OR simply crossing north past the Heartwood Gate
-            // (z below the gate). The second is the robust trigger: once a survivor is through the
-            // open gate they have escaped, even if the distant exit pad is hard to reach in the dark.
-            boolean pastGate = pos.z() <= ArenaLayout.GATE.z() - 2.0;
-            if (distSq <= ArenaLayout.ESCAPE_RADIUS_SQ || pastGate) {
-                st.setEscaped(true);
-                KweebecNightmarePlugin.LOGGER.atInfo().log(
-                        "[Kweebec][win] survivor " + shortId(st.playerId()) + " ESCAPED (distSq="
-                                + fmt(distSq) + ", z=" + fmt(pos.z()) + ", pastGate=" + pastGate + ")");
+            if (pos != null
+                    && ArenaLayout.ESCAPE.horizontalDistanceSq(pos.x(), pos.z()) <= ArenaLayout.ESCAPE_RADIUS_SQ) {
+                onPad++;
             }
         }
-        // Diagnostic: while the gate is open, log how close the nearest survivor is to the exit
-        // so a "reached the exit but no win" report is decisively explained next playtest.
-        if (nearest != null && nearestSq > ArenaLayout.ESCAPE_RADIUS_SQ) {
-            KweebecNightmarePlugin.LOGGER.atInfo().log(
-                    "[Kweebec][win] ESCAPE phase: nearest survivor " + shortId(nearest)
-                            + " distSq=" + fmt(nearestSq) + " (need <= " + ArenaLayout.ESCAPE_RADIUS_SQ + ")");
-        }
-    }
+        chase.setExtractionCounts(onPad, required);
 
-    private static String shortId(@Nonnull UUID uuid) {
-        return uuid.toString().substring(0, 8);
+        // The reusable ZoneHoldTimer owns the continuous-hold-with-reset state machine; we feed it the live
+        // counts each tick. It accrues while onPad >= required (resetting the instant the group breaks) and
+        // latches complete after RuleSet.extractionHoldSeconds(). A rising edge into "holding" cues the toast.
+        ZoneHoldTimer hold = chase.extractionHold();
+        if (hold == null) {
+            return; // defensive; set in onStart
+        }
+        boolean wasHolding = hold.isHolding();
+        boolean complete = hold.update(onPad, required, now);
+        if (!wasHolding && hold.isHolding()) {
+            forEachPresent(round, pr -> RoundFeedback.warningToast(pr, Lang.TOAST_EXTRACTION_HOLD));
+        }
+        if (!complete) {
+            return;
+        }
+        // Hold complete: the whole required group escapes together. At this point every active survivor is
+        // on the platform by construction (allHolding required onPad >= required >= activeCount), so marking all
+        // active survivors escaped marks exactly the on-pad group; resolveOutcome sees anyEscaped() this tick.
+        int escaped = 0;
+        for (PlayerRoundState st : round.playerStates()) {
+            if (st.isActive()) {
+                st.setEscaped(true);
+                escaped++;
+            }
+        }
+        KweebecNightmarePlugin.LOGGER.atInfo().log(
+                "[Kweebec][win] EXTRACTION complete - " + escaped + " survivor(s) held the platform for "
+                        + fmt(rules.extractionHoldSeconds()) + "s; round ESCAPED.");
     }
 
     private static String fmt(double v) {
@@ -500,16 +610,33 @@ public final class ChaseMode {
         int alive = round.activeCount();
         double corruption = chase.corruption();
         ChasePhase phase = chase.phase();
+        // Extraction line: shown only once the gate is open (the ESCAPE climax). onPad/required are the
+        // live "X / Y on the platform" counts; holdRemain is the seconds left in the current continuous hold
+        // (the full hold when the group is not yet all assembled, since the timer has not started/has reset).
+        boolean extracting = phase == ChasePhase.ESCAPE && chase.isGateOpen();
+        int onPad = chase.extractionOnPad();
+        int required = chase.extractionRequired();
+        int holdRemain = extractionHoldRemaining(round, chase);
         for (PlayerRoundState st : round.playerStates()) {
             Object hud = round.hud(st.playerId());
             if (hud instanceof NightmareHud nh) {
                 try {
-                    nh.pushState(remaining, phase, lit, total, alive, corruption);
+                    nh.pushState(remaining, phase, lit, total, alive, corruption,
+                            extracting, onPad, required, holdRemain);
                 } catch (Throwable ignored) {
                     // HUD is non-essential
                 }
             }
         }
+    }
+
+    /** Seconds left in the current extraction hold (the full hold when not yet started / reset). */
+    private static int extractionHoldRemaining(@Nonnull RoundInstance round, @Nonnull ChaseState chase) {
+        ZoneHoldTimer hold = chase.extractionHold();
+        if (hold == null) {
+            return (int) Math.ceil(Math.max(0.0, round.ruleSet().extractionHoldSeconds()));
+        }
+        return hold.remainingSeconds(System.currentTimeMillis());
     }
 
     // --- win/lose ---

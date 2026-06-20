@@ -59,6 +59,14 @@
       "Value": 3.25,
       "Description": "The distance at which an NPC will execute attacks"
     },
+    "RangedAttack": {
+      "Value": "KweebecNightmare_Spit",
+      "Description": "Ranged attack RootInteraction (tagged Attack:Ranged) the Spitter fires"
+    },
+    "RangedAttackDistance": {
+      "Value": 20,
+      "Description": "Max distance the Spitter fires the spit (must exceed the 7-11 kite standoff)"
+    },
     "MotionComponent": {
       "Value": "Component_Instruction_Intelligent_Idle_Motion_Wander",
       "Description": "The component to use for motion"
@@ -549,14 +557,41 @@
               }
             },
             {
-              "$Comment": "SPITTER kite: at mid range, hold a 7-11 block standoff and strafe (MaintainDistance) while spitting a Void glob (a SpawnParticles burst toward the player; a true projectile would need a CombatConfig ability/projectile asset this owner cannot author safely, so the spit is the visual tell + the kite is the mechanical differentiator). Continue branch so the trailing Seek fallback still runs if MaintainDistance has no valid position.",
+              "$Comment": "SPITTER ranged spit: when the target is within RangedAttackDistance with line of sight, fire the asset-driven Void spit (a REAL projectile that damages + on-hit slows, via the KweebecNightmare_Spit RootInteraction -> Projectile_Config_KweebecNightmare_VoidSpit). Continue so the kite + Seek fallback still run; the head Aims for the ballistic solve. NOTE: a landed spit resets desperation enrage (a kiter that is hitting you is not desperate) - intended, do not 'fix' it.",
+              "Continue": true,
+              "Sensor": {
+                "Type": "Target",
+                "Range": { "Compute": "RangedAttackDistance" },
+                "Filters": [
+                  {
+                    "Type": "LineOfSight"
+                  }
+                ]
+              },
+              "Actions": [
+                {
+                  "Type": "Attack",
+                  "Attack": { "Compute": "RangedAttack" },
+                  "BallisticMode": "Short",
+                  "LineOfSight": true,
+                  "AimingTimeRange": [ 0.6, 1.2 ],
+                  "AttackPauseRange": [ 1.5, 2.5 ]
+                }
+              ],
+              "HeadMotion": {
+                "Type": "Aim",
+                "Spread": 1,
+                "HitProbability": 0.85,
+                "Deflection": true,
+                "RelativeTurnSpeed": { "Compute": "CombatRelativeTurnSpeed" }
+              }
+            },
+            {
+              "$Comment": "SPITTER kite: hold a 7-11 block standoff and strafe (MaintainDistance) so the Spitter fires from range and only closes to the melee bite when cornered. Body-only - the ranged Attack instruction above owns the head Aim. Continue so the trailing Seek fallback still runs if MaintainDistance has no valid position.",
               "Continue": true,
               "Sensor": {
                 "Type": "Target",
                 "Range": { "Compute": "AlertedRange" }
-              },
-              "HeadMotion": {
-                "Type": "Aim"
               },
               "BodyMotion": {
                 "Type": "MaintainDistance",
@@ -568,30 +603,6 @@
                 "StrafingDurationRange": [ 1.0, 2.0 ],
                 "StrafingFrequencyRange": [ 2.0, 3.5 ]
               }
-            },
-            {
-              "Continue": true,
-              "Sensor": {
-                "Type": "Target",
-                "Range": { "Compute": "AlertedRange" },
-                "Filters": [
-                  {
-                    "Type": "LineOfSight"
-                  }
-                ]
-              },
-              "ActionsAtomic": true,
-              "Actions": [
-                {
-                  "Type": "SpawnParticles",
-                  "Offset": [ 0, 1.4, 0 ],
-                  "ParticleSystem": "Angry"
-                },
-                {
-                  "Type": "Timeout",
-                  "Delay": [ 1.5, 2.5 ]
-                }
-              ]
             },
             {
               "$Comment": "Relentless Seek fallback: when MaintainDistance cannot position (no path / target far beyond standoff) keep closing. Same de-leashed pursuit as the Stalker so the Spitter never gives up.",

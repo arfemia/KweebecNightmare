@@ -3,6 +3,8 @@ package com.ziggfreed.kweebec.round;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.ziggfreed.common.worldmap.DiscoveryMode;
+import com.ziggfreed.common.worldmap.MapDiscovery;
 import com.ziggfreed.kweebec.score.ScoringConfig;
 
 /**
@@ -54,8 +56,14 @@ public final class RuleSet {
     private final int minParty;
     private final int maxParty;
     private final boolean exitMarker;
+    private final ExtractionMode extractionMode;
+    private final double extractionHoldSeconds;
+    private final DiscoveryMode shrineDiscovery;
+    private final MapDiscovery.Visibility shrineDiscoveryVisibility;
+    private final double shrineDiscoveryRadius;
     private final boolean bossEnabled;
     @Nullable private final String bossId;
+    private final boolean bossBarsGate;
     private final ScoringConfig scoring;
     // On-hit punishment baseline (applies to every hunter unless its archetype overrides a field).
     private final String onHitSlowEffectId;
@@ -69,6 +77,11 @@ public final class RuleSet {
     private final double enrageDamageMult;
     private final double enrageDurationSeconds;
     private final String enrageSoundId;
+    // Jumpscare beat (the proximity/alert scare): which beat fires, shake strength, throttle, on/off.
+    private final boolean jumpscareEnabled;
+    @Nullable private final String jumpscareBeatId;
+    private final double jumpscareShakeIntensity;
+    private final int jumpscareCooldownSeconds;
 
     private RuleSet(Builder b) {
         this.presetId = b.presetId;
@@ -98,8 +111,14 @@ public final class RuleSet {
         this.minParty = b.minParty;
         this.maxParty = b.maxParty;
         this.exitMarker = b.exitMarker;
+        this.extractionMode = b.extractionMode;
+        this.extractionHoldSeconds = b.extractionHoldSeconds;
+        this.shrineDiscovery = b.shrineDiscovery;
+        this.shrineDiscoveryVisibility = b.shrineDiscoveryVisibility;
+        this.shrineDiscoveryRadius = b.shrineDiscoveryRadius;
         this.bossEnabled = b.bossEnabled;
         this.bossId = b.bossId;
+        this.bossBarsGate = b.bossBarsGate;
         this.scoring = b.scoring;
         this.onHitSlowEffectId = b.onHitSlowEffectId;
         this.onHitSlowSeconds = b.onHitSlowSeconds;
@@ -112,6 +131,10 @@ public final class RuleSet {
         this.enrageDamageMult = b.enrageDamageMult;
         this.enrageDurationSeconds = b.enrageDurationSeconds;
         this.enrageSoundId = b.enrageSoundId;
+        this.jumpscareEnabled = b.jumpscareEnabled;
+        this.jumpscareBeatId = b.jumpscareBeatId;
+        this.jumpscareShakeIntensity = b.jumpscareShakeIntensity;
+        this.jumpscareCooldownSeconds = b.jumpscareCooldownSeconds;
     }
 
     /**
@@ -279,6 +302,55 @@ public final class RuleSet {
     }
 
     /**
+     * WHO must be standing on the Heartwood extraction platform for the co-op escape to complete: every
+     * MOBILE survivor ({@link ExtractionMode#ALL_MOBILE}, a downed teammate does not block) or the
+     * WHOLE party rescue-first ({@link ExtractionMode#EVERYONE}). The escape is a GROUP hold, not a
+     * single survivor reaching the exit. Asset-driven via the preset's {@code ExtractionMode} knob.
+     */
+    @Nonnull
+    public ExtractionMode extractionMode() {
+        return extractionMode;
+    }
+
+    /**
+     * Seconds the required survivor group must hold the extraction platform TOGETHER (continuously) for the
+     * escape to complete; the hold resets to zero whenever the group breaks (someone steps off or is
+     * caught). {@code 0} extracts the instant everyone is on the pad. Asset-driven via the preset's
+     * {@code ExtractionHoldSeconds} knob.
+     */
+    public double extractionHoldSeconds() {
+        return extractionHoldSeconds;
+    }
+
+    /**
+     * How a survivor DISCOVERS a shrine for the world-map marker (the dark-navigation aid). Default
+     * {@link DiscoveryMode#ON_INTERACT} (the first F-press marks it, regardless of Moonbloom on hand);
+     * {@link DiscoveryMode#OFF} shows no shrine markers (the Hardcore preset, like {@link #exitMarker()});
+     * {@link DiscoveryMode#PROXIMITY} (radius via {@link #shrineDiscoveryRadius()}) is the future seam.
+     * Asset-driven via the preset's {@code ShrineDiscovery} knob.
+     */
+    @Nonnull
+    public DiscoveryMode shrineDiscovery() {
+        return shrineDiscovery;
+    }
+
+    /**
+     * WHO sees a discovered shrine marker: {@link MapDiscovery.Visibility#PER_PLAYER} (only the survivor
+     * who found it - the default, the Nightmare "self" feel) or {@link MapDiscovery.Visibility#SHARED}
+     * (the whole party once anyone finds it - the Amateur "all" feel). Asset-driven via the preset's
+     * {@code ShrineDiscoveryVisibility} knob (accepts {@code SELF}/{@code ALL} aliases).
+     */
+    @Nonnull
+    public MapDiscovery.Visibility shrineDiscoveryVisibility() {
+        return shrineDiscoveryVisibility;
+    }
+
+    /** Reveal radius (blocks) when {@link #shrineDiscovery()} is {@link DiscoveryMode#PROXIMITY}; unused otherwise. */
+    public double shrineDiscoveryRadius() {
+        return shrineDiscoveryRadius;
+    }
+
+    /**
      * Whether this round spawns the multi-phase boss capstone (the corrupted-Kweebec Warden) at the escape
      * climax (all shrines lit, gate open). Default off; the harder presets author it on. Asset-driven via the
      * preset's {@code BossEnabled} knob. {@code boss/BossController} reads this in {@code ChaseMode.openGate}.
@@ -296,6 +368,17 @@ public final class RuleSet {
     @Nullable
     public String bossId() {
         return bossId;
+    }
+
+    /**
+     * Whether the capstone boss BARS the Heartwood Gate: when {@code true} (and {@link #bossEnabled()}),
+     * lighting the last shrine spawns the Warden but holds the gate SHUT until it is defeated, so survivors
+     * must kill the boss to escape (the "It rose to bar the gate" climax). When {@code false}, an enabled
+     * boss is a pure obstacle beside an already-open gate. Default off; Nightmare + Hardcore author it on.
+     * Asset-driven via the preset's {@code BossBarsGate} knob; {@code ChaseMode} reads it at the escape beat.
+     */
+    public boolean bossBarsGate() {
+        return bossBarsGate;
     }
 
     /**
@@ -368,6 +451,42 @@ public final class RuleSet {
         return enrageSoundId;
     }
 
+    // --- jumpscare beat (per-preset; ScareDirector reads these for the proximity/alert scare) ---
+
+    /**
+     * Whether the proximity/alert jumpscare fires this round. Default on; a calmer preset
+     * (Amateur) may author it off. Asset-driven via the preset's {@code JumpscareEnabled} knob.
+     */
+    public boolean jumpscareEnabled() {
+        return jumpscareEnabled;
+    }
+
+    /**
+     * Id of the ziggfreed-common {@code BandedEffectAsset} one-shot beat the jumpscare fires
+     * (the overlay {@code EntityEffect} + scream sound + camera shake bundled in one asset),
+     * or {@code null}/blank to use the first authored one-shot ({@code BandedEffectConfig.oneShot()}).
+     * Asset-driven via the preset's {@code JumpscareBeatId} knob - a preset can point at a
+     * different overlay/intensity beat per game mode.
+     */
+    @Nullable
+    public String jumpscareBeatId() {
+        return jumpscareBeatId;
+    }
+
+    /**
+     * Per-preset camera-shake intensity override (0..1) for the jumpscare; {@link Double#NaN}
+     * (the default) keeps the beat's own {@code ShakeIntensity}. Asset-driven via the preset's
+     * {@code JumpscareShakeIntensity} knob - the quick per-mode dial without authoring a new beat.
+     */
+    public double jumpscareShakeIntensity() {
+        return jumpscareShakeIntensity;
+    }
+
+    /** Minimum gap (seconds) between jumpscares for one survivor. Asset-driven via {@code JumpscareCooldownSeconds}. */
+    public int jumpscareCooldownSeconds() {
+        return jumpscareCooldownSeconds;
+    }
+
     /**
      * The worldgen biome (WorldStructure) this round generates in - the per-difficulty world
      * flavor. Default {@link #DEFAULT_WORLD_STRUCTURE}; the per-difficulty presets author
@@ -419,8 +538,14 @@ public final class RuleSet {
         b.minParty = this.minParty;
         b.maxParty = this.maxParty;
         b.exitMarker = this.exitMarker;
+        b.extractionMode = this.extractionMode;
+        b.extractionHoldSeconds = this.extractionHoldSeconds;
+        b.shrineDiscovery = this.shrineDiscovery;
+        b.shrineDiscoveryVisibility = this.shrineDiscoveryVisibility;
+        b.shrineDiscoveryRadius = this.shrineDiscoveryRadius;
         b.bossEnabled = this.bossEnabled;
         b.bossId = this.bossId;
+        b.bossBarsGate = this.bossBarsGate;
         b.scoring = this.scoring;
         b.onHitSlowEffectId = this.onHitSlowEffectId;
         b.onHitSlowSeconds = this.onHitSlowSeconds;
@@ -433,6 +558,10 @@ public final class RuleSet {
         b.enrageDamageMult = this.enrageDamageMult;
         b.enrageDurationSeconds = this.enrageDurationSeconds;
         b.enrageSoundId = this.enrageSoundId;
+        b.jumpscareEnabled = this.jumpscareEnabled;
+        b.jumpscareBeatId = this.jumpscareBeatId;
+        b.jumpscareShakeIntensity = this.jumpscareShakeIntensity;
+        b.jumpscareCooldownSeconds = this.jumpscareCooldownSeconds;
         return b;
     }
 
@@ -466,8 +595,17 @@ public final class RuleSet {
         private int minParty = 1;
         private int maxParty = ARENA_MAX_PARTY;
         private boolean exitMarker = true;
+        // Co-op extraction defaults (the no-soft-lock baseline; presets author per-difficulty).
+        private ExtractionMode extractionMode = ExtractionMode.ALL_MOBILE;
+        private double extractionHoldSeconds = 5.0;
+        // Shrine-discovery markers default to the Nightmare "self" feel: each survivor sees only the
+        // shrines they personally first-touched. Amateur authors SHARED ("all"); Hardcore authors OFF.
+        private DiscoveryMode shrineDiscovery = DiscoveryMode.ON_INTERACT;
+        private MapDiscovery.Visibility shrineDiscoveryVisibility = MapDiscovery.Visibility.PER_PLAYER;
+        private double shrineDiscoveryRadius = 24.0;
         private boolean bossEnabled = false;
         @Nullable private String bossId = null;
+        private boolean bossBarsGate = false;
         private ScoringConfig scoring = ScoringConfig.DEFAULT;
         // On-hit punishment baseline defaults (the zero-pack floor; presets / packs may override).
         @Nullable private String onHitSlowEffectId = "KweebecNightmare_HunterSlow_1";
@@ -481,6 +619,11 @@ public final class RuleSet {
         private double enrageDamageMult = 1.25;
         private double enrageDurationSeconds = 5.0;
         @Nullable private String enrageSoundId = null;
+        // Jumpscare defaults (the zero-pack baseline; presets author per game mode).
+        private boolean jumpscareEnabled = true;
+        @Nullable private String jumpscareBeatId = null;       // null -> BandedEffectConfig.oneShot()
+        private double jumpscareShakeIntensity = Double.NaN;   // NaN -> use the beat's own ShakeIntensity
+        private int jumpscareCooldownSeconds = 12;
 
         private Builder(@Nonnull String presetId) {
             this.presetId = presetId;
@@ -510,8 +653,14 @@ public final class RuleSet {
         @Nonnull public Builder minParty(int v) { this.minParty = v; return this; }
         @Nonnull public Builder maxParty(int v) { this.maxParty = v; return this; }
         @Nonnull public Builder exitMarker(boolean v) { this.exitMarker = v; return this; }
+        @Nonnull public Builder extractionMode(@Nonnull ExtractionMode v) { this.extractionMode = v; return this; }
+        @Nonnull public Builder extractionHoldSeconds(double v) { this.extractionHoldSeconds = Math.max(0.0, v); return this; }
+        @Nonnull public Builder shrineDiscovery(@Nonnull DiscoveryMode v) { this.shrineDiscovery = v; return this; }
+        @Nonnull public Builder shrineDiscoveryVisibility(@Nonnull MapDiscovery.Visibility v) { this.shrineDiscoveryVisibility = v; return this; }
+        @Nonnull public Builder shrineDiscoveryRadius(double v) { this.shrineDiscoveryRadius = Math.max(0.0, v); return this; }
         @Nonnull public Builder bossEnabled(boolean v) { this.bossEnabled = v; return this; }
         @Nonnull public Builder bossId(@Nullable String v) { this.bossId = v; return this; }
+        @Nonnull public Builder bossBarsGate(boolean v) { this.bossBarsGate = v; return this; }
         @Nonnull public Builder scoring(@Nonnull ScoringConfig v) { this.scoring = v; return this; }
         @Nonnull public Builder onHitSlowEffectId(@Nullable String v) { this.onHitSlowEffectId = v; return this; }
         @Nonnull public Builder onHitSlowSeconds(double v) { this.onHitSlowSeconds = v; return this; }
@@ -524,6 +673,10 @@ public final class RuleSet {
         @Nonnull public Builder enrageDamageMult(double v) { this.enrageDamageMult = v; return this; }
         @Nonnull public Builder enrageDurationSeconds(double v) { this.enrageDurationSeconds = v; return this; }
         @Nonnull public Builder enrageSoundId(@Nullable String v) { this.enrageSoundId = v; return this; }
+        @Nonnull public Builder jumpscareEnabled(boolean v) { this.jumpscareEnabled = v; return this; }
+        @Nonnull public Builder jumpscareBeatId(@Nullable String v) { this.jumpscareBeatId = v; return this; }
+        @Nonnull public Builder jumpscareShakeIntensity(double v) { this.jumpscareShakeIntensity = v; return this; }
+        @Nonnull public Builder jumpscareCooldownSeconds(int v) { this.jumpscareCooldownSeconds = Math.max(0, v); return this; }
 
         @Nonnull
         public RuleSet build() {

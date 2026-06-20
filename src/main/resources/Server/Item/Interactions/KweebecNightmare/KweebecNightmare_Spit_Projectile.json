@@ -1,0 +1,12 @@
+{
+  "$Comment": "Spitter ranged spit, projectile launch step. Carries the AimingReference tag (exactly one in the chain) so the NPC can compute the ballistic arc; mirrors vanilla Scarak_Seeker_Spit_Projectile.",
+  "Type": "Projectile",
+  "RunTime": 0.5,
+  "Effects": {
+    "WorldSoundEventId": "SFX_Scarak_Spitball_Fire"
+  },
+  "Config": "Projectile_Config_KweebecNightmare_VoidSpit",
+  "Tags": {
+    "AimingReference": []
+  }
+}

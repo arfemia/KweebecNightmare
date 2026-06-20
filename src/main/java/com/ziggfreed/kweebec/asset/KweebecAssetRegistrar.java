@@ -42,6 +42,7 @@ public final class KweebecAssetRegistrar {
     private static final String PRESETS_PATH = "KweebecNightmare/Presets";
     private static final String HUNTERS_PATH = "KweebecNightmare/Hunters";
     private static final String MUTATORS_PATH = "KweebecNightmare/Mutators";
+    private static final String GROVE_THROWABLES_PATH = "KweebecNightmare/GroveThrowables";
 
     private KweebecAssetRegistrar() {
     }
@@ -73,7 +74,14 @@ public final class KweebecAssetRegistrar {
         plugin.getEventRegistry().register(LoadedAssetsEvent.class, MutatorAsset.class,
                 KweebecAssetRegistrar::onMutatorAssetsLoaded);
 
-        SafeLog.info("[Kweebec][AssetPacks] Registered Kweebec content asset stores (Presets, Hunters, Mutators, Control); Bosses + BandedEffects + Placements + EncounterRules + Instances are owned by ziggfreed-common");
+        // Grove throwables (Pattern A) - loadsAfter the control store. ADD-only (no Control key).
+        AssetStoreRegistrar.registerStore(GroveThrowableAsset.class, new DefaultAssetMap<String, GroveThrowableAsset>(),
+                GROVE_THROWABLES_PATH, GroveThrowableAsset::getId, GroveThrowableAsset.CODEC,
+                new Class<?>[]{KweebecPackControlAsset.class});
+        plugin.getEventRegistry().register(LoadedAssetsEvent.class, GroveThrowableAsset.class,
+                KweebecAssetRegistrar::onGroveThrowableAssetsLoaded);
+
+        SafeLog.info("[Kweebec][AssetPacks] Registered Kweebec content asset stores (Presets, Hunters, Mutators, GroveThrowables, Control); Bosses + BandedEffects + Placements + EncounterRules + Instances are owned by ziggfreed-common");
     }
 
     // ==================== load listeners (Pattern A typed-map fold) ====================
@@ -128,6 +136,29 @@ public final class KweebecAssetRegistrar {
         }
         // Mutators are ADD-only (KweebecPackControlAsset has no "Mutators" key yet).
         MutatorConfig.getInstance().mergePackLayer(layer, false);
+    }
+
+    /**
+     * Fold pack {@link GroveThrowableAsset}s into {@link GroveThrowableConfig}. Pattern A typed-map fold
+     * (the asset is already the consumer's value type). ADD-only (no Control key); the config has no jar
+     * floor, so the loaded layer IS the effective set.
+     */
+    static void onGroveThrowableAssetsLoaded(
+            LoadedAssetsEvent<String, GroveThrowableAsset, DefaultAssetMap<String, GroveThrowableAsset>> event) {
+        DefaultAssetMap<String, GroveThrowableAsset> assetMap = event.getAssetMap();
+        Map<String, GroveThrowableAsset> layer = new LinkedHashMap<>();
+        for (Map.Entry<String, GroveThrowableAsset> entry : assetMap.getAssetMap().entrySet()) {
+            String key = entry.getKey();
+            if (DefaultAssetMap.DEFAULT_PACK_KEY.equals(assetMap.getAssetPack(key))) {
+                continue;
+            }
+            GroveThrowableAsset asset = entry.getValue();
+            if (asset == null) {
+                continue;
+            }
+            layer.put(key.toLowerCase(Locale.ROOT), asset);
+        }
+        GroveThrowableConfig.getInstance().mergePackLayer(layer);
     }
 
     /**

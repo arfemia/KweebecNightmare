@@ -19,6 +19,9 @@
         "Weight": 1
       }
     ],
+    "Light": {
+      "Color": "#232"
+    },
     "HitboxType": "Bench_Furnace",
     "Support": {
       "Down": [

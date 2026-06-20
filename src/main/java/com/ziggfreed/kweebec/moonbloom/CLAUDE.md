@@ -8,6 +8,15 @@ Real INVENTORY items, not an abstract counter.
   the throwable + spendable charge) and `PLANT_BLOCK` (`KweebecNightmare_Moonbloom_Plant`, the
   harvestable grove block that drops the charge). One place so the Java and the pack assets never
   drift.
+- **[`GlowThrowables`](GlowThrowables.java)** (0.6.0) - the id authority for Moonbloom's SIBLING glow-throwable
+  family: Gustbloom (knockback), Mirebloom (slow), Emberbloom (boss-phase damage). Each is a reskinned vanilla
+  glowing mushroom whose on-burst effect is authored 100% in its pack burst JSON (no Java) - knockback via
+  `DamageEffects.Knockback` (Type Point), slow via an `ApplyEffect` step + a slow EntityEffect, damage via a
+  real `BaseDamage`. The same gather loop as Moonbloom (item / `_Plant` block / `_Drop` droplist / `/Prefab`
+  cluster / throw chain). Distribution: Gust/Mire are DATA-DRIVEN via [`../asset/GroveThrowableConfig`](../asset/CLAUDE.md)
+  (shipped `Enabled:false`); Emberbloom clusters are placed by [`../boss/BossController`](../boss/BossController.java)
+  during the Warden phases. The only Java touch beyond ids is the Emberbloom friendly-fire guard in
+  [`../event/KweebecDamageSystem`](../event/CLAUDE.md) (`EMBER_DAMAGE_CAUSE` nulled on a survivor victim).
 - **Gather** is asset-only: the `Moonbloom_Plant` block's `Gathering.Harvest.DropList`
   (`Server/Drops/KweebecNightmare/KweebecNightmare_Moonbloom_Drop.json`) yields the charge item.
   Placement (a guaranteed cluster at each unlit surface shrine + a seed-deterministic grove scatter +

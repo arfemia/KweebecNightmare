@@ -145,6 +145,15 @@ public final class ShrineState {
         return blockPos != null && blockPos.x() == x && blockPos.y() == y && blockPos.z() == z;
     }
 
+    /**
+     * The stable world-map marker id for the shrine furnace at {@code pos}, derived from the block position
+     * so the register / discover / lit-swap call sites never drift. Block-unique within a round.
+     */
+    @Nonnull
+    public static String markerPoiId(@Nonnull Vector3i pos) {
+        return "kweebec_shrine_" + pos.x() + "_" + pos.y() + "_" + pos.z();
+    }
+
     /** Moonbloom charges offered at this shrine's furnace so far. */
     public int submitted() {
         return submitted;

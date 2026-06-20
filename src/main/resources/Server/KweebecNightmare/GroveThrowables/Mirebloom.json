@@ -1,0 +1,10 @@
+{
+  "Name": "mirebloom",
+  "Enabled": false,
+  "PrefabKey": "KweebecNightmare/Mirebloom",
+  "PerShrineCount": 0,
+  "ScatterCount": 6,
+  "RespawnWithWaves": true,
+  "MinCorruptionTier": 0,
+  "NameKey": "kweebecnightmare.item.mirebloom.name"
+}

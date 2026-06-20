@@ -23,6 +23,8 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.ziggfreed.common.world.BlockTypeLists;
 import com.ziggfreed.common.world.SurfaceProbe;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
+import com.ziggfreed.kweebec.asset.GroveThrowableAsset;
+import com.ziggfreed.kweebec.asset.GroveThrowableConfig;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.util.SafeLog;
@@ -41,8 +43,13 @@ import com.ziggfreed.kweebec.util.SafeLog;
  */
 public final class ArenaBuilder {
 
-    private static final String GATE_PREFAB = "KweebecNightmare/Gate";
-    private static final String EXIT_PREFAB = "KweebecNightmare/Exit";
+    /**
+     * The co-op extraction platform (the reworked exit) the survivor group holds together to escape: a vanilla
+     * Frost Elemental Circle medallion copied into the pack (see {@code tools/build_extraction_pad.py}), an
+     * 11x11 standable basalt-and-blue-crystal ring with a raised center, anchored so its walkable plane
+     * floor-snaps flush to the surface at {@link ArenaLayout#ESCAPE}. Replaces the old 3x3 orange-light pad.
+     */
+    private static final String EXIT_PREFAB = "KweebecNightmare/Extraction_Pad";
     /**
      * The corruption-repainted Kweebec well pasted as the grove's village-ruin CENTERPIECE (the hybrid
      * "ruined village in a dead forest" identity). Offset SOUTH of spawn (+z) so it never traps a
@@ -145,29 +152,39 @@ public final class ArenaBuilder {
     }
 
     /**
-     * Stamp Moonbloom plants into the grove: {@code perShrine} in a ring at EACH still-unlit SURFACE
-     * shrine (the guaranteed cleanse supply, withdrawn as shrines are cleansed) plus {@code scatter}
-     * at seed-deterministic grove positions (the exploration supply). Reused for the initial supply and
-     * each mid-match respawn wave; {@code seedSalt} varies the scatter per wave. Best-effort: the
-     * blocking prefab load runs off-thread, then each plant floor-snaps + pastes on the world thread
-     * (a missing prefab or unplantable column is skipped). Safe to call from any thread.
+     * Stamp Moonbloom plants into the grove (the canonical cluster planter): a thin delegate over the
+     * generalized {@link #plantClusters} with the Moonbloom prefab. {@code perShrine} rings EACH surface
+     * shrine (the guaranteed cleanse supply); {@code scatter} seeds grove positions (the exploration
+     * supply); reused for the initial supply and each mid-match respawn wave.
      */
     public static void plantMoonbloom(@Nonnull RoundInstance round, @Nonnull World world,
                                       int perShrine, int scatter, long seedSalt) {
+        plantClusters(round, world, MOONBLOOM_PREFAB, perShrine, scatter, seedSalt);
+    }
+
+    /**
+     * GENERALIZED cluster planter (the Moonbloom planter, parameterized on the plant-cluster prefab): paste
+     * {@code perShrine} of {@code prefabKey} in a ring at EACH surface shrine anchor plus {@code scatter} at
+     * seed-deterministic grove positions. ONE core so Moonbloom, the data-driven grove throwables, and (via
+     * {@link #plantClusterRing}) the boss-phase Emberbloom all share it. Best-effort: the blocking prefab
+     * load runs off-thread, then each plant floor-snaps + pastes on the world thread (a missing prefab or
+     * unplantable column is skipped). Safe to call from any thread; {@code seedSalt} varies the scatter per
+     * wave (and per prefab, so two throwables do not stack on the same scattered tile).
+     */
+    public static void plantClusters(@Nonnull RoundInstance round, @Nonnull World world,
+                                     @Nonnull String prefabKey, int perShrine, int scatter, long seedSalt) {
         if (perShrine <= 0 && scatter <= 0) {
             return;
         }
         CompletableFuture.runAsync(() -> {
             try {
-                IPrefabBuffer buffer = load(MOONBLOOM_PREFAB);
+                IPrefabBuffer buffer = load(prefabKey);
                 if (buffer == null) {
                     return; // load() already WARNs the missing key
                 }
                 // Cluster the guaranteed supply at the REAL surface shrines resolved by ShrinePlacement
-                // (worldgen-detected hosts + any runtime top-up), so the supply always rings the actual
-                // furnaces. Falls back to the authored WORLDGEN_SHRINE_XZ guesses only if detection has
-                // not published positions yet. Cave shrines get no surface cluster - survivors carry
-                // charges down the shaft. (The shrine OBJECTIVE is still discovered via its interaction.)
+                // (worldgen-detected hosts + any runtime top-up). Falls back to the authored
+                // WORLDGEN_SHRINE_XZ guesses only if detection has not published positions yet.
                 if (perShrine > 0) {
                     ChaseState chase = round.chaseState();
                     List<double[]> centers = new ArrayList<>();
@@ -189,9 +206,9 @@ public final class ArenaBuilder {
                         }
                     }
                 }
-                // Scatter across the grove, deterministic off the round seed + the per-wave salt.
+                // Scatter across the grove, deterministic off the round seed + the per-wave/per-prefab salt.
                 if (scatter > 0) {
-                    Random rng = new Random(round.worldSeed() ^ (0x4D6F6F6EL + seedSalt));
+                    Random rng = new Random(round.worldSeed() ^ (0x4D6F6F6EL + seedSalt + prefabKey.hashCode()));
                     for (int i = 0; i < scatter; i++) {
                         double r = MOONBLOOM_SCATTER_MIN_R
                                 + rng.nextDouble() * (MOONBLOOM_SCATTER_MAX_R - MOONBLOOM_SCATTER_MIN_R);
@@ -201,19 +218,76 @@ public final class ArenaBuilder {
                         paste(world, buffer, new Anchor(px, ArenaLayout.STAND_Y, pz, 0f), false, false);
                     }
                 }
-                SafeLog.info("[Kweebec] planted Moonbloom (perShrine=" + perShrine + ", scatter="
-                        + scatter + ", wave=" + seedSalt + ") in " + round.roundId());
+                SafeLog.info("[Kweebec] planted clusters (prefab=" + prefabKey + ", perShrine=" + perShrine
+                        + ", scatter=" + scatter + ", wave=" + seedSalt + ") in " + round.roundId());
             } catch (Throwable t) {
-                SafeLog.warn("[Kweebec] Moonbloom planting failed: " + t.getMessage());
+                SafeLog.warn("[Kweebec] cluster planting failed (" + prefabKey + "): " + t.getMessage());
             }
         });
     }
 
     /**
-     * Resolve + paste the authored objective beats (surface shrine ring, exit, and the underground
-     * cave). Idempotent. NOTE: the Heartwood Gate is deliberately NOT pasted here - it is revealed by
-     * {@link com.ziggfreed.kweebec.mode.chase.ChaseMode}'s {@code openGate} only once every shrine is
-     * lit (the dramatic "the gate opens" beat), via {@link #pasteGate(World)}.
+     * Paste {@code count} of {@code prefabKey} in a ring of {@code radius} blocks around {@code (cx, cz)},
+     * each floor-snapped to the local surface - the boss-phase Emberbloom cluster placer ({@code BossController}
+     * rings these around the Warden, mirroring its {@code summonAdds} ring math). Best-effort + thread-safe
+     * like {@link #plantClusters} (blocking load off-thread, each paste hops to the world thread).
+     */
+    public static void plantClusterRing(@Nonnull World world, @Nonnull String prefabKey,
+                                        double cx, double cz, double radius, int count) {
+        if (count <= 0) {
+            return;
+        }
+        CompletableFuture.runAsync(() -> {
+            try {
+                IPrefabBuffer buffer = load(prefabKey);
+                if (buffer == null) {
+                    return;
+                }
+                for (int i = 0; i < count; i++) {
+                    double theta = 2.0 * Math.PI * i / count;
+                    double px = cx + radius * Math.sin(theta);
+                    double pz = cz + radius * Math.cos(theta);
+                    paste(world, buffer, new Anchor(px, ArenaLayout.STAND_Y, pz, 0f), false, false);
+                }
+            } catch (Throwable t) {
+                SafeLog.warn("[Kweebec] cluster-ring planting failed (" + prefabKey + "): " + t.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Distribute every ENABLED + placeable {@link GroveThrowableConfig} entry (the data-driven utility
+     * glow-throwables - Gust/Mire + any pack-authored variant), each gated by its {@code MinCorruptionTier}
+     * against the round's current corruption tier. Called for the initial supply (from {@code ShrinePlacement}
+     * once shrine positions resolve, {@code wavesOnly=false}) and each Moonbloom respawn wave (from
+     * {@code ChaseMode}, {@code wavesOnly=true} so only {@code RespawnWithWaves} entries regrow). A no-op when
+     * nothing is enabled (the shipped default), so the gather loop ships dormant. World-thread caller OK.
+     */
+    public static void plantGroveThrowables(@Nonnull RoundInstance round, @Nonnull World world,
+                                            long seedSalt, boolean wavesOnly) {
+        ChaseState chase = round.chaseState();
+        int tier = chase != null ? chase.corruptionTier() : 0;
+        for (GroveThrowableAsset gt : GroveThrowableConfig.getInstance().placeable()) {
+            if (wavesOnly && !gt.respawnWithWaves()) {
+                continue;
+            }
+            if (tier < gt.minCorruptionTier()) {
+                continue;
+            }
+            String prefabKey = gt.prefabKey();
+            if (prefabKey == null || prefabKey.isBlank()) {
+                continue;
+            }
+            plantClusters(round, world, prefabKey, gt.perShrineCount(), gt.scatterCount(), seedSalt);
+        }
+    }
+
+    /**
+     * Resolve + paste the authored objective beats (the extraction platform + the underground cave). Idempotent.
+     * The extraction platform ({@code Extraction_Pad}, with its no-op purple void-portal) is the escape goal,
+     * pasted here at {@link ArenaLayout#ESCAPE}. There is no separate Heartwood Gate prefab any more (the old
+     * light archway was removed); {@code ChaseMode.openGate} fires the gate-open beat (titles / exit marker /
+     * hunter alert) logically without a pasted arch.
      */
     private static void pasteObjectives(@Nonnull RoundInstance round, @Nonnull World world) {
         ChaseState chase = round.chaseState();
@@ -247,30 +321,6 @@ public final class ArenaBuilder {
             KweebecNightmarePlugin.LOGGER.atWarning().log(
                     "[Kweebec] arena objective paste failed: " + t.getMessage());
         }
-    }
-
-    /**
-     * Reveal the Heartwood Gate - called from {@code ChaseMode.openGate} when every shrine is lit, so
-     * the gate appears only at the climactic moment (it never exists during the round). Best-effort:
-     * the blocking prefab load runs off-thread, then {@link #paste} hops to the world thread. The
-     * escape win is pure-anchor logic ({@code checkEscapes} crossing {@code GATE.z}), so a missing
-     * prefab only costs the visual, never the win.
-     */
-    public static void pasteGate(@Nonnull World world) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                IPrefabBuffer gate = load(GATE_PREFAB);
-                if (gate != null) {
-                    paste(world, gate, ArenaLayout.GATE);
-                } else {
-                    KweebecNightmarePlugin.LOGGER.atWarning().log(
-                            "[Kweebec] gate reveal: prefab '" + GATE_PREFAB + "' not found");
-                }
-            } catch (Throwable t) {
-                KweebecNightmarePlugin.LOGGER.atWarning().log(
-                        "[Kweebec] gate reveal paste failed: " + t.getMessage());
-            }
-        });
     }
 
     /**

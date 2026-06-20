@@ -22,4 +22,13 @@ public final class Shrine {
      * and rejects a lowercase ("lit") definition name with "Asset key ... has incorrect format!".
      */
     public static final String LIT_STATE = "Lit";
+
+    /**
+     * World-map / compass marker icon for a DISCOVERED (un-cleansed) shrine - a temple objective, visually
+     * distinct from the exit's {@code Portal.png}. Swapped to {@link #LIT_MARKER_ICON} once the shrine lights.
+     */
+    public static final String MARKER_ICON = "Temple_Gateway.png";
+
+    /** World-map / compass marker icon a shrine swaps to once CLEANSED (a navigable "done" landmark). */
+    public static final String LIT_MARKER_ICON = "Campfire.png";
 }

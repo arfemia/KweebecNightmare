@@ -30,6 +30,7 @@ import com.ziggfreed.common.instance.effect.EntityEffectService;
 import com.ziggfreed.common.sound.Sound3D;
 import com.ziggfreed.common.util.EntityIdentifierUtil;
 import com.ziggfreed.kweebec.hunter.OnHitConfig;
+import com.ziggfreed.kweebec.moonbloom.GlowThrowables;
 import com.ziggfreed.kweebec.round.PlayerRoundState;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.round.RoundService;
@@ -77,6 +78,8 @@ public final class KweebecDamageSystem extends DamageEventSystem {
 
     /** Resolved index of the Moonbloom damage cause; cached ONLY once positive (the asset loads after this class). */
     private volatile int moonbloomCauseIndex = -1;
+    /** Resolved index of the Emberbloom damage cause; cached ONLY once positive (used for the friendly-fire guard). */
+    private volatile int emberCauseIndex = -1;
 
     /** Minimum gap (ms) between re-applying the on-hit slow to the SAME victim (so rapid hits do not thrash it). */
     private static final long SLOW_REAPPLY_COOLDOWN_MS = 500L;
@@ -140,6 +143,12 @@ public final class KweebecDamageSystem extends DamageEventSystem {
             }
             if (isMoonbloom) {
                 return; // a friendly Moonbloom splash on a teammate - do not count it as damage taken
+            }
+            if (isEmberCause(damage)) {
+                // An Emberbloom burst is the boss-damage throwable; it must NEVER hurt a fellow survivor
+                // (the AoE has no asset-level attitude filter), so null the damage on a player victim.
+                damage.setAmount(0f);
+                return;
             }
             // HUNTER ON-HIT PUNISHMENT: when the attacker is a live hunter, scale its outgoing damage and
             // slap a proximity-escalating slow on the victim BEFORE scoring, so the score reflects the
@@ -317,6 +326,22 @@ public final class KweebecDamageSystem extends DamageEventSystem {
             }
             if (idx >= 0) {
                 moonbloomCauseIndex = idx; // cache only a real index (the asset registers after this class)
+            }
+        }
+        return idx >= 0 && damage.getDamageCauseIndex() == idx;
+    }
+
+    /** Whether this damage carries the custom Emberbloom cause (resolved + cached lazily, like Moonbloom). */
+    private boolean isEmberCause(@Nonnull Damage damage) {
+        int idx = emberCauseIndex;
+        if (idx < 0) {
+            try {
+                idx = DamageCause.getAssetMap().getIndex(GlowThrowables.EMBER_DAMAGE_CAUSE);
+            } catch (Throwable ignored) {
+                idx = -1;
+            }
+            if (idx >= 0) {
+                emberCauseIndex = idx; // cache only a real index (the asset registers after this class)
             }
         }
         return idx >= 0 && damage.getDamageCauseIndex() == idx;

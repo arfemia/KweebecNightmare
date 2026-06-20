@@ -4,6 +4,9 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
+import com.ziggfreed.common.worldmap.DiscoveryMode;
+import com.ziggfreed.common.worldmap.MapDiscovery;
+import com.ziggfreed.kweebec.round.ExtractionMode;
 import com.ziggfreed.kweebec.round.ReviveStyle;
 import com.ziggfreed.kweebec.round.RuleSet;
 
@@ -54,6 +57,11 @@ public final class DefaultPresets {
                 .corruptionPerShrine(0.08)
                 .shrineRelightSeconds(5.0)
                 .hunterArchetype("stalker")
+                // Easiest mode: a found shrine is marked on EVERYONE's map (the co-op "all" feel).
+                .shrineDiscoveryVisibility(MapDiscovery.Visibility.SHARED)
+                // Forgiving extraction: only the mobile survivors need the platform, brief hold.
+                .extractionMode(ExtractionMode.ALL_MOBILE)
+                .extractionHoldSeconds(4.0)
                 .build();
     }
 
@@ -70,6 +78,10 @@ public final class DefaultPresets {
                 .corruptionPerShrine(0.12)
                 .shrineRelightSeconds(6.0)
                 .hunterArchetype("stalker")
+                // Leave no one behind: the WHOLE party must hold the platform (a downed teammate must be
+                // rescued first), and the hold runs longer than Amateur.
+                .extractionMode(ExtractionMode.EVERYONE)
+                .extractionHoldSeconds(6.0)
                 .build();
     }
 
@@ -88,8 +100,14 @@ public final class DefaultPresets {
                 .shrineRelightSeconds(7.0)
                 .hunterArchetype("stalker")
                 .exitMarker(false)
+                // Hardest mode: no shrine markers at all - survivors navigate the dark unaided (like exitMarker).
+                .shrineDiscovery(DiscoveryMode.OFF)
                 .bossEnabled(true)
                 .bossId("warden")
+                // Brutal extraction: only mobile survivors are required (a permanent catch never
+                // soft-locks), but the platform hold is the longest - the most exposed escape.
+                .extractionMode(ExtractionMode.ALL_MOBILE)
+                .extractionHoldSeconds(8.0)
                 .build();
     }
 

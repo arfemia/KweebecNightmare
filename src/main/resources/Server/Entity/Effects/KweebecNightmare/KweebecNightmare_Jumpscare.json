@@ -2,7 +2,7 @@
   "ApplicationEffects": {
     "EntityBottomTint": "#1a0000",
     "EntityTopTint": "#6e0202",
-    "ScreenEffect": "ScreenEffects/Fire.png"
+    "ScreenEffect": "ScreenEffects/KweebecNightmare_Jumpscare.png"
   },
   "Infinite": false,
   "Duration": 0.6,

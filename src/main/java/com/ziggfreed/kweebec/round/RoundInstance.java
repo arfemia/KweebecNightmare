@@ -12,6 +12,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.hypixel.hytale.server.core.universe.world.World;
+import com.ziggfreed.common.worldmap.MapDiscovery;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
 import com.ziggfreed.kweebec.boss.BossController;
 import com.ziggfreed.kweebec.hunter.HunterController;
@@ -66,6 +67,9 @@ public final class RoundInstance {
     private volatile HunterController hunterController;
     @Nullable
     private volatile BossController bossController;
+    /** Shrine-discovery map markers for this round, created + attached when {@code shrineDiscovery != OFF}. */
+    @Nullable
+    private volatile MapDiscovery mapDiscovery;
 
     public RoundInstance(@Nonnull String roundId, @Nonnull KweebecMode mode,
                          @Nonnull RuleSet ruleSet, long startedAtMs) {
@@ -272,5 +276,19 @@ public final class RoundInstance {
 
     public void setBossController(@Nullable BossController bossController) {
         this.bossController = bossController;
+    }
+
+    /**
+     * The shrine-discovery map-marker tracker for this round, created + attached by
+     * {@code RoundService.onInstanceReady} when the preset's {@code shrineDiscovery} is not OFF.
+     * {@code null} on a Hardcore (or otherwise discovery-off) round.
+     */
+    @Nullable
+    public MapDiscovery mapDiscovery() {
+        return mapDiscovery;
+    }
+
+    public void setMapDiscovery(@Nullable MapDiscovery mapDiscovery) {
+        this.mapDiscovery = mapDiscovery;
     }
 }

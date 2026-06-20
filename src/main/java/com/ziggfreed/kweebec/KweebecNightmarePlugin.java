@@ -125,13 +125,14 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // entry trigger); press-F opens the backstory dialogue + preset launcher.
         getEventRegistry().registerGlobal(PlayerReadyEvent.class, KweebecGuideSpawn::onPlayerReady);
 
-        // Re-deliver any rewards a player could not claim last time because their inventory
-        // was full (the no-claim-with-full-inventory guard holds them until they make space).
-        getEventRegistry().registerGlobal(PlayerReadyEvent.class, KweebecExperience::onPlayerReady);
-
         // Inventory-restore crash/disconnect net: re-apply a leftover inventory snapshot for a player
         // who entered a round but never got restored in-instance (crash / disconnect / restart mid-round).
         getEventRegistry().registerGlobal(PlayerReadyEvent.class, RoundInventoryGuard::onPlayerReady);
+
+        // Open any deferred results page the player earned, now that they are client-ready in the world
+        // (PlayerReadyEvent = the reliable post-teleport signal). Spoils are CLAIMED from that page (or the
+        // play-menu Claim button), never auto-granted here, so this needs no ordering vs the restore above.
+        getEventRegistry().registerGlobal(PlayerReadyEvent.class, KweebecExperience::onPlayerReady);
 
         // Perfect Utils is a hard dependency (loads first); confirm the aggro API resolved so a
         // missing/older jar is obvious in the log rather than a silent fall-back to natural sensors.
