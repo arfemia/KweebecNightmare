@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.hypixel.hytale.event.IEvent;
 
@@ -34,7 +35,13 @@ public final class RoundCompletedEvent implements IEvent<Void> {
         /** The night timer / round cap expired with no win. */
         TIMED_OUT,
         /** The round was force-ended (admin / last player left). */
-        ABORTED
+        ABORTED,
+        /** PvP: one team won (last-team-standing / score cap / most-of-stat at the timer). The winning
+         *  team is {@link #winnerTeamId()}; per-player win is in the scored payload. Appended last to
+         *  preserve the legacy ordinals reflective consumers may key on. */
+        TEAM_ELIMINATED,
+        /** PvP: the round ended in a draw (tie at the timer with no sudden-death resolution). */
+        DRAW
     }
 
     private final String roundId;
@@ -45,6 +52,8 @@ public final class RoundCompletedEvent implements IEvent<Void> {
     private final int durationSeconds;
     private final int objectiveProgress;
     private final int difficultyScore;
+    @Nullable
+    private final Integer winnerTeamId;
 
     /**
      * @param roundId           unique id of the round instance
@@ -64,6 +73,22 @@ public final class RoundCompletedEvent implements IEvent<Void> {
                                int durationSeconds,
                                int objectiveProgress,
                                int difficultyScore) {
+        this(roundId, mode, outcome, participants, durationSeconds, objectiveProgress, difficultyScore, null);
+    }
+
+    /**
+     * PvP overload carrying the winning team. {@code winnerTeamId} is the 0-based winning team for a
+     * {@link Outcome#TEAM_ELIMINATED}, or {@code null} for a co-op outcome / {@link Outcome#DRAW}. The
+     * co-op constructor delegates here with {@code null}.
+     */
+    public RoundCompletedEvent(@Nonnull String roundId,
+                               @Nonnull String mode,
+                               @Nonnull Outcome outcome,
+                               @Nonnull List<UUID> participants,
+                               int durationSeconds,
+                               int objectiveProgress,
+                               int difficultyScore,
+                               @Nullable Integer winnerTeamId) {
         this.roundId = roundId;
         this.mode = mode;
         this.outcome = outcome;
@@ -72,6 +97,7 @@ public final class RoundCompletedEvent implements IEvent<Void> {
         this.durationSeconds = durationSeconds;
         this.objectiveProgress = objectiveProgress;
         this.difficultyScore = difficultyScore;
+        this.winnerTeamId = winnerTeamId;
     }
 
     @Nonnull
@@ -121,5 +147,15 @@ public final class RoundCompletedEvent implements IEvent<Void> {
      */
     public int difficultyScore() {
         return difficultyScore;
+    }
+
+    /**
+     * PvP: the 0-based winning team for a {@link Outcome#TEAM_ELIMINATED}, or {@code null} for a co-op
+     * outcome or a {@link Outcome#DRAW}. Per-player win detail is in the scored payload
+     * ({@code KweebecRoundScoredEvent}); the coarse {@link #isWin()} stays co-op-shaped.
+     */
+    @Nullable
+    public Integer winnerTeamId() {
+        return winnerTeamId;
     }
 }

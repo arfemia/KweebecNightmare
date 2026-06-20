@@ -1,5 +1,7 @@
 package com.ziggfreed.kweebec.command;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -32,6 +34,7 @@ import com.ziggfreed.kweebec.i18n.Lang;
 import com.ziggfreed.kweebec.lobby.KweebecLobby;
 import com.ziggfreed.kweebec.moonbloom.Moonbloom;
 import com.ziggfreed.kweebec.npc.KweebecGuideSpawn;
+import com.ziggfreed.kweebec.round.KweebecMode;
 import com.ziggfreed.kweebec.round.RoundService;
 
 /**
@@ -68,6 +71,8 @@ public final class KweebecCommand extends CommandBase {
         String sub = ctx.provided(subArg) ? subArg.get(ctx).toLowerCase() : "start";
         switch (sub) {
             case "start" -> start(ctx);
+            case "clash" -> startMode(ctx, KweebecMode.CLASH, "clash_1v1");
+            case "domination", "dom" -> startMode(ctx, KweebecMode.DOMINATION, "domination_koth");
             case "exit", "leave" -> exit(ctx);
             case "endall", "end" -> endAll(ctx);
             case "give" -> give(ctx);
@@ -75,6 +80,7 @@ public final class KweebecCommand extends CommandBase {
             case "leaderboard", "lb" -> leaderboard(ctx);
             case "party" -> party(ctx);
             case "spawnguide", "guide" -> spawnGuide(ctx);
+            case "clashhost", "host" -> spawnClashHost(ctx);
             default -> ctx.sendMessage(Lang.msg(Lang.CMD_USAGE));
         }
     }
@@ -112,6 +118,44 @@ public final class KweebecCommand extends CommandBase {
             case ALREADY_ENGAGED -> ctx.sendMessage(Lang.msg(Lang.CMD_ALREADY_IN_ROUND));
             case QUEUE_UNAVAILABLE -> ctx.sendMessage(Lang.msg(Lang.CMD_START_FAILED));
         }
+    }
+
+    /**
+     * {@code clash [preset]} / {@code domination [preset]} - DIRECT PvP start (testing / admin): gather every
+     * eligible player in the caller's current world into one match and start it immediately (no queue). The
+     * teams are split from that roster. The diegetic queue/NPC entry routes through the lobby instead.
+     */
+    private void startMode(@Nonnull CommandContext ctx, @Nonnull KweebecMode mode, @Nonnull String defaultPreset) {
+        if (!(ctx.sender() instanceof PlayerRef player)) {
+            ctx.sendMessage(Lang.msg(Lang.CMD_PLAYERS_ONLY));
+            return;
+        }
+        UUID initiator = player.getUuid();
+        if (RoundService.getInstance().registry().isInRound(initiator)) {
+            ctx.sendMessage(Lang.msg(Lang.CMD_ALREADY_IN_ROUND));
+            return;
+        }
+        String presetId = ctx.provided(presetArg) ? presetArg.get(ctx) : defaultPreset;
+        World world = Universe.get().getWorld(player.getWorldUuid());
+        if (world == null) {
+            ctx.sendMessage(Lang.msg(Lang.CMD_START_FAILED));
+            return;
+        }
+        // Gather every eligible (not-already-in-a-round) player in the caller's world, initiator first.
+        List<UUID> party = new ArrayList<>();
+        party.add(initiator);
+        for (PlayerRef pr : world.getPlayerRefs()) {
+            UUID u = pr.getUuid();
+            if (u != null && !u.equals(initiator) && !RoundService.getInstance().registry().isInRound(u)) {
+                party.add(u);
+            }
+        }
+        ctx.sendMessage(Lang.msg(Lang.CMD_STARTING));
+        RoundService.getInstance().startRound(initiator, party, presetId, mode).whenComplete((id, err) -> {
+            if (err != null) {
+                player.sendMessage(Lang.msg(Lang.CMD_START_FAILED));
+            }
+        });
     }
 
     /** {@code party} - open the party + invite screen. */
@@ -196,6 +240,21 @@ public final class KweebecCommand extends CommandBase {
                         "[Kweebec] spawnguide failed: " + t.getMessage());
             }
         });
+    }
+
+    /** {@code clashhost} - ensure the PvP Clash Host NPC exists in the caller's world (debug placement). */
+    private void spawnClashHost(@Nonnull CommandContext ctx) {
+        if (!(ctx.sender() instanceof PlayerRef player)) {
+            ctx.sendMessage(Lang.msg(Lang.CMD_PLAYERS_ONLY));
+            return;
+        }
+        World world = Universe.get().getWorld(player.getWorldUuid());
+        if (world == null) {
+            ctx.sendMessage(Lang.msg(Lang.CMD_GUIDE_FAILED));
+            return;
+        }
+        ctx.sendMessage(Lang.msg(Lang.CMD_GUIDE_SPAWNED));
+        world.execute(() -> KweebecNightmarePlugin.debugSpawnClashHost(world));
     }
 
     private void endAll(@Nonnull CommandContext ctx) {

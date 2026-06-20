@@ -12,6 +12,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.hypixel.hytale.server.core.universe.world.World;
+import com.ziggfreed.common.instance.arena.ArenaDefinitionAsset;
 import com.ziggfreed.common.worldmap.MapDiscovery;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
 import com.ziggfreed.kweebec.boss.BossController;
@@ -60,7 +61,32 @@ public final class RoundInstance {
     @Nullable
     private volatile RoundCompletedEvent.Outcome outcome;
 
-    // Chase-mode gameplay state (the only mode in the MVP).
+    /**
+     * Mode-specific gameplay state for the NON-chase modes (Clash {@code ClashState} / Domination
+     * {@code DominationState}), held opaquely as {@link Object} so the engine never imports a mode type
+     * (the open/closed seam). The owning {@link RoundMode} casts it. Chase keeps its own typed
+     * {@link #chaseState} handle below. Set on the world thread in the mode's {@code onStart} before ACTIVE.
+     */
+    @Nullable
+    private volatile Object modeState;
+
+    /**
+     * PvP team assignment (player -> 0-based team index), set ONCE on the spawning world thread before the
+     * round goes ACTIVE and never mutated after, so off-thread reads are safe. Empty for co-op (Chase).
+     */
+    private final Map<UUID, Integer> teamAssignments = new ConcurrentHashMap<>();
+
+    /** The arena chosen for a PvP round ({@code ArenaResolver}): source of team/objective/pickup anchors.
+     *  {@code null} for Chase (which runs off {@code ArenaLayout} constants). Set before ACTIVE. */
+    @Nullable
+    private volatile ArenaDefinitionAsset arena;
+
+    /** Pre-made party block sizes (in participant-list order) for the team split; {@code null} = treat the
+     *  whole party as one block. The matchmaking lobby sets this so a premade stays on one team. */
+    @Nullable
+    private volatile List<Integer> partyBlocks;
+
+    // Chase-mode gameplay state (the only co-op mode).
     @Nullable
     private volatile ChaseState chaseState;
     @Nullable
@@ -243,6 +269,67 @@ public final class RoundInstance {
     @Nonnull
     public Collection<Object> huds() {
         return huds.values();
+    }
+
+    // --- mode-generic state (Clash / Domination) ---
+
+    /** The opaque mode-state handle for a non-chase mode; the owning {@link RoundMode} casts it. */
+    @Nullable
+    public Object modeState() {
+        return modeState;
+    }
+
+    public void setModeState(@Nullable Object modeState) {
+        this.modeState = modeState;
+    }
+
+    /** Assign a player to a 0-based team (PvP). Set once before ACTIVE; never mutate after. */
+    public void setTeam(@Nonnull UUID playerId, int team) {
+        teamAssignments.put(playerId, team);
+    }
+
+    /** The player's 0-based team index, or {@code -1} if unassigned (co-op / not seated). */
+    public int teamOf(@Nonnull UUID playerId) {
+        Integer t = teamAssignments.get(playerId);
+        return t != null ? t : -1;
+    }
+
+    /** Live members assigned to a team (a fresh list; iteration-safe). */
+    @Nonnull
+    public List<UUID> membersOfTeam(int team) {
+        List<UUID> out = new java.util.ArrayList<>();
+        for (Map.Entry<UUID, Integer> e : teamAssignments.entrySet()) {
+            if (e.getValue() != null && e.getValue() == team) {
+                out.add(e.getKey());
+            }
+        }
+        return out;
+    }
+
+    /** The full player -> team map (a fresh copy). */
+    @Nonnull
+    public Map<UUID, Integer> teamAssignments() {
+        return Map.copyOf(teamAssignments);
+    }
+
+    /** The PvP arena chosen for this round, or {@code null} for Chase. */
+    @Nullable
+    public ArenaDefinitionAsset arena() {
+        return arena;
+    }
+
+    public void setArena(@Nullable ArenaDefinitionAsset arena) {
+        this.arena = arena;
+    }
+
+    /** Pre-made party block sizes for the team split, or {@code null} = the whole party is one block. */
+    @Nullable
+    public List<Integer> partyBlocks() {
+        return partyBlocks;
+    }
+
+    public void setPartyBlocks(@Nullable List<Integer> partyBlocks) {
+        this.partyBlocks = partyBlocks != null ? List.copyOf(partyBlocks) : null;
     }
 
     // --- chase mode ---

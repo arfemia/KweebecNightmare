@@ -21,8 +21,11 @@ import com.ziggfreed.common.lobby.RoundLauncher;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.asset.PresetConfig;
 import com.ziggfreed.kweebec.i18n.Lang;
+import com.ziggfreed.kweebec.round.ClashPresetValidator;
+import com.ziggfreed.kweebec.round.KweebecMode;
 import com.ziggfreed.kweebec.round.RoundService;
 import com.ziggfreed.kweebec.round.RuleSet;
+import com.ziggfreed.kweebec.util.SafeLog;
 
 /**
  * Kweebec's policy wiring over the generic {@code ziggfreed-common} matchmaking
@@ -147,9 +150,23 @@ public final class KweebecLobby {
     @Nonnull
     private static LobbyConfig configFor(@Nonnull String presetId) {
         RuleSet rs = PresetConfig.getInstance().resolve(presetId);
-        // Queue policy is asset-driven when an InstancePreset is authored for this id;
-        // min/max party stay on the gameplay RuleSet (the arena-budget clamp authority).
         InstancePreset ip = InstancePresetConfig.getInstance().resolve(presetId);
+        KweebecMode mode = modeFor(presetId);
+        if (mode == KweebecMode.CLASH || mode == KweebecMode.DOMINATION) {
+            // PvP is a FIXED-SIZE match: min == max == teamSize * 2 teams, never a lone launch. Surface any
+            // contradictory preset combos (the "leave no gaps" config guard) before sizing the queue.
+            for (String warning : ClashPresetValidator.validate(rs)) {
+                SafeLog.warn(warning);
+            }
+            int n = Math.max(2, rs.teamSize() * 2);
+            // Honor an authored InstancePreset's fill/countdown pacing, but force the fixed team headcount.
+            if (ip != null) {
+                return ip.toLobbyConfig(n, n);
+            }
+            return new LobbyConfig(n, n, FILL_TIMEOUT_SECONDS, COUNTDOWN_SECONDS, false, false);
+        }
+        // Co-op (Chase): queue policy is asset-driven when an InstancePreset is authored for this id;
+        // min/max party stay on the gameplay RuleSet (the arena-budget clamp authority).
         if (ip != null) {
             return ip.toLobbyConfig(rs.minParty(), rs.maxParty());
         }
@@ -157,10 +174,24 @@ public final class KweebecLobby {
                 FILL_TIMEOUT_SECONDS, COUNTDOWN_SECONDS, ALLOW_SOLO, LEADER_FORCE_START);
     }
 
-    /** A launcher that hands the snapshotted party to {@code startChase} for THIS preset. */
+    /** A launcher that hands the snapshotted party to {@code startRound} for THIS preset's mode. */
     @Nonnull
     private static RoundLauncher launcherFor(@Nonnull String presetId) {
-        return (initiator, party) -> RoundService.getInstance().startChase(initiator, party, presetId);
+        KweebecMode mode = modeFor(presetId);
+        return (initiator, party) -> RoundService.getInstance().startRound(initiator, party, presetId, mode);
+    }
+
+    /** Derive the gameplay mode from a preset id ({@code clash_*} -> CLASH, {@code domination_*} -> DOMINATION, else CHASE). */
+    @Nonnull
+    public static KweebecMode modeFor(@Nullable String presetId) {
+        String p = presetId == null ? "" : presetId.toLowerCase();
+        if (p.startsWith("clash")) {
+            return KweebecMode.CLASH;
+        }
+        if (p.startsWith("domination")) {
+            return KweebecMode.DOMINATION;
+        }
+        return KweebecMode.CHASE;
     }
 
     /** Localized queue feedback (common stays locale-free; these are pre-built Messages). */

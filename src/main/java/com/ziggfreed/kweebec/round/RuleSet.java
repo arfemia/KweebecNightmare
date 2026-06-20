@@ -3,6 +3,7 @@ package com.ziggfreed.kweebec.round;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.ziggfreed.common.instance.zone.ContestRule;
 import com.ziggfreed.common.worldmap.DiscoveryMode;
 import com.ziggfreed.common.worldmap.MapDiscovery;
 import com.ziggfreed.kweebec.score.ScoringConfig;
@@ -82,6 +83,32 @@ public final class RuleSet {
     @Nullable private final String jumpscareBeatId;
     private final double jumpscareShakeIntensity;
     private final int jumpscareCooldownSeconds;
+    // --- PvP shared (Clash + Domination): team size, friendly fire, model swap, arena selection ---
+    private final int teamSize;
+    private final boolean friendlyFire;
+    @Nullable private final String modelSwapId;
+    private final double modelSwapScale;
+    @Nullable private final String arenaId;
+    @Nullable private final String arenaTag;
+    // --- Clash (team brawl) knobs (grouped view via clash()) ---
+    private final WinCondition winCondition;
+    private final RespawnPolicy respawnPolicy;
+    private final int respawnDelaySeconds;
+    private final int maxLives;
+    private final int scoreToWin;
+    private final int suddenDeathSeconds;
+    private final int mushroomCadenceSeconds;
+    private final int mushroomWaveCount;
+    private final int mushroomMaxAlive;
+    private final String[] mushroomCycle;
+    // --- Domination (control point) knobs (grouped view via domination()) ---
+    private final int dominationScoreToWin;
+    private final double dominationPointHoldSeconds;
+    private final int dominationAccrualPerSecond;
+    private final double dominationPointRadius;
+    private final ContestRule dominationContestRule;
+    private final boolean dominationCaptureNeutralizes;
+    private final int dominationRespawnDelaySeconds;
 
     private RuleSet(Builder b) {
         this.presetId = b.presetId;
@@ -135,6 +162,29 @@ public final class RuleSet {
         this.jumpscareBeatId = b.jumpscareBeatId;
         this.jumpscareShakeIntensity = b.jumpscareShakeIntensity;
         this.jumpscareCooldownSeconds = b.jumpscareCooldownSeconds;
+        this.teamSize = b.teamSize;
+        this.friendlyFire = b.friendlyFire;
+        this.modelSwapId = b.modelSwapId;
+        this.modelSwapScale = b.modelSwapScale;
+        this.arenaId = b.arenaId;
+        this.arenaTag = b.arenaTag;
+        this.winCondition = b.winCondition;
+        this.respawnPolicy = b.respawnPolicy;
+        this.respawnDelaySeconds = b.respawnDelaySeconds;
+        this.maxLives = b.maxLives;
+        this.scoreToWin = b.scoreToWin;
+        this.suddenDeathSeconds = b.suddenDeathSeconds;
+        this.mushroomCadenceSeconds = b.mushroomCadenceSeconds;
+        this.mushroomWaveCount = b.mushroomWaveCount;
+        this.mushroomMaxAlive = b.mushroomMaxAlive;
+        this.mushroomCycle = b.mushroomCycle;
+        this.dominationScoreToWin = b.dominationScoreToWin;
+        this.dominationPointHoldSeconds = b.dominationPointHoldSeconds;
+        this.dominationAccrualPerSecond = b.dominationAccrualPerSecond;
+        this.dominationPointRadius = b.dominationPointRadius;
+        this.dominationContestRule = b.dominationContestRule;
+        this.dominationCaptureNeutralizes = b.dominationCaptureNeutralizes;
+        this.dominationRespawnDelaySeconds = b.dominationRespawnDelaySeconds;
     }
 
     /**
@@ -487,6 +537,56 @@ public final class RuleSet {
         return jumpscareCooldownSeconds;
     }
 
+    // --- PvP shared (Clash + Domination) ---
+
+    /** Players per team in a PvP round: 1 (1v1) or 2 (2v2). The queue seats {@code teamSize * 2}. */
+    public int teamSize() {
+        return Math.max(1, teamSize);
+    }
+
+    /** Whether same-team damage applies in a PvP round (read by {@code KweebecDamageSystem}). */
+    public boolean friendlyFire() {
+        return friendlyFire;
+    }
+
+    /** The model a PvP player is reskinned to for the match (e.g. {@code Kweebec_Sapling}); blank = no swap. */
+    @Nullable
+    public String modelSwapId() {
+        return modelSwapId;
+    }
+
+    /** Scale applied to the swapped PvP model (1.0 = the model's own scale). */
+    public double modelSwapScale() {
+        return modelSwapScale;
+    }
+
+    /** Pin a specific arena id from the {@code ziggfreed-common} arena catalog; {@code null} = pick by tag. */
+    @Nullable
+    public String arenaId() {
+        return arenaId;
+    }
+
+    /** Pick a random arena carrying this tag; {@code null} = default to the mode id ({@code clash}/{@code domination}). */
+    @Nullable
+    public String arenaTag() {
+        return arenaTag;
+    }
+
+    /** The Clash (team brawl) knobs as an immutable grouped view. */
+    @Nonnull
+    public ClashConfig clash() {
+        return new ClashConfig(winCondition, respawnPolicy, respawnDelaySeconds, maxLives, scoreToWin,
+                suddenDeathSeconds, mushroomCadenceSeconds, mushroomWaveCount, mushroomMaxAlive, mushroomCycle);
+    }
+
+    /** The Domination (control point) knobs as an immutable grouped view. */
+    @Nonnull
+    public DominationConfig domination() {
+        return new DominationConfig(dominationScoreToWin, dominationPointHoldSeconds, dominationAccrualPerSecond,
+                dominationPointRadius, dominationContestRule, dominationCaptureNeutralizes,
+                dominationRespawnDelaySeconds);
+    }
+
     /**
      * The worldgen biome (WorldStructure) this round generates in - the per-difficulty world
      * flavor. Default {@link #DEFAULT_WORLD_STRUCTURE}; the per-difficulty presets author
@@ -562,6 +662,29 @@ public final class RuleSet {
         b.jumpscareBeatId = this.jumpscareBeatId;
         b.jumpscareShakeIntensity = this.jumpscareShakeIntensity;
         b.jumpscareCooldownSeconds = this.jumpscareCooldownSeconds;
+        b.teamSize = this.teamSize;
+        b.friendlyFire = this.friendlyFire;
+        b.modelSwapId = this.modelSwapId;
+        b.modelSwapScale = this.modelSwapScale;
+        b.arenaId = this.arenaId;
+        b.arenaTag = this.arenaTag;
+        b.winCondition = this.winCondition;
+        b.respawnPolicy = this.respawnPolicy;
+        b.respawnDelaySeconds = this.respawnDelaySeconds;
+        b.maxLives = this.maxLives;
+        b.scoreToWin = this.scoreToWin;
+        b.suddenDeathSeconds = this.suddenDeathSeconds;
+        b.mushroomCadenceSeconds = this.mushroomCadenceSeconds;
+        b.mushroomWaveCount = this.mushroomWaveCount;
+        b.mushroomMaxAlive = this.mushroomMaxAlive;
+        b.mushroomCycle = this.mushroomCycle;
+        b.dominationScoreToWin = this.dominationScoreToWin;
+        b.dominationPointHoldSeconds = this.dominationPointHoldSeconds;
+        b.dominationAccrualPerSecond = this.dominationAccrualPerSecond;
+        b.dominationPointRadius = this.dominationPointRadius;
+        b.dominationContestRule = this.dominationContestRule;
+        b.dominationCaptureNeutralizes = this.dominationCaptureNeutralizes;
+        b.dominationRespawnDelaySeconds = this.dominationRespawnDelaySeconds;
         return b;
     }
 
@@ -624,6 +747,32 @@ public final class RuleSet {
         @Nullable private String jumpscareBeatId = null;       // null -> BandedEffectConfig.oneShot()
         private double jumpscareShakeIntensity = Double.NaN;   // NaN -> use the beat's own ShakeIntensity
         private int jumpscareCooldownSeconds = 12;
+        // PvP shared defaults (irrelevant to a chase preset, which never reads them).
+        private int teamSize = 1;
+        private boolean friendlyFire = false;
+        @Nullable private String modelSwapId = "Kweebec_Sapling";
+        private double modelSwapScale = 1.0;
+        @Nullable private String arenaId = null;
+        @Nullable private String arenaTag = null;
+        // Clash defaults (the brief's two-stage rule: last team standing, most hits at the timer).
+        private WinCondition winCondition = WinCondition.DEFAULT;
+        private RespawnPolicy respawnPolicy = RespawnPolicy.DEFAULT;
+        private int respawnDelaySeconds = 5;
+        private int maxLives = 1;
+        private int scoreToWin = 0;
+        private int suddenDeathSeconds = 0;
+        private int mushroomCadenceSeconds = 30;
+        private int mushroomWaveCount = 1;
+        private int mushroomMaxAlive = 12;
+        private String[] mushroomCycle = new String[0];
+        // Domination defaults.
+        private int dominationScoreToWin = 300;
+        private double dominationPointHoldSeconds = 5.0;
+        private int dominationAccrualPerSecond = 1;
+        private double dominationPointRadius = 6.0;
+        private ContestRule dominationContestRule = ContestRule.ANY_PRESENCE;
+        private boolean dominationCaptureNeutralizes = true;
+        private int dominationRespawnDelaySeconds = 5;
 
         private Builder(@Nonnull String presetId) {
             this.presetId = presetId;
@@ -677,6 +826,29 @@ public final class RuleSet {
         @Nonnull public Builder jumpscareBeatId(@Nullable String v) { this.jumpscareBeatId = v; return this; }
         @Nonnull public Builder jumpscareShakeIntensity(double v) { this.jumpscareShakeIntensity = v; return this; }
         @Nonnull public Builder jumpscareCooldownSeconds(int v) { this.jumpscareCooldownSeconds = Math.max(0, v); return this; }
+        @Nonnull public Builder teamSize(int v) { this.teamSize = Math.max(1, v); return this; }
+        @Nonnull public Builder friendlyFire(boolean v) { this.friendlyFire = v; return this; }
+        @Nonnull public Builder modelSwapId(@Nullable String v) { this.modelSwapId = v; return this; }
+        @Nonnull public Builder modelSwapScale(double v) { this.modelSwapScale = v; return this; }
+        @Nonnull public Builder arenaId(@Nullable String v) { this.arenaId = v; return this; }
+        @Nonnull public Builder arenaTag(@Nullable String v) { this.arenaTag = v; return this; }
+        @Nonnull public Builder winCondition(@Nonnull WinCondition v) { this.winCondition = v; return this; }
+        @Nonnull public Builder respawnPolicy(@Nonnull RespawnPolicy v) { this.respawnPolicy = v; return this; }
+        @Nonnull public Builder respawnDelaySeconds(int v) { this.respawnDelaySeconds = Math.max(0, v); return this; }
+        @Nonnull public Builder maxLives(int v) { this.maxLives = Math.max(1, v); return this; }
+        @Nonnull public Builder scoreToWin(int v) { this.scoreToWin = Math.max(0, v); return this; }
+        @Nonnull public Builder suddenDeathSeconds(int v) { this.suddenDeathSeconds = Math.max(0, v); return this; }
+        @Nonnull public Builder mushroomCadenceSeconds(int v) { this.mushroomCadenceSeconds = Math.max(0, v); return this; }
+        @Nonnull public Builder mushroomWaveCount(int v) { this.mushroomWaveCount = Math.max(0, v); return this; }
+        @Nonnull public Builder mushroomMaxAlive(int v) { this.mushroomMaxAlive = Math.max(0, v); return this; }
+        @Nonnull public Builder mushroomCycle(@Nonnull String[] v) { this.mushroomCycle = v.clone(); return this; }
+        @Nonnull public Builder dominationScoreToWin(int v) { this.dominationScoreToWin = Math.max(1, v); return this; }
+        @Nonnull public Builder dominationPointHoldSeconds(double v) { this.dominationPointHoldSeconds = Math.max(0.0, v); return this; }
+        @Nonnull public Builder dominationAccrualPerSecond(int v) { this.dominationAccrualPerSecond = Math.max(1, v); return this; }
+        @Nonnull public Builder dominationPointRadius(double v) { this.dominationPointRadius = Math.max(1.0, v); return this; }
+        @Nonnull public Builder dominationContestRule(@Nonnull ContestRule v) { this.dominationContestRule = v; return this; }
+        @Nonnull public Builder dominationCaptureNeutralizes(boolean v) { this.dominationCaptureNeutralizes = v; return this; }
+        @Nonnull public Builder dominationRespawnDelaySeconds(int v) { this.dominationRespawnDelaySeconds = Math.max(0, v); return this; }
 
         @Nonnull
         public RuleSet build() {

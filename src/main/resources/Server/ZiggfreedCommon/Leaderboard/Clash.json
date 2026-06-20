@@ -1,0 +1,15 @@
+{
+  "Name": "clash",
+  "BoardId": "leaderboard-clash",
+  "PrimaryAxisLabelKey": "kweebecnightmare.leaderboard.clash.axis.mode",
+  "DifficultyTabs": [
+    { "Id": "clash_1v1", "LabelKey": "kweebecnightmare.preset.clash_1v1.name" },
+    { "Id": "clash_2v2", "LabelKey": "kweebecnightmare.preset.clash_2v2.name" },
+    { "Id": "domination_koth", "LabelKey": "kweebecnightmare.preset.domination_koth.name" }
+  ],
+  "StatColumns": [
+    { "StatKey": "hits", "LabelKey": "kweebecnightmare.leaderboard.clash.stat.hits", "Grouped": true },
+    { "StatKey": "kills", "LabelKey": "kweebecnightmare.leaderboard.clash.stat.kills", "Grouped": true },
+    { "StatKey": "kos", "LabelKey": "kweebecnightmare.leaderboard.clash.stat.kos", "Grouped": true }
+  ]
+}

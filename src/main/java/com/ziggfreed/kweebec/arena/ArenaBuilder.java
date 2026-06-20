@@ -256,6 +256,32 @@ public final class ArenaBuilder {
     }
 
     /**
+     * Paste one {@code prefabKey} plant-cluster at EACH explicit XZ point (the PvP pickup anchors), each
+     * floor-snapped to the local surface. The Clash / Domination periodic-pickup placer; same best-effort +
+     * thread-safe idiom as {@link #plantClusters} (blocking load off-thread, each paste hops to the world
+     * thread). No-op for an empty list / missing prefab.
+     */
+    public static void plantAtPoints(@Nonnull World world, @Nonnull String prefabKey,
+                                     @Nonnull List<double[]> pointsXz) {
+        if (pointsXz.isEmpty()) {
+            return;
+        }
+        CompletableFuture.runAsync(() -> {
+            try {
+                IPrefabBuffer buffer = load(prefabKey);
+                if (buffer == null) {
+                    return;
+                }
+                for (double[] xz : pointsXz) {
+                    paste(world, buffer, new Anchor(xz[0], ArenaLayout.STAND_Y, xz[1], 0f), false, false);
+                }
+            } catch (Throwable t) {
+                SafeLog.warn("[Kweebec] plantAtPoints failed (" + prefabKey + "): " + t.getMessage());
+            }
+        });
+    }
+
+    /**
      * Distribute every ENABLED + placeable {@link GroveThrowableConfig} entry (the data-driven utility
      * glow-throwables - Gust/Mire + any pack-authored variant), each gated by its {@code MinCorruptionTier}
      * against the round's current corruption tier. Called for the initial supply (from {@code ShrinePlacement}

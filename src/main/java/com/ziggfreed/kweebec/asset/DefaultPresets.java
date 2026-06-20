@@ -7,8 +7,10 @@ import javax.annotation.Nonnull;
 import com.ziggfreed.common.worldmap.DiscoveryMode;
 import com.ziggfreed.common.worldmap.MapDiscovery;
 import com.ziggfreed.kweebec.round.ExtractionMode;
+import com.ziggfreed.kweebec.round.RespawnPolicy;
 import com.ziggfreed.kweebec.round.ReviveStyle;
 import com.ziggfreed.kweebec.round.RuleSet;
+import com.ziggfreed.kweebec.round.WinCondition;
 
 /**
  * The jar's baseline presets, the in-memory {@code defaults} floor
@@ -202,10 +204,69 @@ public final class DefaultPresets {
                 .build();
     }
 
+    // ==================== PvP presets (Clash + Domination) ====================
+
+    /** 1v1 single-life duel: last team standing, most hits at the timer, sudden-death overtime on a tie. */
+    @Nonnull
+    public static RuleSet clash1v1() {
+        return RuleSet.builder("clash_1v1")
+                .teamSize(1)
+                .winCondition(WinCondition.LAST_TEAM_STANDING)
+                .respawnPolicy(RespawnPolicy.NONE)
+                .roundCapSeconds(180)
+                .suddenDeathSeconds(30)
+                .friendlyFire(false)
+                .modelSwapId("Kweebec_Sapling")
+                .mushroomCadenceSeconds(25)
+                .mushroomWaveCount(2)
+                .arenaTag("clash")
+                .build();
+    }
+
+    /** 2v2 with limited respawns: last team standing once lives run out, most hits at the timer. */
+    @Nonnull
+    public static RuleSet clash2v2() {
+        return RuleSet.builder("clash_2v2")
+                .teamSize(2)
+                .winCondition(WinCondition.LAST_TEAM_STANDING)
+                .respawnPolicy(RespawnPolicy.LIMITED)
+                .maxLives(3)
+                .respawnDelaySeconds(5)
+                .roundCapSeconds(240)
+                .suddenDeathSeconds(30)
+                .friendlyFire(false)
+                .modelSwapId("Kweebec_Sapling")
+                .mushroomCadenceSeconds(25)
+                .mushroomWaveCount(2)
+                .arenaTag("clash")
+                .build();
+    }
+
+    /** 2v2 King-of-the-Hill control: always-respawn, hold the point to accrue to the score cap. */
+    @Nonnull
+    public static RuleSet dominationKoth() {
+        return RuleSet.builder("domination_koth")
+                .teamSize(2)
+                .respawnPolicy(RespawnPolicy.INFINITE)
+                .respawnDelaySeconds(6)
+                .roundCapSeconds(300)
+                .friendlyFire(false)
+                .modelSwapId("Kweebec_Sapling")
+                .dominationScoreToWin(300)
+                .dominationPointHoldSeconds(5.0)
+                .dominationAccrualPerSecond(1)
+                .dominationPointRadius(6.0)
+                .mushroomCadenceSeconds(30)
+                .mushroomWaveCount(1)
+                .arenaTag("domination")
+                .build();
+    }
+
     /**
      * All baseline presets paired with their stacked mutator ids, in display order.
      * Amateur / Nightmare / Hardcore carry no mutators (unchanged); Endless tunes
-     * knobs directly; Swarm / Pitch / Blitz each demonstrate one stacked mutator.
+     * knobs directly; Swarm / Pitch / Blitz each demonstrate one stacked mutator; the
+     * PvP presets (Clash 1v1 / 2v2, Domination KOTH) are the zero-pack defaults.
      */
     @Nonnull
     public static List<Preset> all() {
@@ -216,6 +277,9 @@ public final class DefaultPresets {
                 Preset.of(endless()),
                 Preset.of(swarm(), DefaultMutators.SWARM),
                 Preset.of(pitch(), DefaultMutators.DECAY),
-                Preset.of(blitz(), DefaultMutators.BLITZ));
+                Preset.of(blitz(), DefaultMutators.BLITZ),
+                Preset.of(clash1v1()),
+                Preset.of(clash2v2()),
+                Preset.of(dominationKoth()));
     }
 }

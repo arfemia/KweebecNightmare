@@ -1,0 +1,67 @@
+{
+  "Version": 4,
+  "DisplayName": "Grove Clash",
+  "SpawnProvider": {
+    "Id": "Global",
+    "SpawnPoint": {
+      "X": 0.5,
+      "Y": 80.0,
+      "Z": 0.5,
+      "Pitch": 0.0,
+      "Yaw": 0.0,
+      "Roll": 0.0
+    }
+  },
+  "WorldGen": {
+    "Type": "HytaleGenerator",
+    "WorldStructure": "KweebecNightmare_Grove"
+  },
+  "ChunkStorage": {
+    "Type": "Hytale"
+  },
+  "ChunkConfig": {},
+  "IsTicking": true,
+  "IsBlockTicking": true,
+  "IsPvpEnabled": true,
+  "IsFallDamageEnabled": true,
+  "IsGameTimePaused": true,
+  "GameTime": "0001-01-04T00:00:00.000000000Z",
+  "RequiredPlugins": {},
+  "GameMode": "Adventure",
+  "IsSpawningNPC": false,
+  "IsSpawnMarkersEnabled": false,
+  "IsAllNPCFrozen": false,
+  "IsCompassUpdating": false,
+  "IsSavingPlayers": false,
+  "IsSavingChunks": false,
+  "SaveNewChunks": false,
+  "IsUnloadingChunks": true,
+  "IsObjectiveMarkersEnabled": false,
+  "DeleteOnUniverseStart": true,
+  "DeleteOnRemove": true,
+  "ResourceStorage": {
+    "Type": "Hytale"
+  },
+  "Plugin": {
+    "Instance": {
+      "RemovalConditions": [
+        {
+          "Type": "WorldEmpty",
+          "TimeoutSeconds": 30.0
+        }
+      ],
+      "PreventReconnection": false,
+      "Discovery": {
+        "TitleKey": "kweebecnightmare.instance.clash.title",
+        "SubtitleKey": "kweebecnightmare.instance.clash.subtitle",
+        "Display": true,
+        "AlwaysDisplay": true,
+        "Icon": "KweebecNightmare_Portal.png",
+        "Major": true,
+        "Duration": 4.0,
+        "FadeInDuration": 1.5,
+        "FadeOutDuration": 1.5
+      }
+    }
+  }
+}

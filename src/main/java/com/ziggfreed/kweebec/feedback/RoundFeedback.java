@@ -1,6 +1,7 @@
 package com.ziggfreed.kweebec.feedback;
 
 import java.util.Set;
+import java.util.function.Function;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -11,6 +12,7 @@ import com.hypixel.hytale.protocol.packets.interface_.HudComponent;
 import com.hypixel.hytale.protocol.packets.interface_.NotificationStyle;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.entity.entities.Player;
+import com.hypixel.hytale.server.core.entity.entities.player.hud.CustomUIHud;
 import com.hypixel.hytale.server.core.entity.entities.player.hud.HudManager;
 import com.hypixel.hytale.server.core.io.PacketHandler;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -50,6 +52,25 @@ public final class RoundFeedback {
      */
     @Nullable
     public static NightmareHud installHud(@Nonnull Store<EntityStore> store, @Nonnull Ref<EntityStore> ref) {
+        return installCustomHud(store, ref, NightmareHud::new);
+    }
+
+    /**
+     * Install ANY {@link CustomUIHud} for a player and strip the native HUD down to {@link #KEPT_HUD}, the
+     * generic form of {@link #installHud} the PvP modes reuse (Clash {@link ClashHud}, Domination
+     * {@link DominationHud}). The {@code factory} builds the HUD from the resolved {@link PlayerRef} (the
+     * HUD constructors take only the ref). Returns the installed HUD (for later {@code pushState}) or null on
+     * failure. World thread; every step try-guarded so a missing asset degrades to a no-op.
+     *
+     * @param store   the entity store
+     * @param ref     the player's entity ref
+     * @param factory builds the concrete HUD from the player's {@link PlayerRef}
+     * @param <T>     the concrete {@link CustomUIHud} subtype
+     */
+    @Nullable
+    public static <T extends CustomUIHud> T installCustomHud(@Nonnull Store<EntityStore> store,
+                                                             @Nonnull Ref<EntityStore> ref,
+                                                             @Nonnull Function<PlayerRef, T> factory) {
         try {
             Player player = store.getComponent(ref, Player.getComponentType());
             PlayerRef playerRef = store.getComponent(ref, PlayerRef.getComponentType());
@@ -57,13 +78,13 @@ public final class RoundFeedback {
                 return null;
             }
             HudManager hud = player.getHudManager();
-            NightmareHud nightmareHud = new NightmareHud(playerRef);
-            hud.addCustomHud(playerRef, nightmareHud);
+            T customHud = factory.apply(playerRef);
+            hud.addCustomHud(playerRef, customHud);
             hud.setVisibleHudComponents(playerRef, KEPT_HUD);
-            return nightmareHud;
+            return customHud;
         } catch (Throwable t) {
             KweebecNightmarePlugin.LOGGER.atWarning().log(
-                    "[Kweebec] installHud failed: " + t.getMessage());
+                    "[Kweebec] installCustomHud failed: " + t.getMessage());
             return null;
         }
     }

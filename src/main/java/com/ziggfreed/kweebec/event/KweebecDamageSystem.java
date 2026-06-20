@@ -30,7 +30,9 @@ import com.ziggfreed.common.instance.effect.EntityEffectService;
 import com.ziggfreed.common.sound.Sound3D;
 import com.ziggfreed.common.util.EntityIdentifierUtil;
 import com.ziggfreed.kweebec.hunter.OnHitConfig;
+import com.ziggfreed.kweebec.mode.clash.ClashState;
 import com.ziggfreed.kweebec.moonbloom.GlowThrowables;
+import com.ziggfreed.kweebec.round.KweebecMode;
 import com.ziggfreed.kweebec.round.PlayerRoundState;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.round.RoundService;
@@ -139,6 +141,12 @@ public final class KweebecDamageSystem extends DamageEventSystem {
             }
             RoundInstance round = RoundService.getInstance().registry().forPlayer(uuid);
             if (round == null) {
+                return;
+            }
+            // PvP rounds (Clash / Domination): friendly-fire guard + enemy hit/stun tracking, then done
+            // (they do not use the chase hunter on-hit / damage-taken-scoring path).
+            if (round.mode() == KweebecMode.CLASH || round.mode() == KweebecMode.DOMINATION) {
+                handleClashDamage(store, targetRef, commandBuffer, damage, uuid, round);
                 return;
             }
             if (isMoonbloom) {
@@ -345,6 +353,69 @@ public final class KweebecDamageSystem extends DamageEventSystem {
             }
         }
         return idx >= 0 && damage.getDamageCauseIndex() == idx;
+    }
+
+    /**
+     * PvP (Clash / Domination) damage handling for a player victim: friendly-fire cancel (same team +
+     * FriendlyFire off), enemy hit + last-attacker recording (kill credit on death), and a Moonbloom hit
+     * stunning an enemy player (zeroing its damage, since it is the stun utility). The attacker is the
+     * damage source's owning entity = the melee striker OR the thrower of a mushroom (the source is always
+     * the shooter, never the projectile). Unresolved-team damage is allowed (fail-safe). World thread.
+     */
+    private void handleClashDamage(@Nonnull Store<EntityStore> store, @Nonnull Ref<EntityStore> victimRef,
+                                   @Nonnull CommandBuffer<EntityStore> cb, @Nonnull Damage damage,
+                                   @Nonnull UUID victimId, @Nonnull RoundInstance round) {
+        // Emberbloom is a co-op boss throwable; it has no place hurting a PvP player - null it defensively.
+        if (isEmberCause(damage)) {
+            damage.setAmount(0f);
+            return;
+        }
+        UUID attacker = throwerOf(store, damage); // EntitySource player uuid (striker or thrower)
+        if (attacker == null) {
+            return; // environmental / unattributable - let it apply (e.g. a fall, a pit)
+        }
+        int victimTeam = round.teamOf(victimId);
+        int attackerTeam = round.teamOf(attacker);
+        boolean sameTeam = attackerTeam >= 0 && attackerTeam == victimTeam;
+        if (sameTeam && !round.ruleSet().friendlyFire()) {
+            damage.setCancelled(true); // cancels the hit AND any asset knockback (e.g. a Gustbloom)
+            return;
+        }
+        if (attacker.equals(victimId) || sameTeam) {
+            return; // self or (friendly-fire-on) teammate hit: do not score it
+        }
+        // Enemy hit: record it (hits drive MOST_HITS) + remember the attacker for kill credit on death.
+        // Only Clash tracks per-player hits/kills (Domination wins by zones); guard the state type.
+        if (round.modeState() instanceof ClashState cs) {
+            cs.recordHit(attacker);
+            cs.setLastAttacker(victimId, attacker);
+        }
+        // A Moonbloom hit on an enemy player STUNS them; it is a utility, not a damage source here.
+        if (isMoonbloomCause(damage)) {
+            stunPlayer(store, victimRef, cb, round, attacker);
+            damage.setAmount(0f);
+        }
+    }
+
+    /** Stun an enemy PLAYER via Perfect Utils (the pipeline is entity-agnostic) + the vanilla Stun visual. */
+    private void stunPlayer(@Nonnull Store<EntityStore> store, @Nonnull Ref<EntityStore> targetRef,
+                            @Nonnull CommandBuffer<EntityStore> cb, @Nonnull RoundInstance round,
+                            @Nullable UUID attacker) {
+        StunMobAPI api = StunMobAPI.get();
+        if (api == null) {
+            return;
+        }
+        try {
+            if (api.isStunned(store, targetRef)) {
+                return;
+            }
+        } catch (Throwable ignored) {
+            // best effort
+        }
+        long stunMs = round.ruleSet().stunDurationMs();
+        Ref<EntityStore> attackerRef = attacker != null ? playerRef(attacker) : null;
+        api.stunEntity(store, targetRef, stunMs, attackerRef);
+        applyStunVisual(targetRef, cb, stunMs);
     }
 
     /** The player who threw the Moonbloom: the burst damage's owning entity (the source). {@code null} if not a player. */

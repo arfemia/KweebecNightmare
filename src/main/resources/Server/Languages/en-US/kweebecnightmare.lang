@@ -300,3 +300,75 @@ party.msg.owner = {0} now leads the party.
 
 # Command feedback.
 cmd.party_opened = Opening your party...
+
+# --- Clash / Domination (PvP). {0} is a team name (Red / Blue) where present. ---
+clash.team.red = Red
+clash.team.blue = Blue
+clash.title.start = Clash Begins
+clash.title.start.sub = Last team standing wins.
+clash.title.victory = Victory
+clash.title.victory.sub = Your team carried the grove.
+clash.title.defeat = Defeat
+clash.title.defeat.sub = The other team held the field.
+clash.title.draw = Draw
+clash.title.draw.sub = Neither team could break the other.
+clash.title.sudden_death = Sudden Death
+clash.title.sudden_death.sub = First blood ends it.
+clash.toast.eliminated = You are eliminated. Spectating until the round ends.
+clash.toast.respawn = Returning to the fight...
+clash.toast.ko = You took down {0}!
+clash.toast.teammate_down = A teammate went down.
+clash.toast.pickup = You grabbed a {0}.
+clash.toast.point_captured = Your team captured a point!
+clash.toast.point_lost = A point was lost.
+clash.hud.timer = Time {0}
+clash.hud.score = {0} - {1}
+clash.hud.team = Team
+clash.hud.tally.hits = Hits {0}
+clash.hud.tally.kills = Kills {0}
+clash.hud.alive = Alive {0}/{1}
+clash.hud.capture = Capture {0}
+domination.marker.point = Capture Point
+
+# Clash instance discovery banner.
+instance.clash.title = Grove Clash
+instance.clash.subtitle = Two teams enter. One leaves.
+
+# Domination instance discovery banner.
+instance.domination.title = Grove Domination
+instance.domination.subtitle = Hold the ground. Outlast them.
+
+# Coloured team-score HUD line (TextSpans); ordering flips so the viewer's team is first.
+clash.hud.score.red = <color is="#ff5a5a">{0}</color> - <color is="#5a9cff">{1}</color>
+clash.hud.score.blue = <color is="#5a9cff">{0}</color> - <color is="#ff5a5a">{1}</color>
+# PvP results + leaderboard + preset display names.
+results.clash.breakdown = Combat
+results.clash.kos = Times Downed
+results.clash.preview = Match complete. Your results are waiting back at the lobby.
+leaderboard.clash.title = Arena Leaderboard
+leaderboard.clash.axis.mode = Mode
+leaderboard.clash.stat.hits = Hits
+leaderboard.clash.stat.kills = Kills
+leaderboard.clash.stat.kos = Downs
+preset.clash_1v1.name = Clash 1v1
+preset.clash_2v2.name = Clash 2v2
+preset.domination_koth.name = Domination
+
+# Clash Host NPC + the clash_intro dialogue (the PvP entry).
+npc.clashhost.name = The Duelmaster
+npc.clashhost.hint = Press [{key}] to enter the arena
+dialogue.clash_intro.npc = The Duelmaster
+dialogue.clash_intro.greet.text = A scarred Kweebec leans on a thorned staff and sizes you up. <i>"So. You would test your roots against another warm-blood. The grove makes a fine arena, when the hunt is each other."</i>
+dialogue.clash_intro.greet.opt.0 = How does the arena work?
+dialogue.clash_intro.greet.opt.1 = I am ready to fight.
+dialogue.clash_intro.greet.opt.2 = About the match I have joined...
+dialogue.clash_intro.lore.text = <i>"Two teams. Knockback and stun shrooms sprout from the soil - grab them, throw them, take no chances. Last team standing wins; if the timer runs dry, the team that landed the most blows takes it. In Domination, hold the ground instead."</i>
+dialogue.clash_intro.lore.opt.0 = Enough talk. Let me fight.
+dialogue.clash_intro.lore.opt.1 = Wait, tell me more.
+dialogue.clash_intro.mode_pick.text = <i>"Name your contest, warm-blood."</i>
+dialogue.clash_intro.mode_pick.opt.0 = Clash 1v1 - just the two of us.
+dialogue.clash_intro.mode_pick.opt.1 = Clash 2v2 - bring an ally.
+dialogue.clash_intro.mode_pick.opt.2 = Domination - hold the ground.
+dialogue.clash_intro.mode_pick.opt.3 = Not yet. Step back.
+dialogue.clash_intro.already_engaged.text = <i>"You are already in a contest, warm-blood,"</i> the Duelmaster grunts. <i>"Finish it, then return."</i>
+dialogue.clash_intro.already_engaged.opt.0 = Understood.

@@ -1,0 +1,44 @@
+// Kweebec DOMINATION (control-point PvP) round HUD: a match countdown, the coloured
+// team-vs-team points score, the viewer's team name, and a live leading-capture readout.
+// Texture-free (colour-only) so it cannot red-X on a missing asset, mirroring
+// KweebecNightmareHud.ui. Element ids (#MatchTimer/#TeamScore/#YourTeam/#Capture) are the
+// contract DominationHud pushes partial updates against. #TeamScore is the ONE rich line:
+// it is driven via TextSpans (the <color is="#hex"> markup in the lang value is parsed
+// client-side, per-locale); the rest are plain .Text. All are code-driven each tick, so the
+// literals here are placeholders, never shown once a frame is pushed.
+
+@KnDomTimerStyle   = (FontSize: 18, TextColor: #e6e0c8, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
+@KnDomScoreStyle   = (FontSize: 22, TextColor: #dee2ef, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
+@KnDomTeamStyle    = (FontSize: 13, TextColor: #9fc6d0, RenderBold: false, HorizontalAlignment: Center, VerticalAlignment: Start);
+@KnDomCaptureStyle = (FontSize: 14, TextColor: #7ad6ff, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
+
+Group {
+  Group #KweebecDominationHud {
+    Anchor: (Top: 24, Width: 360, Height: 112, Horizontal: 0);
+    LayoutMode: Top;
+
+    Label #MatchTimer {
+      Text: "Time 5:00";
+      Anchor: (Height: 24);
+      Style: @KnDomTimerStyle;
+    }
+
+    // #TeamScore is rich-text (coloured your-vs-enemy points); DominationHud sets #TeamScore.TextSpans.
+    Label #TeamScore {
+      Anchor: (Height: 28);
+      Style: @KnDomScoreStyle;
+    }
+
+    Label #YourTeam {
+      Text: "Red";
+      Anchor: (Height: 18);
+      Style: @KnDomTeamStyle;
+    }
+
+    Label #Capture {
+      Text: "Capture 0";
+      Anchor: (Height: 20);
+      Style: @KnDomCaptureStyle;
+    }
+  }
+}

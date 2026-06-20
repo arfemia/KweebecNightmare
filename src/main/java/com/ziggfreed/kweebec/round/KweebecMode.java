@@ -13,6 +13,12 @@ public enum KweebecMode {
     /** "Relight & Escape" - relight the grove shrines, then escape the Heartwood Gate. */
     CHASE("chase", "KweebecNightmare_Chase"),
 
+    /** Team PvP brawl (1v1 / 2v2) in a grove arena; win condition + respawn are configurable. */
+    CLASH("clash", "KweebecNightmare_Clash"),
+
+    /** Team PvP control-point (King-of-the-Hill / N-point Domination) reusing the Clash scaffold. */
+    DOMINATION("domination", "KweebecNightmare_Domination"),
+
     /** "Last Light Till Dawn" - defend a heart-sapling against waves until dawn (reserved). */
     SURVIVAL("survival", "KweebecNightmare_Survival");
 

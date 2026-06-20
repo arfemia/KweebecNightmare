@@ -1,0 +1,17 @@
+{
+  "$Comment": "PvP queue policy for the clash_1v1 preset. AllowSolo false (a duel needs two); the Solo card is disabled so players queue Public (matched with a stranger) or Party (premade). Team size + win condition live on the gameplay RoundPreset (clash_1v1); this is the cross-cutting queue/UI layer.",
+  "Name": "clash_1v1",
+  "Enabled": true,
+  "NameKey": "kweebecnightmare.preset.clash_1v1.name",
+  "FillTimeoutSeconds": 25,
+  "CountdownSeconds": 5,
+  "AllowSolo": false,
+  "LeaderForceStart": false,
+  "RewardOnExit": "NEVER",
+  "Rewards": [],
+  "QueueModes": {
+    "Public": { "Enabled": true, "IconItemId": "Tool_Map", "Order": 0 },
+    "Party":  { "Enabled": true, "IconItemId": "Furniture_Outlander_Banner", "Order": 1 },
+    "Solo":   { "Enabled": false, "IconItemId": "Deco_Lantern", "Order": 2 }
+  }
+}

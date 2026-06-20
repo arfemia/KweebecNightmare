@@ -71,13 +71,26 @@ public final class RoundEvents {
                                           @Nonnull List<UUID> participants,
                                           int durationSeconds, int objectiveProgress,
                                           int difficultyScore) {
+        fireRoundCompleted(roundId, mode, outcome, participants, durationSeconds, objectiveProgress,
+                difficultyScore, null);
+    }
+
+    /**
+     * Fire {@code RoundCompletedEvent} also carrying the PvP winning team ({@code winnerTeamId}, 0-based,
+     * or {@code null} for a co-op outcome / draw). Same dispatch semantics as the other overloads.
+     */
+    public static void fireRoundCompleted(@Nonnull String roundId, @Nonnull String mode,
+                                          @Nonnull RoundCompletedEvent.Outcome outcome,
+                                          @Nonnull List<UUID> participants,
+                                          int durationSeconds, int objectiveProgress,
+                                          int difficultyScore, @Nullable Integer winnerTeamId) {
         try {
             IEventDispatcher<RoundCompletedEvent, RoundCompletedEvent> d =
                     HytaleServer.get().getEventBus().dispatchFor(RoundCompletedEvent.class);
             if (d.hasListener()) {
                 d.dispatch(new RoundCompletedEvent(
                         roundId, mode, outcome, participants, durationSeconds, objectiveProgress,
-                        difficultyScore));
+                        difficultyScore, winnerTeamId));
             }
         } catch (Throwable t) {
             log("RoundCompleted", t);

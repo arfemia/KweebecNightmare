@@ -1,15 +1,24 @@
 package com.ziggfreed.kweebec;
 
+import java.nio.file.Path;
+import java.util.Set;
+
 import javax.annotation.Nonnull;
 
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.Interaction;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
+import com.hypixel.hytale.server.core.universe.world.World;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.narwhals.perfectutils.api.AggroAPI;
 import com.narwhals.perfectutils.api.StunMobAPI;
 import com.ziggfreed.common.npc.NpcActions;
+import com.ziggfreed.common.npc.NpcAutoSpawn;
 import com.ziggfreed.common.npc.NpcDialogueDepsRegistry;
 import com.ziggfreed.kweebec.asset.KweebecAssetRegistrar;
 import com.ziggfreed.kweebec.command.KweebecCommand;
@@ -20,10 +29,17 @@ import com.ziggfreed.kweebec.event.KweebecDamageSystem;
 import com.ziggfreed.kweebec.event.MoonbloomCollectSystem;
 import com.ziggfreed.kweebec.interaction.ShrineSubmitInteraction;
 import com.ziggfreed.kweebec.lobby.KweebecLobby;
+import com.ziggfreed.kweebec.mode.chase.ChaseRoundMode;
+import com.ziggfreed.kweebec.mode.clash.ClashModelSwapper;
+import com.ziggfreed.kweebec.mode.clash.ClashRoundMode;
+import com.ziggfreed.kweebec.mode.domination.DominationRoundMode;
 import com.ziggfreed.kweebec.npc.KweebecGuideConfig;
 import com.ziggfreed.kweebec.npc.KweebecGuidePlacementStore;
 import com.ziggfreed.kweebec.npc.KweebecGuideSpawn;
+import com.ziggfreed.kweebec.experience.KweebecClashExperience;
 import com.ziggfreed.kweebec.experience.KweebecExperience;
+import com.ziggfreed.kweebec.round.KweebecMode;
+import com.ziggfreed.kweebec.round.ModeRegistry;
 import com.ziggfreed.kweebec.round.RoundInventoryGuard;
 import com.ziggfreed.kweebec.round.RoundService;
 
@@ -41,6 +57,12 @@ public class KweebecNightmarePlugin extends JavaPlugin {
     public static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
 
     private static KweebecNightmarePlugin instance;
+
+    /** Auto-spawn spec for the PvP "Clash Host" entry NPC (placed once per overworld near the spawn point). */
+    private static final NpcAutoSpawn.AutoSpawnSpec CLASH_HOST_SPEC = new NpcAutoSpawn.AutoSpawnSpec(
+            "clash_host", "KweebecNightmare_ClashHost", Set.of("default"), 4.0, 0.0, -4.0, 180.0f);
+    /** The data dir the Clash Host placement marker persists in (set at setup, read by the PlayerReady hook). */
+    private static Path clashHostDir;
 
     @Nonnull
     public static KweebecNightmarePlugin getInstance() {
@@ -99,6 +121,9 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // lazily at page-open, so order here is fine.
         KweebecExperience.init(getDataDirectory());
 
+        // The PvP twin of the experience layer (Clash + Domination team results + the arena leaderboard).
+        KweebecClashExperience.init(getDataDirectory());
+
         // Grove Warden guide auto-spawn config (<data dir>/guide.json; defaults written on first run):
         // which worlds get the guide (default the "default" overworld only) + its spawn offset/yaw.
         // Mirrors MMO Skill Tree's spawn-hub.json.
@@ -113,6 +138,21 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // exactly on exit. Persisted under the data dir so a crash/disconnect/restart mid-round never
         // eats gear (the next-login net below re-applies a leftover snapshot).
         RoundInventoryGuard.init(getDataDirectory());
+
+        // Register the gameplay modes into the dispatch table BEFORE the engine starts (the open/closed
+        // seam: the engine never imports a mode). Chase is the co-op MVP; Clash + Domination (PvP) register
+        // here once their RoundMode impls land.
+        ModeRegistry.register(KweebecMode.CHASE, new ChaseRoundMode());
+        ModeRegistry.register(KweebecMode.CLASH, new ClashRoundMode());
+        ModeRegistry.register(KweebecMode.DOMINATION, new DominationRoundMode());
+
+        // Clash model-swap store (the persisted "still swapped" set behind the restore-on-PlayerReady
+        // catch-all, so a tiny-hitbox Sapling is never stranded in the overworld across disconnect/restart).
+        ClashModelSwapper.init(getDataDirectory());
+
+        // Clash Host auto-spawn marker (the PvP entry NPC, placed once per overworld; mirrors the guide).
+        clashHostDir = getDataDirectory();
+        NpcAutoSpawn.init(clashHostDir);
 
         // Round engine: 1 Hz state machine + cleanup ticker.
         RoundService.getInstance().startup();
@@ -133,6 +173,15 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // (PlayerReadyEvent = the reliable post-teleport signal). Spoils are CLAIMED from that page (or the
         // play-menu Claim button), never auto-granted here, so this needs no ordering vs the restore above.
         getEventRegistry().registerGlobal(PlayerReadyEvent.class, KweebecExperience::onPlayerReady);
+        getEventRegistry().registerGlobal(PlayerReadyEvent.class, KweebecClashExperience::onPlayerReady);
+
+        // Clash model-swap restore catch-all: when a player becomes ready in a normal world and is NOT in a
+        // round, restore their real model if they are still flagged swapped (covers exit / disconnect / relog
+        // / crash mid-match). The single guarantee against a stranded Sapling.
+        getEventRegistry().registerGlobal(PlayerReadyEvent.class, KweebecNightmarePlugin::onPlayerReadyRestoreModel);
+
+        // Auto-spawn the PvP Clash Host once per overworld (the diegetic entry; mirrors the Grove Warden guide).
+        getEventRegistry().registerGlobal(PlayerReadyEvent.class, KweebecNightmarePlugin::onPlayerReadyClashHost);
 
         // Perfect Utils is a hard dependency (loads first); confirm the aggro API resolved so a
         // missing/older jar is obvious in the log rather than a silent fall-back to natural sensors.
@@ -152,6 +201,69 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         }
 
         LOGGER.atInfo().log("KweebecNightmare setup complete (Chase MVP, in dev).");
+    }
+
+    /**
+     * Restore a player's real model on PlayerReady if they are still flagged as Clash-swapped and are NOT
+     * currently in a round (so a Sapling is never stranded in the overworld after any exit path). No-op for
+     * an unswapped player or one entering a Clash instance.
+     */
+    private static void onPlayerReadyRestoreModel(@Nonnull PlayerReadyEvent event) {
+        Player player = event.getPlayer();
+        if (player == null) {
+            return;
+        }
+        java.util.UUID uuid = player.getUuid();
+        if (uuid == null || !ClashModelSwapper.isSwapped(uuid)) {
+            return;
+        }
+        if (RoundService.getInstance().registry().forPlayer(uuid) != null) {
+            return; // still in a round (e.g. just entered the arena) - leave the swap in place
+        }
+        World world = player.getWorld();
+        if (world == null) {
+            return;
+        }
+        world.execute(() -> {
+            try {
+                Ref<EntityStore> ref = player.getReference();
+                if (ref != null && ref.isValid()) {
+                    Store<EntityStore> store = ref.getStore();
+                    ClashModelSwapper.restoreOnReady(uuid, ref, store);
+                }
+            } catch (Throwable t) {
+                LOGGER.atFine().log("[Kweebec] clash model restore-on-ready failed: " + t.getMessage());
+            }
+        });
+    }
+
+    /** Debug ({@code /kweebec clashhost}): ensure the Clash Host exists in {@code world} (idempotent per world). World thread. */
+    public static void debugSpawnClashHost(@Nonnull World world) {
+        if (clashHostDir == null || world.getName() == null) {
+            return;
+        }
+        NpcAutoSpawn.ensureSpawned(world, new NpcAutoSpawn.AutoSpawnSpec(
+                "clash_host", "KweebecNightmare_ClashHost", Set.of(world.getName()), 4.0, 0.0, -4.0, 180.0f),
+                clashHostDir);
+    }
+
+    /** PlayerReady hook: ensure the PvP Clash Host is spawned once in the overworld (NpcAutoSpawn is idempotent). */
+    private static void onPlayerReadyClashHost(@Nonnull PlayerReadyEvent event) {
+        Player player = event.getPlayer();
+        if (player == null || clashHostDir == null) {
+            return;
+        }
+        World world = player.getWorld();
+        if (world == null) {
+            return;
+        }
+        world.execute(() -> {
+            try {
+                NpcAutoSpawn.ensureSpawned(world, CLASH_HOST_SPEC, clashHostDir);
+            } catch (Throwable t) {
+                LOGGER.atFine().log("[Kweebec] clash host auto-spawn failed: " + t.getMessage());
+            }
+        });
     }
 
     @Override

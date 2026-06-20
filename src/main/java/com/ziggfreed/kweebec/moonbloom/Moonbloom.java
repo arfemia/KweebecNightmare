@@ -16,4 +16,7 @@ public final class Moonbloom {
 
     /** The harvestable grove plant block; broken/harvested it yields one {@link #CHARGE_ITEM}. */
     public static final String PLANT_BLOCK = "KweebecNightmare_Moonbloom_Plant";
+
+    /** The one-block plant-cluster prefab key the ArenaBuilder pastes for a Moonbloom pickup. */
+    public static final String PREFAB = "KweebecNightmare/Moonbloom";
 }

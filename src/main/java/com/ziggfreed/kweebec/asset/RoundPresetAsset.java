@@ -9,13 +9,16 @@ import com.hypixel.hytale.assetstore.map.DefaultAssetMap;
 import com.hypixel.hytale.assetstore.map.JsonAssetWithMap;
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
+import com.ziggfreed.common.instance.zone.ContestRule;
 import com.ziggfreed.common.worldmap.DiscoveryMode;
 import com.ziggfreed.common.worldmap.MapDiscovery;
 import com.ziggfreed.kweebec.round.ExtractionMode;
 import com.ziggfreed.kweebec.round.InventoryMode;
+import com.ziggfreed.kweebec.round.RespawnPolicy;
 import com.ziggfreed.kweebec.round.ReviveStyle;
 import com.ziggfreed.kweebec.round.RuleSet;
 import com.ziggfreed.kweebec.round.ThrowMode;
+import com.ziggfreed.kweebec.round.WinCondition;
 import com.ziggfreed.kweebec.score.ScoringConfig;
 
 /**
@@ -144,6 +147,32 @@ public final class RoundPresetAsset
     private int stunBonusPer = UNSET_INT;
     private int shrineBonusPer = UNSET_INT;
     private int allShrinesBonus = UNSET_INT;
+    // --- PvP shared (Clash + Domination): null/UNSET = absent = the RuleSet default ---
+    private int teamSize = UNSET_INT;
+    @Nullable private Boolean friendlyFire;
+    @Nullable private String modelSwapId;
+    private double modelSwapScale = UNSET_DOUBLE;
+    @Nullable private String arenaId;
+    @Nullable private String arenaTag;
+    // --- Clash knobs ---
+    @Nullable private String winCondition;
+    @Nullable private String respawnPolicy;
+    private int respawnDelaySeconds = UNSET_INT;
+    private int maxLives = UNSET_INT;
+    private int scoreToWin = UNSET_INT;
+    private int suddenDeathSeconds = UNSET_INT;
+    private int mushroomCadenceSeconds = UNSET_INT;
+    private int mushroomWaveCount = UNSET_INT;
+    private int mushroomMaxAlive = UNSET_INT;
+    @Nullable private String[] mushroomCycle;
+    // --- Domination knobs ---
+    private int dominationScoreToWin = UNSET_INT;
+    private double dominationPointHoldSeconds = UNSET_DOUBLE;
+    private int dominationAccrualPerSecond = UNSET_INT;
+    private double dominationPointRadius = UNSET_DOUBLE;
+    @Nullable private String dominationContestRule;
+    @Nullable private Boolean dominationCaptureNeutralizes;
+    private int dominationRespawnDelaySeconds = UNSET_INT;
 
     public static final AssetBuilderCodec<String, RoundPresetAsset> CODEC = AssetBuilderCodec.builder(
                     RoundPresetAsset.class,
@@ -253,6 +282,55 @@ public final class RoundPresetAsset
             .append(new KeyedCodec<>("ShrineBonusPer", Codec.INTEGER, false), (a, v) -> a.shrineBonusPer = v, a -> a.shrineBonusPer)
             .add()
             .append(new KeyedCodec<>("AllShrinesBonus", Codec.INTEGER, false), (a, v) -> a.allShrinesBonus = v, a -> a.allShrinesBonus)
+            .add()
+            // --- PvP shared (Clash + Domination) ---
+            .append(new KeyedCodec<>("TeamSize", Codec.INTEGER, false), (a, v) -> a.teamSize = v, a -> a.teamSize)
+            .add()
+            .append(new KeyedCodec<>("FriendlyFire", Codec.BOOLEAN, false), (a, v) -> a.friendlyFire = v, a -> a.friendlyFire)
+            .add()
+            .append(new KeyedCodec<>("ModelSwapId", Codec.STRING, false), (a, v) -> a.modelSwapId = v, a -> a.modelSwapId)
+            .add()
+            .append(new KeyedCodec<>("ModelSwapScale", Codec.DOUBLE, false), (a, v) -> a.modelSwapScale = v, a -> a.modelSwapScale)
+            .add()
+            .append(new KeyedCodec<>("ArenaId", Codec.STRING, false), (a, v) -> a.arenaId = v, a -> a.arenaId)
+            .add()
+            .append(new KeyedCodec<>("ArenaTag", Codec.STRING, false), (a, v) -> a.arenaTag = v, a -> a.arenaTag)
+            .add()
+            // --- Clash ---
+            .append(new KeyedCodec<>("WinCondition", Codec.STRING, false), (a, v) -> a.winCondition = v, a -> a.winCondition)
+            .add()
+            .append(new KeyedCodec<>("RespawnPolicy", Codec.STRING, false), (a, v) -> a.respawnPolicy = v, a -> a.respawnPolicy)
+            .add()
+            .append(new KeyedCodec<>("RespawnDelaySeconds", Codec.INTEGER, false), (a, v) -> a.respawnDelaySeconds = v, a -> a.respawnDelaySeconds)
+            .add()
+            .append(new KeyedCodec<>("MaxLives", Codec.INTEGER, false), (a, v) -> a.maxLives = v, a -> a.maxLives)
+            .add()
+            .append(new KeyedCodec<>("ScoreToWin", Codec.INTEGER, false), (a, v) -> a.scoreToWin = v, a -> a.scoreToWin)
+            .add()
+            .append(new KeyedCodec<>("SuddenDeathSeconds", Codec.INTEGER, false), (a, v) -> a.suddenDeathSeconds = v, a -> a.suddenDeathSeconds)
+            .add()
+            .append(new KeyedCodec<>("MushroomCadenceSeconds", Codec.INTEGER, false), (a, v) -> a.mushroomCadenceSeconds = v, a -> a.mushroomCadenceSeconds)
+            .add()
+            .append(new KeyedCodec<>("MushroomWaveCount", Codec.INTEGER, false), (a, v) -> a.mushroomWaveCount = v, a -> a.mushroomWaveCount)
+            .add()
+            .append(new KeyedCodec<>("MushroomMaxAlive", Codec.INTEGER, false), (a, v) -> a.mushroomMaxAlive = v, a -> a.mushroomMaxAlive)
+            .add()
+            .append(new KeyedCodec<>("MushroomCycle", Codec.STRING_ARRAY, false), (a, v) -> a.mushroomCycle = v, a -> a.mushroomCycle)
+            .add()
+            // --- Domination ---
+            .append(new KeyedCodec<>("DominationScoreToWin", Codec.INTEGER, false), (a, v) -> a.dominationScoreToWin = v, a -> a.dominationScoreToWin)
+            .add()
+            .append(new KeyedCodec<>("DominationPointHoldSeconds", Codec.DOUBLE, false), (a, v) -> a.dominationPointHoldSeconds = v, a -> a.dominationPointHoldSeconds)
+            .add()
+            .append(new KeyedCodec<>("DominationAccrualPerSecond", Codec.INTEGER, false), (a, v) -> a.dominationAccrualPerSecond = v, a -> a.dominationAccrualPerSecond)
+            .add()
+            .append(new KeyedCodec<>("DominationPointRadius", Codec.DOUBLE, false), (a, v) -> a.dominationPointRadius = v, a -> a.dominationPointRadius)
+            .add()
+            .append(new KeyedCodec<>("DominationContestRule", Codec.STRING, false), (a, v) -> a.dominationContestRule = v, a -> a.dominationContestRule)
+            .add()
+            .append(new KeyedCodec<>("DominationCaptureNeutralizes", Codec.BOOLEAN, false), (a, v) -> a.dominationCaptureNeutralizes = v, a -> a.dominationCaptureNeutralizes)
+            .add()
+            .append(new KeyedCodec<>("DominationRespawnDelaySeconds", Codec.INTEGER, false), (a, v) -> a.dominationRespawnDelaySeconds = v, a -> a.dominationRespawnDelaySeconds)
             .add()
             .build();
 
@@ -403,6 +481,78 @@ public final class RoundPresetAsset
         }
         if (jumpscareCooldownSeconds != UNSET_INT) {
             b.jumpscareCooldownSeconds(jumpscareCooldownSeconds);
+        }
+        // --- PvP shared (Clash + Domination) ---
+        if (teamSize != UNSET_INT) {
+            b.teamSize(teamSize);
+        }
+        if (friendlyFire != null) {
+            b.friendlyFire(friendlyFire);
+        }
+        if (modelSwapId != null) {
+            b.modelSwapId(modelSwapId);
+        }
+        if (!Double.isNaN(modelSwapScale)) {
+            b.modelSwapScale(modelSwapScale);
+        }
+        if (arenaId != null && !arenaId.isBlank()) {
+            b.arenaId(arenaId);
+        }
+        if (arenaTag != null && !arenaTag.isBlank()) {
+            b.arenaTag(arenaTag);
+        }
+        // --- Clash ---
+        if (winCondition != null && !winCondition.isBlank()) {
+            b.winCondition(WinCondition.fromString(winCondition));
+        }
+        if (respawnPolicy != null && !respawnPolicy.isBlank()) {
+            b.respawnPolicy(RespawnPolicy.fromString(respawnPolicy));
+        }
+        if (respawnDelaySeconds != UNSET_INT) {
+            b.respawnDelaySeconds(respawnDelaySeconds);
+        }
+        if (maxLives != UNSET_INT) {
+            b.maxLives(maxLives);
+        }
+        if (scoreToWin != UNSET_INT) {
+            b.scoreToWin(scoreToWin);
+        }
+        if (suddenDeathSeconds != UNSET_INT) {
+            b.suddenDeathSeconds(suddenDeathSeconds);
+        }
+        if (mushroomCadenceSeconds != UNSET_INT) {
+            b.mushroomCadenceSeconds(mushroomCadenceSeconds);
+        }
+        if (mushroomWaveCount != UNSET_INT) {
+            b.mushroomWaveCount(mushroomWaveCount);
+        }
+        if (mushroomMaxAlive != UNSET_INT) {
+            b.mushroomMaxAlive(mushroomMaxAlive);
+        }
+        if (mushroomCycle != null) {
+            b.mushroomCycle(mushroomCycle);
+        }
+        // --- Domination ---
+        if (dominationScoreToWin != UNSET_INT) {
+            b.dominationScoreToWin(dominationScoreToWin);
+        }
+        if (!Double.isNaN(dominationPointHoldSeconds)) {
+            b.dominationPointHoldSeconds(dominationPointHoldSeconds);
+        }
+        if (dominationAccrualPerSecond != UNSET_INT) {
+            b.dominationAccrualPerSecond(dominationAccrualPerSecond);
+        }
+        if (!Double.isNaN(dominationPointRadius)) {
+            b.dominationPointRadius(dominationPointRadius);
+        }
+        if (dominationContestRule != null && !dominationContestRule.isBlank()) {
+            b.dominationContestRule(ContestRule.valueOf(dominationContestRule.trim().toUpperCase()));
+        }
+        if (dominationCaptureNeutralizes != null) {
+            b.dominationCaptureNeutralizes(dominationCaptureNeutralizes);
+        }
+        if (dominationRespawnDelaySeconds != UNSET_INT) {
+            b.dominationRespawnDelaySeconds(dominationRespawnDelaySeconds);
         }
         b.scoring(buildScoring());
         return b.build();

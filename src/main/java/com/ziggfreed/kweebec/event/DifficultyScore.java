@@ -2,6 +2,8 @@ package com.ziggfreed.kweebec.event;
 
 import javax.annotation.Nonnull;
 
+import com.ziggfreed.kweebec.round.ClashConfig;
+import com.ziggfreed.kweebec.round.RespawnPolicy;
 import com.ziggfreed.kweebec.round.RuleSet;
 
 /**
@@ -56,6 +58,34 @@ public final class DifficultyScore {
                 + rs.corruptionPerSecond() * CORRUPTION_WEIGHT
                 + shrineBase(rs) * SHRINE_BASE_WEIGHT;
         return Math.max(0, (int) Math.round(score));
+    }
+
+    // PvP (Clash / Domination) weights: the chase knobs are 0/default on a PvP preset, so a PvP round
+    // needs its own weighting or its difficultyScore would be ~0 and an MMO would grant ~0 reward.
+    private static final double TEAM_SIZE_WEIGHT = 15.0;
+    private static final double RESPAWN_NONE_WEIGHT = 30.0;   // single-life is the most intense
+    private static final double RESPAWN_LIMITED_WEIGHT = 15.0;
+    private static final double RESPAWN_INFINITE_WEIGHT = 5.0;
+    private static final double SHORT_ROUND_PIVOT_SECONDS = 300.0; // shorter than this adds intensity
+
+    /**
+     * Difficulty score for a PvP (Clash / Domination) rule-set, weighting team size, respawn policy,
+     * score cap, and round brevity to a range comparable to {@link #compute(RuleSet)} so an MMO reward
+     * multiplier reads both modes consistently. Floored at 1 (never the chase-zero a PvP preset would
+     * otherwise produce). See {@link RoundMode#difficultyScore(RuleSet)} which routes PvP rounds here.
+     */
+    public static int computeClash(@Nonnull RuleSet rs) {
+        ClashConfig c = rs.clash();
+        double respawn = switch (c.respawnPolicy()) {
+            case NONE -> RESPAWN_NONE_WEIGHT;
+            case LIMITED -> RESPAWN_LIMITED_WEIGHT;
+            case INFINITE -> RESPAWN_INFINITE_WEIGHT;
+        };
+        double score = rs.teamSize() * TEAM_SIZE_WEIGHT
+                + respawn
+                + (c.scoreToWin() > 0 ? c.scoreToWin() : 0)
+                + Math.max(0.0, (SHORT_ROUND_PIVOT_SECONDS - rs.roundCapSeconds()) / 10.0);
+        return Math.max(1, (int) Math.round(score));
     }
 
     /**

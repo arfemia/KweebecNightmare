@@ -92,6 +92,54 @@ public final class Lang {
     public static final String BOSS_TOAST_PHASE = "kweebecnightmare.boss.toast.phase";
     public static final String BOSS_TOAST_DEFEATED = "kweebecnightmare.boss.toast.defeated";
 
+    // --- Clash / Domination (PvP) ---
+    // Match title banners (start / win / lose / draw) + the team names used as title args.
+    public static final String CLASH_TITLE_START = "kweebecnightmare.clash.title.start";
+    public static final String CLASH_TITLE_START_SUB = "kweebecnightmare.clash.title.start.sub";
+    public static final String CLASH_TITLE_VICTORY = "kweebecnightmare.clash.title.victory";
+    public static final String CLASH_TITLE_VICTORY_SUB = "kweebecnightmare.clash.title.victory.sub";
+    public static final String CLASH_TITLE_DEFEAT = "kweebecnightmare.clash.title.defeat";
+    public static final String CLASH_TITLE_DEFEAT_SUB = "kweebecnightmare.clash.title.defeat.sub";
+    public static final String CLASH_TITLE_DRAW = "kweebecnightmare.clash.title.draw";
+    public static final String CLASH_TITLE_DRAW_SUB = "kweebecnightmare.clash.title.draw.sub";
+    public static final String CLASH_TITLE_SUDDEN_DEATH = "kweebecnightmare.clash.title.sudden_death";
+    public static final String CLASH_TITLE_SUDDEN_DEATH_SUB = "kweebecnightmare.clash.title.sudden_death.sub";
+    // Clash toasts.
+    public static final String CLASH_TOAST_ELIMINATED = "kweebecnightmare.clash.toast.eliminated";
+    public static final String CLASH_TOAST_RESPAWN = "kweebecnightmare.clash.toast.respawn";
+    public static final String CLASH_TOAST_KO = "kweebecnightmare.clash.toast.ko";
+    public static final String CLASH_TOAST_TEAMMATE_DOWN = "kweebecnightmare.clash.toast.teammate_down";
+    public static final String CLASH_TOAST_PICKUP = "kweebecnightmare.clash.toast.pickup";
+    public static final String CLASH_TOAST_POINT_CAPTURED = "kweebecnightmare.clash.toast.point_captured";
+    public static final String CLASH_TOAST_POINT_LOST = "kweebecnightmare.clash.toast.point_lost";
+    // Clash / Domination HUD labels + team names (rendered RED/BLUE).
+    public static final String CLASH_HUD_TIMER = "kweebecnightmare.clash.hud.timer";
+    public static final String CLASH_HUD_SCORE = "kweebecnightmare.clash.hud.score";
+    public static final String CLASH_HUD_TEAM = "kweebecnightmare.clash.hud.team";
+    public static final String CLASH_HUD_TALLY_HITS = "kweebecnightmare.clash.hud.tally.hits";
+    public static final String CLASH_HUD_TALLY_KILLS = "kweebecnightmare.clash.hud.tally.kills";
+    public static final String CLASH_HUD_ALIVE = "kweebecnightmare.clash.hud.alive";
+    public static final String CLASH_HUD_CAPTURE = "kweebecnightmare.clash.hud.capture";
+    public static final String CLASH_TEAM_RED = "kweebecnightmare.clash.team.red";
+    public static final String CLASH_TEAM_BLUE = "kweebecnightmare.clash.team.blue";
+    // Domination marker name.
+    public static final String DOM_MARKER_POINT = "kweebecnightmare.domination.marker.point";
+    // Coloured (TextSpans) team-score HUD variants - your-score-first ordering flips per team.
+    public static final String CLASH_HUD_SCORE_RED = "kweebecnightmare.clash.hud.score.red";
+    public static final String CLASH_HUD_SCORE_BLUE = "kweebecnightmare.clash.hud.score.blue";
+    // PvP results screen (team breakdown) + the per-mode leaderboard + the PvP preset display names.
+    public static final String RESULTS_CLASH_BREAKDOWN = "kweebecnightmare.results.clash.breakdown";
+    public static final String RESULTS_CLASH_KOS = "kweebecnightmare.results.clash.kos";
+    public static final String RESULTS_CLASH_PREVIEW = "kweebecnightmare.results.clash.preview";
+    public static final String LB_CLASH_TITLE = "kweebecnightmare.leaderboard.clash.title";
+    public static final String LB_CLASH_AXIS_MODE = "kweebecnightmare.leaderboard.clash.axis.mode";
+    public static final String LB_CLASH_STAT_HITS = "kweebecnightmare.leaderboard.clash.stat.hits";
+    public static final String LB_CLASH_STAT_KILLS = "kweebecnightmare.leaderboard.clash.stat.kills";
+    public static final String LB_CLASH_STAT_KOS = "kweebecnightmare.leaderboard.clash.stat.kos";
+    public static final String PRESET_CLASH_1V1 = "kweebecnightmare.preset.clash_1v1.name";
+    public static final String PRESET_CLASH_2V2 = "kweebecnightmare.preset.clash_2v2.name";
+    public static final String PRESET_DOMINATION_KOTH = "kweebecnightmare.preset.domination_koth.name";
+
     // Command + system feedback.
     public static final String CMD_PLAYERS_ONLY = "kweebecnightmare.cmd.players_only";
     public static final String CMD_ALREADY_IN_ROUND = "kweebecnightmare.cmd.already_in_round";

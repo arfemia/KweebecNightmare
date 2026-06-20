@@ -17,6 +17,9 @@ import com.hypixel.hytale.server.core.modules.entity.damage.DeathComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.DeathSystems;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.ziggfreed.kweebec.mode.clash.ClashMode;
+import com.ziggfreed.kweebec.mode.domination.DominationMode;
+import com.ziggfreed.kweebec.round.KweebecMode;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.round.RoundService;
 
@@ -59,6 +62,15 @@ public final class CocoonOnDeathSystem extends DeathSystems.OnDeathSystem {
             return; // not in a Kweebec round - let the vanilla death flow run
         }
         death.setShowDeathMenu(false);
+        // PvP rounds: credit the kill + respawn-or-eliminate; do NOT cocoon.
+        if (round.mode() == KweebecMode.CLASH) {
+            ClashMode.onPlayerDeath(round, uuid, ref, store, commandBuffer);
+            return;
+        }
+        if (round.mode() == KweebecMode.DOMINATION) {
+            DominationMode.onPlayerDeath(round, uuid, ref, store, commandBuffer);
+            return;
+        }
         CocoonService.onDeath(round, uuid, ref, store, commandBuffer);
     }
 }

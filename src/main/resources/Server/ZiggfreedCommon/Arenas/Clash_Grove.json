@@ -1,0 +1,23 @@
+{
+  "Name": "Clash_Grove",
+  "InstanceName": "KweebecNightmare_Clash",
+  "Tags": [ "clash" ],
+  "TeamSpawns": [
+    { "Anchors": [
+      { "X": -4.5, "Y": 80.0, "Z": -2.0, "Yaw": 90.0 },
+      { "X": -4.5, "Y": 80.0, "Z": 2.0, "Yaw": 90.0 }
+    ] },
+    { "Anchors": [
+      { "X": 4.5, "Y": 80.0, "Z": -2.0, "Yaw": 270.0 },
+      { "X": 4.5, "Y": 80.0, "Z": 2.0, "Yaw": 270.0 }
+    ] }
+  ],
+  "ObjectiveAnchors": [
+    { "Id": "hill", "X": 0.0, "Z": 0.0, "Radius": 6.0 }
+  ],
+  "PickupAnchors": [
+    { "X": -2.0, "Z": 0.0 },
+    { "X": 2.0, "Z": 0.0 },
+    { "X": 0.0, "Z": 3.0 }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "Name": "Domination_Koth",
+  "InstanceName": "KweebecNightmare_Domination",
+  "Tags": [ "domination" ],
+  "TeamSpawns": [
+    { "Anchors": [
+      { "X": -5.0, "Y": 80.0, "Z": -2.0, "Yaw": 90.0 },
+      { "X": -5.0, "Y": 80.0, "Z": 2.0, "Yaw": 90.0 }
+    ] },
+    { "Anchors": [
+      { "X": 5.0, "Y": 80.0, "Z": -2.0, "Yaw": 270.0 },
+      { "X": 5.0, "Y": 80.0, "Z": 2.0, "Yaw": 270.0 }
+    ] }
+  ],
+  "ObjectiveAnchors": [
+    { "Id": "hill", "X": 0.0, "Z": 0.0, "Radius": 5.0 }
+  ],
+  "PickupAnchors": [
+    { "X": -2.0, "Z": 3.0 },
+    { "X": 2.0, "Z": -3.0 }
+  ]
+}

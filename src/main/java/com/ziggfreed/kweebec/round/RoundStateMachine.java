@@ -12,7 +12,6 @@ import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
-import com.ziggfreed.kweebec.mode.chase.ChaseMode;
 
 /**
  * Drives every live round once per second. Polling happens off-thread; the mode
@@ -85,7 +84,8 @@ public final class RoundStateMachine {
         RoundCompletedEvent.Outcome outcome;
         try {
             Store<EntityStore> store = world.getEntityStore().getStore();
-            outcome = ChaseMode.tick(round, world, store);
+            RoundMode mode = ModeRegistry.get(round.mode());
+            outcome = mode != null ? mode.tick(round, world, store) : null;
         } catch (Throwable t) {
             KweebecNightmarePlugin.LOGGER.atWarning().log(
                     "[Kweebec] tick threw for " + round.roundId() + ": " + t.getMessage());
