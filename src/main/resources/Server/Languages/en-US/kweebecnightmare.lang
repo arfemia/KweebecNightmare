@@ -21,7 +21,7 @@ mutator.decay.name = Creeping Decay
 mutator.blitz.name = Blitz
 
 instance.chase.title = The Blighted Grove
-instance.chase.subtitle = Relight the shrines. Do not let it catch you.
+instance.chase.subtitle = Collect moonbloom and relight the shrines. Do not let it catch you.
 
 npc.blight.name = Blighted Kweebec
 npc.lunger.name = Lunging Blight
@@ -30,7 +30,7 @@ npc.ambusher.name = Blinking Blight
 npc.warden.name = The Blight Warden
 
 title.hunt_begins = The Hunt Begins
-title.hunt_begins.sub = Relight the grove shrines
+title.hunt_begins.sub = Collect moonbloom and relight the grove shrines
 title.gate_open = The Heartwood Gate Opens
 title.gate_open.sub = Gather on the platform and hold it together
 title.you_survived = You Escaped

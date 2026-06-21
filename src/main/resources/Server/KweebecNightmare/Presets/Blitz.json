@@ -1,6 +1,6 @@
 {
   "Name": "blitz",
-  "Enabled": true,
+  "Enabled": false,
   "NameKey": "kweebecnightmare.preset.blitz.name",
   "ReviveStyle": "COOP_RESCUE",
   "MaxDowns": 1,

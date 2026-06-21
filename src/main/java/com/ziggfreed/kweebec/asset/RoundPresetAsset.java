@@ -53,7 +53,7 @@ import com.ziggfreed.kweebec.score.ScoringConfig;
  *   "ReviveStyle": "COOP_RESCUE", "MaxDowns": 1, "BleedOutSeconds": 30,
  *   "HunterCount": 1, "HunterSpeedBase": 1.0, "HunterSpeedMax": 1.35,
  *   "ShrineBase": 2, "ShrinePerPlayer": 1, "CaveShrineCount": 2,
- *   "RoundCapSeconds": 900, "CorruptionPerSecond": 0.0014,
+ *   "RoundCapSeconds": 900, "PrepSeconds": 30, "CorruptionPerSecond": 0.0014,
  *   "CorruptionPerShrine": 0.12, "ShrineRelightSeconds": 6.0,
  *   "InventoryMode": "PRESERVE_AND_STRIP", "HunterArchetype": "stalker",
  *   "Baseline": 1000, "ParTimeSeconds": 420, "TimePointsPerSecond": 5.0,
@@ -105,6 +105,7 @@ public final class RoundPresetAsset
     private int shrinePerPlayer = UNSET_INT;
     private int caveShrineCount = UNSET_INT;
     private int roundCapSeconds = UNSET_INT;
+    private int prepSeconds = UNSET_INT;
     private double corruptionPerSecond = UNSET_DOUBLE;
     private double corruptionPerShrine = UNSET_DOUBLE;
     private double shrineRelightSeconds = UNSET_DOUBLE;
@@ -136,10 +137,14 @@ public final class RoundPresetAsset
     // Boss capstone toggle + id (null = absent = the RuleSet default = off / default Warden). The harder
     // presets author BossEnabled=true; BossId selects a non-default boss from the BossConfig fold;
     // BossBarsGate=true holds the Heartwood Gate shut until the boss is defeated (else the boss is a
-    // pure obstacle beside an already-open gate).
+    // pure obstacle beside an already-open gate). BossMarker toggles the boss world-map marker (default on,
+    // mirrors ExitMarker); BossHealthMultiplier is the per-difficulty flat MAX-health scale (default 1.0,
+    // composed with the boss asset's HealthPerPlayer party scaling).
     @Nullable private Boolean bossEnabled;
     @Nullable private String bossId;
     @Nullable private Boolean bossBarsGate;
+    @Nullable private Boolean bossMarker;
+    private double bossHealthMultiplier = UNSET_DOUBLE;
     // Jumpscare beat knobs (null/UNSET = absent = the RuleSet default). JumpscareEnabled toggles the
     // proximity/alert scare; JumpscareBeatId names a ziggfreed-common BandedEffect one-shot (overlay
     // EntityEffect + scream + camera shake) so a preset can use a different overlay/intensity per mode;
@@ -224,6 +229,8 @@ public final class RoundPresetAsset
             .add()
             .append(new KeyedCodec<>("RoundCapSeconds", Codec.INTEGER, false), (a, v) -> a.roundCapSeconds = v, a -> a.roundCapSeconds)
             .add()
+            .append(new KeyedCodec<>("PrepSeconds", Codec.INTEGER, false), (a, v) -> a.prepSeconds = v, a -> a.prepSeconds)
+            .add()
             .append(new KeyedCodec<>("CorruptionPerSecond", Codec.DOUBLE, false), (a, v) -> a.corruptionPerSecond = v, a -> a.corruptionPerSecond)
             .add()
             .append(new KeyedCodec<>("CorruptionPerShrine", Codec.DOUBLE, false), (a, v) -> a.corruptionPerShrine = v, a -> a.corruptionPerShrine)
@@ -273,6 +280,10 @@ public final class RoundPresetAsset
             .append(new KeyedCodec<>("BossId", Codec.STRING, false), (a, v) -> a.bossId = v, a -> a.bossId)
             .add()
             .append(new KeyedCodec<>("BossBarsGate", Codec.BOOLEAN, false), (a, v) -> a.bossBarsGate = v, a -> a.bossBarsGate)
+            .add()
+            .append(new KeyedCodec<>("BossMarker", Codec.BOOLEAN, false), (a, v) -> a.bossMarker = v, a -> a.bossMarker)
+            .add()
+            .append(new KeyedCodec<>("BossHealthMultiplier", Codec.DOUBLE, false), (a, v) -> a.bossHealthMultiplier = v, a -> a.bossHealthMultiplier)
             .add()
             .append(new KeyedCodec<>("JumpscareEnabled", Codec.BOOLEAN, false), (a, v) -> a.jumpscareEnabled = v, a -> a.jumpscareEnabled)
             .add()
@@ -414,6 +425,9 @@ public final class RoundPresetAsset
         if (roundCapSeconds != UNSET_INT) {
             b.roundCapSeconds(roundCapSeconds);
         }
+        if (prepSeconds != UNSET_INT) {
+            b.prepSeconds(prepSeconds);
+        }
         if (!Double.isNaN(corruptionPerSecond)) {
             b.corruptionPerSecond(corruptionPerSecond);
         }
@@ -489,6 +503,12 @@ public final class RoundPresetAsset
         }
         if (bossBarsGate != null) {
             b.bossBarsGate(bossBarsGate);
+        }
+        if (bossMarker != null) {
+            b.bossMarker(bossMarker);
+        }
+        if (!Double.isNaN(bossHealthMultiplier)) {
+            b.bossHealthMultiplier(bossHealthMultiplier);
         }
         if (jumpscareEnabled != null) {
             b.jumpscareEnabled(jumpscareEnabled);

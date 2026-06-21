@@ -1,6 +1,6 @@
 {
   "Name": "pitch",
-  "Enabled": true,
+  "Enabled": false,
   "NameKey": "kweebecnightmare.preset.pitch.name",
   "ReviveStyle": "COOP_RESCUE",
   "MaxDowns": 1,

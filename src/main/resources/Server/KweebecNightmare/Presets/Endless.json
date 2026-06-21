@@ -1,6 +1,6 @@
 {
   "Name": "endless",
-  "Enabled": true,
+  "Enabled": false,
   "NameKey": "kweebecnightmare.preset.endless.name",
   "ReviveStyle": "COOP_RESCUE",
   "MaxDowns": 2,
@@ -13,7 +13,7 @@
   "CaveShrineCount": 4,
   "RoundCapSeconds": 1500,
   "CorruptionPerSecond": 0.0009,
-  "CorruptionPerShrine": 0.10,
+  "CorruptionPerShrine": 0.1,
   "ShrineRelightSeconds": 6.0,
   "InventoryMode": "PRESERVE_AND_STRIP",
   "RewardOnExit": "ON_WIN",

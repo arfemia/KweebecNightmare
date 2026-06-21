@@ -2,7 +2,6 @@ package com.ziggfreed.kweebec.feedback;
 
 import javax.annotation.Nonnull;
 
-import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.entity.entities.player.hud.CustomUIHud;
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -45,18 +44,23 @@ public final class BossHud extends CustomUIHud {
         UICommandBuilder cb = new UICommandBuilder();
 
         cb.set("#BossName.Text", Lang.msg(Lang.NPC_WARDEN));
-        // Only show the "Phase X/Y" indicator when the boss actually has multiple phases (the
-        // later phases carry an authored role). A single-phase Warden (phases 2/3 disabled) blanks
-        // the line rather than reading a meaningless "Phase 1/1". The blank MUST be Message.raw("")
-        // (a real empty rawText string), NOT Message.empty(): an empty Message serializes as a
-        // FormattedMessage object with no text/translationKey, and the client's String-typed `.Text`
-        // setter cannot construct a System.String from it - it hard-disconnects with "CustomUI Set
-        // command couldn't set value ... No parameterless constructor defined for type 'System.String'".
+        // Only show the "Phase X/Y" indicator when the boss actually has multiple phases (the later
+        // phases carry an authored role). A single-phase Warden (phases 2/3 disabled) blanks the line
+        // rather than reading a meaningless "Phase 1/1".
+        //
+        // The blank MUST go through the plain-STRING set overload (cb.set(selector, "")), NOT a Message.
+        // A `.Text` markup property is a client-side System.String. A TRANSLATION Message (the multi-
+        // phase branch below, and #BossName) serializes as a FormattedMessage object the client resolves
+        // to a string - that path is fine. But a NON-translation Message (Message.empty() OR
+        // Message.raw("")) serializes as a FormattedMessage object with no messageId, and the client
+        // cannot turn it into a String: it hard-disconnects with "CustomUI Set command couldn't set
+        // value ... No parameterless constructor defined for type 'System.String'". Both were tried and
+        // both crashed; the String overload sends a bare BsonString the .Text property takes directly.
         if (totalPhases > 1) {
             cb.set("#BossPhase.Text", Lang.msg(Lang.BOSS_HUD_PHASE)
                     .param("0", Math.max(1, phase)).param("1", totalPhases));
         } else {
-            cb.set("#BossPhase.Text", Message.raw(""));
+            cb.set("#BossPhase.Text", "");
         }
 
         double fraction = max > 0.0 ? Math.max(0.0, Math.min(1.0, current / max)) : 0.0;

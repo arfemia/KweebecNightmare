@@ -14,6 +14,7 @@ import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.vector.Rotation3f;
 import com.hypixel.hytale.protocol.SoundCategory;
+import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.entities.player.hud.HudManager;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
@@ -25,9 +26,11 @@ import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.npc.NPCPlugin;
+import com.ziggfreed.common.health.HealthUtil;
 import com.ziggfreed.common.instance.encounter.MultiPhaseBossAsset;
 import com.ziggfreed.common.sound.Sound3D;
 import com.ziggfreed.common.world.SpawnPlacement;
+import com.ziggfreed.common.worldmap.WorldMapMarkers;
 import com.ziggfreed.kweebec.arena.Anchor;
 import com.ziggfreed.kweebec.arena.ArenaBuilder;
 import com.ziggfreed.kweebec.arena.ArenaLayout;
@@ -70,6 +73,10 @@ public final class BossController {
 
     /** Add-spawn ring radius (blocks) around the boss for the per-phase Blight summons. */
     private static final double ADD_RING_RADIUS = 6.0;
+    /** World-map POI id for the boss marker (mod-prefixed; avoids the engine's reserved POI keys). */
+    private static final String BOSS_MARKER_ID = "kweebec_boss";
+    /** {@link EntityStatMap} modifier key for the per-encounter boss MAX-health scale (idempotency handle). */
+    private static final String HEALTH_SCALE_KEY = "kweebec_boss_scale";
 
     private final MultiPhaseBossAsset boss;
     /**
@@ -109,6 +116,17 @@ public final class BossController {
      * stacking on the previous wave's. World-thread only.
      */
     private int throwableWave = 0;
+    /**
+     * Cached MAX-health scale applied to each phase entity (party size x difficulty), computed once at
+     * spawn from {@code presentCount()} and the boss/preset knobs. 1.0 = no scaling. World-thread only.
+     */
+    private double healthScaleFactor = 1.0;
+    /** Whether this round drops a boss world-map marker (preset {@code BossMarker}); cached at spawn. */
+    private boolean markerEnabled;
+    /** Throttle (ms) between boss-marker re-placements so it tracks the moving boss; cached at spawn. */
+    private long markerUpdateMs = 3000L;
+    /** Wall-clock (ms) of the last boss-marker placement (the follow throttle anchor). World-thread only. */
+    private long lastBossMarkerMs = 0L;
 
     private BossController(@Nonnull MultiPhaseBossAsset boss) {
         this.boss = boss;
@@ -166,6 +184,21 @@ public final class BossController {
         }
         this.bossRef = spawned;
         this.phase = 1;
+        // Per-encounter HP scale (party size x difficulty), cached for every phase entity. presentCount() is
+        // the survivors still in the round (the boss-HUD audience). Both knobs default to no-op (perPlayer 0,
+        // multiplier 1) so an unconfigured boss keeps its role-authored MaxHealth. Applied on the first tick.
+        int players = Math.max(1, round.presentCount());
+        this.healthScaleFactor = round.ruleSet().bossHealthMultiplier()
+                * (1.0 + boss.healthPerPlayer() * (players - 1));
+        this.markerEnabled = round.ruleSet().bossMarker();
+        this.markerUpdateMs = Math.max(1, boss.markerUpdateSeconds()) * 1000L;
+        if (markerEnabled) {
+            // Compass updating is the world-map render precondition (the exit marker may be off this preset);
+            // enable it so the boss POI shows, then drop the marker at the spawn pos.
+            world.setCompassUpdating(true);
+            placeBossMarker(world, pos);
+            lastBossMarkerMs = System.currentTimeMillis();
+        }
         installHuds(round, store);
         String spawnSound = boss.spawnSoundId();
         if (spawnSound != null && !spawnSound.isBlank()) {
@@ -209,6 +242,17 @@ public final class BossController {
         if (hp == null) {
             return false; // cannot read HP this tick; hold the current phase
         }
+        // Apply the per-encounter MAX-health scale to THIS phase entity (once - the modifier-presence guard
+        // in HealthUtil makes it a no-op thereafter, and re-applies after each phase respawn). Deferred to
+        // the first tick so NPC balancing has set the role's base max; re-read so the rest of the tick (HUD,
+        // phase threshold) sees the scaled values.
+        if (HealthUtil.scaleMaxHealth(store, bossRef, healthScaleFactor, HEALTH_SCALE_KEY)) {
+            hp = readHealth(store, bossRef);
+            if (hp == null) {
+                return false;
+            }
+        }
+        maybeUpdateBossMarker(world);
         maybeSwapPhase(round, world, store, hp);
         maybeRespawnThrowables(round, world, store);
         pushHuds(round, hp);
@@ -432,6 +476,35 @@ public final class BossController {
         }
     }
 
+    // --- world-map marker ---
+
+    /**
+     * Re-place the boss marker at the boss's live position, throttled to {@link #markerUpdateMs} so it
+     * tracks the moving boss without a per-tick write. No-op when the marker is disabled this round or the
+     * boss position is unknown. World-thread only.
+     */
+    private void maybeUpdateBossMarker(@Nonnull World world) {
+        if (!markerEnabled || lastKnownPos == null) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if (now - lastBossMarkerMs < markerUpdateMs) {
+            return;
+        }
+        placeBossMarker(world, lastKnownPos);
+        lastBossMarkerMs = now;
+    }
+
+    /**
+     * Place / move the boss world-map POI (re-using {@link #BOSS_MARKER_ID} so the engine moves the existing
+     * marker) at {@code p}, labelled with the boss's display name (its {@code NameKey}) when authored.
+     * World-thread; best-effort (the marker call is itself try-guarded).
+     */
+    private void placeBossMarker(@Nonnull World world, @Nonnull Vector3d p) {
+        Message name = boss.nameKey() != null ? Lang.msg(boss.nameKey()) : null;
+        WorldMapMarkers.place(world, BOSS_MARKER_ID, p.x(), p.y(), p.z(), boss.markerIcon(), name);
+    }
+
     // --- teardown ---
 
     /** Despawn the boss + every add and strip the boss HUD from every survivor. Best-effort, idempotent. */
@@ -455,6 +528,9 @@ public final class BossController {
         }
         adds.clear();
         stripHuds(store);
+        // Drop the boss marker the instant the boss is gone (defeat -> onDefeated -> here, and round
+        // teardown), so it never lingers past the fight. Safe no-op if it was never placed.
+        WorldMapMarkers.remove(world, BOSS_MARKER_ID);
     }
 
     // --- HUD lifecycle ---

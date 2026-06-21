@@ -440,7 +440,9 @@ public final class KweebecExperience {
                 out.addAll(table.roll(score, new Random(seed)));
             }
         }
-        return out;
+        // Collapse the table's repeated picks (and any flat-reward overlap) into one entry per item,
+        // so the claim store grants - and the results chips show - "x9 Moonbloom" once, not four chips.
+        return InstanceReward.merge(out);
     }
 
     /**

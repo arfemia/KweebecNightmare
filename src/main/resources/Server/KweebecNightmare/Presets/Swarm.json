@@ -1,6 +1,6 @@
 {
   "Name": "swarm",
-  "Enabled": true,
+  "Enabled": false,
   "NameKey": "kweebecnightmare.preset.swarm.name",
   "ReviveStyle": "COOP_RESCUE",
   "MaxDowns": 1,

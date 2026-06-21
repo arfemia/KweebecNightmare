@@ -60,7 +60,6 @@ import com.ziggfreed.kweebec.round.RuleSet;
  */
 public final class ChaseMode {
 
-    private static final int PREP_SECONDS = 15;
     private static final double RESCUE_SECONDS = 3.0;
     /** World-map POI id + icon for the exit marker placed at gate-open (see {@code openGate}). */
     private static final String EXIT_MARKER_ID = "kweebec_exit";
@@ -87,7 +86,9 @@ public final class ChaseMode {
         ChaseState chase = new ChaseState(
                 ArenaLayout.SURFACE_WORLDGEN_SHRINES + round.ruleSet().caveShrineCount());
         chase.setPhase(ChasePhase.PREP);
-        chase.setPrepEndsAtMs(System.currentTimeMillis() + PREP_SECONDS * 1000L);
+        // PREP grace is per-difficulty (RuleSet.prepSeconds: Amateur 45 / Nightmare 30 / Hardcore 20) -
+        // the head start before the hunter spawns and the hunt begins in beginRitual.
+        chase.setPrepEndsAtMs(System.currentTimeMillis() + round.ruleSet().prepSeconds() * 1000L);
         // The co-op extraction hold (the reusable ziggfreed-common ZoneHoldTimer); duration is the
         // per-difficulty RuleSet.extractionHoldSeconds(). Fed each ESCAPE tick by checkExtraction.
         chase.setExtractionHold(new ZoneHoldTimer(round.ruleSet().extractionHoldSeconds()));

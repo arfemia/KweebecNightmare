@@ -44,6 +44,7 @@ public final class RuleSet {
     private final int shrinePerPlayer;
     private final int caveShrineCount;
     private final int roundCapSeconds;
+    private final int prepSeconds;
     private final double corruptionPerSecond;
     private final double corruptionPerShrine;
     private final double shrineRelightSeconds;
@@ -68,6 +69,8 @@ public final class RuleSet {
     private final boolean bossEnabled;
     @Nullable private final String bossId;
     private final boolean bossBarsGate;
+    private final boolean bossMarker;
+    private final double bossHealthMultiplier;
     private final ScoringConfig scoring;
     // On-hit punishment baseline (applies to every hunter unless its archetype overrides a field).
     private final String onHitSlowEffectId;
@@ -128,6 +131,7 @@ public final class RuleSet {
         this.shrinePerPlayer = b.shrinePerPlayer;
         this.caveShrineCount = b.caveShrineCount;
         this.roundCapSeconds = b.roundCapSeconds;
+        this.prepSeconds = b.prepSeconds;
         this.corruptionPerSecond = b.corruptionPerSecond;
         this.corruptionPerShrine = b.corruptionPerShrine;
         this.shrineRelightSeconds = b.shrineRelightSeconds;
@@ -152,6 +156,8 @@ public final class RuleSet {
         this.bossEnabled = b.bossEnabled;
         this.bossId = b.bossId;
         this.bossBarsGate = b.bossBarsGate;
+        this.bossMarker = b.bossMarker;
+        this.bossHealthMultiplier = b.bossHealthMultiplier;
         this.scoring = b.scoring;
         this.onHitSlowEffectId = b.onHitSlowEffectId;
         this.onHitSlowSeconds = b.onHitSlowSeconds;
@@ -254,6 +260,16 @@ public final class RuleSet {
 
     public int roundCapSeconds() {
         return roundCapSeconds;
+    }
+
+    /**
+     * Seconds of PREP grace after the party enters before the hunt begins - the hunter spawns and the
+     * heartbeat + corruption ramp start at the PREP -> RITUAL transition this many seconds in. The
+     * per-difficulty head start (Amateur 45, Nightmare 30, Hardcore 20); a longer breath is easier.
+     * Clamped to at least 0 by the builder. Asset-driven via the preset's {@code PrepSeconds} knob.
+     */
+    public int prepSeconds() {
+        return prepSeconds;
     }
 
     public double corruptionPerSecond() {
@@ -462,6 +478,26 @@ public final class RuleSet {
     }
 
     /**
+     * Whether an enabled boss drops a WORLD-MAP marker that tracks it (a compass/world-map POI the
+     * {@code BossController} places at spawn and follows as it moves). Default on; a preset can author it
+     * off (e.g. Hardcore, which also ships the exit marker dark). Asset-driven via the preset's
+     * {@code BossMarker} knob. Mirrors {@link #exitMarker()}.
+     */
+    public boolean bossMarker() {
+        return bossMarker;
+    }
+
+    /**
+     * Per-difficulty flat multiplier on the boss's MAX health, composed with the boss asset's
+     * {@code HealthPerPlayer} party scaling ({@code final = bossHealthMultiplier * (1 + perPlayer*(players-1))}).
+     * Default {@code 1.0} (no change); harder presets author it up. Asset-driven via the preset's
+     * {@code BossHealthMultiplier} knob; {@code BossController} reads it at spawn.
+     */
+    public double bossHealthMultiplier() {
+        return bossHealthMultiplier;
+    }
+
+    /**
      * The per-preset scoring weights used to score a round of this preset (the base the runtime
      * tier may still override/scale). Authored via the preset's {@code Baseline}/{@code StunBonusPer}/
      * {@code ShrineBonusPer}/{@code AllShrinesBonus}/... knobs; absent fields keep the
@@ -664,6 +700,7 @@ public final class RuleSet {
         b.shrinePerPlayer = this.shrinePerPlayer;
         b.caveShrineCount = this.caveShrineCount;
         b.roundCapSeconds = this.roundCapSeconds;
+        b.prepSeconds = this.prepSeconds;
         b.corruptionPerSecond = this.corruptionPerSecond;
         b.corruptionPerShrine = this.corruptionPerShrine;
         b.shrineRelightSeconds = this.shrineRelightSeconds;
@@ -688,6 +725,8 @@ public final class RuleSet {
         b.bossEnabled = this.bossEnabled;
         b.bossId = this.bossId;
         b.bossBarsGate = this.bossBarsGate;
+        b.bossMarker = this.bossMarker;
+        b.bossHealthMultiplier = this.bossHealthMultiplier;
         b.scoring = this.scoring;
         b.onHitSlowEffectId = this.onHitSlowEffectId;
         b.onHitSlowSeconds = this.onHitSlowSeconds;
@@ -745,6 +784,7 @@ public final class RuleSet {
         private int shrinePerPlayer = 1;
         private int caveShrineCount = 2;
         private int roundCapSeconds = 900;
+        private int prepSeconds = 15;
         private double corruptionPerSecond = 0.0014;
         private double corruptionPerShrine = 0.12;
         private double shrineRelightSeconds = 6.0;
@@ -774,6 +814,8 @@ public final class RuleSet {
         private boolean bossEnabled = false;
         @Nullable private String bossId = null;
         private boolean bossBarsGate = false;
+        private boolean bossMarker = true;
+        private double bossHealthMultiplier = 1.0;
         private ScoringConfig scoring = ScoringConfig.DEFAULT;
         // On-hit punishment baseline defaults (the zero-pack floor; presets / packs may override).
         @Nullable private String onHitSlowEffectId = "KweebecNightmare_HunterSlow_1";
@@ -834,6 +876,7 @@ public final class RuleSet {
         @Nonnull public Builder shrines(int base, int perPlayer) { this.shrineBase = base; this.shrinePerPlayer = perPlayer; return this; }
         @Nonnull public Builder caveShrineCount(int v) { this.caveShrineCount = v; return this; }
         @Nonnull public Builder roundCapSeconds(int v) { this.roundCapSeconds = v; return this; }
+        @Nonnull public Builder prepSeconds(int v) { this.prepSeconds = Math.max(0, v); return this; }
         @Nonnull public Builder corruptionPerSecond(double v) { this.corruptionPerSecond = v; return this; }
         @Nonnull public Builder corruptionPerShrine(double v) { this.corruptionPerShrine = v; return this; }
         @Nonnull public Builder shrineRelightSeconds(double v) { this.shrineRelightSeconds = v; return this; }
@@ -858,6 +901,8 @@ public final class RuleSet {
         @Nonnull public Builder bossEnabled(boolean v) { this.bossEnabled = v; return this; }
         @Nonnull public Builder bossId(@Nullable String v) { this.bossId = v; return this; }
         @Nonnull public Builder bossBarsGate(boolean v) { this.bossBarsGate = v; return this; }
+        @Nonnull public Builder bossMarker(boolean v) { this.bossMarker = v; return this; }
+        @Nonnull public Builder bossHealthMultiplier(double v) { this.bossHealthMultiplier = v; return this; }
         @Nonnull public Builder scoring(@Nonnull ScoringConfig v) { this.scoring = v; return this; }
         @Nonnull public Builder onHitSlowEffectId(@Nullable String v) { this.onHitSlowEffectId = v; return this; }
         @Nonnull public Builder onHitSlowSeconds(double v) { this.onHitSlowSeconds = v; return this; }

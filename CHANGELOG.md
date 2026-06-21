@@ -2,6 +2,17 @@
 
 Developer changelog for Kweebec Nightmare. User-facing release notes live in `patch-notes/`.
 
+## 1.0.0
+
+First public release. The co-op chase ("Relight & Escape") is the shipped, documented experience: relight the grove-shrines, gather and throw glow-mushrooms, survive the Blighted hunter and the Warden capstone, then hold the Heartwood platform together to escape. This cycle adds the boss difficulty/marker pass and merged reward chips, and pins the stable `ziggfreed-common` 1.0.0. The PvP arena modes (Clash + Domination) remain in the build but are NOT advertised on the public listing this release (they have not been live-playtested); `CURSEFORGE.md` describes the chase only.
+
+- **Boss MAX-health scaling (party size x difficulty, asset/config driven).** The Warden no longer melts the same for a solo player and a full party. `BossController` raises each phase entity's MAX health at spawn by `bossHealthMultiplier * (1 + healthPerPlayer * (players - 1))` via the new `ziggfreed-common` `HealthUtil.scaleMaxHealth`, where `HealthPerPlayer` is a boss-asset knob (`Warden.json`, 0.35 = +35% per extra survivor) and `BossHealthMultiplier` is a per-preset knob (`RoundPresetAsset` / `RuleSet`, Nightmare 1.0 / Hardcore 1.4). Both default to no-op, so an unauthored boss keeps its role `MaxHealth`. Applied on the first tick after spawn (so NPC balancing has run) and re-applied once per phase respawn, guarded idempotent so the boss never heal-loops.
+- **Boss world-map marker (configurable, follows the boss).** When a preset's `BossMarker` is on (Nightmare on, Hardcore off), the Warden drops a world-map / compass POI at spawn that re-points to the boss every `MarkerUpdateSeconds` (3s default, `Warden.json` `MarkerIcon`/`MarkerUpdateSeconds`) and is removed the instant the boss is defeated or the round tears down. Reuses the `ziggfreed-common` `WorldMapMarkers` primitive (the same one behind the exit marker); the marker label is the boss's own `NameKey`, so no new localization.
+- **Merged reward chips.** The score-tiered loot roll routes through the new `ziggfreed-common` `InstanceReward.merge`, so a results screen shows "x9 Moonbloom" ONCE instead of repeated single chips, and the claim store grants one merged entry per item.
+- **Dependency: `ziggfreed-common` 1.0.0** (the `HealthUtil.scaleMaxHealth` + `MultiPhaseBossAsset` marker knobs + `InstanceReward.merge` additions). Gradle pin + manifest dependency bumped.
+
+Technical: built green via `gradlew build` (java + api) against `ziggfreed-common` 1.0.0. The boss HP-scaling magnitude, the marker follow/cleanup, and the merged-chip preview are NOT gradle-validated; they need an in-game pass (a solo vs 3-4p Nightmare boss for the HP curve, a Hardcore run for the 1.4x multiplier and marker-off, a win claim for the merged chips). Design + verified seams: the parent-repo plan note `need-to-give-boss-prancy-harp`.
+
 ## 0.6.0 (in development)
 
 PvP pass: two new player-versus-player modes (Kweebec Clash team brawl + Kweebec Domination control point) running on the same instance/round engine as the co-op chase, a Kweebec Sapling reskin for combatants, throwable knockback/stun mushroom pickups, a new host NPC + dialogue, and asset-driven PvP presets/arenas. Built green (java + ziggfreed-common); the mode loops, the reskin, the pickups, the NPC, and the presets/arenas validate in-game.

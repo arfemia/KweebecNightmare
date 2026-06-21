@@ -18,5 +18,8 @@
   "Phase2ThrowableCount": 10,
   "Phase3ThrowableCount": 12,
   "ThrowableRingRadius": 10.0,
-  "ThrowableRespawnSeconds": 45
+  "ThrowableRespawnSeconds": 45,
+  "HealthPerPlayer": 0.35,
+  "MarkerIcon": "Home.png",
+  "MarkerUpdateSeconds": 3
 }

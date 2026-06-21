@@ -1,31 +1,31 @@
 # Kweebec Nightmare
 
-**A standalone Kweebec minigame mod. Survive the night together, or clash over the grove.**
+**A standalone co-op horror minigame. Relight the grove together, or be hunted in the dark.**
 
-Night has fallen on the Emerald Grove, and the gentle Kweebec tree-folk have been twisted by the Void into something that hunts. One mod, several modes: a co-op **chase** (relight the corrupted grove-shrines to open the Heartwood Gate and escape before the Blighted Kweebec runs you down), and a **PvP arena** where two teams of saplings fight with knockback and stun mushrooms - last team standing, or hold the ground in Domination. 1 to 4 players co-op, or 1v1 / 2v2 in the arena.
+Night has fallen on the Emerald Grove, and the gentle Kweebec tree-folk have been twisted by the Void into something that hunts. One to four of you (or a lone survivor against the AI) must relight the corrupted grove-shrines to open the Heartwood Gate and hold the platform together long enough to escape, all while a Blighted Kweebec stalks the dark and grows faster with every shrine you light.
 
-> Status: in development (mod-jam build). The Chase round and the PvP arena (Clash + Domination) are built (server build green); they have not been playtested in a live server yet. The top-down survival mode is still reserved. Watch the Versions tab for playable releases.
+> v1.0.0, the first public release. The co-op chase ("Relight & Escape") runs end to end. This is a fresh launch off a mod-jam build, so if something feels off in your server, please report it on the Versions tab so it can be fixed. Watch that tab for updates.
 
 ## Features
 
 - **Co-op horror, 1 to 4 players.** Work together to relight the grove, or get cocooned in roots and hope a friend cuts you free. Plays solo against an AI hunter too.
-- **A hunter that learns the night.** The Blighted Kweebec tracks the noise of your rituals and grows faster and more relentless as the grove darkens.
-- **Risk that scales with success.** Every shrine you light brings you closer to escape and closer to the hunt. The final shrine is the loudest of all.
-- **Glowing mushrooms to throw.** Gather corrupted glowcaps and hurl them, each bursting differently: stun, knock flying, slow to a slog, or blast for real damage. They arm the chase (stun the hunter) and the PvP arena alike, where knockback and stun shrooms sprout from the soil mid-fight.
-- **PvP arena (Clash + Domination).** Two teams of Kweebec saplings clash in a grove arena: 1v1 or 2v2, last team standing or most hits at the timer, with configurable respawns. Or play Domination and hold the capture ground for points. Queue solo (matched with a stranger) or bring a party as your team, entered through the arena's Duelmaster NPC. Everything - win condition, team size, respawns, timer, arenas - is data-driven and tunable.
-- **Become a sapling.** In the arena you fight as a Kweebec sapling, restored to your own look the moment the match ends.
-- **A fresh round every time.** A new instanced grove per round keeps every mode rapidly repeatable.
-- **Built for dread.** Perpetual midnight, thickening fog, a proximity heartbeat that tightens as the hunter nears, and cinematic title cards.
+- **A hunter that learns the night.** The Blighted Kweebec tracks the noise of your rituals and grows faster and more relentless as the grove darkens, hunting in different ways depending on the breed that stalks you.
+- **Risk that scales with success.** Every shrine you light brings you closer to escape and closer to the hunt. The final shrine is the loudest of all, and it wakes something worse.
+- **A capstone boss.** On the harder nights the corrupted Warden rises when the gate opens, tougher the larger your party and the higher the difficulty. Keep it killable by gathering and hurling glow-mushrooms, and track it on your map as it hunts.
+- **Glowing mushrooms to throw.** Gather corrupted glowcaps and hurl them, each bursting differently: stun the hunter, knock it flying, slow it to a slog, or blast for real damage. Stocking your kit is half of staying alive.
+- **A co-op escape, not a footrace.** Opening the Heartwood Gate is not the end. The survivors have to gather on the extraction platform and hold it together until everyone gets out, and the hold resets if the group breaks.
+- **A fresh round every time.** A new instanced grove per round, with shifting shrine layouts, caves, and corrupted ruins, keeps every run rapidly repeatable. Win well and you earn better loot.
+- **Built for dread.** Perpetual midnight, thickening fog, a proximity heartbeat that tightens as the hunter nears, whispers in the trees, and cinematic title cards.
 - **Better with MMO Skill Tree (optional).** Installed alongside MMO Skill Tree, a round can advance your skills and rewards; on its own, it grants its own. Never required.
 
 ## Install
 
-Place `KweebecNightmare-<version>.jar` in your server `Mods/` folder. Requires a Hytale server in the Update 5 range.
+Place `KweebecNightmare-<version>.jar` in your server `Mods/` folder. Requires a Hytale server in the Update 5 range, plus the **Ziggfreed's CommonLib** and **Perfect Utils** dependencies (the server loads them first).
 
 ## Versions
 
 | Version | Notes |
 |---|---|
-| 0.6.0 | PvP arena built: Kweebec Clash (1v1 / 2v2) and Domination, on the shared round engine. Configurable win conditions (last team standing / most hits / most kills / TDM) and respawns, the Kweebec Sapling reskin, periodic knockback + stun mushroom pickups, team results + a per-mode leaderboard, and the Duelmaster host NPC with its own dialogue. In development, not yet playtested live. |
-| 0.2.0 | Chase round built ("Relight & Escape"): round engine, difficulty presets, the Blighted hunter, cocoon and rescue, dark atmosphere and round HUD. In development, not yet playtested live. |
+| 1.0.0 | First public release. The co-op chase ("Relight & Escape"): an instanced grove round with shifting layouts, difficulty presets, the Blighted hunter and its breeds, gather-and-throw glow-mushrooms, the multi-phase Warden capstone (scaling with party size and difficulty, with a world-map marker), score-tiered win loot, and a co-op extraction hold to escape together. |
+| 0.2.0 | Chase round built ("Relight & Escape"): round engine, difficulty presets, the Blighted hunter, cocoon and rescue, dark atmosphere and round HUD. |
 | 0.1.0 | Initial project scaffold (not yet playable). |
