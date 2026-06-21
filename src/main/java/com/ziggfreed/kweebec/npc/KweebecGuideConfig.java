@@ -21,17 +21,21 @@ import com.google.gson.JsonParser;
 import com.ziggfreed.kweebec.util.SafeLog;
 
 /**
- * Settings for the auto-spawned "Grove Warden" guide NPC, the kweebec mirror of MMO Skill Tree's
- * {@code spawn-hub.json} ({@code SpawnHubConfig}). Lives at {@code <data dir>/guide.json}; a slim Gson
- * schema, unknown keys ignored so future fields can be added without breaking existing files. Written
- * with defaults on first run.
+ * Settings for the auto-spawned "Grove Warden" guide NPC, the kweebec mirror of
+ * MMO Skill Tree's {@code spawn-hub.json} ({@code SpawnHubConfig}). Lives at
+ * {@code <data dir>/guide.json}; a slim Gson schema, unknown keys ignored so
+ * future fields can be added without breaking existing files. Written with
+ * defaults on first run.
  *
- * <p>The auto-spawn (in {@link KweebecGuideSpawn}, on {@code PlayerReadyEvent}) is restricted to the
- * worlds named in {@code worlds}. The default {@code ["default"]} keeps the guide in the main overworld
- * only - NOT in secondary worlds, round instances, or the creative hub (which also fire
- * {@code PlayerReadyEvent}). A single {@code "*"} entry spawns it in every world; an empty list disables
- * the auto-spawn entirely (place it yourself via {@code /kweebec spawnguide}). World names match
- * {@code World.getName()}. {@code enabled=false} disables it outright.
+ * <p>
+ * The auto-spawn (in {@link KweebecGuideSpawn}, on {@code PlayerReadyEvent}) is
+ * restricted to the worlds named in {@code worlds}. The default
+ * {@code ["default"]} keeps the guide in the main overworld only - NOT in
+ * secondary worlds, round instances, or the creative hub (which also fire
+ * {@code PlayerReadyEvent}). A single {@code "*"} entry spawns it in every
+ * world; an empty list disables the auto-spawn entirely (place it yourself via
+ * {@code /kweebec spawnguide}). World names match {@code World.getName()}.
+ * {@code enabled=false} disables it outright.
  */
 public final class KweebecGuideConfig {
 
@@ -56,12 +60,15 @@ public final class KweebecGuideConfig {
     private volatile boolean enabled = true;
     private volatile String role = KweebecGuideSpawn.GUIDE_ROLE;
     private volatile List<String> worlds = new ArrayList<>(List.of("default"));
-    private volatile double offsetX = -3.0;
+    private volatile double offsetX = 5.0;
     private volatile double offsetY = 0.0;
     private volatile double offsetZ = 0.0;
     private volatile float yaw = 90.0f;
 
-    /** Load {@code <dataDir>/guide.json} (writing defaults if absent). A null dir keeps the defaults. */
+    /**
+     * Load {@code <dataDir>/guide.json} (writing defaults if absent). A null
+     * dir keeps the defaults.
+     */
     public void load(@Nullable Path dataDir) {
         if (dataDir == null) {
             SafeLog.warn("[Kweebec] guide config: no data dir, using defaults");
@@ -152,13 +159,19 @@ public final class KweebecGuideConfig {
         return role;
     }
 
-    /** The worlds the guide auto-spawns in (a single {@code "*"} = all worlds; empty = none). */
+    /**
+     * The worlds the guide auto-spawns in (a single {@code "*"} = all worlds;
+     * empty = none).
+     */
     @Nonnull
     public List<String> getWorlds() {
         return Collections.unmodifiableList(worlds);
     }
 
-    /** Whether the guide may auto-spawn in {@code worldName} per the {@code worlds} list. */
+    /**
+     * Whether the guide may auto-spawn in {@code worldName} per the
+     * {@code worlds} list.
+     */
     public boolean shouldSpawnInWorld(@Nonnull String worldName) {
         return worlds.contains("*") || worlds.contains(worldName);
     }

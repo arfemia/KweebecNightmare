@@ -2,6 +2,7 @@
   "Name": "hardcore",
   "Enabled": true,
   "NameKey": "kweebecnightmare.preset.hardcore.name",
+  "WorldStructure": "KweebecNightmare_Grove_Dread",
   "ReviveStyle": "HARDCORE",
   "MaxDowns": 0,
   "BleedOutSeconds": 20,
@@ -19,6 +20,10 @@
   "RewardOnExit": "ON_WIN",
   "HunterArchetype": "stalker",
   "CleanseCost": 4,
+  "ThrowableDamage": {
+    "KweebecNightmare_Moonbloom": 1,
+    "KweebecNightmare_EmberHit": 100
+  },
   "ExitMarker": false,
   "ShrineDiscovery": "OFF",
   "BossEnabled": true,

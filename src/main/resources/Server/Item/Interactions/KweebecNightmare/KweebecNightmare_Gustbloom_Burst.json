@@ -24,8 +24,8 @@
         "DamageEffects": {
           "Knockback": {
             "Type": "Point",
-            "Force": 14,
-            "VelocityY": 6,
+            "Force": 36,
+            "VelocityY": 11,
             "VelocityType": "Set",
             "VelocityConfig": {
               "AirResistance": 0.97,

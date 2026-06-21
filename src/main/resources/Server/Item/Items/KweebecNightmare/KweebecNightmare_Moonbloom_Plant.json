@@ -1,6 +1,7 @@
 {
   "TranslationProperties": {
-    "Name": "kweebecnightmare.item.moonbloom_plant.name"
+    "Name": "kweebecnightmare.item.moonbloom_plant.name",
+    "Description": "kweebecnightmare.item.moonbloom_plant.description"
   },
   "Categories": [
     "Blocks.Plants"

@@ -19,6 +19,10 @@
   "RewardOnExit": "ON_WIN",
   "HunterArchetype": "stalker",
   "CleanseCost": 3,
+  "ThrowableDamage": {
+    "KweebecNightmare_Moonbloom": 12,
+    "KweebecNightmare_EmberHit": 125
+  },
   "BossEnabled": true,
   "BossId": "warden",
   "BossBarsGate": true,

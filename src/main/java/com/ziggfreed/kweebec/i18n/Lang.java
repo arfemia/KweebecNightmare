@@ -41,6 +41,19 @@ public final class Lang {
     public static final String ITEM_EMBERBLOOM = "kweebecnightmare.item.emberbloom.name";
     public static final String ITEM_EMBERBLOOM_PLANT = "kweebecnightmare.item.emberbloom_plant.name";
 
+    // Item tooltip descriptions (item JSON TranslationProperties.Description; native inline markup
+    // rendered client-side on the tooltip's TextSpans, like vanilla items.*.description). The four
+    // thrown blooms, their harvestable grove clusters, and the shrine furnace each carry one.
+    public static final String ITEM_MOONBLOOM_DESC = "kweebecnightmare.item.moonbloom.description";
+    public static final String ITEM_MOONBLOOM_PLANT_DESC = "kweebecnightmare.item.moonbloom_plant.description";
+    public static final String ITEM_GUSTBLOOM_DESC = "kweebecnightmare.item.gustbloom.description";
+    public static final String ITEM_GUSTBLOOM_PLANT_DESC = "kweebecnightmare.item.gustbloom_plant.description";
+    public static final String ITEM_MIREBLOOM_DESC = "kweebecnightmare.item.mirebloom.description";
+    public static final String ITEM_MIREBLOOM_PLANT_DESC = "kweebecnightmare.item.mirebloom_plant.description";
+    public static final String ITEM_EMBERBLOOM_DESC = "kweebecnightmare.item.emberbloom.description";
+    public static final String ITEM_EMBERBLOOM_PLANT_DESC = "kweebecnightmare.item.emberbloom_plant.description";
+    public static final String ITEM_SHRINE_DESC = "kweebecnightmare.item.shrine.description";
+
     // Block interaction hints (the F-prompt shown when looking at an interactable block).
     public static final String INTERACTION_SHRINE_HINT = "kweebecnightmare.interaction.shrine.hint";
 
@@ -178,14 +191,11 @@ public final class Lang {
     public static final String ARG_SUB_DESC = "kweebecnightmare.cmd.arg.sub";
     public static final String ARG_PRESET_DESC = "kweebecnightmare.cmd.arg.preset";
 
-    // Dialogue demo (the /kntalk trigger + the Whispering Sapling name header). The
-    // dialogue's node/option TEXT keys are by-convention (dialogue.kweebec_intro.*)
-    // and live only in the .lang, not as constants here.
-    public static final String CMD_TALK_DESC = "kweebecnightmare.cmd.kntalk.desc";
-    public static final String DIALOGUE_INTRO_NPC = "kweebecnightmare.dialogue.kweebec_intro.npc";
-
     // The guide NPC's dialogue header name (the "nightmares_intro" backstory + preset launcher).
     public static final String DIALOGUE_NIGHTMARES_NPC = "kweebecnightmare.dialogue.nightmares_intro.npc";
+
+    // The Duelmaster (clash host) dialogue header name (the "clash_intro" PvP entry).
+    public static final String DIALOGUE_CLASH_NPC = "kweebecnightmare.dialogue.clash_intro.npc";
 
     // Leaderboard page (launched by the guide's "Open: leaderboard" dialogue option). The option
     // LABEL is by-convention (dialogue.nightmares_intro.greet.opt.3) and lives only in the .lang.
@@ -214,14 +224,21 @@ public final class Lang {
     public static final String LB_AXIS_PLAYERS = "kweebecnightmare.leaderboard.axis.players";
     public static final String LB_AXIS_SORT = "kweebecnightmare.leaderboard.axis.sort";
     public static final String LB_AXIS_VIEW = "kweebecnightmare.leaderboard.axis.view";
+    // The synthesized "All" tab label (lifetime roll-up; on each tab axis with 2+ concrete tabs).
+    public static final String LB_FILTER_ALL = "kweebecnightmare.leaderboard.filter.all";
     // Lifetime stat column labels (Stats view).
     public static final String LB_STAT_STUNNED = "kweebecnightmare.leaderboard.stat.stunned";
     public static final String LB_STAT_MOONBLOOM = "kweebecnightmare.leaderboard.stat.moonbloom";
     public static final String LB_STAT_SHRINES = "kweebecnightmare.leaderboard.stat.shrines";
-    // Difficulty tab labels reuse the existing preset names.
+    public static final String LB_STAT_WINS = "kweebecnightmare.leaderboard.stat.wins";
+    // Difficulty tab labels reuse the existing preset names (the 3 core + the 4 variety presets).
     public static final String PRESET_AMATEUR = "kweebecnightmare.preset.amateur.name";
     public static final String PRESET_NIGHTMARE = "kweebecnightmare.preset.nightmare.name";
     public static final String PRESET_HARDCORE = "kweebecnightmare.preset.hardcore.name";
+    public static final String PRESET_ENDLESS = "kweebecnightmare.preset.endless.name";
+    public static final String PRESET_SWARM = "kweebecnightmare.preset.swarm.name";
+    public static final String PRESET_PITCH = "kweebecnightmare.preset.pitch.name";
+    public static final String PRESET_BLITZ = "kweebecnightmare.preset.blitz.name";
 
     // End-of-game results screen (the common instance-experience ResultsPage).
     public static final String RESULTS_WIN = "kweebecnightmare.results.win";

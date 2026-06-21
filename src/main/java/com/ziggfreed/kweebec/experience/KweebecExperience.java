@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -44,6 +45,8 @@ import com.ziggfreed.common.instance.result.TeamResult;
 import com.ziggfreed.common.instance.reward.GrantOutcome;
 import com.ziggfreed.common.instance.reward.InstanceReward;
 import com.ziggfreed.common.instance.reward.InstanceRewardGranter;
+import com.ziggfreed.common.instance.reward.LootTable;
+import com.ziggfreed.common.instance.reward.LootTableConfig;
 import com.ziggfreed.common.instance.reward.PendingRewardStore;
 import com.ziggfreed.common.party.PartyConfig;
 import com.ziggfreed.common.party.PartyService;
@@ -76,6 +79,7 @@ public final class KweebecExperience {
     private static final String STAT_STUNNED = "stunned";
     private static final String STAT_MOONBLOOM = "moonbloom";
     private static final String STAT_SHRINES = "shrines";
+    private static final String STAT_WINS = "wins";
 
     private static Path dataDir;
     private static Leaderboard board;
@@ -96,10 +100,16 @@ public final class KweebecExperience {
      */
     private static final Map<UUID, PendingResult> pendingResults = new ConcurrentHashMap<>();
 
-    /** Everything needed to rebuild + grant a player's results page once they are back in the overworld. */
+    /**
+     * Everything needed to rebuild + grant a player's results page once they are back in the overworld,
+     * including the CONCRETE rolled spoils ({@code rolledRewards}) - the loot table is rolled once at
+     * resolve (where the score is known), so the chip preview shows exactly what the durable claim store
+     * will grant. The same list is queued to {@link #pendingRewards}; this copy only feeds the chips.
+     */
     private record PendingResult(@Nonnull ResultKind kind, int duration, @Nonnull List<PlayerResultRow> rows,
                                  long teamTotal, int difficultyScore, @Nonnull String bucket,
-                                 @Nonnull String presetId, boolean win) {
+                                 @Nonnull String presetId, boolean win,
+                                 @Nonnull List<InstanceReward> rolledRewards) {
     }
 
     private KweebecExperience() {
@@ -171,7 +181,11 @@ public final class KweebecExperience {
                 List.of(
                         new LeaderboardBucketTab("amateur", Lang.msg(Lang.PRESET_AMATEUR)),
                         new LeaderboardBucketTab("nightmare", Lang.msg(Lang.PRESET_NIGHTMARE)),
-                        new LeaderboardBucketTab("hardcore", Lang.msg(Lang.PRESET_HARDCORE))),
+                        new LeaderboardBucketTab("hardcore", Lang.msg(Lang.PRESET_HARDCORE)),
+                        new LeaderboardBucketTab("endless", Lang.msg(Lang.PRESET_ENDLESS)),
+                        new LeaderboardBucketTab("swarm", Lang.msg(Lang.PRESET_SWARM)),
+                        new LeaderboardBucketTab("pitch", Lang.msg(Lang.PRESET_PITCH)),
+                        new LeaderboardBucketTab("blitz", Lang.msg(Lang.PRESET_BLITZ))),
                 List.of(
                         new LeaderboardBucketTab("1", Lang.msg(Lang.LB_TAB_SOLO)),
                         new LeaderboardBucketTab("2", Lang.msg(Lang.LB_TAB_DUO)),
@@ -180,7 +194,8 @@ public final class KweebecExperience {
                 List.of(
                         StatColumnDef.grouped(STAT_STUNNED, Lang.msg(Lang.LB_STAT_STUNNED)),
                         StatColumnDef.grouped(STAT_MOONBLOOM, Lang.msg(Lang.LB_STAT_MOONBLOOM)),
-                        StatColumnDef.grouped(STAT_SHRINES, Lang.msg(Lang.LB_STAT_SHRINES))));
+                        StatColumnDef.grouped(STAT_SHRINES, Lang.msg(Lang.LB_STAT_SHRINES)),
+                        StatColumnDef.grouped(STAT_WINS, Lang.msg(Lang.LB_STAT_WINS))));
     }
 
     public static void shutdown() {
@@ -242,7 +257,8 @@ public final class KweebecExperience {
             Map<String, Long> statDeltas = Map.of(
                     STAT_STUNNED, (long) ps.mobsStunned(),
                     STAT_MOONBLOOM, (long) ps.moonbloomCollected(),
-                    STAT_SHRINES, (long) ps.shrinesLit());
+                    STAT_SHRINES, (long) ps.shrinesLit(),
+                    STAT_WINS, ps.win() ? 1L : 0L);
             board.record(bucket, st.playerId(), name, ps.total(), ps.durationSeconds(), ps.win(), statDeltas);
         }
     }
@@ -269,6 +285,7 @@ public final class KweebecExperience {
         // The leaderboard CTA deep-links to the just-played difficulty + party-size bucket.
         String bucket = bucketKey(round.ruleSet().presetId(), round.partySize());
         String presetId = round.ruleSet().presetId();
+        String roundId = round.roundId();
         InstancePreset preset = InstancePresetConfig.getInstance().resolve(presetId);
         TeamResult team = buildTeam(round, scores);
         Message previewNote = Lang.msg(Lang.RESULTS_SPOILS_PENDING);
@@ -278,11 +295,18 @@ public final class KweebecExperience {
                 continue;
             }
             UUID uuid = st.playerId();
-            // Persist the owed spoils to the claim store now (NO grant): they survive disconnect/restart
-            // and are delivered only when the player presses Claim (results page or play-menu button).
-            queuePending(uuid, preset, win);
+            PlayerScore ps = scores.get(uuid);
+            int score = ps != null ? ps.total() : 0;
+            // Roll the score-tiered spoils ONCE now (the player's score is known here): persist the
+            // CONCRETE rolled list to the claim store (NO grant) so it survives disconnect/restart, and
+            // stash the same list for the chip preview. Delivered only when the player presses Claim
+            // (results page or play-menu button).
+            List<InstanceReward> rolled = rollRewards(preset, win, score, seedFor(roundId, uuid));
+            if (!rolled.isEmpty()) {
+                pendingRewards.queue(uuid, rolled);
+            }
             pendingResults.put(uuid, new PendingResult(kind, duration, team.rows(), team.teamTotal(),
-                    difficultyScore, bucket, presetId, win));
+                    difficultyScore, bucket, presetId, win, rolled));
             PlayerRef pr = Universe.get().getPlayer(uuid);
             if (pr == null) {
                 continue;
@@ -323,8 +347,9 @@ public final class KweebecExperience {
         if (pend == null) {
             return;
         }
-        InstancePreset preset = InstancePresetConfig.getInstance().resolve(pend.presetId());
-        List<RewardChip> chips = previewChips(preset, pend.win());
+        // Chips show the CONCRETE rolled spoils stashed at resolve (the same list the durable claim store
+        // will grant), so the preview matches the payout exactly even though the table roll is random.
+        List<RewardChip> chips = chipsFor(pend.rolledRewards());
         MatchResult result = new MatchResult(pend.kind(), pend.duration(),
                 List.of(TeamResult.single(pend.teamTotal(), rowsForViewer(pend.rows(), pr.getUuid()))),
                 pend.difficultyScore(), chips, pend.bucket());
@@ -394,22 +419,45 @@ public final class KweebecExperience {
         return out;
     }
 
-    /** Persist a preset's owed spoils to the claim store (NO grant) when the outcome grants rewards. */
-    private static void queuePending(@Nonnull UUID uuid, @Nullable InstancePreset preset, boolean win) {
-        if (preset == null || !preset.rewardOnExit().grantsOn(win) || preset.rewards().isEmpty()) {
-            return;
-        }
-        pendingRewards.queue(uuid, preset.rewards());
-    }
-
-    /** Build display chips for a preset's owed spoils WITHOUT granting (the page's unclaimed preview). */
+    /**
+     * Roll a preset's owed spoils for a player with {@code score}: empty when the outcome does not grant
+     * (win-gated by the preset's reward-on-exit policy), else the preset's flat
+     * {@link InstancePreset#rewards()} (backward compat) plus the score-rolled entries of its
+     * {@link InstancePreset#rewardTableId() loot table} when one is referenced. Higher score = more rolls
+     * + premium entries unlocked (see {@code LootTable.roll}). Deterministic for a given {@code seed}.
+     */
     @Nonnull
-    private static List<RewardChip> previewChips(@Nullable InstancePreset preset, boolean win) {
-        if (preset == null || !preset.rewardOnExit().grantsOn(win) || preset.rewards().isEmpty()) {
+    private static List<InstanceReward> rollRewards(@Nullable InstancePreset preset, boolean win,
+                                                    int score, long seed) {
+        if (preset == null || !preset.rewardOnExit().grantsOn(win)) {
             return List.of();
         }
+        List<InstanceReward> out = new ArrayList<>(preset.rewards());
+        String tableId = preset.rewardTableId();
+        if (tableId != null && !tableId.isBlank()) {
+            LootTable table = LootTableConfig.getInstance().resolve(tableId);
+            if (table != null) {
+                out.addAll(table.roll(score, new Random(seed)));
+            }
+        }
+        return out;
+    }
+
+    /**
+     * A deterministic per-(round, player) seed for the loot roll: each player in a round gets their own
+     * roll, reproducible for tests, with NO {@code Math.random} (so a resolve is replayable off the round
+     * id + player uuid).
+     */
+    private static long seedFor(@Nonnull String roundId, @Nonnull UUID uuid) {
+        return ((long) roundId.hashCode() << 32)
+                ^ (uuid.getMostSignificantBits() * 31 + uuid.getLeastSignificantBits());
+    }
+
+    /** Build display chips for a concrete rolled spoils list WITHOUT granting (the page's unclaimed preview). */
+    @Nonnull
+    private static List<RewardChip> chipsFor(@Nonnull List<InstanceReward> rewards) {
         List<RewardChip> chips = new ArrayList<>();
-        for (InstanceReward r : preset.rewards()) {
+        for (InstanceReward r : rewards) {
             chips.add(toChip(r, false));
         }
         return chips;

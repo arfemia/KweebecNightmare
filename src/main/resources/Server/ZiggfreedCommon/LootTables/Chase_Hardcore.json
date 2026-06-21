@@ -1,0 +1,18 @@
+{
+  "Name": "chase_hardcore",
+  "Guaranteed": [
+    "item KweebecNightmare_Moonbloom 3",
+    "item Ingredient_Life_Essence_Concentrated 1"
+  ],
+  "Rolls": 3,
+  "ScorePerBonusRoll": 2200,
+  "MaxRolls": 6,
+  "Pool": [
+    "w10 item KweebecNightmare_Gustbloom 2-4",
+    "w10 item KweebecNightmare_Mirebloom 2-4",
+    "w9 item KweebecNightmare_Emberbloom 1-3",
+    "w8 item KweebecNightmare_Moonbloom 3-4",
+    "w6 s3000 item Ingredient_Life_Essence 3-4",
+    "w4 s5000 item Ingredient_Life_Essence_Concentrated 1-2"
+  ]
+}

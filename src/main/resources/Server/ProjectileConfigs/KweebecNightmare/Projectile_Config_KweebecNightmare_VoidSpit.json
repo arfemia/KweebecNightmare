@@ -11,9 +11,10 @@
     "SticksVertically": true
   },
   "LaunchForce": 170,
+  "$Comment_SpawnOffset": "Y MUST stay 0 (matches vanilla Scarak_Seeker). The launch base is already the NPC eye height (TargetUtil.getLook). The engine treats SpawnOffset.Y (verticalCenterShot) with OPPOSITE signs in its two paths: the ballistic solver (HeadMotionAim/computeStartOffset) subtracts it, but the actual spawn (ProjectileModule.getCalculatedOffset) ADDS it - so any non-zero Y makes the glob launch ~2*Y above where it was aimed and sail over the target. A raised Y=1.4 was exactly the 'spits above the player' bug.",
   "SpawnOffset": {
     "X": 0,
-    "Y": 1.4,
+    "Y": 0,
     "Z": 0.5
   },
   "Interactions": {

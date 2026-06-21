@@ -1,7 +1,7 @@
 {
   "Name": "Clash_Grove",
   "InstanceName": "KweebecNightmare_Clash",
-  "Tags": [ "clash" ],
+  "ArenaTags": [ "clash" ],
   "TeamSpawns": [
     { "Anchors": [
       { "X": -4.5, "Y": 80.0, "Z": -2.0, "Yaw": 90.0 },

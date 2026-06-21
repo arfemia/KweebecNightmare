@@ -484,10 +484,10 @@ public final class ChaseMode {
                 "[Kweebec][win] GATE OPEN. Hold ESCAPE z=" + ArenaLayout.ESCAPE.z()
                         + " (radius " + ArenaLayout.ESCAPE_RADIUS + ") as a group for "
                         + fmt(round.ruleSet().extractionHoldSeconds()) + "s to extract.");
-        // The gate "opens" logically here (the dramatic beat) - there is no separate gate-arch prefab to
-        // reveal any more (the old purple light archway was removed). The escape goal is the extraction
-        // platform + its void-portal, already standing at ArenaLayout.ESCAPE; the win is the co-op hold
-        // (checkExtraction). The titles / exit marker / hunter alert below carry the beat.
+        // Reveal the exit platform NOW (the dramatic gate-open beat) - it does NOT stand at the escape from
+        // round start. The old purple light archway is gone; the exit is the copied vanilla circle with
+        // Moonbloom, pasted here at ArenaLayout.ESCAPE. The win is the co-op hold (checkExtraction).
+        ArenaBuilder.pasteExit(world);
         // Place the exit map marker (a world-map / compass POI at the escape) so survivors can find
         // the way out in the dark. Game-mode-asset-driven: the RuleSet.exitMarker() knob (Hardcore
         // ships it off, so its survivors get no marker). The marker lives on this round's own
@@ -566,13 +566,22 @@ public final class ChaseMode {
         }
         chase.setExtractionCounts(onPad, required);
 
-        // The reusable ZoneHoldTimer owns the continuous-hold-with-reset state machine; we feed it the live
-        // counts each tick. It accrues while onPad >= required (resetting the instant the group breaks) and
-        // latches complete after RuleSet.extractionHoldSeconds(). A rising edge into "holding" cues the toast.
+        // No one left to extract (every survivor is down/escaped/excused -> required == 0): this is NOT an
+        // extraction win, it is a LOSS the round resolves via resolveOutcome's CAUGHT (required == 0 implies
+        // activeCount == 0). Reset + skip the hold so a previously-latched completion can never replay
+        // "EXTRACTION complete - 0 survivor(s)" every tick (the symptom seen when the round failed to resolve).
         ZoneHoldTimer hold = chase.extractionHold();
         if (hold == null) {
             return; // defensive; set in onStart
         }
+        if (required <= 0) {
+            hold.reset();
+            return;
+        }
+
+        // The reusable ZoneHoldTimer owns the continuous-hold-with-reset state machine; we feed it the live
+        // counts each tick. It accrues while onPad >= required (resetting the instant the group breaks) and
+        // latches complete after RuleSet.extractionHoldSeconds(). A rising edge into "holding" cues the toast.
         boolean wasHolding = hold.isHolding();
         boolean complete = hold.update(onPad, required, now);
         if (!wasHolding && hold.isHolding()) {

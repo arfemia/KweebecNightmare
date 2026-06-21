@@ -25,10 +25,9 @@ import com.ziggfreed.kweebec.util.SafeLog;
  *
  * <p><b>Four-tier difficulty model</b> ({@code defaults < pack < owner < runtime}):
  * <ol>
- *   <li><b>defaults</b> - the jar's baseline presets ({@code DefaultPresets}), the
- *       in-memory floor.</li>
- *   <li><b>pack</b> - a content pack's {@code Server/KweebecNightmare/Presets/*.json}
- *       overlaid by {@link PresetConfig#mergePackLayer}.</li>
+ *   <li><b>defaults + pack</b> - the presets ARE {@code Server/KweebecNightmare/Presets/*.json}
+ *       (the bundled JSON is the source of truth; no Java-baked defaults), with any external
+ *       pack overlaying by id - folded by {@link PresetConfig#mergePackLayer}.</li>
  *   <li><b>owner</b> - a future {@code mods/kweebecnightmare/presets.json} (not wired
  *       this pass); still folded inside {@link PresetConfig}.</li>
  *   <li><b>runtime</b> - THIS facade. {@link #overridePreset(String)} forces a

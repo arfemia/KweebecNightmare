@@ -1,7 +1,7 @@
 {
   "Name": "Domination_Koth",
   "InstanceName": "KweebecNightmare_Domination",
-  "Tags": [ "domination" ],
+  "ArenaTags": [ "domination" ],
   "TeamSpawns": [
     { "Anchors": [
       { "X": -5.0, "Y": 80.0, "Z": -2.0, "Yaw": 90.0 },

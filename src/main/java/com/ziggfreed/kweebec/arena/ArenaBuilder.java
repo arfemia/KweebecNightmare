@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -14,6 +15,7 @@ import org.joml.Vector3i;
 
 import com.hypixel.hytale.server.core.HytaleServer;
 import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.math.util.ChunkUtil;
 import com.hypixel.hytale.server.core.asset.type.blocktype.config.Rotation;
 import com.hypixel.hytale.server.core.prefab.PrefabStore;
 import com.hypixel.hytale.server.core.prefab.selection.buffer.PrefabBufferUtil;
@@ -105,6 +107,18 @@ public final class ArenaBuilder {
     // race, both of which the biome scatter avoids. ArenaBuilder now stamps ONLY the gameplay beats.
 
     private ArenaBuilder() {
+    }
+
+    /**
+     * The foliage-skip block-key set ({@link #SURFACE_DECORATION_LISTS}, resolved + cached via
+     * {@link BlockTypeLists}): the worldgen-scattered trees and ground scatter a runtime surface probe must
+     * scan PAST to reach the genuine ground under the grove canopy. The ONE authority any runtime
+     * spawn/paste shares (the arena pastes, the hunter spawn, and the boss spawn) so a placement never
+     * anchors on a tree trunk or a leaf. World-thread / post-asset-load (the engine lists resolve lazily).
+     */
+    @Nonnull
+    public static Set<String> surfaceDecorationKeys() {
+        return BlockTypeLists.keys(SURFACE_DECORATION_LISTS);
     }
 
     /**
@@ -234,6 +248,17 @@ public final class ArenaBuilder {
      */
     public static void plantClusterRing(@Nonnull World world, @Nonnull String prefabKey,
                                         double cx, double cz, double radius, int count) {
+        plantClusterRing(world, prefabKey, cx, cz, radius, count, 0.0);
+    }
+
+    /**
+     * {@link #plantClusterRing(World, String, double, double, double, int)} rotated by {@code angleOffset}
+     * radians, so a caller placing successive rings around the SAME point (the boss-phase Emberbloom respawn
+     * waves) can offset each wave's slots and land on FRESH tiles instead of stacking the new ring exactly
+     * atop the previous one. A {@code 0} offset is the canonical unrotated ring.
+     */
+    public static void plantClusterRing(@Nonnull World world, @Nonnull String prefabKey,
+                                        double cx, double cz, double radius, int count, double angleOffset) {
         if (count <= 0) {
             return;
         }
@@ -244,7 +269,7 @@ public final class ArenaBuilder {
                     return;
                 }
                 for (int i = 0; i < count; i++) {
-                    double theta = 2.0 * Math.PI * i / count;
+                    double theta = angleOffset + 2.0 * Math.PI * i / count;
                     double px = cx + radius * Math.sin(theta);
                     double pz = cz + radius * Math.cos(theta);
                     paste(world, buffer, new Anchor(px, ArenaLayout.STAND_Y, pz, 0f), false, false);
@@ -309,11 +334,9 @@ public final class ArenaBuilder {
     }
 
     /**
-     * Resolve + paste the authored objective beats (the extraction platform + the underground cave). Idempotent.
-     * The extraction platform ({@code Extraction_Pad}, with its no-op purple void-portal) is the escape goal,
-     * pasted here at {@link ArenaLayout#ESCAPE}. There is no separate Heartwood Gate prefab any more (the old
-     * light archway was removed); {@code ChaseMode.openGate} fires the gate-open beat (titles / exit marker /
-     * hunter alert) logically without a pasted arch.
+     * Resolve + carve the underground cave-shrine shafts (the objective beats that must exist from round
+     * start). The exit platform is deliberately NOT pasted here - it is revealed only at the gate-open beat
+     * via {@link #pasteExit(World)} (so it does not stand at the escape from the very start of the round).
      */
     private static void pasteObjectives(@Nonnull RoundInstance round, @Nonnull World world) {
         ChaseState chase = round.chaseState();
@@ -321,7 +344,6 @@ public final class ArenaBuilder {
             return;
         }
         try {
-            IPrefabBuffer exit = load(EXIT_PREFAB);
             IPrefabBuffer[] shafts = new IPrefabBuffer[SHAFT_PREFABS.length];
             for (int i = 0; i < SHAFT_PREFABS.length; i++) {
                 shafts[i] = load(SHAFT_PREFABS[i]);
@@ -340,13 +362,69 @@ public final class ArenaBuilder {
                     pasteCaveShaft(world, shaft, caves.get(caveIndex), caveIndex, chase);
                 }
             }
-            if (exit != null) {
-                paste(world, exit, ArenaLayout.ESCAPE);
-            }
         } catch (Throwable t) {
             KweebecNightmarePlugin.LOGGER.atWarning().log(
                     "[Kweebec] arena objective paste failed: " + t.getMessage());
         }
+    }
+
+    /** Chunk radius (chunks) force-loaded around {@code ESCAPE} before the exit reveal, and its timeout. */
+    private static final int EXIT_CHUNK_RADIUS = 1;
+    private static final long EXIT_FORCE_LOAD_TIMEOUT_SEC = 8L;
+
+    /**
+     * Reveal the exit platform - called from {@code ChaseMode.openGate} when every shrine is lit, so it
+     * appears only at the climactic gate-open beat (it never stands at the escape from round start).
+     *
+     * <p>By gate-open the party is at the LAST SHRINE, not the escape, so the {@link ArenaLayout#ESCAPE}
+     * chunk may be UNLOADED (the instance unloads chunks) and a bare paste would silently no-op (the
+     * symptom: "the prefab did not spawn but the exit still worked"). So we FORCE-LOAD the chunks around
+     * ESCAPE first (mirrors {@code ShrinePlacement.forceLoadCore}), then paste once they settle. The paste
+     * is {@code force=true} so the prefab's Empty "carve" cells dig the recess for a lowered platform
+     * (a {@code force=false} paste ignores Empty and would bury a lowered circle under the terrain). The
+     * win is the pure-anchor co-op hold, so a missing/failed prefab only costs the visual, never the win.
+     */
+    public static void pasteExit(@Nonnull World world) {
+        try {
+            forceLoadAround(world, ArenaLayout.ESCAPE.x(), ArenaLayout.ESCAPE.z(), EXIT_CHUNK_RADIUS)
+                    .orTimeout(EXIT_FORCE_LOAD_TIMEOUT_SEC, TimeUnit.SECONDS)
+                    .whenComplete((v, ex) -> doPasteExit(world));
+        } catch (Throwable t) {
+            // Could not even start the force-load: still try to paste on whatever is already loaded.
+            SafeLog.warn("[Kweebec] exit force-load kickoff failed: " + t.getMessage());
+            doPasteExit(world);
+        }
+    }
+
+    private static void doPasteExit(@Nonnull World world) {
+        try {
+            IPrefabBuffer exit = load(EXIT_PREFAB);
+            if (exit != null) {
+                // force=true: write every cell incl. the Empty carve cells so a lowered platform digs a
+                // clean recess instead of burying under the terrain.
+                paste(world, exit, ArenaLayout.ESCAPE, true, true);
+            } else {
+                KweebecNightmarePlugin.LOGGER.atWarning().log(
+                        "[Kweebec] exit reveal: prefab '" + EXIT_PREFAB + "' not found");
+            }
+        } catch (Throwable t) {
+            KweebecNightmarePlugin.LOGGER.atWarning().log(
+                    "[Kweebec] exit reveal paste failed: " + t.getMessage());
+        }
+    }
+
+    /** Force-load (generate if missing) the {@code (2r+1)^2} chunks around a world XZ; settles when loaded. */
+    @Nonnull
+    private static CompletableFuture<Void> forceLoadAround(@Nonnull World world, double x, double z, int chunkRadius) {
+        int cx = ((int) Math.floor(x)) >> 4;
+        int cz = ((int) Math.floor(z)) >> 4;
+        List<CompletableFuture<?>> futures = new ArrayList<>();
+        for (int chX = cx - chunkRadius; chX <= cx + chunkRadius; chX++) {
+            for (int chZ = cz - chunkRadius; chZ <= cz + chunkRadius; chZ++) {
+                futures.add(world.getChunkAsync(ChunkUtil.indexChunk(chX, chZ)));
+            }
+        }
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
     }
 
     /**

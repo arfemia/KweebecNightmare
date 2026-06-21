@@ -22,7 +22,6 @@ import com.ziggfreed.common.npc.NpcAutoSpawn;
 import com.ziggfreed.common.npc.NpcDialogueDepsRegistry;
 import com.ziggfreed.kweebec.asset.KweebecAssetRegistrar;
 import com.ziggfreed.kweebec.command.KweebecCommand;
-import com.ziggfreed.kweebec.command.KweebecTalkCommand;
 import com.ziggfreed.kweebec.death.CocoonOnDeathSystem;
 import com.ziggfreed.kweebec.dialogue.KweebecDialogue;
 import com.ziggfreed.kweebec.event.KweebecDamageSystem;
@@ -58,10 +57,7 @@ public class KweebecNightmarePlugin extends JavaPlugin {
 
     private static KweebecNightmarePlugin instance;
 
-    /** Auto-spawn spec for the PvP "Clash Host" entry NPC (placed once per overworld near the spawn point). */
-    private static final NpcAutoSpawn.AutoSpawnSpec CLASH_HOST_SPEC = new NpcAutoSpawn.AutoSpawnSpec(
-            "clash_host", "KweebecNightmare_ClashHost", Set.of("default"), 4.0, 0.0, -4.0, 180.0f);
-    /** The data dir the Clash Host placement marker persists in (set at setup, read by the PlayerReady hook). */
+    /** The data dir the Clash Host placement marker persists in (set at setup, read by {@code /kweebec clashhost}). */
     private static Path clashHostDir;
 
     @Nonnull
@@ -102,9 +98,6 @@ public class KweebecNightmarePlugin extends JavaPlugin {
 
         // Round entry command (the first of the designed-for triggers).
         getCommandRegistry().registerCommand(new KweebecCommand());
-
-        // Dialogue demo trigger: opens the shared ziggfreed-common dialogue page.
-        getCommandRegistry().registerCommand(new KweebecTalkCommand());
 
         // Interactable shrine furnace: the block's RootInteraction fires this handler on F (submit Moonbloom).
         try {
@@ -180,8 +173,9 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // / crash mid-match). The single guarantee against a stranded Sapling.
         getEventRegistry().registerGlobal(PlayerReadyEvent.class, KweebecNightmarePlugin::onPlayerReadyRestoreModel);
 
-        // Auto-spawn the PvP Clash Host once per overworld (the diegetic entry; mirrors the Grove Warden guide).
-        getEventRegistry().registerGlobal(PlayerReadyEvent.class, KweebecNightmarePlugin::onPlayerReadyClashHost);
+        // The PvP Clash Host is NOT auto-spawned; place it deliberately via /kweebec clashhost
+        // (debugSpawnClashHost). The auto-spawn-on-player-ready hook was removed by request so the
+        // overworld stays NPC-free unless an admin explicitly drops the arena host.
 
         // Perfect Utils is a hard dependency (loads first); confirm the aggro API resolved so a
         // missing/older jar is obvious in the log rather than a silent fall-back to natural sensors.
@@ -245,25 +239,6 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         NpcAutoSpawn.ensureSpawned(world, new NpcAutoSpawn.AutoSpawnSpec(
                 "clash_host", "KweebecNightmare_ClashHost", Set.of(world.getName()), 4.0, 0.0, -4.0, 180.0f),
                 clashHostDir);
-    }
-
-    /** PlayerReady hook: ensure the PvP Clash Host is spawned once in the overworld (NpcAutoSpawn is idempotent). */
-    private static void onPlayerReadyClashHost(@Nonnull PlayerReadyEvent event) {
-        Player player = event.getPlayer();
-        if (player == null || clashHostDir == null) {
-            return;
-        }
-        World world = player.getWorld();
-        if (world == null) {
-            return;
-        }
-        world.execute(() -> {
-            try {
-                NpcAutoSpawn.ensureSpawned(world, CLASH_HOST_SPEC, clashHostDir);
-            } catch (Throwable t) {
-                LOGGER.atFine().log("[Kweebec] clash host auto-spawn failed: " + t.getMessage());
-            }
-        });
     }
 
     @Override

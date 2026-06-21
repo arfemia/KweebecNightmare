@@ -2,6 +2,7 @@
   "Name": "amateur",
   "Enabled": true,
   "NameKey": "kweebecnightmare.preset.amateur.name",
+  "WorldStructure": "KweebecNightmare_Grove_Calm",
   "ReviveStyle": "FORGIVING",
   "MaxDowns": 2147483647,
   "BleedOutSeconds": 45,
@@ -19,6 +20,10 @@
   "RewardOnExit": "ON_WIN",
   "HunterArchetype": "stalker",
   "CleanseCost": 3,
+  "ThrowableDamage": {
+    "KweebecNightmare_Moonbloom": 25,
+    "KweebecNightmare_EmberHit": 150
+  },
   "ShrineDiscoveryVisibility": "ALL",
   "JumpscareShakeIntensity": 0.06,
   "JumpscareCooldownSeconds": 18,

@@ -1,0 +1,17 @@
+{
+  "Name": "chase_amateur",
+  "Guaranteed": [
+    "item KweebecNightmare_Moonbloom 1",
+    "item Ingredient_Life_Essence 1"
+  ],
+  "Rolls": 1,
+  "ScorePerBonusRoll": 1200,
+  "MaxRolls": 3,
+  "Pool": [
+    "w12 item KweebecNightmare_Moonbloom 1-2",
+    "w10 item KweebecNightmare_Gustbloom 1-2",
+    "w10 item KweebecNightmare_Mirebloom 1-2",
+    "w6 s1500 item Ingredient_Life_Essence 1-2",
+    "w4 s2500 item KweebecNightmare_Emberbloom 1"
+  ]
+}

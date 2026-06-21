@@ -1,16 +1,31 @@
 // Kweebec Nightmare BOSS health bar HUD: the Warden's name, a phase indicator, and an
 // HP bar. Mirrors KweebecNightmareHud.ui's texture-free (colour-only) approach so it
-// cannot red-X on a missing asset. The HP "fill" is a coloured Group whose Anchor width
-// BossHud rewrites per tick (#BossHpFill.Anchor.Width), over a darker track Group.
-// Element ids (#BossName / #BossPhase / #BossHpFill) are the contract BossHud pushes
+// cannot red-X on a missing asset.
+//
+// HP BAR = 20 fixed colour segments over a dark track; BossHud.pushHealth toggles each
+// segment's .Visible per tick (ceil(fraction * 20) shown left-to-right). This is the
+// ONLY proportional-bar approach that is BOTH runtime-settable AND texture-free:
+//   - cb.set("#El.Width", ...) HARD-DISCONNECTS the client ("Set command selector
+//     doesn't match a markup property") - a Group's Width is a layout INPUT, not a
+//     runtime-settable property, no matter the anchor shape (empirically crash-proven).
+//   - the native ProgressBar widget's .Value IS settable (MMO ViewXpPage #CardProgress,
+//     native MemoriesPage #MemoriesProgressBar) but needs a BarTexturePath we'd red-X on.
+//   - .Visible IS settable (heavily used in MMO pages), so segment toggling is safe.
+// Element ids (#BossName / #BossPhase / #BossHpSeg0..19) are the contract BossHud pushes
 // partial updates against. Anchored top-center, below the round HUD.
 
 @KnBossNameStyle  = (FontSize: 20, TextColor: #ff5a5a, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
 @KnBossPhaseStyle = (FontSize: 13, TextColor: #c8b0ff, RenderBold: false, HorizontalAlignment: Center, VerticalAlignment: Start);
 
 Group {
+  // NO Horizontal anchor: in Hytale's DSL `Horizontal: N` is a LEFT+RIGHT inset (stretch to
+  // fill minus N), so `Horizontal: 0` would stretch this to FULL SCREEN width (the shipped
+  // bug: the HP track's dark Background spanned the whole screen, the segments clustering at
+  // the left edge). A fixed Width with NO Horizontal centers horizontally by default (vanilla
+  // EventTitle/Major, Speedometer). Width matches #BossHpTrack so the track fills it edge-to-
+  // edge with no leftover background regardless of cross-axis alignment.
   Group #KweebecBossHud {
-    Anchor: (Top: 150, Width: 420, Height: 70, Horizontal: 0);
+    Anchor: (Top: 150, Width: 400, Height: 70);
     LayoutMode: Top;
 
     // #BossName / #BossPhase Text is DRIVEN BY CODE (BossHud.pushHealth sets the
@@ -27,16 +42,32 @@ Group {
       Style: @KnBossPhaseStyle;
     }
 
-    // HP bar: a dark track holding a red fill. BossHud sets #BossHpFill.Anchor.Width
-    // each tick to (currentFraction * trackWidth). The track is the full 400 wide.
+    // HP bar: a dark 400-wide track holding 20 red 20px segments (each spans the track
+    // height via Top/Bottom). BossHud sets #BossHpSegN.Visible per tick; full = all 20.
     Group #BossHpTrack {
-      Anchor: (Width: 400, Height: 14, Horizontal: 0);
+      Anchor: (Width: 400, Height: 14);
       Background: (Color: #1a0a0a);
 
-      Group #BossHpFill {
-        Anchor: (Left: 0, Width: 400, Height: 14, Vertical: 0);
-        Background: (Color: #d83a3a);
-      }
+      Group #BossHpSeg0  { Anchor: (Top: 0, Bottom: 0, Left: 0,   Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg1  { Anchor: (Top: 0, Bottom: 0, Left: 20,  Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg2  { Anchor: (Top: 0, Bottom: 0, Left: 40,  Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg3  { Anchor: (Top: 0, Bottom: 0, Left: 60,  Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg4  { Anchor: (Top: 0, Bottom: 0, Left: 80,  Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg5  { Anchor: (Top: 0, Bottom: 0, Left: 100, Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg6  { Anchor: (Top: 0, Bottom: 0, Left: 120, Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg7  { Anchor: (Top: 0, Bottom: 0, Left: 140, Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg8  { Anchor: (Top: 0, Bottom: 0, Left: 160, Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg9  { Anchor: (Top: 0, Bottom: 0, Left: 180, Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg10 { Anchor: (Top: 0, Bottom: 0, Left: 200, Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg11 { Anchor: (Top: 0, Bottom: 0, Left: 220, Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg12 { Anchor: (Top: 0, Bottom: 0, Left: 240, Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg13 { Anchor: (Top: 0, Bottom: 0, Left: 260, Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg14 { Anchor: (Top: 0, Bottom: 0, Left: 280, Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg15 { Anchor: (Top: 0, Bottom: 0, Left: 300, Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg16 { Anchor: (Top: 0, Bottom: 0, Left: 320, Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg17 { Anchor: (Top: 0, Bottom: 0, Left: 340, Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg18 { Anchor: (Top: 0, Bottom: 0, Left: 360, Width: 20); Background: (Color: #d83a3a); }
+      Group #BossHpSeg19 { Anchor: (Top: 0, Bottom: 0, Left: 380, Width: 20); Background: (Color: #d83a3a); }
     }
   }
 }

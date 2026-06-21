@@ -23,6 +23,14 @@ public final class RoundStateMachine {
 
     private static final long TICK_INTERVAL_SEC = 1;
 
+    /**
+     * Consecutive throwing ticks after which a round is force-evacuated. A tick that throws swallows its
+     * outcome (so the round cannot resolve normally); if that repeats forever, a cocooned player stays
+     * frozen under the infinite {@code DisableAll} cocoon. This watchdog guarantees a wedged round frees
+     * its players within a few seconds instead. Kept small but above a one-off transient blip.
+     */
+    private static final int MAX_CONSECUTIVE_TICK_FAILURES = 5;
+
     private final RoundService service;
     private ScheduledExecutorService scheduler;
     private ScheduledFuture<?> tickFuture;
@@ -81,16 +89,37 @@ public final class RoundStateMachine {
         if (world == null) {
             return;
         }
-        RoundCompletedEvent.Outcome outcome;
+        RoundCompletedEvent.Outcome outcome = null;
+        boolean tickFailed = false;
         try {
             Store<EntityStore> store = world.getEntityStore().getStore();
             RoundMode mode = ModeRegistry.get(round.mode());
             outcome = mode != null ? mode.tick(round, world, store) : null;
         } catch (Throwable t) {
+            tickFailed = true;
+            // Include the exception type: a linkage error (NoClassDefFoundError) reads very differently
+            // from a logic NPE, and getMessage() alone hid that (the cocoon soft-lock root cause).
             KweebecNightmarePlugin.LOGGER.atWarning().log(
-                    "[Kweebec] tick threw for " + round.roundId() + ": " + t.getMessage());
-            outcome = null;
+                    "[Kweebec] tick threw for " + round.roundId() + ": "
+                            + t.getClass().getSimpleName() + ": " + t.getMessage());
         }
+
+        if (tickFailed) {
+            // Watchdog: a tick that keeps throwing can never resolve the round, which would leave a
+            // cocooned (dead-in-place, infinite movement-lock) player frozen forever. After a few
+            // consecutive failures, force-evacuate the round so its players are revived + ejected.
+            // forceAbort never touches RoundCompletedEvent.Outcome, so it works even when that enum is
+            // the unloadable class behind the failure.
+            int fails = round.recordTickFailure();
+            if (fails >= MAX_CONSECUTIVE_TICK_FAILURES) {
+                KweebecNightmarePlugin.LOGGER.atSevere().log(
+                        "[Kweebec] round " + round.roundId() + " tick failed " + fails
+                                + "x consecutively; force-evacuating its players.");
+                service.forceAbort(round);
+            }
+            return;
+        }
+        round.resetTickFailures();
         if (outcome != null) {
             service.resolve(round, outcome);
         }

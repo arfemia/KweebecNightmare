@@ -1,6 +1,7 @@
 {
   "TranslationProperties": {
-    "Name": "kweebecnightmare.item.shrine.name"
+    "Name": "kweebecnightmare.item.shrine.name",
+    "Description": "kweebecnightmare.item.shrine.description"
   },
   "Categories": [
     "Furniture.Decorations"
@@ -19,9 +20,17 @@
         "Weight": 1
       }
     ],
-    "Light": {
-      "Color": "#232"
-    },
+    "Particles": [
+      {
+        "SystemId": "Eye_Void_Smoke_Green",
+        "TargetNodeName": "Fire",
+        "Scale": 0.45,
+        "PositionOffset": {
+          "X": 0,
+          "Z": 0.3
+        }
+      }
+    ],
     "HitboxType": "Bench_Furnace",
     "Support": {
       "Down": [

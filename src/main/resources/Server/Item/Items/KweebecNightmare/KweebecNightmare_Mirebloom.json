@@ -1,6 +1,7 @@
 {
   "TranslationProperties": {
-    "Name": "kweebecnightmare.item.mirebloom.name"
+    "Name": "kweebecnightmare.item.mirebloom.name",
+    "Description": "kweebecnightmare.item.mirebloom.description"
   },
   "Categories": [
     "Items.Weapons"

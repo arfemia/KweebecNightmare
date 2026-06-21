@@ -2,7 +2,7 @@
   "$Comment": "Build-for-both demo: classic 3-point Domination is PURE DATA - same engine, three objective anchors. Tag is 'domination3' so it is opt-in (a preset with ArenaTag 'domination3', or rename this tag to 'domination' to put it in the default rotation). A dedicated worldgen instance can be authored later; this reuses KweebecNightmare_Domination.",
   "Name": "Domination_ThreePoint",
   "InstanceName": "KweebecNightmare_Domination",
-  "Tags": [ "domination3" ],
+  "ArenaTags": [ "domination3" ],
   "TeamSpawns": [
     { "Anchors": [
       { "X": -10.0, "Y": 80.0, "Z": 0.0, "Yaw": 90.0 },

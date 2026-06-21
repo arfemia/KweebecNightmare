@@ -29,20 +29,20 @@ import com.ziggfreed.kweebec.experience.KweebecExperience;
  * {@link NotInRoundCondition}/
  * {@link EngagedCondition} (gate launch options on engagement), an in-memory
  * {@link KweebecDialogueFlags} store, the {@code kweebecnightmare.} i18n namespace,
- * and a context-aware name header; folds two authored dialogues (the {@code /kntalk}
- * Whispering Sapling demo and the guide NPC's preset-launch backstory); and exposes
- * the {@link DialoguePageDeps} a page (command or NPC) opens against.
+ * and a context-aware name header; folds the authored dialogues (the guide NPC's
+ * preset-launch backstory and the clash-host PvP entry); and exposes the
+ * {@link DialoguePageDeps} a page (command or NPC) opens against.
  */
 public final class KweebecDialogue {
-
-    /** The demo dialogue id (its content keys are {@code dialogue.kweebec_intro.*}). */
-    public static final String INTRO_ID = "kweebec_intro";
 
     /** The guide NPC's backstory + preset-launch dialogue ({@code dialogue.nightmares_intro.*}). */
     public static final String NIGHTMARES_INTRO_ID = "nightmares_intro";
 
     /** The {@code ContextNpc} the guide role passes, used to pick the dialogue's name header. */
     public static final String GUIDE_CONTEXT = "guide";
+
+    /** The {@code ContextNpc} the clash-host role passes, used to pick the dialogue's name header. */
+    public static final String CLASH_CONTEXT = "clash";
 
     private static volatile DialoguePageDeps deps;
     private static final Map<String, NpcDialogue> DIALOGUES = new ConcurrentHashMap<>();
@@ -89,13 +89,13 @@ public final class KweebecDialogue {
                 null);
     }
 
-    /** The dialogue header name, chosen by the opening NPC's context id. */
+    /** The dialogue header name, chosen by the opening NPC's context id (guide is the default). */
     @Nonnull
     private static Message npcName(@Nullable String contextId) {
-        if (GUIDE_CONTEXT.equals(contextId)) {
-            return Lang.msg(Lang.DIALOGUE_NIGHTMARES_NPC);
+        if (CLASH_CONTEXT.equals(contextId)) {
+            return Lang.msg(Lang.DIALOGUE_CLASH_NPC);
         }
-        return Lang.msg(Lang.DIALOGUE_INTRO_NPC);
+        return Lang.msg(Lang.DIALOGUE_NIGHTMARES_NPC);
     }
 
     /**

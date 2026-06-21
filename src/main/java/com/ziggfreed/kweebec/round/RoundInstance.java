@@ -48,6 +48,16 @@ public final class RoundInstance {
     private volatile boolean resolved;
 
     /**
+     * Consecutive failed ticks, the {@code RoundStateMachine} watchdog counter. A persistently
+     * THROWING tick (e.g. a runtime linkage error reaching {@code resolveOutcome}) silently swallows
+     * the outcome, so the round would otherwise never resolve and a cocooned player would stay frozen
+     * under the infinite {@code DisableAll} cocoon forever. Reset to 0 on every clean tick; when it
+     * crosses the watchdog threshold the round is force-evacuated. Mutated only on the instance world
+     * thread (the tick runs there), so a plain int is safe.
+     */
+    private int consecutiveTickFailures;
+
+    /**
      * The per-round world seed: the SINGLE coherent source the terrain, the shrine ring rotation,
      * the cave-anchor selection, and the corrupted-structure subset + facing all derive from, so a
      * given round is internally consistent and distinct rounds vary together. {@code 0} until set.
@@ -180,6 +190,20 @@ public final class RoundInstance {
     @Nullable
     public RoundCompletedEvent.Outcome outcome() {
         return outcome;
+    }
+
+    /**
+     * Record one failed (throwing) tick and return the new consecutive-failure count. The state-machine
+     * watchdog force-evacuates the round once this crosses its threshold, so a wedged tick can never trap
+     * a cocooned player. World-thread only.
+     */
+    public int recordTickFailure() {
+        return ++consecutiveTickFailures;
+    }
+
+    /** Clear the consecutive-failure count after a clean tick. World-thread only. */
+    public void resetTickFailures() {
+        this.consecutiveTickFailures = 0;
     }
 
     // --- party / player state ---

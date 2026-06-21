@@ -257,8 +257,8 @@
   "Props": [
     {
       "Skip": false,
-      "Runtime": 1,
-      "$Comment": "TREE COLLISION FIX (Runtime 1): trees run in a LATER prop runtime than the structures (which stay Runtime 0). PropStage copies the previous runtime's material output as this runtime's input (PropStage.run:180), so a Runtime-1 tree READS the placed Runtime-0 crypts/houses/ruins; its Floor pattern (Soil_Grass_Dry under Empty) then FAILS on a structure footprint (now rock/brick) and the tree skips it, instead of growing through the building. Trees still place normally on open grass. 1C: ambient blight trees scattered by WORLDGEN (replaces the runtime ArenaBuilder foliage ring, per the design's 'trees from worldgen, not manual paste'). A sparse Mesh2D grid of weighted native dead/poisoned tree prefabs (FULL ATMOSPHERIC PASS: ash/poisoned/petrified/burnt-dead stages plus rare Ash_twisted Large/Giant canopy landmarks; density unchanged, only the variety widened - all paths verified to resolve to native prefab folders), floor-snapped to the rolling surface by the ColumnLinear scanner; BlockMask.DontReplace keeps trunks from gouging the soil. A malformed Prefab prop fails the WHOLE biome decode (= all air), so this mirrors the proven vanilla Example_Prop 'Hills' Prefab-prop shape exactly. Validate in-game (the biome JSON is not gradle-compiled).",
+      "Runtime": 2,
+      "$Comment": "TREE COLLISION FIX (Runtime 2): trees run in the LAST prop runtime, AFTER every structure (big shrines at Runtime 0, small shrines at Runtime 1). PropStage copies the previous runtime's material output as this runtime's input (PropStage.run:180), so a Runtime-2 tree READS all placed crypts/dungeons/houses/ruins; its Floor pattern (Soil_Grass_Dry under Empty) then FAILS on a structure footprint (now rock/brick) and the tree skips it, instead of growing through the building. Trees still place normally on open grass. 1C: ambient blight trees scattered by WORLDGEN (replaces the runtime ArenaBuilder foliage ring, per the design's 'trees from worldgen, not manual paste'). A sparse Mesh2D grid of weighted native dead/poisoned tree prefabs (FULL ATMOSPHERIC PASS: ash/poisoned/petrified/burnt-dead stages plus rare Ash_twisted Large/Giant canopy landmarks; density unchanged, only the variety widened - all paths verified to resolve to native prefab folders), floor-snapped to the rolling surface by the ColumnLinear scanner; BlockMask.DontReplace keeps trunks from gouging the soil. A malformed Prefab prop fails the WHOLE biome decode (= all air), so this mirrors the proven vanilla Example_Prop 'Hills' Prefab-prop shape exactly. Validate in-game (the biome JSON is not gradle-compiled).",
       "Positions": {
         "Type": "Mesh2D",
         "Skip": false,
@@ -411,7 +411,7 @@
     },
     {
       "Skip": false,
-      "Runtime": 0,
+      "Runtime": 2,
       "$Comment": "TRACK A (cycle 3): SPARSE corrupted-structure ruins scattered gen-time among the dead trees. CLONED from Props[0] (the Type:Prefab tree-scatter prop) and repointed at the committed KweebecNightmare/Corrupted_* structures, so it mirrors the proven Prefab-prop shape exactly (a malformed Prefab prop fails the WHOLE biome decode = all air; validate in-game, this JSON is not gradle-compiled). MUCH sparser than the trees: Mesh ScaleX/Y/Z 48 (vs the trees' 16) plus SkipChance 0.85 means only a handful of ruins land, biased to the outer grove since the structures are big (the small Lamppost / House / Bridge are weighted highest, the large Shop / GuardTower / Well rarest). LoadEntities:false so the native NPC_Spawn_Marker / NPC_Path_Marker entities baked into the source villages never spawn (the Corrupted_* files already zero entities; this is belt-and-suspenders at the scatter layer too). DontReplace placement guard: the ColumnLinear scanner floor-snaps onto the rolling surface and the Floor pattern only accepts a column standing on Soil_Grass_Dry under Empty, so a ruin never gouges existing soil or floats in the air; we DROP the trees' +8 air-offset headroom check because these structures are tall and do not need clear sky at exactly +8 blocks. Random directionality rotates each ruin. Jitter 0.5 (the <=0.5 BiomeAsset cap). IN-GAME GATE: pack-authored Corrupted_* prefab-folder resolution during worldgen scatter is unverified here; confirm the keys resolve and the footprints do not bury/float badly on rolling terrain.",
       "Positions": {
         "Type": "Mesh2D",
@@ -518,7 +518,7 @@
     },
     {
       "Skip": false,
-      "Runtime": 0,
+      "Runtime": 2,
       "Positions": {
         "Type": "Mesh2D",
         "Skip": false,
@@ -660,7 +660,7 @@
     },
     {
       "Skip": false,
-      "Runtime": 0,
+      "Runtime": 2,
       "Positions": {
         "Type": "Mesh2D",
         "Skip": false,
@@ -780,7 +780,7 @@
             }
           },
           {
-            "Weight": 30,
+            "Weight": 140,
             "Assignments": {
               "Type": "Constant",
               "Prop": {
@@ -834,8 +834,8 @@
     },
     {
       "Skip": false,
-      "Runtime": 1,
-      "$Comment": "Runtime 1 (same as trees) so debris reads the placed Runtime-0 structures and its Floor pattern skips their footprints instead of landing logs on/through the crypts + houses. FULL ATMOSPHERIC PASS: forest-floor DEBRIS - fallen logs, stumps, petrified logs, mossy boulders strewn through the dead grove for cover + decay texture. CLONED from the Corrupted_* ruins prop (the proven Type:Prefab scatter shape; a malformed Prefab prop fails the WHOLE biome decode = all air), repointed at verified native prefab folders (each folder resolves to a random child variant). Sparser than trees (Mesh Scale 14 + SkipChance 0.7). LoadEntities:false; the Floor pattern + ColumnLinear scanner floor-snap each piece onto Soil_Grass_Dry under Empty so nothing gouges soil or floats; Random rotation. Validate in-game (this JSON is not gradle-compiled).",
+      "Runtime": 2,
+      "$Comment": "Runtime 2 (same as trees) so debris reads ALL placed structures (big shrines at Runtime 0, small shrines at Runtime 1) and its Floor pattern skips their footprints instead of landing logs on/through the crypts + houses. FULL ATMOSPHERIC PASS: forest-floor DEBRIS - fallen logs, stumps, petrified logs, mossy boulders strewn through the dead grove for cover + decay texture. CLONED from the Corrupted_* ruins prop (the proven Type:Prefab scatter shape; a malformed Prefab prop fails the WHOLE biome decode = all air), repointed at verified native prefab folders (each folder resolves to a random child variant). Sparser than trees (Mesh Scale 14 + SkipChance 0.7). LoadEntities:false; the Floor pattern + ColumnLinear scanner floor-snap each piece onto Soil_Grass_Dry under Empty so nothing gouges soil or floats; Random rotation. Validate in-game (this JSON is not gradle-compiled).",
       "Positions": {
         "Type": "Mesh2D",
         "Skip": false,
@@ -937,7 +937,7 @@
     },
     {
       "Skip": false,
-      "Runtime": 0,
+      "Runtime": 2,
       "$Comment": "FULL ATMOSPHERIC PASS: rare GRAVES + RELICS - Cursed Crypt tombstones + a warning sign-post seeded sparsely as haunted set-dressing. The big Crypt_Entrance set-piece is deliberately NOT scattered here (it carves a deep pit; a random drop onto a shrine/spawn would break the chase) - that stays on the runtime, ExclusionMask-protected seam. CLONED from the ruins prop shape. Very sparse (Mesh Scale 40 + SkipChance 0.85). LoadEntities:false; Floor pattern + ColumnLinear floor-snap; Random rotation. Validate in-game.",
       "Positions": {
         "Type": "Mesh2D",
@@ -1028,7 +1028,7 @@
     },
     {
       "Skip": false,
-      "Runtime": 0,
+      "Runtime": 2,
       "$Comment": "ATMOSPHERE CLUSTERS (native prefab-stitching): composed multi-prefab set-dressing via Child_Prefabs / Prefab_Spawner_Block. Each cluster parent (KweebecNightmare/Cluster_Deadfall, Cluster_Rubble) embeds Prefab_Spawner_Block markers the worldgen PrefabProp path harvests + recursively pastes (decompile-verified: builtin.hytalegenerator.props.deprecated.prefab.PrefabProp harvests prefab.getChildPrefabs() at construction and pastes each child in place(); that branch is taken because this prop carries Scanner+Directionality). Children are confirmed-resolving native debris (Trees/Cedar_Logs, Fir_Logs, Petrified_Logs, Autumn_Stumps); each child carries FitHeightmap:true so it self-snaps to the rolling surface (no float/gouge). SPARSER than the lone-debris pass (Mesh 40 + SkipChance 0.8) so a handful of intentional rubble/deadfall piles read among the single debris. CLONED from the proven debris Prefab-prop shape; LoadEntities:false; Floor pattern + ColumnLinear floor-snaps the cluster anchor, Random rotation turns the whole cluster. IN-GAME GATE: (1) biome still generates (not all-air), (2) clusters appear as grouped debris, (3) the @Tech Prefab_Spawner_Block leaves NO visible marker on this V2 generator path (vanilla crypt/goblin use it cleanly on the V1 path; the V2 paste is unverified). This JSON is not gradle-compiled.",
       "Positions": {
         "Type": "Mesh2D",
@@ -1119,8 +1119,8 @@
     },
     {
       "Skip": false,
-      "Runtime": 0,
-      "$Comment": "WORLDGEN SHRINE HOSTS - SMALL CRYPTS (scatter): the furnace-baked copied-vanilla Tomb_Small crypts (Shrine_Crypt_01/02), scattered FREQUENTLY via the proven Mesh2D+Weighted shape (the trees/debris use this). The large crypt + the two corrupted houses scatter via the next two props (sparser, big footprints; the houses carry LoadEntities:true for their corrupted-Kweebec spawn markers). Scatter is best-effort now (LoadEntities:true so each host spawns a baked hidden shrine MARKER entity): ShrinePlacement force-loads the play core, queries the markers to learn the real count + positions, and runtime-tops-up only the MISSING ones (spaced) to guarantee >=ArenaLayout.SURFACE_WORLDGEN_SHRINES; the furnace is discovered via its interaction. Furnace is a baked 4-cell multiblock (renders correct). IN-GAME GATE: confirm hosts generate, the marker is detected, the round is winnable, and the biome is not all-air (a malformed Prefab prop airs out the whole biome). Not gradle-compiled.",
+      "Runtime": 1,
+      "$Comment": "WORLDGEN SHRINE HOSTS - SMALL CRYPTS (scatter, Runtime 1): the furnace-baked copied-vanilla Tomb_Small crypts (Shrine_Crypt_01/02), scattered via the proven Mesh2D+Weighted shape (the trees/debris use this). SPAWN-ORDER: the big landmark hosts (the large crypt + the underground dungeon) place FIRST at Runtime 0; these small crypts run at Runtime 1 so they READ those placed footprints (now rock/brick) and their Floor pattern (Soil_Grass_Dry under Empty) SKIPS them, filling in AROUND the landmarks instead of crowding or overlapping them. Density slightly REDUCED (SkipChance 0.6, was 0.5) to leave room for the bigger hosts. Scatter is best-effort now (LoadEntities:true so each host spawns a baked hidden shrine MARKER entity): ShrinePlacement force-loads the play core, queries the markers to learn the real count + positions, and runtime-tops-up only the MISSING ones (spaced) to guarantee >=ArenaLayout.SURFACE_WORLDGEN_SHRINES; the furnace is discovered via its interaction. Furnace is a baked 4-cell multiblock (renders correct). IN-GAME GATE: confirm hosts generate, the marker is detected, the round is winnable, and the biome is not all-air (a malformed Prefab prop airs out the whole biome). Not gradle-compiled.",
       "Positions": {
         "Type": "Mesh2D",
         "Skip": false,
@@ -1136,7 +1136,7 @@
       },
       "Assignments": {
         "Type": "Weighted",
-        "SkipChance": 0.5,
+        "SkipChance": 0.6,
         "Seed": "KN_ShrineHostsW",
         "WeightedAssignments": [
           {
@@ -1211,7 +1211,7 @@
     {
       "Skip": false,
       "Runtime": 0,
-      "$Comment": "WORLDGEN SHRINE HOSTS - LARGE CRYPT (scatter): the big furnace-baked Shrine_Crypt_Large, scattered (Scale 80 + SkipChance 0.65, ~2-3 per round - reliable presence without crowding) on its own prop so its ~29x29 footprint does not crowd/overlap the frequent small crypts. Same proven Prefab-prop shape; LoadEntities:true so the baked hidden shrine MARKER entity spawns (ShrinePlacement queries it to detect this host + top up any missing shrines); Floor pattern + ColumnLinear floor-snaps it onto Soil_Grass_Dry under Empty. A landmark shrine. IN-GAME GATE: confirm it floor-snaps without burying/floating on rolling terrain, and the marker is detected. Not gradle-compiled.",
+      "$Comment": "WORLDGEN SHRINE HOSTS - LARGE CRYPT (scatter, Runtime 0): the big furnace-baked Shrine_Crypt_Large, scattered (Scale 72 + SkipChance 0.72, ~2 per round) on its own prop. SPAWN-ORDER: runs at Runtime 0, BEFORE the small crypts (Runtime 1), so this big ~29x29 landmark claims its ground first and the frequent small crypts skip its footprint instead of crowding it. Denser grid + lower SkipChance than before (was Scale 80 + 0.65) to make the landmark RELIABLY present per map - it was spawning too rarely. Same proven Prefab-prop shape; LoadEntities:true so the baked hidden shrine MARKER entity spawns (ShrinePlacement queries it to detect this host + top up any missing shrines); Floor pattern + ColumnLinear floor-snaps it onto Soil_Grass_Dry under Empty. A landmark shrine. IN-GAME GATE: confirm it floor-snaps without burying/floating on rolling terrain, and the marker is detected. Not gradle-compiled.",
       "Positions": {
         "Type": "Mesh2D",
         "Skip": false,
@@ -1219,15 +1219,15 @@
         "PointGenerator": {
           "Type": "Mesh",
           "Jitter": 0.5,
-          "ScaleX": 80,
-          "ScaleY": 80,
-          "ScaleZ": 80,
+          "ScaleX": 72,
+          "ScaleY": 72,
+          "ScaleZ": 72,
           "Seed": "KN_ShrineLarge"
         }
       },
       "Assignments": {
         "Type": "Weighted",
-        "SkipChance": 0.65,
+        "SkipChance": 0.72,
         "Seed": "KN_ShrineLargeW",
         "WeightedAssignments": [
           {
@@ -1298,7 +1298,7 @@
     {
       "Skip": false,
       "Runtime": 0,
-      "$Comment": "WORLDGEN SHRINE HOST - UNDERGROUND DUNGEON (scatter + CARVE): the furnace-baked multi-level descent Shrine_Dungeon_Underground_01, scattered RARELY (Scale 90 + SkipChance 0.7, ~1-2 per round) on its own prop because it is a big deep carve. UNLIKE the surface crypts this prefab DESCENDS: its anchor IS the surface ENTRANCE (anchorY 36) and the body extends DOWN ~36 blocks to the furnace chamber, the descent shaft authored as Empty cells. A Type:Prefab worldgen prop writes EVERY stored cell incl. Empty (decompile-verified: props.PrefabProp.place -> materialWriteSpace.set(material,pos) per cell, no air skip), so the Empty cells CARVE the descent straight out of the solid grove AT GENERATION TIME - the same carve the runtime cave-shaft seam did, now gen-time and reliable (no worldgen race, no force-paste). The Floor pattern + ColumnLinear scanner land the ENTRANCE flush on Soil_Grass_Dry under Empty; the body carves below into the dirt/rock (material runs to BottomY -80, far below the ~surface-36 chamber). LoadEntities:true spawns the baked hidden kn_shrine_marker entity (worldgen tags it FromWorldGen so ShrinePlacement detects it, tops up, and clusters surface Moonbloom at the entrance) and the dungeon self-bakes its own Moonbloom supply down the shaft. Furnace is a baked 4-cell multiblock, discovered via its interaction like every other host. Random directionality spins the footprint. IN-GAME GATE: confirm the entrance carves flush (not buried/floating) on rolling terrain, the descent is walkable to the furnace, the marker is detected, and the biome is not all-air (a malformed Prefab prop airs out the WHOLE biome). Not gradle-compiled.",
+      "$Comment": "WORLDGEN SHRINE HOST - UNDERGROUND DUNGEON (scatter + CARVE, Runtime 0): the furnace-baked multi-level descent Shrine_Dungeon_Underground_01, scattered (Scale 80 + SkipChance 0.78, ~1-2 per round - a denser grid + lower skip than the old 90/0.7, which too often rolled zero) on its own prop because it is a big deep carve. SPAWN-ORDER: runs at Runtime 0 alongside the large crypt (BEFORE the small crypts at Runtime 1), a big landmark host placed first. UNLIKE the surface crypts this prefab DESCENDS: its anchor IS the surface ENTRANCE (anchorY 36) and the body extends DOWN ~36 blocks to the furnace chamber, the descent shaft authored as Empty cells. A Type:Prefab worldgen prop writes EVERY stored cell incl. Empty (decompile-verified: props.PrefabProp.place -> materialWriteSpace.set(material,pos) per cell, no air skip), so the Empty cells CARVE the descent straight out of the solid grove AT GENERATION TIME - the same carve the runtime cave-shaft seam did, now gen-time and reliable (no worldgen race, no force-paste). The Floor pattern + ColumnLinear scanner land the ENTRANCE flush on Soil_Grass_Dry under Empty; the body carves below into the dirt/rock (material runs to BottomY -80, far below the ~surface-36 chamber). LoadEntities:true spawns the baked hidden kn_shrine_marker entity (worldgen tags it FromWorldGen so ShrinePlacement detects it, tops up, and clusters surface Moonbloom at the entrance) and the dungeon self-bakes its own Moonbloom supply down the shaft. Furnace is a baked 4-cell multiblock, discovered via its interaction like every other host. Random directionality spins the footprint. IN-GAME GATE: confirm the entrance carves flush (not buried/floating) on rolling terrain, the descent is walkable to the furnace, the marker is detected, and the biome is not all-air (a malformed Prefab prop airs out the WHOLE biome). Not gradle-compiled.",
       "Positions": {
         "Type": "Mesh2D",
         "Skip": false,
@@ -1306,15 +1306,15 @@
         "PointGenerator": {
           "Type": "Mesh",
           "Jitter": 0.5,
-          "ScaleX": 90,
-          "ScaleY": 90,
-          "ScaleZ": 90,
+          "ScaleX": 80,
+          "ScaleY": 80,
+          "ScaleZ": 80,
           "Seed": "KN_ShrineDungeon"
         }
       },
       "Assignments": {
         "Type": "Weighted",
-        "SkipChance": 0.7,
+        "SkipChance": 0.78,
         "Seed": "KN_ShrineDungeonW",
         "WeightedAssignments": [
           {

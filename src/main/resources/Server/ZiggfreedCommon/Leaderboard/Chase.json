@@ -6,7 +6,11 @@
   "DifficultyTabs": [
     { "Id": "amateur", "LabelKey": "kweebecnightmare.preset.amateur.name" },
     { "Id": "nightmare", "LabelKey": "kweebecnightmare.preset.nightmare.name" },
-    { "Id": "hardcore", "LabelKey": "kweebecnightmare.preset.hardcore.name" }
+    { "Id": "hardcore", "LabelKey": "kweebecnightmare.preset.hardcore.name" },
+    { "Id": "endless", "LabelKey": "kweebecnightmare.preset.endless.name" },
+    { "Id": "swarm", "LabelKey": "kweebecnightmare.preset.swarm.name" },
+    { "Id": "pitch", "LabelKey": "kweebecnightmare.preset.pitch.name" },
+    { "Id": "blitz", "LabelKey": "kweebecnightmare.preset.blitz.name" }
   ],
   "PartySizeTabs": [
     { "Id": "1", "LabelKey": "kweebecnightmare.leaderboard.tab.solo" },
@@ -17,6 +21,7 @@
   "StatColumns": [
     { "StatKey": "stunned", "LabelKey": "kweebecnightmare.leaderboard.stat.stunned", "Grouped": true },
     { "StatKey": "moonbloom", "LabelKey": "kweebecnightmare.leaderboard.stat.moonbloom", "Grouped": true },
-    { "StatKey": "shrines", "LabelKey": "kweebecnightmare.leaderboard.stat.shrines", "Grouped": true }
+    { "StatKey": "shrines", "LabelKey": "kweebecnightmare.leaderboard.stat.shrines", "Grouped": true },
+    { "StatKey": "wins", "LabelKey": "kweebecnightmare.leaderboard.stat.wins", "Grouped": true }
   ]
 }

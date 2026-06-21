@@ -18,6 +18,7 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.ziggfreed.common.health.HealthUtil;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
 import com.ziggfreed.kweebec.atmosphere.MusicBedService;
@@ -328,7 +329,7 @@ public final class RoundService {
         });
 
         HytaleServer.SCHEDULED_EXECUTOR.schedule(
-                () -> finalizeAndEject(round, world),
+                () -> finalizeAndEject(round, world, win),
                 RESULT_HOLD_SECONDS, TimeUnit.SECONDS);
     }
 
@@ -362,7 +363,7 @@ public final class RoundService {
         }
     }
 
-    private void finalizeAndEject(@Nonnull RoundInstance round, @Nonnull World world) {
+    private void finalizeAndEject(@Nonnull RoundInstance round, @Nonnull World world, boolean fullHeal) {
         world.execute(() -> {
             try {
                 Store<EntityStore> store = world.getEntityStore().getStore();
@@ -373,7 +374,7 @@ public final class RoundService {
                     }
                     Ref<EntityStore> ref = pr.getReference();
                     if (ref != null && ref.isValid()) {
-                        reviveThenExit(world, store, ref);
+                        reviveThenExit(world, store, ref, fullHeal);
                     }
                 }
                 round.setState(InstanceState.EVICTING);
@@ -405,7 +406,7 @@ public final class RoundService {
      * <p>Runs on the instance world thread; the exit re-hops via {@code world.execute}.
      */
     private void reviveThenExit(@Nonnull World world, @Nonnull Store<EntityStore> store,
-                               @Nonnull Ref<EntityStore> ref) {
+                               @Nonnull Ref<EntityStore> ref, boolean fullHeal) {
         // Capture the UUID now: the cross-world exit invalidates this ref, so the
         // post-exit heal must re-resolve the player by UUID in the overworld.
         UUID uuid = null;
@@ -429,10 +430,10 @@ public final class RoundService {
                 }
                 if (wasDead) {
                     HytaleServer.SCHEDULED_EXECUTOR.schedule(
-                            () -> exitFromInstance(world, ref, playerId),
+                            () -> exitFromInstance(world, ref, playerId, fullHeal),
                             REVIVE_SETTLE_MS, TimeUnit.MILLISECONDS);
                 } else {
-                    exitFromInstance(world, ref, playerId);
+                    exitFromInstance(world, ref, playerId, fullHeal);
                 }
             });
         } catch (Throwable t) {
@@ -441,19 +442,20 @@ public final class RoundService {
                     "[Kweebec] reviveThenExit failed, exiting directly: " + t.getMessage());
             if (ref.isValid()) {
                 InstanceLifecycle.exit(ref, store)
-                        .whenComplete((v2, e2) -> scheduleOverworldResync(playerId));
+                        .whenComplete((v2, e2) -> scheduleOverworldResync(playerId, fullHeal));
             }
         }
     }
 
-    /** Cross-world exit on the instance world thread, then heal the player once back in the overworld. */
-    private void exitFromInstance(@Nonnull World world, @Nonnull Ref<EntityStore> ref, @Nullable UUID playerId) {
+    /** Cross-world exit on the instance world thread, then resync (and, on a win, full-heal) once back in the overworld. */
+    private void exitFromInstance(@Nonnull World world, @Nonnull Ref<EntityStore> ref, @Nullable UUID playerId,
+                                  boolean fullHeal) {
         world.execute(() -> {
             try {
                 Store<EntityStore> ws = world.getEntityStore().getStore();
                 if (ref.isValid()) {
                     InstanceLifecycle.exit(ref, ws)
-                            .whenComplete((v2, e2) -> scheduleOverworldResync(playerId));
+                            .whenComplete((v2, e2) -> scheduleOverworldResync(playerId, fullHeal));
                 }
             } catch (Throwable t) {
                 KweebecNightmarePlugin.LOGGER.atWarning().log(
@@ -465,9 +467,11 @@ public final class RoundService {
     /**
      * After a player has fully returned to the overworld, clear any stale {@code PendingTeleport} left over
      * from the death respawn's same-world teleport, then clear the cocoon root + restore the inventory
-     * snapshot. Best-effort; never throws.
+     * snapshot. On a round WIN ({@code fullHeal}) the survivor is also topped off to full health via the
+     * ziggfreed-common {@link HealthUtil} (the same native {@code EntityStats} heal the MMO health-tick path
+     * uses), so a battered winner returns whole. Best-effort; never throws.
      */
-    private void scheduleOverworldResync(@Nullable UUID uuid) {
+    private void scheduleOverworldResync(@Nullable UUID uuid, boolean fullHeal) {
         if (uuid == null) {
             return;
         }
@@ -490,6 +494,10 @@ public final class RoundService {
                         CocoonService.clearEffects(r, ws);
                         // Restore the inventory snapshot taken on entry (drops in-round loot; no-op in KEEP).
                         RoundInventoryGuard.restore(ws, r, uuid);
+                        // On a win, fully heal the survivor now that they are back in the overworld.
+                        if (fullHeal) {
+                            HealthUtil.fullHeal(ws, r);
+                        }
                     }
                 });
             } catch (Throwable t) {
@@ -522,13 +530,63 @@ public final class RoundService {
                     RoundFeedback.restoreHud(store, ref);
                     // A swapped model is restored by the PlayerReady catch-all when this player reaches the
                     // overworld (the robust path covering exit / disconnect / relog / crash); not here.
-                    reviveThenExit(world, store, ref);
+                    // A voluntary leave is not a win, so no full-heal on return.
+                    reviveThenExit(world, store, ref, false);
                 }
                 round.removeHud(uuid);
             } catch (Throwable t) {
                 KweebecNightmarePlugin.LOGGER.atWarning().log("[Kweebec] exit failed: " + t.getMessage());
             }
         });
+    }
+
+    /**
+     * Last-resort recovery for a round whose per-tick loop is PERSISTENTLY throwing (the state-machine
+     * watchdog calls this). Such a round can never reach {@link ChaseMode#tick}'s outcome resolution, so a
+     * cocooned (dead-in-place) player would stay frozen under the infinite {@code DisableAll} cocoon
+     * forever. This frees every player WITHOUT touching {@link RoundCompletedEvent.Outcome} - which may
+     * itself be the unloadable class behind the failure - by routing each through the normal voluntary
+     * {@link #exit} path (revive -> cross-world exit -> overworld resync clears the cocoon), then tearing
+     * the round down. It deliberately skips scoring + the {@code RoundCompleted} event (a wedged round has
+     * no trustworthy outcome). Flips the round out of {@code ACTIVE} and drops it from the registry so the
+     * state machine stops ticking it.
+     */
+    void forceAbort(@Nonnull RoundInstance round) {
+        KweebecNightmarePlugin.LOGGER.atSevere().log(
+                "[Kweebec] force-aborting wedged round " + round.roundId()
+                        + " (tick persistently failing); freeing its players.");
+        round.setState(InstanceState.EVICTING);
+        HeartbeatService.stop(round.roundId());
+        MusicBedService.clear(round);
+        World world = round.world();
+        // Mode actor + scheduler teardown (despawn hunters/boss, stop whispers, drop markers). All
+        // Outcome-free; best-effort so a failure here never blocks freeing the players below.
+        if (world != null) {
+            try {
+                RoundMode mode = ModeRegistry.get(round.mode());
+                if (mode != null) {
+                    mode.onTeardown(round, world, world.getEntityStore().getStore());
+                }
+            } catch (Throwable t) {
+                KweebecNightmarePlugin.LOGGER.atWarning().log(
+                        "[Kweebec] force-abort teardown failed for " + round.roundId() + ": " + t.getMessage());
+            }
+        }
+        // Free every bound player on the standard exit path (clears the cocoon on overworld return).
+        for (UUID id : round.participantList()) {
+            try {
+                exit(id);
+            } catch (Throwable t) {
+                KweebecNightmarePlugin.LOGGER.atWarning().log(
+                        "[Kweebec] force-abort exit failed for " + id + ": " + t.getMessage());
+            }
+        }
+        // Flag the instance for removal-when-empty (players leave via exit above); drop the round so the
+        // state machine no longer sees it.
+        if (world != null) {
+            InstanceLifecycle.safeRemove(world);
+        }
+        registry.remove(round.roundId());
     }
 
     /** Admin force-end of every live round. Returns how many were ended. */

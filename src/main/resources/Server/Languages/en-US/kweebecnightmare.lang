@@ -42,20 +42,34 @@ title.night_falls.sub = Dawn never came
 title.jumpscare = IT HAS YOU
 title.jumpscare.sub = Tear free and run
 
+# Item names + tooltip descriptions for the grove blooms and the shrine. A description renders as
+# rich text on the item tooltip's TextSpans (Hytale's native <i>/<b>/<color is="#hex">/\n markup,
+# parsed client-side per locale, exactly like vanilla items.*.description). Each highlight colour
+# matches the bloom's own glow. No balance numbers in the flavor, so a tuning change never forces a
+# localization edit. The _Plant clusters are the harvest source; the thrown blooms drop from them.
 item.moonbloom.name = Moonbloom
+item.moonbloom.description = Offer it at a blighted shrine to cleanse the grove, or hurl it to <color is="#7affa0">stun</color> a hunter where it bursts.\n\n<i>The grove's last clean light. It still remembers the song the Void tried to drown.</i>
 item.moonbloom_plant.name = Moonbloom Cluster
+item.moonbloom_plant.description = Harvest this glowing cluster to gather <color is="#7affa0">Moonbloom</color>, the light the shrines drink and the hunt fears.\n\n<i>Even choked by the blight, a little of the grove's old light keeps creeping back.</i>
 item.gustbloom.name = Gustbloom
+item.gustbloom.description = Bursts in a sharp <color is="#5a9cff">gust</color> that hurls a hunter back and buys you room to run.\n\n<i>It held its breath since the grove last breathed clean, and lets go all at once.</i>
 item.gustbloom_plant.name = Gustbloom Cluster
+item.gustbloom_plant.description = Harvest this windswept cluster to gather <color is="#5a9cff">Gustbloom</color>, the bloom that throws a hunter back.\n\n<i>It sways when there is no wind, breathing air the dead grove can no longer use.</i>
 item.mirebloom.name = Mirebloom
+item.mirebloom.description = Bursts into clinging spores that <color is="#7affa0">slow</color> whatever they touch. Drag the hunt down to a crawl.\n\n<i>It festered in the drowned roots where the blight pools thickest, and the mire clings to all that moves.</i>
 item.mirebloom_plant.name = Mirebloom Cluster
+item.mirebloom_plant.description = Harvest this sodden cluster to gather <color is="#7affa0">Mirebloom</color>, the bloom that drags the hunt to a crawl.\n\n<i>It thrives where the roots have drowned, growing fat on the standing rot.</i>
 item.emberbloom.name = Emberbloom
+item.emberbloom.description = Bursts into searing <color is="#ff8a3c">embers</color> that burn the blight and spare your fellow survivors.\n\n<i>Cracked from the Warden's own bark. Fire is the one shape the Void never learned to wear.</i>
 item.emberbloom_plant.name = Emberbloom Cluster
+item.emberbloom_plant.description = Harvest this smouldering cluster to gather <color is="#ff8a3c">Emberbloom</color>, the bloom that burns the blight away.\n\n<i>It takes root only where the Warden has walked, and it is always warm to the touch.</i>
 item.shrine.name = Blighted Shrine
+item.shrine.description = Offer <color is="#7affa0">Moonbloom</color> here to cleanse the blight. A relit shrine burns with green fire, and the hunt turns toward the light.\n\n<i>It once carried the grove's song. Now it waits cold for someone warm to wake it.</i>
 
-interaction.shrine.hint = Offer Moonbloom
+interaction.shrine.hint = Press [{key}] to offer Moonbloom
 
 toast.cleanse_done = The shrine drinks the Moonbloom light
-toast.cleanse_need = Gather Moonbloom to cleanse this shrine
+toast.cleanse_need = Gather {0} more Moonbloom to cleanse this shrine
 toast.shrine_submit = The shrine drinks your Moonbloom ({0}/{1})
 toast.shrine_dormant = The shrine sleeps until the hunt begins
 toast.moonbloom_respawn = The grove stirs. Fresh Moonbloom has grown.
@@ -109,25 +123,10 @@ cmd.lb_empty = No leaderboard entries for that party size yet.
 cmd.kweebec.desc = Start, leave, or end a Kweebec Nightmare round
 cmd.arg.sub = start | exit | endall | give | score | leaderboard | spawnguide
 cmd.arg.preset = preset | count | partySize
-cmd.kntalk.desc = Speak with the Whispering Sapling (dialogue demo)
 
 # Dialogue page chrome (resolved by the shared ziggfreed-common dialogue engine).
 ui.dialogue.farewell = Step away
 ui.dialogue.missing = The voice fades. Nothing more comes.
-
-# Demo dialogue: the Whispering Sapling (id "kweebec_intro"; keys are by-convention
-# dialogue.<id>.<node>.text and dialogue.<id>.<node>.opt.<index>).
-dialogue.kweebec_intro.npc = The Whispering Sapling
-dialogue.kweebec_intro.greet.text = A pale sapling turns its hollow eyes toward you. "You still breathe," it rasps. "Few do, this deep in the blight."
-dialogue.kweebec_intro.greet.opt.0 = What is this place?
-dialogue.kweebec_intro.greet.opt.1 = What hunts in the dark?
-dialogue.kweebec_intro.greet.opt.2 = You spoke of a warning. Tell me what the grove hid.
-dialogue.kweebec_intro.lore.text = "Once the Emerald Grove sang. The Void crept in through the roots, and the song turned to screaming. We are what is left of the singers."
-dialogue.kweebec_intro.lore.opt.0 = Go back
-dialogue.kweebec_intro.warning.text = "It wears our bark and our faces. It does not tire. When a shrine flares, it turns toward the light, and toward you."
-dialogue.kweebec_intro.warning.opt.0 = Go back
-dialogue.kweebec_intro.secret.text = The sapling leans close. "The Heartwood Gate is not an exit. It is a mouth. Relight every shrine and step onto the platform together, or it keeps the ones who linger."
-dialogue.kweebec_intro.secret.opt.0 = Go back
 
 # Matchmaking queue feedback. Toasts (Notify) are coloured by their NotificationStyle
 # (success/warning/danger); the countdown banner (EventTitles) renders PLAIN text only -
@@ -160,21 +159,24 @@ npc.guide.hint = Press [{key}] to speak with the Grove Warden
 # translator keeps the markup in their own line. Option labels are TextButtons (no
 # TextSpans), so they take no markup - colour-coded by their DialogueOptionStyle.
 dialogue.nightmares_intro.npc = The Grove Warden
-dialogue.nightmares_intro.greet.text = A small Kweebec, its bark still <color is="#7affa0">green</color>, steps from the roots and looks up at you. <i>"You are warm. You are awake. Most of my kin are neither, not since the <color is="#a06cff">Void</color> crept into the grove. I am what is left to warn the warm ones."</i>
-dialogue.nightmares_intro.greet.opt.0 = What happened to this place?
-dialogue.nightmares_intro.greet.opt.1 = I am ready. Send me into the grove.
-dialogue.nightmares_intro.greet.opt.2 = About the hunt I have already chosen...
-dialogue.nightmares_intro.greet.opt.3 = Who has survived the most?
-dialogue.nightmares_intro.lore.text = <i>"Once the Emerald Grove <b>sang</b>. The <color is="#a06cff">Void</color> seeped up through the roots, and the song became screaming. My kin wear our faces now, and they <color is="#ff6b6b">hunt</color>. Relight the grove-shrines and the Heartwood Gate will open; gather on the platform beyond it <b>together</b>, or the dark keeps the ones left behind."</i>
-dialogue.nightmares_intro.lore.opt.0 = Enough. I am ready to hunt.
-dialogue.nightmares_intro.lore.opt.1 = Tell me something else.
-dialogue.nightmares_intro.preset_pick.text = <i>"How deep will you go?"</i> The warden's eyes flicker like dying embers. <i>"Choose, and I will open a way into the dark."</i>
+dialogue.nightmares_intro.greet.text = Warm. Breathing. Awake. You have no idea how rare that is down here. I have lived this same nightmare more nights than I have rings - the grove gone black, my own kin wearing my face, hunting me through the dark. I never make it out. But I have watched it enough times to know where it trips you. Sit a moment. Let me ruin the ending for you.
+dialogue.nightmares_intro.greet.opt.0 = How does this nightmare go?
+dialogue.nightmares_intro.greet.opt.1 = Enough talk. Send me in.
+dialogue.nightmares_intro.greet.opt.2 = About the hunt I am already in...
+dialogue.nightmares_intro.greet.opt.3 = Who has lasted the longest?
+dialogue.nightmares_intro.lore.text = It always starts the same. The grove is dark and dead, and the only way to wake it is the shrines - feed them <color is="#7affa0">Moonbloom</color> light until they catch green fire. Here is the cruel part: lighting a shrine is loud, and the thing in the dark has wonderful ears. Funny how it always knows exactly where I am the moment I start to channel. Light every shrine and the <b>Heartwood Gate</b> opens - loudly, of course - and whoever stands nearest it is the first to be missed.
+dialogue.nightmares_intro.lore.opt.0 = I have heard enough. Send me in.
+dialogue.nightmares_intro.lore.opt.1 = So how do I actually survive it?
+dialogue.nightmares_intro.tips.text = So you want to live. Bold of you. Keep your pockets full of blooms: a <color is="#7affa0">Moonbloom</color> to the face stuns the wretched things, a <color is="#5a9cff">Gustbloom</color> throws them back, a <color is="#7affa0">Mirebloom</color> drags them to a crawl, and an <color is="#ff8a3c">Emberbloom</color> burns them - them, mind, not your friends. If the roots take you, do not sulk down there; a warm hand can tear you free, so stay close enough to be that hand. And the way out only opens for those who stand on the platform <b>together</b> - wander off alone and the grove simply forgets to let you leave. Oh, and do hurry. Every breath you waste, the dark grows bolder, faster, <color is="#ff6b6b">hungrier</color>.
+dialogue.nightmares_intro.tips.opt.0 = Now I am ready.
+dialogue.nightmares_intro.tips.opt.1 = Go back.
+dialogue.nightmares_intro.preset_pick.text = How deep into the nightmare do you want to go? Shallow, and it shambles - good for learning where the bodies fall. Deep, and it sprints, and the dark drinks your light faster than you can make it. Choose. I will be watching from somewhere safe.
 dialogue.nightmares_intro.preset_pick.opt.0 = Amateur - let me learn the grove.
-dialogue.nightmares_intro.preset_pick.opt.1 = Nightmare - the true hunt.
-dialogue.nightmares_intro.preset_pick.opt.2 = Hardcore - one life, no mercy.
+dialogue.nightmares_intro.preset_pick.opt.1 = Nightmare - the real hunt.
+dialogue.nightmares_intro.preset_pick.opt.2 = Hardcore - one life, no second chances.
 dialogue.nightmares_intro.preset_pick.opt.3 = Not yet. Step back.
-dialogue.nightmares_intro.already_engaged.text = <i>"You are already bound to a hunt, warm one,"</i> the warden murmurs. <i>"Step out of the gathering first, and I will offer you the choice again."</i>
-dialogue.nightmares_intro.already_engaged.opt.0 = I understand.
+dialogue.nightmares_intro.already_engaged.text = One nightmare at a time, warm one. You are already bound to a hunt. Slip out of that gathering first, and I will gladly throw you into the next.
+dialogue.nightmares_intro.already_engaged.opt.0 = Understood.
 
 # Leaderboard page (the Grove Warden's "Who has survived the most?" option, greet.opt.3).
 # Plain labels shown on Label .Text (no inline markup); column colours come from the .ui styles.
@@ -197,16 +199,19 @@ leaderboard.axis.difficulty = Difficulty
 leaderboard.axis.players = Players
 leaderboard.axis.sort = Sort
 leaderboard.axis.view = View
+# The synthesized "All" tab (lifetime roll-up across an axis: All+All = full lifetime totals).
+leaderboard.filter.all = All
 # Sort toggle + Rankings/Stats view toggle buttons.
 leaderboard.sort.score = Best Score
 leaderboard.sort.total = Total Points
 leaderboard.sort.time = Fastest
 leaderboard.view.rankings = Rankings
 leaderboard.view.stats = Stats
-# Lifetime stat columns (Stats view).
+# Lifetime stat columns (Stats view). Click a column header to sort by it.
 leaderboard.stat.stunned = Stunned
 leaderboard.stat.moonbloom = Moonbloom
 leaderboard.stat.shrines = Shrines Lit
+leaderboard.stat.wins = Wins
 
 # End-of-game results screen (the shared instance-experience ResultsPage).
 results.win = You Survived
@@ -358,17 +363,17 @@ preset.domination_koth.name = Domination
 npc.clashhost.name = The Duelmaster
 npc.clashhost.hint = Press [{key}] to enter the arena
 dialogue.clash_intro.npc = The Duelmaster
-dialogue.clash_intro.greet.text = A scarred Kweebec leans on a thorned staff and sizes you up. <i>"So. You would test your roots against another warm-blood. The grove makes a fine arena, when the hunt is each other."</i>
+dialogue.clash_intro.greet.text = So. You would rather test your roots against another warm-blood than run from the dark. I respect that. The grove makes a fine arena when the only nightmare in it is each other. Stay sharp - I have buried better fighters than you, and I was not even trying.
 dialogue.clash_intro.greet.opt.0 = How does the arena work?
 dialogue.clash_intro.greet.opt.1 = I am ready to fight.
-dialogue.clash_intro.greet.opt.2 = About the match I have joined...
-dialogue.clash_intro.lore.text = <i>"Two teams. Knockback and stun shrooms sprout from the soil - grab them, throw them, take no chances. Last team standing wins; if the timer runs dry, the team that landed the most blows takes it. In Domination, hold the ground instead."</i>
-dialogue.clash_intro.lore.opt.0 = Enough talk. Let me fight.
-dialogue.clash_intro.lore.opt.1 = Wait, tell me more.
-dialogue.clash_intro.mode_pick.text = <i>"Name your contest, warm-blood."</i>
+dialogue.clash_intro.greet.opt.2 = About the match I am already in...
+dialogue.clash_intro.lore.text = Two teams, one grove, and shrooms sprouting from the soil: <color is="#5a9cff">knockback</color> to send a fool flying off the edge, <color is="#7affa0">stun</color> to leave them gawping while you swing. Grab them before the other side does - the ones who scavenge tend to be the ones who walk out. Last team standing takes it; if the clock runs dry, whoever landed the most blows wins, so do not just dance, hit something. In Domination, forget all that and simply hold the ground longer than they can.
+dialogue.clash_intro.lore.opt.0 = Enough. Let me fight.
+dialogue.clash_intro.lore.opt.1 = On second thought, go back.
+dialogue.clash_intro.mode_pick.text = Name your contest, warm-blood. I will open the gate to whichever ground you fancy bleeding on.
 dialogue.clash_intro.mode_pick.opt.0 = Clash 1v1 - just the two of us.
-dialogue.clash_intro.mode_pick.opt.1 = Clash 2v2 - bring an ally.
+dialogue.clash_intro.mode_pick.opt.1 = Clash 2v2 - bring a friend to lose with.
 dialogue.clash_intro.mode_pick.opt.2 = Domination - hold the ground.
 dialogue.clash_intro.mode_pick.opt.3 = Not yet. Step back.
-dialogue.clash_intro.already_engaged.text = <i>"You are already in a contest, warm-blood,"</i> the Duelmaster grunts. <i>"Finish it, then return."</i>
+dialogue.clash_intro.already_engaged.text = One fight at a time, warm-blood. Finish the contest you are in, then come bleed for me again.
 dialogue.clash_intro.already_engaged.opt.0 = Understood.

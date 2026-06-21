@@ -1,5 +1,7 @@
 package com.ziggfreed.kweebec.round;
 
+import java.util.Map;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -49,6 +51,7 @@ public final class RuleSet {
     @Nullable private final String hunterArchetype;
     private final int cleanseCost;
     private final long stunDurationMs;
+    private final Map<String, Double> throwableDamage;
     private final ThrowMode throwMode;
     private final int moonbloomPerShrine;
     private final int moonbloomScatter;
@@ -83,6 +86,8 @@ public final class RuleSet {
     @Nullable private final String jumpscareBeatId;
     private final double jumpscareShakeIntensity;
     private final int jumpscareCooldownSeconds;
+    // Win feedback: the SoundEvent id played to each survivor on a round win (blank = no win sound).
+    @Nullable private final String winSoundId;
     // --- PvP shared (Clash + Domination): team size, friendly fire, model swap, arena selection ---
     private final int teamSize;
     private final boolean friendlyFire;
@@ -130,6 +135,7 @@ public final class RuleSet {
         this.hunterArchetype = b.hunterArchetype;
         this.cleanseCost = b.cleanseCost;
         this.stunDurationMs = b.stunDurationMs;
+        this.throwableDamage = Map.copyOf(b.throwableDamage);
         this.throwMode = b.throwMode;
         this.moonbloomPerShrine = b.moonbloomPerShrine;
         this.moonbloomScatter = b.moonbloomScatter;
@@ -162,6 +168,7 @@ public final class RuleSet {
         this.jumpscareBeatId = b.jumpscareBeatId;
         this.jumpscareShakeIntensity = b.jumpscareShakeIntensity;
         this.jumpscareCooldownSeconds = b.jumpscareCooldownSeconds;
+        this.winSoundId = b.winSoundId;
         this.teamSize = b.teamSize;
         this.friendlyFire = b.friendlyFire;
         this.modelSwapId = b.modelSwapId;
@@ -309,6 +316,29 @@ public final class RuleSet {
     /** How long (ms) a thrown Moonbloom freezes a hunter via the Perfect Utils stun on impact. */
     public long stunDurationMs() {
         return stunDurationMs;
+    }
+
+    /**
+     * Per-difficulty damage override for a thrown glow-throwable, keyed by the throwable's custom
+     * {@code DamageCause} id (e.g. {@code KweebecNightmare_Moonbloom}, {@code KweebecNightmare_EmberHit}).
+     * When a hit lands on a mob in a round and its cause id is present here, {@code KweebecDamageSystem}
+     * overrides the burst's authored damage with this amount, so one preset tunes how hard each authored
+     * throwable hits without touching the shared burst asset. Absent key = the burst's authored damage
+     * stands. Never null; empty when the preset authors no overrides. Authored via the preset's
+     * {@code ThrowableDamage} object knob.
+     */
+    @Nonnull
+    public Map<String, Double> throwableDamage() {
+        return throwableDamage;
+    }
+
+    /**
+     * The per-difficulty damage override for the throwable identified by {@code damageCauseId}, or
+     * {@code null} when this preset authors none for it (the burst's authored damage stands).
+     */
+    @Nullable
+    public Double throwableDamage(@Nonnull String damageCauseId) {
+        return throwableDamage.get(damageCauseId);
     }
 
     /** How a thrown Moonbloom delivers its stun: the asset projectile, or the code-only cone fallback. */
@@ -537,6 +567,17 @@ public final class RuleSet {
         return jumpscareCooldownSeconds;
     }
 
+    /**
+     * The {@code SoundEvent} id played to each surviving player when the round is WON (the extraction
+     * fanfare), or {@code null}/blank for no win sound. Default {@code SFX_Discovery_Z1_Medium} (a vanilla
+     * triumphant discovery jingle); a pack tunes it per preset via the {@code WinSoundId} knob. Played
+     * through the ziggfreed-common {@code Sound3D} seam in {@code ChaseRoundMode.onResolve}.
+     */
+    @Nullable
+    public String winSoundId() {
+        return winSoundId;
+    }
+
     // --- PvP shared (Clash + Domination) ---
 
     /** Players per team in a PvP round: 1 (1v1) or 2 (2v2). The queue seats {@code teamSize * 2}. */
@@ -630,6 +671,7 @@ public final class RuleSet {
         b.hunterArchetype = this.hunterArchetype;
         b.cleanseCost = this.cleanseCost;
         b.stunDurationMs = this.stunDurationMs;
+        b.throwableDamage = this.throwableDamage;
         b.throwMode = this.throwMode;
         b.moonbloomPerShrine = this.moonbloomPerShrine;
         b.moonbloomScatter = this.moonbloomScatter;
@@ -662,6 +704,7 @@ public final class RuleSet {
         b.jumpscareBeatId = this.jumpscareBeatId;
         b.jumpscareShakeIntensity = this.jumpscareShakeIntensity;
         b.jumpscareCooldownSeconds = this.jumpscareCooldownSeconds;
+        b.winSoundId = this.winSoundId;
         b.teamSize = this.teamSize;
         b.friendlyFire = this.friendlyFire;
         b.modelSwapId = this.modelSwapId;
@@ -710,6 +753,8 @@ public final class RuleSet {
         // The shipped preset JSONs author CleanseCost per preset; this is only the zero-pack fallback.
         private int cleanseCost = 1;
         private long stunDurationMs = 2500L;
+        // Per-throwable damage overrides keyed by DamageCause id (empty = each burst's authored damage stands).
+        private Map<String, Double> throwableDamage = Map.of();
         private ThrowMode throwMode = ThrowMode.DEFAULT;
         private int moonbloomPerShrine = 3;
         private int moonbloomScatter = 12;
@@ -747,6 +792,8 @@ public final class RuleSet {
         @Nullable private String jumpscareBeatId = null;       // null -> BandedEffectConfig.oneShot()
         private double jumpscareShakeIntensity = Double.NaN;   // NaN -> use the beat's own ShakeIntensity
         private int jumpscareCooldownSeconds = 12;
+        // Win fanfare: a vanilla triumphant discovery jingle by default; a preset may override or blank it.
+        @Nullable private String winSoundId = "SFX_Discovery_Z1_Medium";
         // PvP shared defaults (irrelevant to a chase preset, which never reads them).
         private int teamSize = 1;
         private boolean friendlyFire = false;
@@ -794,6 +841,7 @@ public final class RuleSet {
         @Nonnull public Builder hunterArchetype(@Nullable String v) { this.hunterArchetype = v; return this; }
         @Nonnull public Builder cleanseCost(int v) { this.cleanseCost = Math.max(0, v); return this; }
         @Nonnull public Builder stunDurationMs(long v) { this.stunDurationMs = Math.max(0L, v); return this; }
+        @Nonnull public Builder throwableDamage(@Nonnull Map<String, Double> v) { this.throwableDamage = Map.copyOf(v); return this; }
         @Nonnull public Builder throwMode(@Nonnull ThrowMode v) { this.throwMode = v; return this; }
         @Nonnull public Builder moonbloomPerShrine(int v) { this.moonbloomPerShrine = Math.max(0, v); return this; }
         @Nonnull public Builder moonbloomScatter(int v) { this.moonbloomScatter = Math.max(0, v); return this; }
@@ -826,6 +874,7 @@ public final class RuleSet {
         @Nonnull public Builder jumpscareBeatId(@Nullable String v) { this.jumpscareBeatId = v; return this; }
         @Nonnull public Builder jumpscareShakeIntensity(double v) { this.jumpscareShakeIntensity = v; return this; }
         @Nonnull public Builder jumpscareCooldownSeconds(int v) { this.jumpscareCooldownSeconds = Math.max(0, v); return this; }
+        @Nonnull public Builder winSoundId(@Nullable String v) { this.winSoundId = v; return this; }
         @Nonnull public Builder teamSize(int v) { this.teamSize = Math.max(1, v); return this; }
         @Nonnull public Builder friendlyFire(boolean v) { this.friendlyFire = v; return this; }
         @Nonnull public Builder modelSwapId(@Nullable String v) { this.modelSwapId = v; return this; }

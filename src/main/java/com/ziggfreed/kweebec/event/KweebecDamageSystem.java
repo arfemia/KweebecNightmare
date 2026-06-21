@@ -123,14 +123,20 @@ public final class KweebecDamageSystem extends DamageEventSystem {
             PlayerRef targetPlayer = store.getComponent(targetRef, PlayerRef.getComponentType());
 
             if (targetPlayer == null) {
-                // Non-player victim: ONLY a thrown Moonbloom stuns it (a melee / other hit does nothing).
-                if (!isMoonbloom) {
-                    return;
-                }
+                // Non-player victim (a hunter / boss / mob). Resolve the thrower + their round once, so both
+                // the generic damage override and the Moonbloom stun share it.
                 UUID thrower = throwerOf(store, damage);
                 RoundInstance round = thrower != null
                         ? RoundService.getInstance().registry().forPlayer(thrower) : null;
-                stunMob(store, targetRef, commandBuffer, round, thrower);
+                // Per-difficulty damage override for ANY authored throwable (Moonbloom, Emberbloom, future);
+                // a non-throwable cause (melee, etc.) is left untouched by the cause-id table lookup.
+                if (round != null) {
+                    applyThrowableDamageOverride(damage, round);
+                }
+                // Only a thrown Moonbloom additionally STUNS the mob (a melee / other hit does not).
+                if (isMoonbloom) {
+                    stunMob(store, targetRef, commandBuffer, round, thrower);
+                }
                 return;
             }
 
@@ -321,6 +327,40 @@ public final class KweebecDamageSystem extends DamageEventSystem {
         proximityStack.clear();
         lastHitMs.clear();
         lastSlowAppliedMs.clear();
+    }
+
+    /**
+     * Generic per-difficulty damage override for a thrown glow-throwable hitting a mob: if this damage's
+     * custom {@link DamageCause} id is listed in the preset's {@link RuleSet#throwableDamage()} table,
+     * replace the burst's authored amount with the per-difficulty value. ONE table tunes how hard EVERY
+     * authored throwable (Moonbloom, Emberbloom, any future one) hits per preset, with no per-item Java; a
+     * cause NOT in the table (a melee/other hit, or a throwable this preset does not tune) is left
+     * untouched. World thread; best-effort.
+     */
+    private void applyThrowableDamageOverride(@Nonnull Damage damage, @Nonnull RoundInstance round) {
+        Map<String, Double> table = round.ruleSet().throwableDamage();
+        if (table.isEmpty()) {
+            return;
+        }
+        String causeId = damageCauseId(damage);
+        if (causeId == null) {
+            return;
+        }
+        Double override = table.get(causeId);
+        if (override != null) {
+            damage.setAmount((float) Math.max(0.0, override));
+        }
+    }
+
+    /** The id string of this damage's custom {@link DamageCause} (reverse of the index), or null if unresolved. */
+    @Nullable
+    private static String damageCauseId(@Nonnull Damage damage) {
+        try {
+            DamageCause cause = DamageCause.getAssetMap().getAsset(damage.getDamageCauseIndex());
+            return cause != null ? cause.getId() : null;
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     /** Whether this damage carries the custom Moonbloom cause (resolved + cached lazily). */

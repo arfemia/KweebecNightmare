@@ -100,9 +100,9 @@ public final class KweebecAssetRegistrar {
         Map<String, String[]> mutatorIds = new LinkedHashMap<>();
         for (Map.Entry<String, RoundPresetAsset> entry : assetMap.getAssetMap().entrySet()) {
             String key = entry.getKey();
-            if (DefaultAssetMap.DEFAULT_PACK_KEY.equals(assetMap.getAssetPack(key))) {
-                continue;
-            }
+            // NO default-pack skip: the bundled Server/KweebecNightmare/Presets/*.json ARE our presets
+            // (the JSON is the single source of truth - there is no Java DefaultPresets floor). The engine
+            // has already folded the bundled defaults with any external pack overlay into this map by id.
             RoundPresetAsset asset = entry.getValue();
             if (asset == null) {
                 continue;

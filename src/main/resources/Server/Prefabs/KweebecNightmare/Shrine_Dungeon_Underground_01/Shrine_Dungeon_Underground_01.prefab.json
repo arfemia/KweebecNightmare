@@ -5431,7 +5431,7 @@
    "components": {
     "Components": {
      "BlockSpawner": {
-      "BlockSpawnerId": "Zone1_Encounters_Tier3"
+      "BlockSpawnerId": "KweebecNightmare_Crypt_Loot"
      }
     }
    },
@@ -25700,12 +25700,6 @@
    "y": 0,
    "z": -8,
    "name": "Rock_Stone_Cobble"
-  },
-  {
-   "x": 1,
-   "y": 1,
-   "z": -8,
-   "name": "KweebecNightmare_Moonbloom_Plant"
   },
   {
    "x": 1,

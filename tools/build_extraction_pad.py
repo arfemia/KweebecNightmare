@@ -53,54 +53,71 @@ OUT = os.path.join(
 # The walkable ring plane in SOURCE coords.
 TOP_PLANE_Y = 13
 
-# anchorY = TOP_PLANE_Y + ANCHOR_RAISE. RAISING anchorY (pinning a HIGHER source block to the
-# floor-snapped surface) makes the structure sit LOWER in the world, so the platform is recessed into the
-# ground (the walkable ring ~ANCHOR_RAISE blocks below the surrounding terrain, the void-portal rising out
-# of the sunken circle). Set this to 0 for a flush platform, or negative to make the platform sit proud.
-ANCHOR_RAISE = 4
+# anchorY = TOP_PLANE_Y + ANCHOR_RAISE. RAISING this pins a HIGHER source block to the floor-snapped
+# surface, so the whole platform spawns LOWER in the world (1 unit = 1 block lower). 2 = spawn 2 blocks
+# lower. To keep the lowered circle VISIBLE (not buried under terrain), the tool also adds Empty "carve"
+# cells over the walkable footprint (see carve_hollow) and the exit is pasted with force=true
+# (ArenaBuilder.pasteExit), so it digs a clean recess instead of vanishing under the ground. Set 0 for a
+# flush platform (no recess); negative raises it.
+ANCHOR_RAISE = 2
 
 # Block names dropped on copy (no air, no encounter trigger, no construction signs).
 DROP_NAMES = {"Empty", "Block_Spawner_Block", "Furniture_Construction_Sign"}
 
-# The central crystal medallion (source y > TOP_PLANE_Y, near the axis) is removed and REPLACED by a
-# no-op purple "void portal" arch (see portal_arch). Real vanilla portal-surface blocks
-# (Forgotten_Temple_Portal_*, Hub_Portal_*, Portal_Return/Device) all carry a CollisionEnter teleport
-# interaction and WOULD eject a player from the round instance, so the arch is built from INERT vanilla
-# blocks: a Rock_Basalt_Brick_Smooth frame (matching the platform) around a Rock_Crystal_Purple_Block surface.
-PORTAL_FRAME = "Rock_Basalt_Brick_Smooth"
-PORTAL_FILL = "Rock_Crystal_Purple_Block"
-PORTAL_GLOW = "Build_Lightsource_Purple"
+# The full elemental circle (incl. its central crystal medallion) is KEPT intact; the ONLY addition is a
+# cluster of the mod's own glowing Moonbloom plant placed ON the platform (crowning the central columns),
+# as the exit marker. No hand-built portal/blocks. The Moonbloom plant glows and is on-theme.
+MOONBLOOM = "KweebecNightmare_Moonbloom_Plant"
+# Central radius (in X and Z) whose column tops get crowned with a Moonbloom plant.
+MOONBLOOM_RADIUS = 2
+# The Moonbloom plant needs a FULL solid face below it (Support.Down=Full), so it only goes on top of a
+# full block - NOT on half-blocks / stairs / crystal models (it would be skipped by the force=false paste).
+FULL_FACE_BLOCKS = {
+    "Rock_Basalt_Brick_Smooth",
+    "Rock_Basalt_Brick_Decorative",
+    "Rock_Basalt_Brick_Ornate",
+    "Rock_Crystal_Blue_Block",
+}
 
 
-def portal_arch():
-    """A decorative, strictly NO-OP purple void-portal arch standing on the platform center (source coords).
+def moonbloom_cluster(kept):
+    """Place a Moonbloom plant ON TOP of each central column of the kept circle whose top block is FULL.
 
-    Centered on x=0, z=0 in the X-Y plane (opening faces +/-z, so the party approaching from +z sees it
-    face-on), rising from the walkable ring (y=TOP_PLANE_Y). 5 wide x 5 tall: a basalt frame around a
-    3x4 glowing purple-crystal surface, with a purple lightsource behind for the void glow."""
-    blocks = []
-    base = TOP_PLANE_Y + 1  # first row above the walkable ring
-    top = base + 4          # lintel row (y=18)
-    # Uprights (basalt) at x=-2 and x=+2.
-    for y in range(base, top):
-        for x in (-2, 2):
-            blocks.append({"x": x, "y": y, "z": 0, "name": PORTAL_FRAME})
-    # Lintel (basalt) across the top.
-    for x in range(-2, 3):
-        blocks.append({"x": x, "y": top, "z": 0, "name": PORTAL_FRAME})
-    # Portal surface (purple crystal) - the 3-wide x 4-tall inert "void" face.
-    for y in range(base, top):
-        for x in (-1, 0, 1):
-            blocks.append({"x": x, "y": y, "z": 0, "name": PORTAL_FILL})
-    # A purple lightsource one block behind the surface so it glows from within (z=-1, hidden core).
-    for y in range(base, top):
-        blocks.append({"x": 0, "y": y, "z": -1, "name": PORTAL_GLOW})
-    return blocks
+    Robust: it reads the actual top block of every column within MOONBLOOM_RADIUS of the centre and, only
+    when that top is a full-face block (so the plant's Support.Down requirement is met), puts one Moonbloom
+    one block above it. So each plant sits on a real full surface (the medallion or the walkable ring) and
+    actually renders, never floating or silently skipped."""
+    col_top_y = {}
+    col_top_name = {}
+    for b in kept:
+        if abs(b["x"]) <= MOONBLOOM_RADIUS and abs(b["z"]) <= MOONBLOOM_RADIUS:
+            k = (b["x"], b["z"])
+            if b["y"] > col_top_y.get(k, -10 ** 9):
+                col_top_y[k] = b["y"]
+                col_top_name[k] = b["name"]
+    return [{"x": x, "y": y + 1, "z": z, "name": MOONBLOOM}
+            for (x, z), y in col_top_y.items()
+            if col_top_name[(x, z)] in FULL_FACE_BLOCKS]
 
 
-def is_central_medallion(b):
-    """The raised central crystal spike (and the arch footprint) we clear before splicing the portal."""
-    return b["y"] > TOP_PLANE_Y and abs(b["x"]) <= 2 and abs(b["z"]) <= 2
+def carve_hollow(kept):
+    """Empty 'carve' cells so a LOWERED platform (ANCHOR_RAISE > 0) digs a clean recess instead of being
+    buried under the terrain. Over every column of the circle, clear the ANCHOR_RAISE+1 cells just above the
+    walkable plane (the rows that would otherwise be filled with surrounding ground), but NEVER a cell the
+    platform itself occupies (a solid block or a Moonbloom), so the medallion + Moonbloom survive. Only
+    meaningful when pasted with force=true (force=false ignores Empty). Empty when ANCHOR_RAISE <= 0."""
+    if ANCHOR_RAISE <= 0:
+        return []
+    occupied = {(b["x"], b["y"], b["z"]) for b in kept}
+    cols = {(b["x"], b["z"]) for b in kept if b["name"] != MOONBLOOM}
+    lo = TOP_PLANE_Y + 1
+    hi = TOP_PLANE_Y + ANCHOR_RAISE + 1  # clear the recess depth + 1 headroom row
+    empties = []
+    for (x, z) in cols:
+        for sy in range(lo, hi + 1):
+            if (x, sy, z) not in occupied:
+                empties.append({"x": x, "y": sy, "z": z, "name": "Empty"})
+    return empties
 
 
 def main() -> int:
@@ -125,13 +142,15 @@ def main() -> int:
         if extra in src:
             print(f"source has '{extra}': {len(src[extra])} entries (dropped)")
 
-    # Keep solid blocks, drop the central medallion (replaced by the portal arch), then splice the arch.
-    kept = [b for b in blocks if b["name"] not in DROP_NAMES and not is_central_medallion(b)]
-    dropped_medallion = sum(1 for b in blocks
-                            if b["name"] not in DROP_NAMES and is_central_medallion(b))
-    arch = portal_arch()
-    kept.extend(arch)
-    print(f"dropped central medallion blocks: {dropped_medallion}; spliced portal arch: {len(arch)}")
+    # Keep ALL solid blocks (the full elemental circle, incl. its central medallion), then crown the
+    # centre with the mod's glowing Moonbloom plant as the exit marker.
+    kept = [b for b in blocks if b["name"] not in DROP_NAMES]
+    moonbloom = moonbloom_cluster(kept)
+    kept.extend(moonbloom)
+    hollow = carve_hollow(kept)
+    kept.extend(hollow)
+    print(f"kept full circle; added {len(moonbloom)} Moonbloom plants; {len(hollow)} carve (Empty) cells "
+          f"for a {ANCHOR_RAISE}-block recess")
     # Per-column top to confirm TOP_PLANE_Y is the dominant walkable plane.
     col_top = defaultdict(lambda: -10**9)
     for b in kept:

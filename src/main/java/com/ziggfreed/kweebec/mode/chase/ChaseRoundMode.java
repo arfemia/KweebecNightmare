@@ -7,11 +7,14 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.protocol.SoundCategory;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.ziggfreed.common.sound.Sound3D;
 import com.ziggfreed.common.worldmap.DiscoveryMode;
 import com.ziggfreed.common.worldmap.MapDiscovery;
 import com.ziggfreed.kweebec.api.PlayerScore;
@@ -80,6 +83,10 @@ public final class ChaseRoundMode implements RoundMode {
         KweebecExperience.recordScores(round.partySize(), round, scores);
         if (world != null) {
             showResult(round, outcome);
+            // On a win, sound the extraction fanfare (asset-driven, per-preset) to each survivor.
+            if (win && store != null) {
+                playWinSound(round, store);
+            }
             // Stash the per-player results snapshot + open the BUTTON-LESS in-instance preview during the
             // hold. The reward grant + the full interactive page are deferred to overworld return.
             KweebecExperience.stashResults(round, outcome, win, duration, difficultyScore, scores);
@@ -148,6 +155,33 @@ public final class ChaseRoundMode implements RoundMode {
             } else {
                 RoundFeedback.title(pr, Lang.TITLE_CAUGHT, Lang.TITLE_CAUGHT_SUB, true);
             }
+        }
+    }
+
+    /**
+     * Play the per-preset win fanfare (asset-driven {@link RuleSet#winSoundId()}) PRIVATELY to each present
+     * survivor through the ziggfreed-common {@link Sound3D} seam, so every winner hears it once at full volume
+     * regardless of how the party is spread across the extraction pad. No-op when the preset authors no win
+     * sound (a blank {@code winSoundId}). Runs on the instance world thread (called from {@link #onResolve}).
+     */
+    private static void playWinSound(@Nonnull RoundInstance round, @Nonnull Store<EntityStore> store) {
+        String soundId = round.ruleSet().winSoundId();
+        if (soundId == null || soundId.isBlank()) {
+            return;
+        }
+        for (PlayerRoundState st : round.playerStates()) {
+            if (st.hasLeftRound()) {
+                continue;
+            }
+            PlayerRef pr = Universe.get().getPlayer(st.playerId());
+            if (pr == null) {
+                continue;
+            }
+            Ref<EntityStore> ref = pr.getReference();
+            if (ref == null || !ref.isValid()) {
+                continue;
+            }
+            Sound3D.playAt(soundId, SoundCategory.UI, ref, Sound3D.onlyEntity(ref), store, "WIN", false);
         }
     }
 }

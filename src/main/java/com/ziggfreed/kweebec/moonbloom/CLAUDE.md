@@ -41,3 +41,11 @@ Real INVENTORY items, not an abstract counter.
   Perfect Utils `StunMobAPI` freeze + the vanilla `Stun` effect (the visible Stunned stars; the Perfect
   Utils `DU_Entity_Stunned` has no particle). `RuleSet.throwMode` selects PROJECTILE (default) or the
   code-only CONE fallback (scaffolded, not wired - DO NOT engage cone without an explicit ask).
+- **Per-difficulty throwable damage (generic, asset-driven).** The burst's `BaseDamage` is a fixed 1-HP TAG;
+  the ACTUAL damage a thrown throwable deals to a mob in a round is the per-preset `ThrowableDamage` table
+  on [`../round/RuleSet`](../round/CLAUDE.md) - a `Map<DamageCauseId, amount>` (authored in the preset JSON,
+  e.g. `"ThrowableDamage": {"KweebecNightmare_Moonbloom": 25}`; Amateur 25 / Nightmare 12 / Hardcore 1).
+  [`../event/KweebecDamageSystem`](../event/CLAUDE.md) reverse-resolves the hit's `DamageCause` id and, if the
+  preset tunes it, `setAmount`s the override (covers Moonbloom, Emberbloom, and ANY future authored throwable
+  with NO per-item Java; a cause absent from the table keeps the burst's authored damage). Outside a round the
+  authored 1 stands.

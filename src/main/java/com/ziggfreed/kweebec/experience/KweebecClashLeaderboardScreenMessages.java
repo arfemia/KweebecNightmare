@@ -79,6 +79,10 @@ public final class KweebecClashLeaderboardScreenMessages implements LeaderboardS
         return Lang.msg(Lang.LB_VIEW_STATS);
     }
 
+    @Override @Nonnull public Message filterAll() {
+        return Lang.msg(Lang.LB_FILTER_ALL);
+    }
+
     @Override @Nonnull public Message yourRank(int rank, long bestScore) {
         return Lang.msg(Lang.LB_YOUR_RANK).param("0", rank).param("1", NumberFormatter.grouped(bestScore));
     }

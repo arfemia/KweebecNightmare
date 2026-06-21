@@ -18,7 +18,7 @@
         "Parent": "DamageEntityParent",
         "DamageCalculator": {
           "BaseDamage": {
-            "KweebecNightmare_EmberHit": 45
+            "KweebecNightmare_EmberHit": 25
           }
         },
         "DamageEffects": {

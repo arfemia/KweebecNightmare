@@ -114,11 +114,12 @@ public final class ShrineSubmitInteraction extends SimpleInstantInteraction {
                 return;
             }
             // DISCOVER-on-touch: this RootInteraction only fires on a KweebecNightmare_Shrine furnace block,
-            // so resolve (creating on first F-press) the shrine for the targeted block. Null only once the
-            // round's known total shrines are already discovered (an unexpected extra furnace) - then no-op.
+            // so resolve (creating on first F-press) the shrine for the targeted block. EVERY furnace in the
+            // grove counts - the worldgen biome scatters far more furnaces than the win count, and discovery
+            // is no longer capped, so any unlit furnace is always cleansable (never a silent dead-end).
             ShrineState shrine = chase.shrineForBlock(bp.x, bp.y, bp.z);
-            if (shrine == null || shrine.isLit()) {
-                // Beyond the expected shrine count, or already cleansed: no-op (no Moonbloom consumed).
+            if (shrine.isLit()) {
+                // Already cleansed: no-op (no Moonbloom consumed).
                 ctx.getState().state = InteractionState.Finished;
                 return;
             }
@@ -155,8 +156,8 @@ public final class ShrineSubmitInteraction extends SimpleInstantInteraction {
             KweebecNightmarePlugin.LOGGER.atInfo().log("[Kweebec] shrine " + shrine.index()
                     + " submit: have=" + have + " need=" + remaining + " taken=" + taken);
             if (taken <= 0) {
-                // At the shrine but carrying no Moonbloom: nudge to gather more.
-                RoundFeedback.warningToast(pr, Lang.TOAST_CLEANSE_NEED);
+                // At the shrine but carrying no Moonbloom: nudge to gather the amount still needed.
+                RoundFeedback.warningToast(pr, Lang.msg(Lang.TOAST_CLEANSE_NEED).param("0", remaining));
                 ctx.getState().state = InteractionState.Finished;
                 return;
             }

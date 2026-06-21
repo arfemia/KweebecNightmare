@@ -9,9 +9,7 @@
   "LeaderboardBucket": "PARTY_SIZE",
   "LeaderboardKey": "kweebecnightmare.leaderboard.title",
   "RewardOnExit": "ON_WIN",
-  "Rewards": [
-    "item KweebecNightmare_Moonbloom 3"
-  ],
+  "RewardTableId": "chase_nightmare",
   "QueueModes": {
     "Public": { "Enabled": true, "IconItemId": "Tool_Map", "Order": 0 },
     "Party":  { "Enabled": true, "IconItemId": "Furniture_Outlander_Banner", "Order": 1 },

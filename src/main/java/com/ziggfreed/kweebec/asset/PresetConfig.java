@@ -1,7 +1,6 @@
 package com.ziggfreed.kweebec.asset;
 
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -16,50 +15,44 @@ import com.ziggfreed.kweebec.round.RuleSet;
 import com.ziggfreed.kweebec.util.SafeLog;
 
 /**
- * The authority for round presets, folded {@code defaults < pack < owner}. Replaces
- * the old hardcoded {@code RoundPreset} enum as the {@link RuleSet} source; the enum
- * is now a thin compatibility shim that delegates here.
- *
- * <p>Folding mechanism (copied from hyMMO's per-type config singletons): the jar
- * ships the three baseline presets as default JSON (loaded via the engine asset
- * store's DEFAULT_PACK layer and re-applied here as the {@code defaults} floor); a
- * pack's {@code Server/KweebecNightmare/Presets/*.json} overlays by id
- * (last-pack-wins, or {@code replace} drops the defaults for that type). The owner
- * layer (a future {@code mods/kweebecnightmare/presets.json}) would overlay on top;
- * it is not wired this pass.
+ * The authority for round presets. The presets ARE the pack-authored
+ * {@code Server/KweebecNightmare/Presets/*.json} (the JSON is the single source of
+ * truth - there are NO Java-baked default presets); the engine's asset system folds
+ * the bundled defaults with any external pack overlay (by id, last-pack-wins or the
+ * Control {@code replace} mode) BEFORE {@code KweebecAssetRegistrar}'s preset-load
+ * listener hands the decoded set here via {@link #mergePackLayer}.
  *
  * <p>A 4th <b>runtime</b> tier lives above this in {@code RoundService} via
  * {@code KweebecNightmareAPI} (an installed MMO calls
  * {@code overridePreset}/{@code scaleRuleSet} BEFORE the round builds its RuleSet).
- * This config is purely the static defaults &lt; pack fold.
+ *
+ * <p><b>Read lazily / post-load.</b> The presets are populated by the asset
+ * {@code LoadedAssetsEvent} AFTER plugin {@code setup()}; {@link #resolve} is called at
+ * round start (post-load). If a preset is queried before its JSON has loaded (or the
+ * Presets folder is missing entirely), {@link #resolve} falls back to a schema-default
+ * {@link RuleSet} (the value object's own field defaults, NOT a content preset) so a
+ * round can still start - and logs a warning so the missing JSON is obvious.
  */
 public final class PresetConfig {
 
-    /** The preset id used when none is specified. Preserves {@code RoundPreset.DEFAULT == NIGHTMARE}. */
+    /** The preset id used when none is specified. */
     public static final String DEFAULT = "nightmare";
 
     private static PresetConfig instance;
 
     /**
-     * Effective BASE presets by lowercase id (defaults < pack), BEFORE the mutator
-     * fold. {@link #resolve(String)} stacks each preset's authored mutators on top of
-     * its base at resolve time (lazily, so it is robust to the order the preset and
-     * mutator load handlers fire in).
+     * Effective BASE presets by lowercase id, BEFORE the mutator fold. The JSON-decoded
+     * set handed in by {@link #mergePackLayer}. {@link #resolve(String)} stacks each
+     * preset's authored mutators on top of its base at resolve time (lazily, so it is
+     * robust to the order the preset and mutator load handlers fire in).
      */
     private final ConcurrentHashMap<String, RuleSet> presets = new ConcurrentHashMap<>();
     /** Authored mutator ids per preset (lowercase id -> ordered mutator ids), stacked at resolve. */
     private final ConcurrentHashMap<String, String[]> mutatorIds = new ConcurrentHashMap<>();
 
-    /**
-     * Cached pack layer (already-decoded RuleSets handed in by the asset load
-     * handler); deliberately NOT cleared by reloads so an owner reload re-overlays.
-     */
-    @Nullable private Map<String, RuleSet> packLayer = null;
-    @Nullable private Map<String, String[]> packMutatorIds = null;
-    private boolean packReplace = false;
-
     private PresetConfig() {
-        loadDefaults();
+        // No Java defaults: presets are loaded from Server/KweebecNightmare/Presets/*.json
+        // via mergePackLayer when the asset LoadedAssetsEvent fires (post-setup).
     }
 
     @Nonnull
@@ -70,105 +63,55 @@ public final class PresetConfig {
         return instance;
     }
 
-    // ==================== defaults ====================
+    // ==================== pack/JSON layer ====================
 
     /**
-     * The jar's baseline presets (the Nightmare-tuned floor). These match the old
-     * {@code RoundPreset} enum exactly so behavior is unchanged when no pack lands.
-     * The default JSON in {@code Server/KweebecNightmare/Presets/} is the authoring
-     * reference / editor surface; this code path is the in-memory source of truth so
-     * the feature works with zero pack files too.
-     */
-    private synchronized void loadDefaults() {
-        presets.clear();
-        mutatorIds.clear();
-        for (DefaultPresets.Preset p : DefaultPresets.all()) {
-            RuleSet rs = p.ruleSet();
-            presets.put(rs.presetId(), rs);
-            mutatorIds.put(rs.presetId(), p.mutatorIds());
-        }
-    }
-
-    // ==================== pack layer ====================
-
-    /**
-     * Entry point for {@code KweebecAssetRegistrar}'s preset-load listener. The
-     * handler decodes each pack {@code RoundPresetAsset} into a RuleSet via the
-     * shared {@code RoundPresetAsset.CODEC}, so this layer arrives already typed.
+     * Entry point for {@code KweebecAssetRegistrar}'s preset-load listener. The handler
+     * decodes every loaded {@code RoundPresetAsset} (the bundled defaults AND any external
+     * pack overlay, already merged by the engine's asset system) into a RuleSet via the
+     * shared {@code RoundPresetAsset.CODEC}, so this layer arrives already typed and
+     * fully folded. It REPLACES the effective set wholesale (the incoming map is the
+     * complete, already-merged result).
      *
      * @param layer       decoded BASE RuleSets by lowercase id (un-mutated)
      * @param mutatorIds  authored mutator ids per preset (stacked at resolve time)
-     * @param replace     {@code true} to drop the jar defaults for the presets type
+     * @param replace     unused (the engine's asset merge + Control mode already decided
+     *                    add/replace before this fires); kept for call-site symmetry
      */
     public synchronized void mergePackLayer(@Nonnull Map<String, RuleSet> layer,
                                             @Nonnull Map<String, String[]> mutatorIds,
                                             boolean replace) {
-        this.packLayer = layer;
-        this.packMutatorIds = mutatorIds;
-        this.packReplace = replace;
-        applyPackLayer();
-        SafeLog.info("[Kweebec][AssetPacks] Preset layer applied (" + layer.size()
-                + " entries, mode=" + (replace ? "replace" : "add") + ") - "
-                + presets.size() + " effective");
-    }
-
-    private synchronized void applyPackLayer() {
-        Map<String, RuleSet> effPresets = new LinkedHashMap<>();
-        Map<String, String[]> effMutators = new LinkedHashMap<>();
-        // (a) jar defaults floor, unless the pack declares replace.
-        if (!packReplace) {
-            for (DefaultPresets.Preset p : DefaultPresets.all()) {
-                RuleSet rs = p.ruleSet();
-                effPresets.put(rs.presetId(), rs);
-                effMutators.put(rs.presetId(), p.mutatorIds());
-            }
-        }
-        // (b) pack layer overlays by id.
-        if (packLayer != null) {
-            effPresets.putAll(packLayer);
-        }
-        if (packMutatorIds != null) {
-            effMutators.putAll(packMutatorIds);
-        }
         presets.clear();
-        presets.putAll(effPresets);
-        mutatorIds.clear();
-        mutatorIds.putAll(effMutators);
-        // Guarantee the default preset always resolves (a replace pack without
-        // "nightmare" falls back to the jar baseline so a round can always start).
-        if (!presets.containsKey(DEFAULT)) {
-            RuleSet fallback = DefaultPresets.nightmare();
-            presets.put(DEFAULT, fallback);
-            mutatorIds.putIfAbsent(DEFAULT, new String[0]);
-            SafeLog.warn("[Kweebec][AssetPacks] no '" + DEFAULT
-                    + "' preset after fold; restored jar baseline so rounds can start.");
-        }
+        presets.putAll(layer);
+        this.mutatorIds.clear();
+        this.mutatorIds.putAll(mutatorIds);
+        SafeLog.info("[Kweebec][AssetPacks] Presets loaded from JSON (" + presets.size() + " effective).");
     }
 
     // ==================== resolve / queries ====================
 
     /**
      * Resolve a preset id to its fully-folded {@link RuleSet}. {@code null} / blank /
-     * unknown falls back to {@link #DEFAULT}. This is the single static-fold
-     * authority: it returns the preset's base {@link RuleSet} with the preset's
-     * authored mutators (the {@code mutator fold}) STACKED on top - sitting between
-     * the {@code defaults < pack < owner} layering and the runtime SCALE tier (the
-     * MMO API tier applies last, above this in RoundService, untouched).
+     * unknown falls back to {@link #DEFAULT}; if even that is not loaded (no Presets JSON
+     * yet / missing), a schema-default {@link RuleSet} is returned so a round can start.
+     * Returns the preset's base {@link RuleSet} with the preset's authored mutators
+     * STACKED on top (the mutator fold) - sitting between the JSON layer and the runtime
+     * SCALE tier (the MMO API tier applies last, above this in RoundService).
      */
     @Nonnull
     public RuleSet resolve(@Nullable String id) {
-        if (id != null && !id.isBlank()) {
-            String key = id.toLowerCase(Locale.ROOT);
-            RuleSet rs = presets.get(key);
-            if (rs != null) {
-                return applyMutators(key, rs);
-            }
+        String key = (id != null && !id.isBlank()) ? id.toLowerCase(Locale.ROOT) : DEFAULT;
+        RuleSet rs = presets.get(key);
+        if (rs == null && !key.equals(DEFAULT)) {
+            rs = presets.get(DEFAULT);
         }
-        RuleSet def = presets.get(DEFAULT);
-        if (def != null) {
-            return applyMutators(DEFAULT, def);
+        if (rs == null) {
+            SafeLog.warn("[Kweebec][AssetPacks] preset '" + key + "' not loaded from JSON "
+                    + "(Server/KweebecNightmare/Presets/*.json missing or not yet loaded); "
+                    + "using a schema-default RuleSet so the round can still start.");
+            return RuleSet.builder(key).build();
         }
-        return DefaultPresets.nightmare();
+        return applyMutators(key, rs);
     }
 
     /**

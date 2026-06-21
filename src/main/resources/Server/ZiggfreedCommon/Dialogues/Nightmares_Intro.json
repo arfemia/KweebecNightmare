@@ -15,6 +15,12 @@
       "lore": {
         "Options": [
           { "Conditions": [{ "Type": "NotInRound" }], "Goto": "preset_pick" },
+          { "Goto": "tips" }
+        ]
+      },
+      "tips": {
+        "Options": [
+          { "Conditions": [{ "Type": "NotInRound" }], "Goto": "preset_pick" },
           { "Goto": "greet" }
         ]
       },

@@ -131,6 +131,11 @@ public final class RoundFeedback {
         toast(playerRef, Lang.msg(key), NotificationStyle.Warning);
     }
 
+    /** A warning toast carrying a PRE-BUILT (possibly parameterized) message. */
+    public static void warningToast(@Nonnull PlayerRef playerRef, @Nonnull Message message) {
+        toast(playerRef, message, NotificationStyle.Warning);
+    }
+
     /** A neutral progress toast carrying a PRE-BUILT (possibly parameterized) message. */
     public static void infoToast(@Nonnull PlayerRef playerRef, @Nonnull Message message) {
         toast(playerRef, message, NotificationStyle.Default);

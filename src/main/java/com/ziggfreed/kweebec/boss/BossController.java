@@ -68,12 +68,17 @@ import com.ziggfreed.kweebec.util.SafeLog;
  */
 public final class BossController {
 
-    /** Total phase count (for the HUD "Phase X/Y" indicator). The Warden ships three phases. */
-    private static final int TOTAL_PHASES = 3;
     /** Add-spawn ring radius (blocks) around the boss for the per-phase Blight summons. */
     private static final double ADD_RING_RADIUS = 6.0;
 
     private final MultiPhaseBossAsset boss;
+    /**
+     * Effective phase count for the HUD "Phase X/Y" indicator, derived from which later-phase roles the
+     * asset actually authors (1..3): a boss whose phase-2 (and phase-3) role is blank is a single-phase
+     * fight, so the HUD must not advertise "Phase 1/3". Phase 3 only counts when phase 2 is also authored
+     * (the swap chain is sequential - it can never reach phase 3 without passing through phase 2).
+     */
+    private final int totalPhases;
 
     /** The live boss entity (current phase), or {@code null} before spawn / after death. World-thread only. */
     @Nullable private Ref<EntityStore> bossRef;
@@ -87,14 +92,41 @@ public final class BossController {
     /** True once the boss has been defeated (so we resolve/teardown exactly once). World-thread only. */
     private boolean defeated = false;
     /**
+     * Last position the live boss entity was seen at (refreshed every tick it is valid), so a death-driven
+     * phase advance can re-rise the next phase where the previous one fell rather than back at the gate.
+     * World-thread only.
+     */
+    @Nullable private Vector3d lastKnownPos;
+    /**
      * Wall-clock (ms) of the last Emberbloom helper-throwable cluster placement, the cooldown anchor for the
      * asset's {@link MultiPhaseBossAsset#throwableRespawnSeconds()} regrow timer. Stamped on every placement
      * (phase entry + each respawn). World-thread only.
      */
     private long lastThrowableSpawnMs = 0L;
+    /**
+     * Monotonic counter bumped on every throwable placement (phase entry + each respawn wave), used as the
+     * deterministic scatter salt so each wave lands its grove-scattered Emberbloom on fresh tiles instead of
+     * stacking on the previous wave's. World-thread only.
+     */
+    private int throwableWave = 0;
 
     private BossController(@Nonnull MultiPhaseBossAsset boss) {
         this.boss = boss;
+        this.totalPhases = countAuthoredPhases(boss);
+    }
+
+    /**
+     * Count how many phases the boss asset actually authors (1..3): phase 1 always exists, phase 2 counts
+     * when {@link MultiPhaseBossAsset#phase2Role()} is present, and phase 3 only counts when phase 2 is too
+     * (the swap chain is sequential, so an authored phase-3 role is unreachable without phase 2).
+     */
+    private static int countAuthoredPhases(@Nonnull MultiPhaseBossAsset boss) {
+        boolean hasPhase2 = boss.phase2Role() != null && !boss.phase2Role().isBlank();
+        boolean hasPhase3 = boss.phase3Role() != null && !boss.phase3Role().isBlank();
+        if (hasPhase2 && hasPhase3) {
+            return 3;
+        }
+        return hasPhase2 ? 2 : 1;
     }
 
     /**
@@ -140,7 +172,7 @@ public final class BossController {
             Sound3D.playAt(spawnSound, SoundCategory.SFX, spawned, store, "BOSS_SPAWN", false);
         }
         summonAdds(npc, store, world, Math.max(0, boss.phase1AddCount()));
-        placeThrowableClusters(world, store, boss.throwableCountForPhase(1));
+        placeThrowableClusters(round, world, store, boss.throwableCountForPhase(1));
         forEachSurvivor(round, pr -> RoundFeedback.title(pr,
                 Lang.BOSS_TITLE_AWAKENS, Lang.BOSS_TITLE_AWAKENS_SUB, true));
         SafeLog.info("[Kweebec][boss] Warden spawned (phase 1) in round " + round.roundId());
@@ -161,16 +193,24 @@ public final class BossController {
             return false;
         }
         if (!bossRef.isValid()) {
-            // The boss entity is gone (killed) - that is the win.
+            // The phase entity is gone (killed). The 1 Hz round tick samples HP only once per second, so a
+            // burst (multi-survivor Emberbloom throws at 125 each + melee) can carry the boss from above a
+            // phase threshold straight to dead inside one inter-tick window - the swap was never observed.
+            // Advance to the next phase in the fallen one's place instead of declaring victory; only the
+            // FINAL phase's death is the win.
+            if (advanceToNextPhaseOnDeath(round, world, store)) {
+                return false;
+            }
             onDefeated(round);
             return true;
         }
+        lastKnownPos = positionOf(store, bossRef);
         HealthSnapshot hp = readHealth(store, bossRef);
         if (hp == null) {
             return false; // cannot read HP this tick; hold the current phase
         }
         maybeSwapPhase(round, world, store, hp);
-        maybeRespawnThrowables(world, store);
+        maybeRespawnThrowables(round, world, store);
         pushHuds(round, hp);
         return false;
     }
@@ -192,6 +232,36 @@ public final class BossController {
         }
     }
 
+    /**
+     * Death-driven phase advance: when the live phase entity was killed (the threshold swap never fired
+     * because a burst outran the 1 Hz sample), rise the next phase in its place via {@link #swapTo}. Returns
+     * {@code true} when a new phase entity actually rose; {@code false} when no phase remains (final phase
+     * died = the win) or the next phase has no authored role / its spawn failed (in which case {@code swapTo}
+     * has already resolved the defeat). World-thread only.
+     */
+    private boolean advanceToNextPhaseOnDeath(@Nonnull RoundInstance round, @Nonnull World world,
+                                              @Nonnull Store<EntityStore> store) {
+        int nextPhase;
+        String nextRole;
+        int addCount;
+        if (phase == 1) {
+            nextPhase = 2;
+            nextRole = boss.phase2Role();
+            addCount = boss.phase2AddCount();
+        } else if (phase == 2) {
+            nextPhase = 3;
+            nextRole = boss.phase3Role();
+            addCount = boss.phase3AddCount();
+        } else {
+            return false; // the final phase fell - that is the win
+        }
+        if (nextRole == null || nextRole.isBlank()) {
+            return false; // no next phase authored - treat the death as the win
+        }
+        swapTo(round, world, store, nextPhase, nextRole, Math.max(0, addCount));
+        return !defeated && bossRef != null; // swapTo flips defeated + nulls bossRef on spawn failure
+    }
+
     /** Despawn the current phase entity, spawn the next phase role at the same pos, cue + summon adds. */
     private void swapTo(@Nonnull RoundInstance round, @Nonnull World world, @Nonnull Store<EntityStore> store,
                         int newPhase, @Nonnull String roleName, int addCount) {
@@ -201,7 +271,8 @@ public final class BossController {
         }
         Vector3d pos = positionOf(store, bossRef);
         if (pos == null) {
-            pos = bossSpawnPos(world);
+            // The entity is already gone (death-driven advance): re-rise where it last stood, else the gate.
+            pos = lastKnownPos != null ? lastKnownPos : bossSpawnPos(world);
         }
         // Despawn the old phase entity.
         if (bossRef != null && bossRef.isValid()) {
@@ -225,7 +296,7 @@ public final class BossController {
             Sound3D.playAt(roar, SoundCategory.SFX, spawned, store, "BOSS_PHASE", false);
         }
         summonAdds(npc, store, world, addCount);
-        placeThrowableClusters(world, store, boss.throwableCountForPhase(newPhase));
+        placeThrowableClusters(round, world, store, boss.throwableCountForPhase(newPhase));
         forEachSurvivor(round, pr -> RoundFeedback.dangerToast(pr, Lang.BOSS_TOAST_PHASE));
         SafeLog.info("[Kweebec][boss] Warden -> phase " + newPhase + " in round " + round.roundId());
     }
@@ -270,7 +341,7 @@ public final class BossController {
         }
         int fallbackY = (int) ArenaLayout.STAND_Y;
         List<Vector3d> ring = SpawnPlacement.ringAround(world, center.x(), center.z(),
-                ADD_RING_RADIUS, toSpawn, fallbackY);
+                ADD_RING_RADIUS, toSpawn, fallbackY, ArenaBuilder.surfaceDecorationKeys());
         for (Vector3d p : ring) {
             Ref<EntityStore> add = spawnRole(npc, store, addRole, p, ArenaLayout.GATE.yaw());
             if (add != null) {
@@ -282,33 +353,74 @@ public final class BossController {
     // --- helper throwables (the boss-phase Emberbloom supply) ---
 
     /**
-     * Place {@code count} harvestable Emberbloom clusters in a ring around the boss (the asset's
-     * {@link MultiPhaseBossAsset#throwableClusterId()} prefab at {@link MultiPhaseBossAsset#throwableRingRadius()}),
-     * so survivors can gather + throw them at the Warden for the burst damage that makes a high-HP boss
-     * killable. Stamps {@link #lastThrowableSpawnMs} so the respawn timer measures from this placement.
-     * No-op when the boss authors no throwable cluster (the default). World-thread; best-effort via
-     * {@code ArenaBuilder} (blocking load off-thread, each paste hops back on).
+     * Per-wave ring rotation (radians): the golden angle, so each successive ring around a stationary boss is
+     * rotated to angles no earlier wave used and lands on FRESH tiles instead of stacking exactly atop the
+     * previous ring (the "Emberbloom on top of itself" bug).
      */
-    private void placeThrowableClusters(@Nonnull World world, @Nonnull Store<EntityStore> store, int count) {
+    private static final double RING_WAVE_ROTATION = 2.0 * Math.PI * 0.6180339887498949;
+
+    /**
+     * The PHASE-ENTRY Emberbloom placement: a {@code count} close ring at the boss (the ammo right where the
+     * fight is) PLUS a SMALLER one-time scatter across the wider grove, so survivors are not pinned to the
+     * boss's feet yet the arena is not carpeted in Emberbloom. Placed ONCE per phase; the periodic top-up
+     * ({@link #replenishThrowableRing}) re-rings the close supply only, never re-scatters. The ring is
+     * rotated per wave ({@link #RING_WAVE_ROTATION}) so it never stacks on a previous ring. Stamps
+     * {@link #lastThrowableSpawnMs} so the respawn timer measures from here. No-op when the boss authors no
+     * throwable cluster (the default). World-thread; best-effort via {@code ArenaBuilder} (blocking load
+     * off-thread, each paste hops back on).
+     */
+    private void placeThrowableClusters(@Nonnull RoundInstance round, @Nonnull World world,
+                                        @Nonnull Store<EntityStore> store, int count) {
         String prefab = boss.throwableClusterId();
         if (count <= 0 || prefab == null || prefab.isBlank()) {
             return;
         }
         Vector3d center = positionOf(store, bossRef);
         if (center == null) {
-            center = bossSpawnPos(world);
+            center = lastKnownPos != null ? lastKnownPos : bossSpawnPos(world);
         }
-        ArenaBuilder.plantClusterRing(world, prefab, center.x(), center.z(), boss.throwableRingRadius(), count);
+        int wave = ++throwableWave;
+        // Close supply: a ring at the boss so survivors have ammo right where the fight is.
+        ArenaBuilder.plantClusterRing(world, prefab, center.x(), center.z(), boss.throwableRingRadius(),
+                count, RING_WAVE_ROTATION * wave);
+        // Board supply: HALF the count scattered across the wider grove (placed ONCE per phase, NOT on every
+        // respawn), so the Emberbloom is reachable beyond the boss's feet without carpeting the arena. Salted
+        // by wave so it lands on fresh tiles.
+        ArenaBuilder.plantClusters(round, world, prefab, 0, Math.max(1, count / 2), wave);
         lastThrowableSpawnMs = System.currentTimeMillis();
     }
 
     /**
-     * Replenish the current phase's Emberbloom clusters once {@link MultiPhaseBossAsset#throwableRespawnSeconds()}
-     * has elapsed since the last placement - the configurable supply timer that keeps the Warden killable as
+     * Respawn-timer top-up: re-ring ONLY the current phase's CLOSE Emberbloom supply around the boss (no
+     * whole-grove re-scatter, so the arena is not progressively carpeted), rotated per wave
+     * ({@link #RING_WAVE_ROTATION}) so the fresh ring interleaves with the previous one rather than stacking
+     * on the same tiles. Stamps {@link #lastThrowableSpawnMs}. No-op when the current phase places no
+     * throwables. World-thread only.
+     */
+    private void replenishThrowableRing(@Nonnull World world, @Nonnull Store<EntityStore> store) {
+        String prefab = boss.throwableClusterId();
+        int count = boss.throwableCountForPhase(phase);
+        if (count <= 0 || prefab == null || prefab.isBlank()) {
+            return;
+        }
+        Vector3d center = positionOf(store, bossRef);
+        if (center == null) {
+            center = lastKnownPos != null ? lastKnownPos : bossSpawnPos(world);
+        }
+        int wave = ++throwableWave;
+        ArenaBuilder.plantClusterRing(world, prefab, center.x(), center.z(), boss.throwableRingRadius(),
+                count, RING_WAVE_ROTATION * wave);
+        lastThrowableSpawnMs = System.currentTimeMillis();
+    }
+
+    /**
+     * Fire {@link #replenishThrowableRing} once {@link MultiPhaseBossAsset#throwableRespawnSeconds()} has
+     * elapsed since the last placement - the configurable supply timer that keeps the Warden killable as
      * survivors spend throwables on it. No-op when respawn is off ({@code 0}) or the current phase places no
      * throwables. World-thread only.
      */
-    private void maybeRespawnThrowables(@Nonnull World world, @Nonnull Store<EntityStore> store) {
+    private void maybeRespawnThrowables(@Nonnull RoundInstance round, @Nonnull World world,
+                                        @Nonnull Store<EntityStore> store) {
         int respawnSec = boss.throwableRespawnSeconds();
         int count = boss.throwableCountForPhase(phase);
         String prefab = boss.throwableClusterId();
@@ -316,7 +428,7 @@ public final class BossController {
             return;
         }
         if (System.currentTimeMillis() - lastThrowableSpawnMs >= respawnSec * 1000L) {
-            placeThrowableClusters(world, store, count);
+            replenishThrowableRing(world, store);
         }
     }
 
@@ -382,7 +494,7 @@ public final class BossController {
             BossHud bossHud = resolveBossHud(pr);
             if (bossHud != null) {
                 try {
-                    bossHud.pushHealth(hp.current(), hp.max(), phase, TOTAL_PHASES);
+                    bossHud.pushHealth(hp.current(), hp.max(), phase, totalPhases);
                 } catch (Throwable ignored) {
                     // HUD is non-essential
                 }
@@ -460,11 +572,16 @@ public final class BossController {
         }
     }
 
-    /** Floor-snapped boss spawn position at the Heartwood Gate (barring the escape). World-thread only. */
+    /**
+     * Floor-snapped boss spawn position at the Heartwood Gate (barring the escape), snapped PAST the grove
+     * canopy ({@link ArenaBuilder#surfaceDecorationKeys()}) so the Warden rises on the genuine ground and
+     * never spawns standing on top of a tree. World-thread only.
+     */
     @Nonnull
     private static Vector3d bossSpawnPos(@Nonnull World world) {
         Anchor gate = ArenaLayout.GATE;
-        return SpawnPlacement.snapToSurface(world, gate.x(), gate.z(), (int) ArenaLayout.STAND_Y);
+        return SpawnPlacement.snapToSurface(world, gate.x(), gate.z(), (int) ArenaLayout.STAND_Y,
+                ArenaBuilder.surfaceDecorationKeys());
     }
 
     @Nullable

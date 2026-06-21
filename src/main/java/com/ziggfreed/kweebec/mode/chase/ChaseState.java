@@ -103,19 +103,25 @@ public final class ChaseState {
 
     /**
      * Resolve (CREATING on first touch) the shrine for the furnace block a survivor pressed F on. The
-     * {@code KweebecNightmare_Shrine_Use} RootInteraction only fires on a shrine furnace block, so a block
-     * not yet in the map IS a real shrine being discovered - register it. Returns null only once the known
-     * {@link #totalShrines} have already been discovered (ignore any unexpected extra furnace). World-thread only.
+     * {@code KweebecNightmare_Shrine_Use} RootInteraction only fires on a {@code KweebecNightmare_Shrine}
+     * furnace block, so a block not yet in the map IS a real shrine being discovered - register it.
+     *
+     * <p><b>Every furnace counts - discovery is NOT capped.</b> The grove is SCATTERED with furnace-baked
+     * shrine hosts by worldgen (the {@code KweebecNightmare_Grove} {@code Mesh2D} shrine-host props place
+     * many more furnaces than {@link #totalShrines}); the design is "light ANY {@link #totalShrines} of the
+     * worldgen-scattered shrines to win". An earlier version rejected any furnace once {@code totalShrines}
+     * distinct ones had been touched - but because the world holds far more furnaces than the win count, that
+     * silently DEAD-ENDED every surplus furnace: a party that lit some, then ran short of Moonbloom at others,
+     * could fill all the discovery slots with already-touched furnaces and then be UNABLE to light any of the
+     * remaining ones (pressing F did nothing), soft-locking the round at e.g. 4/5. So discovery is never
+     * capped; the win stays a COUNT ({@link #allShrinesLit}) over however many furnaces get lit. World-thread only.
      */
-    @Nullable
+    @Nonnull
     public ShrineState shrineForBlock(int x, int y, int z) {
         Vector3i pos = new Vector3i(x, y, z);
         ShrineState existing = discovered.get(pos);
         if (existing != null) {
             return existing;
-        }
-        if (discovered.size() >= totalShrines) {
-            return null;
         }
         ShrineState s = new ShrineState(DISCOVERED_INDEX_BASE + discovered.size(), new Anchor(x, y, z, 0f));
         s.setBlockPos(pos);

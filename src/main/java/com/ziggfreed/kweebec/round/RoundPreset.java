@@ -3,7 +3,6 @@ package com.ziggfreed.kweebec.round;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.ziggfreed.kweebec.asset.DefaultPresets;
 import com.ziggfreed.kweebec.asset.PresetConfig;
 
 /**
@@ -15,19 +14,20 @@ import com.ziggfreed.kweebec.asset.PresetConfig;
  * legacy enum path. Prefer {@code PresetConfig.getInstance()} +
  * {@code KweebecNightmareAPI.resolveRuleSet(...)} in new code.
  *
- * <p>The constants do NOT re-declare the tuned builders (that data lives once in
- * {@link DefaultPresets} / {@link PresetConfig}); they are just stable ids with the
- * {@link #NIGHTMARE} default preserved.
+ * <p>The constants do NOT re-declare the tuned builders (preset tuning lives ONLY in
+ * the pack-authored {@code Server/KweebecNightmare/Presets/*.json}, folded by
+ * {@link PresetConfig}); they are just stable ids with the {@link #NIGHTMARE} default
+ * preserved.
  */
 public enum RoundPreset {
 
-    /** Forgiving, solo-friendly. Tuning lives in {@link DefaultPresets#amateur()}. */
+    /** Forgiving, solo-friendly. Tuning lives in {@code Presets/Amateur.json}. */
     AMATEUR("amateur"),
 
-    /** The default tuning. Tuning lives in {@link DefaultPresets#nightmare()}. */
+    /** The default tuning. Tuning lives in {@code Presets/Nightmare.json}. */
     NIGHTMARE("nightmare"),
 
-    /** Brutal. Tuning lives in {@link DefaultPresets#hardcore()}. */
+    /** Brutal. Tuning lives in {@code Presets/Hardcore.json}. */
     HARDCORE("hardcore");
 
     /** The preset chosen when none is specified ({@code PresetConfig.DEFAULT}). */

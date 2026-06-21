@@ -1,5 +1,8 @@
 package com.ziggfreed.kweebec.asset;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -9,6 +12,7 @@ import com.hypixel.hytale.assetstore.map.DefaultAssetMap;
 import com.hypixel.hytale.assetstore.map.JsonAssetWithMap;
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
+import com.hypixel.hytale.codec.codecs.map.MapCodec;
 import com.ziggfreed.common.instance.zone.ContestRule;
 import com.ziggfreed.common.worldmap.DiscoveryMode;
 import com.ziggfreed.common.worldmap.MapDiscovery;
@@ -56,8 +60,13 @@ import com.ziggfreed.kweebec.score.ScoringConfig;
  *   "DamagePointsPerHp": 8.0, "DamageBudget": 200.0, "StunBonusPer": 50,
  *   "ShrineBonusPer": 75, "AllShrinesBonus": 500,
  *   "JumpscareEnabled": true, "JumpscareBeatId": "jumpscare",
- *   "JumpscareShakeIntensity": 0.7, "JumpscareCooldownSeconds": 12 }
+ *   "JumpscareShakeIntensity": 0.7, "JumpscareCooldownSeconds": 12,
+ *   "WinSoundId": "SFX_Discovery_Z1_Medium" }
  * }</pre>
+ *
+ * <p>{@code WinSoundId} is the {@code SoundEvent} id played to each survivor on a round win (the
+ * extraction fanfare; absent = the {@link RuleSet} default {@code SFX_Discovery_Z1_Medium}). It plays
+ * through the ziggfreed-common {@code Sound3D} seam in {@code ChaseRoundMode.onResolve}.
  *
  * <p>The 4 jumpscare knobs are per-game-mode: {@code JumpscareEnabled} toggles the proximity/alert
  * scare; {@code JumpscareBeatId} names a ziggfreed-common {@code BandedEffect} one-shot (overlay
@@ -102,6 +111,8 @@ public final class RoundPresetAsset
     // 1.4.0 Moonbloom loop knobs.
     private int cleanseCost = UNSET_INT;
     private long stunDurationMs = UNSET_LONG;
+    // Per-throwable damage overrides keyed by DamageCause id (null = absent = each burst's authored damage stands).
+    @Nullable private Map<String, Double> throwableDamage;
     @Nullable private String throwMode;
     private int moonbloomPerShrine = UNSET_INT;
     private int moonbloomScatter = UNSET_INT;
@@ -137,6 +148,8 @@ public final class RoundPresetAsset
     @Nullable private String jumpscareBeatId;
     private double jumpscareShakeIntensity = UNSET_DOUBLE;
     private int jumpscareCooldownSeconds = UNSET_INT;
+    // Win fanfare SoundEvent id played to each survivor on a round win (null/blank = the RuleSet default).
+    @Nullable private String winSoundId;
     // Per-preset scoring weights (each absent = the ScoringConfig default). The asset-driven
     // scoring calculation: a preset may reward speed/caution/aggression/devotion differently.
     private int scoreBaseline = UNSET_INT;
@@ -227,6 +240,8 @@ public final class RoundPresetAsset
             .add()
             .append(new KeyedCodec<>("StunDurationMs", Codec.LONG, false), (a, v) -> a.stunDurationMs = v, a -> a.stunDurationMs)
             .add()
+            .append(new KeyedCodec<>("ThrowableDamage", new MapCodec<>(Codec.DOUBLE, HashMap::new), false), (a, v) -> a.throwableDamage = v, a -> a.throwableDamage)
+            .add()
             .append(new KeyedCodec<>("ThrowMode", Codec.STRING, false), (a, v) -> a.throwMode = v, a -> a.throwMode)
             .add()
             .append(new KeyedCodec<>("MoonbloomPerShrine", Codec.INTEGER, false), (a, v) -> a.moonbloomPerShrine = v, a -> a.moonbloomPerShrine)
@@ -266,6 +281,8 @@ public final class RoundPresetAsset
             .append(new KeyedCodec<>("JumpscareShakeIntensity", Codec.DOUBLE, false), (a, v) -> a.jumpscareShakeIntensity = v, a -> a.jumpscareShakeIntensity)
             .add()
             .append(new KeyedCodec<>("JumpscareCooldownSeconds", Codec.INTEGER, false), (a, v) -> a.jumpscareCooldownSeconds = v, a -> a.jumpscareCooldownSeconds)
+            .add()
+            .append(new KeyedCodec<>("WinSoundId", Codec.STRING, false), (a, v) -> a.winSoundId = v, a -> a.winSoundId)
             .add()
             .append(new KeyedCodec<>("Baseline", Codec.INTEGER, false), (a, v) -> a.scoreBaseline = v, a -> a.scoreBaseline)
             .add()
@@ -417,6 +434,9 @@ public final class RoundPresetAsset
         if (stunDurationMs != UNSET_LONG) {
             b.stunDurationMs(stunDurationMs);
         }
+        if (throwableDamage != null && !throwableDamage.isEmpty()) {
+            b.throwableDamage(throwableDamage);
+        }
         if (throwMode != null && !throwMode.isBlank()) {
             b.throwMode(ThrowMode.fromString(throwMode));
         }
@@ -481,6 +501,9 @@ public final class RoundPresetAsset
         }
         if (jumpscareCooldownSeconds != UNSET_INT) {
             b.jumpscareCooldownSeconds(jumpscareCooldownSeconds);
+        }
+        if (winSoundId != null && !winSoundId.isBlank()) {
+            b.winSoundId(winSoundId);
         }
         // --- PvP shared (Clash + Domination) ---
         if (teamSize != UNSET_INT) {

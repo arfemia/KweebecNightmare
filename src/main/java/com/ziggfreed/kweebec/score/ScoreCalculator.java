@@ -16,6 +16,10 @@ import com.ziggfreed.kweebec.api.PlayerScore;
  * {@code stunBonus = mobsStunned * stunBonusPer}, {@code shrineBonus = shrinesLit * shrineBonusPer}
  * (devotion per shrine personally lit), and {@code allShrinesBonus} (a flat completion bonus when
  * the round lit EVERY discovered shrine).
+ *
+ * <p><b>On a loss, only the effort the player actually banked counts:</b> the {@code shrineBonus}
+ * (shrines personally lit) and {@code stunBonus} (hunters stunned). The baseline, time, damage, and
+ * all-shrines completion bonus are all zeroed - they are win-only rewards.
  */
 public final class ScoreCalculator {
 
@@ -31,15 +35,20 @@ public final class ScoreCalculator {
         int safeStuns = Math.max(0, mobsStunned);
         int safeShrines = Math.max(0, shrinesLit);
 
-        int timeComponent = (int) Math.round(
-                Math.max(0, cfg.parTimeSeconds() - safeDuration) * cfg.timePointsPerSecond());
-        double avoided = Math.max(0.0, cfg.damageBudget() - safeDamage);
-        int damageComponent = (int) Math.round(avoided * cfg.damagePointsPerHp());
+        // shrineBonus + stunBonus are always banked (the effort the player actually put in).
         int stunBonus = safeStuns * cfg.stunBonusPer();
         int shrineBonus = safeShrines * cfg.shrineBonusPer();
-        int allShrinesBonus = allShrinesLit ? cfg.allShrinesBonus() : 0;
 
-        int total = Math.max(0, cfg.baseline() + timeComponent + damageComponent
+        // Win-only rewards: baseline, time bonus, damage-avoided, and the all-shrines completion bonus.
+        // A loss earns no points beyond shrines lit + stuns.
+        int baseline = win ? cfg.baseline() : 0;
+        int timeComponent = win ? (int) Math.round(
+                Math.max(0, cfg.parTimeSeconds() - safeDuration) * cfg.timePointsPerSecond()) : 0;
+        double avoided = Math.max(0.0, cfg.damageBudget() - safeDamage);
+        int damageComponent = win ? (int) Math.round(avoided * cfg.damagePointsPerHp()) : 0;
+        int allShrinesBonus = (win && allShrinesLit) ? cfg.allShrinesBonus() : 0;
+
+        int total = Math.max(0, baseline + timeComponent + damageComponent
                 + stunBonus + shrineBonus + allShrinesBonus);
         // moonbloomCollected is carried as a lifetime-stat input only (not weighted into total).
         return new PlayerScore(total, timeComponent, damageComponent, stunBonus, shrineBonus,
