@@ -2,9 +2,9 @@
 
 **A standalone co-op horror minigame. Relight the grove together, or be hunted in the dark.**
 
-Night has fallen on the Emerald Grove, and the gentle Kweebec tree-folk have been twisted by the Void into something that hunts. One to four of you (or a lone survivor against the AI) must relight the corrupted grove-shrines to open the Heartwood Gate and hold the platform together long enough to escape, all while a Blighted Kweebec stalks the dark and grows faster with every shrine you light.
+The Void has crept into the Emerald Grove, and the gentle Kweebec tree-folk did not survive it whole. Now they wear one another's faces and hunt through a perpetual midnight that never breaks. You are one of the few still warm, still awake - alone, or with up to three others - and the only way out is to wake the grove: relight its corrupted shrines with the last of its clean light. But lighting a shrine is loud, and the thing in the dark has very good ears. Relight them all to open the Heartwood Gate, then gather on the platform beyond and hold it together until the grove lets you go, all while the hunt grows faster and hungrier with every shrine you burn bright.
 
-> v1.0.0, the first public release. The co-op chase ("Relight & Escape") runs end to end. This is a fresh launch off a mod-jam build, so if something feels off in your server, please report it on the Versions tab so it can be fixed. Watch that tab for updates.
+> v1.0.0, the first public release. The co-op chase ("Relight & Escape") runs end to end. This is a fresh launch off a mod-jam build, so if something feels off in your server, please report it on the in my discord so it can be fixed. Watch that tab for updates.
 
 ## Features
 
@@ -16,7 +16,6 @@ Night has fallen on the Emerald Grove, and the gentle Kweebec tree-folk have bee
 - **A co-op escape, not a footrace.** Opening the Heartwood Gate is not the end. The survivors have to gather on the extraction platform and hold it together until everyone gets out, and the hold resets if the group breaks.
 - **A fresh round every time.** A new instanced grove per round, with shifting shrine layouts, caves, and corrupted ruins, keeps every run rapidly repeatable. Win well and you earn better loot.
 - **Built for dread.** Perpetual midnight, thickening fog, a proximity heartbeat that tightens as the hunter nears, whispers in the trees, and cinematic title cards.
-- **Better with MMO Skill Tree (optional).** Installed alongside MMO Skill Tree, a round can advance your skills and rewards; on its own, it grants its own. Never required.
 
 ## Install
 
@@ -24,8 +23,8 @@ Place `KweebecNightmare-<version>.jar` in your server `Mods/` folder. Requires a
 
 ## Versions
 
-| Version | Notes |
-|---|---|
-| 1.0.0 | First public release. The co-op chase ("Relight & Escape"): an instanced grove round with shifting layouts, difficulty presets, the Blighted hunter and its breeds, gather-and-throw glow-mushrooms, the multi-phase Warden capstone (scaling with party size and difficulty, with a world-map marker), score-tiered win loot, and a co-op extraction hold to escape together. |
-| 0.2.0 | Chase round built ("Relight & Escape"): round engine, difficulty presets, the Blighted hunter, cocoon and rescue, dark atmosphere and round HUD. |
-| 0.1.0 | Initial project scaffold (not yet playable). |
+| Version | Notes                                                                                                                                                                                                                                                                                                                                                                          |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1.0.0   | First public release. The co-op chase ("Relight & Escape"): an instanced grove round with shifting layouts, difficulty presets, the Blighted hunter and its breeds, gather-and-throw glow-mushrooms, the multi-phase Warden capstone (scaling with party size and difficulty, with a world-map marker), score-tiered win loot, and a co-op extraction hold to escape together. |
+| 0.2.0   | Chase round built ("Relight & Escape"): round engine, difficulty presets, the Blighted hunter, cocoon and rescue, dark atmosphere and round HUD.                                                                                                                                                                                                                               |
+| 0.1.0   | Initial project scaffold (not yet playable).                                                                                                                                                                                                                                                                                                                                   |

@@ -159,23 +159,23 @@ npc.guide.hint = Press [{key}] to speak with the Grove Warden
 # translator keeps the markup in their own line. Option labels are TextButtons (no
 # TextSpans), so they take no markup - colour-coded by their DialogueOptionStyle.
 dialogue.nightmares_intro.npc = The Grove Warden
-dialogue.nightmares_intro.greet.text = Warm. Breathing. Awake. You have no idea how rare that is down here. I have lived this same nightmare more nights than I have rings - the grove gone black, my own kin wearing my face, hunting me through the dark. I never make it out. But I have watched it enough times to know where it trips you. Sit a moment. Let me ruin the ending for you.
+dialogue.nightmares_intro.greet.text = Oh good, you're still breathing. Not many are, this far in. I've lived this same nightmare more times than I can count - the grove goes black, my own kin start wearing my face and chasing me through it, and I never make it out. But I've seen it enough to know where it gets you. Stay a minute, I'll tell you the parts that get people killed.
 dialogue.nightmares_intro.greet.opt.0 = How does this nightmare go?
-dialogue.nightmares_intro.greet.opt.1 = Enough talk. Send me in.
-dialogue.nightmares_intro.greet.opt.2 = About the hunt I am already in...
+dialogue.nightmares_intro.greet.opt.1 = Enough talk, send me in.
+dialogue.nightmares_intro.greet.opt.2 = About the hunt I'm already in...
 dialogue.nightmares_intro.greet.opt.3 = Who has lasted the longest?
-dialogue.nightmares_intro.lore.text = It always starts the same. The grove is dark and dead, and the only way to wake it is the shrines - feed them <color is="#7affa0">Moonbloom</color> light until they catch green fire. Here is the cruel part: lighting a shrine is loud, and the thing in the dark has wonderful ears. Funny how it always knows exactly where I am the moment I start to channel. Light every shrine and the <b>Heartwood Gate</b> opens - loudly, of course - and whoever stands nearest it is the first to be missed.
-dialogue.nightmares_intro.lore.opt.0 = I have heard enough. Send me in.
+dialogue.nightmares_intro.lore.text = It goes the same way every time. The grove's dead and dark, and the only thing that wakes it up is the shrines - you pour <color is="#7affa0">Moonbloom</color> into them until they burn green. Trouble is, that's loud, and whatever's out there hears everything. I swear it knows the second I start. Light them all and the <b>Heartwood Gate</b> finally opens, but that's loud too, and whoever's standing closest tends to vanish first.
+dialogue.nightmares_intro.lore.opt.0 = I've heard enough. Send me in.
 dialogue.nightmares_intro.lore.opt.1 = So how do I actually survive it?
-dialogue.nightmares_intro.tips.text = So you want to live. Bold of you. Keep your pockets full of blooms: a <color is="#7affa0">Moonbloom</color> to the face stuns the wretched things, a <color is="#5a9cff">Gustbloom</color> throws them back, a <color is="#7affa0">Mirebloom</color> drags them to a crawl, and an <color is="#ff8a3c">Emberbloom</color> burns them - them, mind, not your friends. If the roots take you, do not sulk down there; a warm hand can tear you free, so stay close enough to be that hand. And the way out only opens for those who stand on the platform <b>together</b> - wander off alone and the grove simply forgets to let you leave. Oh, and do hurry. Every breath you waste, the dark grows bolder, faster, <color is="#ff6b6b">hungrier</color>.
-dialogue.nightmares_intro.tips.opt.0 = Now I am ready.
+dialogue.nightmares_intro.tips.text = So you want to make it out. Good luck with that. Keep blooms on you - a <color is="#7affa0">Moonbloom</color> in the face stuns them, a <color is="#5a9cff">Gustbloom</color> knocks them flying, a <color is="#7affa0">Mirebloom</color> bogs them down, and an <color is="#ff8a3c">Emberbloom</color> burns them. The Emberbloom doesn't care who it hits, so mind your friends. If the roots grab you, don't just lie there - someone can pull you out, so stay where they can reach you. The way out's the same: it only opens if you're all on the platform <b>together</b>. And don't dawdle. The longer this drags on, the faster and meaner that thing gets.
+dialogue.nightmares_intro.tips.opt.0 = Alright, I'm ready.
 dialogue.nightmares_intro.tips.opt.1 = Go back.
-dialogue.nightmares_intro.preset_pick.text = How deep into the nightmare do you want to go? Shallow, and it shambles - good for learning where the bodies fall. Deep, and it sprints, and the dark drinks your light faster than you can make it. Choose. I will be watching from somewhere safe.
+dialogue.nightmares_intro.preset_pick.text = So how bad do you want it? Take it gentle and the thing just shuffles after you - good for learning how all this works. Push it and it runs you down, and the dark eats your light before you can make more. Your call. I'll be somewhere out of the way.
 dialogue.nightmares_intro.preset_pick.opt.0 = Amateur - let me learn the grove.
 dialogue.nightmares_intro.preset_pick.opt.1 = Nightmare - the real hunt.
 dialogue.nightmares_intro.preset_pick.opt.2 = Hardcore - one life, no second chances.
 dialogue.nightmares_intro.preset_pick.opt.3 = Not yet. Step back.
-dialogue.nightmares_intro.already_engaged.text = One nightmare at a time, warm one. You are already bound to a hunt. Slip out of that gathering first, and I will gladly throw you into the next.
+dialogue.nightmares_intro.already_engaged.text = One at a time, warm one. You're already in a hunt - get out of that gathering first, and I'll gladly drop you into the next.
 dialogue.nightmares_intro.already_engaged.opt.0 = Understood.
 
 # Leaderboard page (the Grove Warden's "Who has survived the most?" option, greet.opt.3).

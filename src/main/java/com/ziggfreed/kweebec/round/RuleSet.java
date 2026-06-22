@@ -38,6 +38,7 @@ public final class RuleSet {
     private final int maxDowns;
     private final int bleedOutSeconds;
     private final int hunterCount;
+    private final int maxHunters;
     private final double hunterSpeedBase;
     private final double hunterSpeedMax;
     private final int shrineBase;
@@ -53,6 +54,7 @@ public final class RuleSet {
     private final int cleanseCost;
     private final long stunDurationMs;
     private final Map<String, Double> throwableDamage;
+    private final Map<String, Double> gatherHealthRestore;
     private final ThrowMode throwMode;
     private final int moonbloomPerShrine;
     private final int moonbloomScatter;
@@ -91,6 +93,8 @@ public final class RuleSet {
     private final int jumpscareCooldownSeconds;
     // Win feedback: the SoundEvent id played to each survivor on a round win (blank = no win sound).
     @Nullable private final String winSoundId;
+    // Lose feedback: the SoundEvent id played to each present survivor on a round loss (blank = no lose sound).
+    @Nullable private final String loseSoundId;
     // --- PvP shared (Clash + Domination): team size, friendly fire, model swap, arena selection ---
     private final int teamSize;
     private final boolean friendlyFire;
@@ -125,6 +129,7 @@ public final class RuleSet {
         this.maxDowns = b.maxDowns;
         this.bleedOutSeconds = b.bleedOutSeconds;
         this.hunterCount = b.hunterCount;
+        this.maxHunters = b.maxHunters;
         this.hunterSpeedBase = b.hunterSpeedBase;
         this.hunterSpeedMax = b.hunterSpeedMax;
         this.shrineBase = b.shrineBase;
@@ -140,6 +145,7 @@ public final class RuleSet {
         this.cleanseCost = b.cleanseCost;
         this.stunDurationMs = b.stunDurationMs;
         this.throwableDamage = Map.copyOf(b.throwableDamage);
+        this.gatherHealthRestore = Map.copyOf(b.gatherHealthRestore);
         this.throwMode = b.throwMode;
         this.moonbloomPerShrine = b.moonbloomPerShrine;
         this.moonbloomScatter = b.moonbloomScatter;
@@ -175,6 +181,7 @@ public final class RuleSet {
         this.jumpscareShakeIntensity = b.jumpscareShakeIntensity;
         this.jumpscareCooldownSeconds = b.jumpscareCooldownSeconds;
         this.winSoundId = b.winSoundId;
+        this.loseSoundId = b.loseSoundId;
         this.teamSize = b.teamSize;
         this.friendlyFire = b.friendlyFire;
         this.modelSwapId = b.modelSwapId;
@@ -240,6 +247,16 @@ public final class RuleSet {
 
     public int hunterCount() {
         return hunterCount;
+    }
+
+    /**
+     * Per-round LIVE hunter ceiling: how many corrupted Kweebec may be alive at once
+     * (difficulty-driven, bounded caller-side by the absolute backstop + scaled per party
+     * member). The initial roster is {@link #hunterCount()}; escalation + extra-spawn waves
+     * fill up toward this.
+     */
+    public int maxHunters() {
+        return maxHunters;
     }
 
     /** Hunter walk-speed multiplier at zero corruption (best-effort applied to the role). */
@@ -355,6 +372,30 @@ public final class RuleSet {
     @Nullable
     public Double throwableDamage(@Nonnull String damageCauseId) {
         return throwableDamage.get(damageCauseId);
+    }
+
+    /**
+     * Per-difficulty HEALTH RESTORED when a survivor GATHERS (picks up) a glow-mushroom this round,
+     * keyed by the gathered item's id (e.g. {@code KweebecNightmare_Moonbloom},
+     * {@code KweebecNightmare_Emberbloom}); the value is the HP restored per shroom picked up (a stack of
+     * N heals N times the amount). {@code MoonbloomCollectSystem} reads this on each in-round pickup and
+     * tops the gatherer off via ziggfreed-common {@code HealthUtil.heal}, so a preset can make scavenging
+     * a survival lifeline on the gentler difficulties and a thin trickle on the harder ones. Absent key =
+     * no heal for that item. Never null; empty when the preset authors none. Authored via the preset's
+     * {@code GatherHealthRestore} object knob.
+     */
+    @Nonnull
+    public Map<String, Double> gatherHealthRestore() {
+        return gatherHealthRestore;
+    }
+
+    /**
+     * The HP restored per gathered shroom for the item identified by {@code itemId}, or {@code null} when
+     * this preset authors no heal for it (no health is restored on its pickup).
+     */
+    @Nullable
+    public Double gatherHealthRestore(@Nonnull String itemId) {
+        return gatherHealthRestore.get(itemId);
     }
 
     /** How a thrown Moonbloom delivers its stun: the asset projectile, or the code-only cone fallback. */
@@ -614,6 +655,17 @@ public final class RuleSet {
         return winSoundId;
     }
 
+    /**
+     * The {@code SoundEvent} id played to each present survivor when the round is LOST (the defeat
+     * stinger), or {@code null}/blank for no lose sound. Default {@code SFX_Hedera_Scream} (a vanilla
+     * Void scream); a pack tunes it per preset via the {@code LoseSoundId} knob. Played through the
+     * ziggfreed-common {@code Sound3D} seam in {@code ChaseRoundMode.onResolve}.
+     */
+    @Nullable
+    public String loseSoundId() {
+        return loseSoundId;
+    }
+
     // --- PvP shared (Clash + Domination) ---
 
     /** Players per team in a PvP round: 1 (1v1) or 2 (2v2). The queue seats {@code teamSize * 2}. */
@@ -694,6 +746,7 @@ public final class RuleSet {
         b.maxDowns = this.maxDowns;
         b.bleedOutSeconds = this.bleedOutSeconds;
         b.hunterCount = this.hunterCount;
+        b.maxHunters = this.maxHunters;
         b.hunterSpeedBase = this.hunterSpeedBase;
         b.hunterSpeedMax = this.hunterSpeedMax;
         b.shrineBase = this.shrineBase;
@@ -709,6 +762,7 @@ public final class RuleSet {
         b.cleanseCost = this.cleanseCost;
         b.stunDurationMs = this.stunDurationMs;
         b.throwableDamage = this.throwableDamage;
+        b.gatherHealthRestore = this.gatherHealthRestore;
         b.throwMode = this.throwMode;
         b.moonbloomPerShrine = this.moonbloomPerShrine;
         b.moonbloomScatter = this.moonbloomScatter;
@@ -744,6 +798,7 @@ public final class RuleSet {
         b.jumpscareShakeIntensity = this.jumpscareShakeIntensity;
         b.jumpscareCooldownSeconds = this.jumpscareCooldownSeconds;
         b.winSoundId = this.winSoundId;
+        b.loseSoundId = this.loseSoundId;
         b.teamSize = this.teamSize;
         b.friendlyFire = this.friendlyFire;
         b.modelSwapId = this.modelSwapId;
@@ -778,6 +833,10 @@ public final class RuleSet {
         private int maxDowns = 1;
         private int bleedOutSeconds = 30;
         private int hunterCount = 1;
+        // The per-round LIVE hunter ceiling that escalation + extra-spawn waves fill toward
+        // (difficulty-driven; the presets author 15/25/50). The initial roster stays
+        // hunterCount-driven; this only bounds how many can be ALIVE at once.
+        private int maxHunters = 6;
         private double hunterSpeedBase = 1.0;
         private double hunterSpeedMax = 1.35;
         private int shrineBase = 2;
@@ -795,6 +854,8 @@ public final class RuleSet {
         private long stunDurationMs = 2500L;
         // Per-throwable damage overrides keyed by DamageCause id (empty = each burst's authored damage stands).
         private Map<String, Double> throwableDamage = Map.of();
+        // Per-gather health restore keyed by gathered shroom item id (empty = no gather heal).
+        private Map<String, Double> gatherHealthRestore = Map.of();
         private ThrowMode throwMode = ThrowMode.DEFAULT;
         private int moonbloomPerShrine = 3;
         private int moonbloomScatter = 12;
@@ -836,6 +897,8 @@ public final class RuleSet {
         private int jumpscareCooldownSeconds = 12;
         // Win fanfare: a vanilla triumphant discovery jingle by default; a preset may override or blank it.
         @Nullable private String winSoundId = "SFX_Discovery_Z1_Medium";
+        // Lose stinger: a vanilla Void scream by default; a preset may override or blank it.
+        @Nullable private String loseSoundId = "SFX_Hedera_Scream";
         // PvP shared defaults (irrelevant to a chase preset, which never reads them).
         private int teamSize = 1;
         private boolean friendlyFire = false;
@@ -872,6 +935,7 @@ public final class RuleSet {
         @Nonnull public Builder maxDowns(int v) { this.maxDowns = v; return this; }
         @Nonnull public Builder bleedOutSeconds(int v) { this.bleedOutSeconds = v; return this; }
         @Nonnull public Builder hunterCount(int v) { this.hunterCount = v; return this; }
+        @Nonnull public Builder maxHunters(int v) { this.maxHunters = v; return this; }
         @Nonnull public Builder hunterSpeed(double base, double max) { this.hunterSpeedBase = base; this.hunterSpeedMax = max; return this; }
         @Nonnull public Builder shrines(int base, int perPlayer) { this.shrineBase = base; this.shrinePerPlayer = perPlayer; return this; }
         @Nonnull public Builder caveShrineCount(int v) { this.caveShrineCount = v; return this; }
@@ -885,6 +949,7 @@ public final class RuleSet {
         @Nonnull public Builder cleanseCost(int v) { this.cleanseCost = Math.max(0, v); return this; }
         @Nonnull public Builder stunDurationMs(long v) { this.stunDurationMs = Math.max(0L, v); return this; }
         @Nonnull public Builder throwableDamage(@Nonnull Map<String, Double> v) { this.throwableDamage = Map.copyOf(v); return this; }
+        @Nonnull public Builder gatherHealthRestore(@Nonnull Map<String, Double> v) { this.gatherHealthRestore = Map.copyOf(v); return this; }
         @Nonnull public Builder throwMode(@Nonnull ThrowMode v) { this.throwMode = v; return this; }
         @Nonnull public Builder moonbloomPerShrine(int v) { this.moonbloomPerShrine = Math.max(0, v); return this; }
         @Nonnull public Builder moonbloomScatter(int v) { this.moonbloomScatter = Math.max(0, v); return this; }
@@ -920,6 +985,7 @@ public final class RuleSet {
         @Nonnull public Builder jumpscareShakeIntensity(double v) { this.jumpscareShakeIntensity = v; return this; }
         @Nonnull public Builder jumpscareCooldownSeconds(int v) { this.jumpscareCooldownSeconds = Math.max(0, v); return this; }
         @Nonnull public Builder winSoundId(@Nullable String v) { this.winSoundId = v; return this; }
+        @Nonnull public Builder loseSoundId(@Nullable String v) { this.loseSoundId = v; return this; }
         @Nonnull public Builder teamSize(int v) { this.teamSize = Math.max(1, v); return this; }
         @Nonnull public Builder friendlyFire(boolean v) { this.friendlyFire = v; return this; }
         @Nonnull public Builder modelSwapId(@Nullable String v) { this.modelSwapId = v; return this; }

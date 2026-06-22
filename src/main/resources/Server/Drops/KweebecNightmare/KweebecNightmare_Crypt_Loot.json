@@ -2,17 +2,62 @@
   "Container": {
     "Type": "Multiple",
     "Containers": [
-      { "Type": "Single", "Item": { "ItemId": "KweebecNightmare_Gustbloom", "QuantityMin": 2, "QuantityMax": 3 } },
-      { "Type": "Single", "Item": { "ItemId": "KweebecNightmare_Mirebloom", "QuantityMin": 2, "QuantityMax": 3 } },
-      { "Type": "Single", "Item": { "ItemId": "KweebecNightmare_Emberbloom", "QuantityMin": 1, "QuantityMax": 2 } },
+      {
+        "Type": "Single",
+        "Item": {
+          "ItemId": "KweebecNightmare_Gustbloom",
+          "QuantityMin": 2,
+          "QuantityMax": 8
+        }
+      },
+      {
+        "Type": "Single",
+        "Item": {
+          "ItemId": "KweebecNightmare_Mirebloom",
+          "QuantityMin": 1,
+          "QuantityMax": 9
+        }
+      },
+      {
+        "Type": "Single",
+        "Item": {
+          "ItemId": "KweebecNightmare_Emberbloom",
+          "QuantityMin": 2,
+          "QuantityMax": 5
+        }
+      },
       {
         "Type": "Choice",
         "RollsMin": 1,
         "RollsMax": 2,
         "Containers": [
-          { "Type": "Single", "Weight": 10, "Item": { "ItemId": "KweebecNightmare_Gustbloom", "QuantityMin": 1, "QuantityMax": 2 } },
-          { "Type": "Single", "Weight": 10, "Item": { "ItemId": "KweebecNightmare_Mirebloom", "QuantityMin": 1, "QuantityMax": 2 } },
-          { "Type": "Single", "Weight": 6, "Item": { "ItemId": "KweebecNightmare_Emberbloom", "QuantityMin": 1, "QuantityMax": 2 } },
+          {
+            "Type": "Single",
+            "Weight": 10,
+            "Item": {
+              "ItemId": "KweebecNightmare_Gustbloom",
+              "QuantityMin": 2,
+              "QuantityMax": 3
+            }
+          },
+          {
+            "Type": "Single",
+            "Weight": 10,
+            "Item": {
+              "ItemId": "KweebecNightmare_Mirebloom",
+              "QuantityMin": 2,
+              "QuantityMax": 3
+            }
+          },
+          {
+            "Type": "Single",
+            "Weight": 6,
+            "Item": {
+              "ItemId": "KweebecNightmare_Emberbloom",
+              "QuantityMin": 2,
+              "QuantityMax": 5
+            }
+          },
           { "Type": "Empty", "Weight": 4 }
         ]
       }

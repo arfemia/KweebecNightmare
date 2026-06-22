@@ -49,3 +49,12 @@ Real INVENTORY items, not an abstract counter.
   preset tunes it, `setAmount`s the override (covers Moonbloom, Emberbloom, and ANY future authored throwable
   with NO per-item Java; a cause absent from the table keeps the burst's authored damage). Outside a round the
   authored 1 stands.
+- **Per-difficulty GATHER HEAL (generic, asset-driven).** Picking up a glow-mushroom can RESTORE HP, tuned per
+  preset by the `GatherHealthRestore` knob on [`../round/RuleSet`](../round/CLAUDE.md) - a `Map<ItemId, hp>` keyed
+  by the gathered ITEM id (e.g. `{"KweebecNightmare_Moonbloom": 8, "KweebecNightmare_Emberbloom": 8}`; Amateur
+  8/8, Nightmare 5/5, Hardcore 2/3). [`../event/MoonbloomCollectSystem`](../event/CLAUDE.md) (the in-round pickup
+  observer) reads it on each gather and tops the gatherer off by `perShroom * quantity` via ziggfreed-common
+  `HealthUtil.heal` (a stack of N heals N times; an item absent from the table heals nothing; no per-item Java,
+  so any future authored shroom is covered the moment a preset lists it). Note the heal table keys on the ITEM
+  id (`Moonbloom.CHARGE_ITEM` / `GlowThrowables.EMBER_ITEM`), distinct from the throwable-damage table which keys
+  on the DamageCause id (`KweebecNightmare_EmberHit`).

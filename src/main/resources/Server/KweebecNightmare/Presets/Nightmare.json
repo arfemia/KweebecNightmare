@@ -6,6 +6,7 @@
   "MaxDowns": 1,
   "BleedOutSeconds": 30,
   "HunterCount": 1,
+  "MaxHunters": 25,
   "HunterSpeedBase": 1.0,
   "HunterSpeedMax": 1.35,
   "ShrineBase": 2,
@@ -23,6 +24,10 @@
   "ThrowableDamage": {
     "KweebecNightmare_Moonbloom": 12,
     "KweebecNightmare_EmberHit": 125
+  },
+  "GatherHealthRestore": {
+    "KweebecNightmare_Moonbloom": 5,
+    "KweebecNightmare_Emberbloom": 5
   },
   "BossEnabled": true,
   "BossId": "warden",

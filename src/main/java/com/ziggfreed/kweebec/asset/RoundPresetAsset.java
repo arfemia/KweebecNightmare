@@ -61,11 +61,13 @@ import com.ziggfreed.kweebec.score.ScoringConfig;
  *   "ShrineBonusPer": 75, "AllShrinesBonus": 500,
  *   "JumpscareEnabled": true, "JumpscareBeatId": "jumpscare",
  *   "JumpscareShakeIntensity": 0.7, "JumpscareCooldownSeconds": 12,
- *   "WinSoundId": "SFX_Discovery_Z1_Medium" }
+ *   "WinSoundId": "SFX_Discovery_Z1_Medium", "LoseSoundId": "SFX_Hedera_Scream" }
  * }</pre>
  *
  * <p>{@code WinSoundId} is the {@code SoundEvent} id played to each survivor on a round win (the
- * extraction fanfare; absent = the {@link RuleSet} default {@code SFX_Discovery_Z1_Medium}). It plays
+ * extraction fanfare; absent = the {@link RuleSet} default {@code SFX_Discovery_Z1_Medium}), and
+ * {@code LoseSoundId} the id played to each present survivor on a round loss (the defeat stinger;
+ * absent = the {@link RuleSet} default {@code SFX_Hedera_Scream}, a vanilla Void scream). Both play
  * through the ziggfreed-common {@code Sound3D} seam in {@code ChaseRoundMode.onResolve}.
  *
  * <p>The 4 jumpscare knobs are per-game-mode: {@code JumpscareEnabled} toggles the proximity/alert
@@ -99,6 +101,7 @@ public final class RoundPresetAsset
     private int maxDowns = UNSET_INT;
     private int bleedOutSeconds = UNSET_INT;
     private int hunterCount = UNSET_INT;
+    private int maxHunters = UNSET_INT;
     private double hunterSpeedBase = UNSET_DOUBLE;
     private double hunterSpeedMax = UNSET_DOUBLE;
     private int shrineBase = UNSET_INT;
@@ -114,6 +117,8 @@ public final class RoundPresetAsset
     private long stunDurationMs = UNSET_LONG;
     // Per-throwable damage overrides keyed by DamageCause id (null = absent = each burst's authored damage stands).
     @Nullable private Map<String, Double> throwableDamage;
+    // Per-gather health-restore overrides keyed by gathered shroom item id (null = absent = no gather heal).
+    @Nullable private Map<String, Double> gatherHealthRestore;
     @Nullable private String throwMode;
     private int moonbloomPerShrine = UNSET_INT;
     private int moonbloomScatter = UNSET_INT;
@@ -155,6 +160,8 @@ public final class RoundPresetAsset
     private int jumpscareCooldownSeconds = UNSET_INT;
     // Win fanfare SoundEvent id played to each survivor on a round win (null/blank = the RuleSet default).
     @Nullable private String winSoundId;
+    // Lose stinger SoundEvent id played to each present survivor on a round loss (null/blank = the RuleSet default).
+    @Nullable private String loseSoundId;
     // Per-preset scoring weights (each absent = the ScoringConfig default). The asset-driven
     // scoring calculation: a preset may reward speed/caution/aggression/devotion differently.
     private int scoreBaseline = UNSET_INT;
@@ -217,6 +224,8 @@ public final class RoundPresetAsset
             .add()
             .append(new KeyedCodec<>("HunterCount", Codec.INTEGER, false), (a, v) -> a.hunterCount = v, a -> a.hunterCount)
             .add()
+            .append(new KeyedCodec<>("MaxHunters", Codec.INTEGER, false), (a, v) -> a.maxHunters = v, a -> a.maxHunters)
+            .add()
             .append(new KeyedCodec<>("HunterSpeedBase", Codec.DOUBLE, false), (a, v) -> a.hunterSpeedBase = v, a -> a.hunterSpeedBase)
             .add()
             .append(new KeyedCodec<>("HunterSpeedMax", Codec.DOUBLE, false), (a, v) -> a.hunterSpeedMax = v, a -> a.hunterSpeedMax)
@@ -248,6 +257,8 @@ public final class RoundPresetAsset
             .append(new KeyedCodec<>("StunDurationMs", Codec.LONG, false), (a, v) -> a.stunDurationMs = v, a -> a.stunDurationMs)
             .add()
             .append(new KeyedCodec<>("ThrowableDamage", new MapCodec<>(Codec.DOUBLE, HashMap::new), false), (a, v) -> a.throwableDamage = v, a -> a.throwableDamage)
+            .add()
+            .append(new KeyedCodec<>("GatherHealthRestore", new MapCodec<>(Codec.DOUBLE, HashMap::new), false), (a, v) -> a.gatherHealthRestore = v, a -> a.gatherHealthRestore)
             .add()
             .append(new KeyedCodec<>("ThrowMode", Codec.STRING, false), (a, v) -> a.throwMode = v, a -> a.throwMode)
             .add()
@@ -294,6 +305,8 @@ public final class RoundPresetAsset
             .append(new KeyedCodec<>("JumpscareCooldownSeconds", Codec.INTEGER, false), (a, v) -> a.jumpscareCooldownSeconds = v, a -> a.jumpscareCooldownSeconds)
             .add()
             .append(new KeyedCodec<>("WinSoundId", Codec.STRING, false), (a, v) -> a.winSoundId = v, a -> a.winSoundId)
+            .add()
+            .append(new KeyedCodec<>("LoseSoundId", Codec.STRING, false), (a, v) -> a.loseSoundId = v, a -> a.loseSoundId)
             .add()
             .append(new KeyedCodec<>("Baseline", Codec.INTEGER, false), (a, v) -> a.scoreBaseline = v, a -> a.scoreBaseline)
             .add()
@@ -407,6 +420,9 @@ public final class RoundPresetAsset
         if (hunterCount != UNSET_INT) {
             b.hunterCount(hunterCount);
         }
+        if (maxHunters != UNSET_INT) {
+            b.maxHunters(maxHunters);
+        }
         // hunterSpeed is a paired setter; only override when at least one band is authored.
         if (!Double.isNaN(hunterSpeedBase) || !Double.isNaN(hunterSpeedMax)) {
             double base = Double.isNaN(hunterSpeedBase) ? 1.0 : hunterSpeedBase;
@@ -450,6 +466,9 @@ public final class RoundPresetAsset
         }
         if (throwableDamage != null && !throwableDamage.isEmpty()) {
             b.throwableDamage(throwableDamage);
+        }
+        if (gatherHealthRestore != null && !gatherHealthRestore.isEmpty()) {
+            b.gatherHealthRestore(gatherHealthRestore);
         }
         if (throwMode != null && !throwMode.isBlank()) {
             b.throwMode(ThrowMode.fromString(throwMode));
@@ -524,6 +543,9 @@ public final class RoundPresetAsset
         }
         if (winSoundId != null && !winSoundId.isBlank()) {
             b.winSoundId(winSoundId);
+        }
+        if (loseSoundId != null && !loseSoundId.isBlank()) {
+            b.loseSoundId(loseSoundId);
         }
         // --- PvP shared (Clash + Domination) ---
         if (teamSize != UNSET_INT) {

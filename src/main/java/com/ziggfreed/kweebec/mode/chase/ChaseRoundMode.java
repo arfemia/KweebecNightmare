@@ -83,9 +83,14 @@ public final class ChaseRoundMode implements RoundMode {
         KweebecExperience.recordScores(round.partySize(), round, scores);
         if (world != null) {
             showResult(round, outcome);
-            // On a win, sound the extraction fanfare (asset-driven, per-preset) to each survivor.
-            if (win && store != null) {
-                playWinSound(round, store);
+            // Sound the per-preset, asset-driven stinger to each survivor: the extraction fanfare on a
+            // win, the defeat stinger on a loss.
+            if (store != null) {
+                if (win) {
+                    playWinSound(round, store);
+                } else {
+                    playLoseSound(round, store);
+                }
             }
             // Stash the per-player results snapshot + open the BUTTON-LESS in-instance preview during the
             // hold. The reward grant + the full interactive page are deferred to overworld return.
@@ -182,6 +187,33 @@ public final class ChaseRoundMode implements RoundMode {
                 continue;
             }
             Sound3D.playAt(soundId, SoundCategory.UI, ref, Sound3D.onlyEntity(ref), store, "WIN", false);
+        }
+    }
+
+    /**
+     * Play the per-preset defeat stinger (asset-driven {@link RuleSet#loseSoundId()}) PRIVATELY to each present
+     * survivor through the ziggfreed-common {@link Sound3D} seam, so every loser hears it once at full volume
+     * regardless of where the party was caught. No-op when the preset authors no lose sound (a blank
+     * {@code loseSoundId}). Runs on the instance world thread (called from {@link #onResolve}).
+     */
+    private static void playLoseSound(@Nonnull RoundInstance round, @Nonnull Store<EntityStore> store) {
+        String soundId = round.ruleSet().loseSoundId();
+        if (soundId == null || soundId.isBlank()) {
+            return;
+        }
+        for (PlayerRoundState st : round.playerStates()) {
+            if (st.hasLeftRound()) {
+                continue;
+            }
+            PlayerRef pr = Universe.get().getPlayer(st.playerId());
+            if (pr == null) {
+                continue;
+            }
+            Ref<EntityStore> ref = pr.getReference();
+            if (ref == null || !ref.isValid()) {
+                continue;
+            }
+            Sound3D.playAt(soundId, SoundCategory.UI, ref, Sound3D.onlyEntity(ref), store, "LOSE", false);
         }
     }
 }

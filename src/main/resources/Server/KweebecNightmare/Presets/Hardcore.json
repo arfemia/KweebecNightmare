@@ -7,6 +7,7 @@
   "MaxDowns": 0,
   "BleedOutSeconds": 20,
   "HunterCount": 2,
+  "MaxHunters": 50,
   "HunterSpeedBase": 1.1,
   "HunterSpeedMax": 1.5,
   "ShrineBase": 2,
@@ -24,6 +25,10 @@
   "ThrowableDamage": {
     "KweebecNightmare_Moonbloom": 1,
     "KweebecNightmare_EmberHit": 100
+  },
+  "GatherHealthRestore": {
+    "KweebecNightmare_Moonbloom": 2,
+    "KweebecNightmare_Emberbloom": 3
   },
   "ExitMarker": false,
   "ShrineDiscovery": "OFF",

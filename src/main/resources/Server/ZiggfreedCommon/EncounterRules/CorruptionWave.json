@@ -8,7 +8,7 @@
   "Cap": 0,
   "CooldownSeconds": 0.0,
   "MinTier": 1,
-  "MaxPerRound": 1,
+  "MaxPerRound": 12,
   "RingRadius": 18.0,
   "AtSeconds": 0,
   "AtTier": 0

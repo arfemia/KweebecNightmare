@@ -120,8 +120,13 @@ public final class AiHunterController implements HunterController {
         }
     }
 
-    /** Hard ceiling on total live hunters, so corruption escalation can never runaway-spawn. */
-    private static final int MAX_HUNTERS = 6;
+    /**
+     * Absolute hard backstop on total live hunters, so a misconfigured preset / runtime override
+     * can never runaway-spawn. The REAL per-round ceiling is difficulty-driven
+     * ({@code RuleSet.maxHunters()} + party scaling, computed into {@link #maxLiveHunters} each
+     * round); this only caps that.
+     */
+    private static final int MAX_HUNTERS = 200;
     /**
      * Blocks within the gate corridor a survivor must be for a PLAYER_PROXIMITY spawn rule to fire.
      * STABLE engine constant (arena gate geometry), NOT an author-tunable difficulty knob; if a future
@@ -173,8 +178,14 @@ public final class AiHunterController implements HunterController {
     private final EncounterDirector encounterDirector = new EncounterDirector();
     /** The archetypes that spawned this round (for mid-round corruption escalation). World-thread only. */
     private final List<HunterArchetypeAsset> rosterPlan = new ArrayList<>();
-    /** Ceiling on total hunters for this round (computed in {@code spawn} from party size). */
+    /** Ceiling on the INITIAL roster size for this round (computed in {@code spawn} from party size). */
     private int hunterCap = 1;
+    /**
+     * The per-round LIVE hunter ceiling: {@code RuleSet.maxHunters()} + per-extra-player scaling,
+     * clamped to {@link #MAX_HUNTERS}. Escalation + extra-spawn waves fill up toward this (NOT the
+     * smaller initial {@link #hunterCap}). Computed in {@code spawn}.
+     */
+    private int maxLiveHunters = MAX_HUNTERS;
     /**
      * The rule-set of the round this controller serves, cached on {@code spawn} so the on-hit config seam
      * ({@link #resolveOnHitConfigFor}) can fold archetype overrides over the baseline without a
@@ -237,9 +248,14 @@ public final class AiHunterController implements HunterController {
         // Fresh per-round wave bookkeeping (cooldowns + max-per-round fire counts) for the spawn rules.
         encounterDirector.reset();
         int partySize = Math.max(1, round.partySize());
-        int desired = Math.max(1, round.ruleSet().hunterCount())
-                + EXTRA_PER_EXTRA_PLAYER * Math.max(0, partySize - 1);
-        this.hunterCap = Math.min(MAX_HUNTERS, desired);
+        int extraForParty = EXTRA_PER_EXTRA_PLAYER * Math.max(0, partySize - 1);
+        // The per-round LIVE ceiling is difficulty-driven (RuleSet.maxHunters()) plus per-extra-player
+        // scaling, clamped to the absolute backstop. Waves + escalation fill toward this.
+        this.maxLiveHunters = Math.min(MAX_HUNTERS,
+                Math.max(1, round.ruleSet().maxHunters()) + extraForParty);
+        // The INITIAL roster stays driven by hunterCount (small); never above the live ceiling.
+        int desired = Math.max(1, round.ruleSet().hunterCount()) + extraForParty;
+        this.hunterCap = Math.min(this.maxLiveHunters, desired);
 
         int tier = currentTier(round);
         // Build the roster plan: archetypes eligible at the current corruption tier, the rule-set's
@@ -446,13 +462,14 @@ public final class AiHunterController implements HunterController {
 
     /**
      * Corruption-tier escalation: when the tier has risen so that a higher-tier archetype is now
-     * eligible and the roster is below its cap, spawn ONE extra archetype hunter (a weighted pick over
-     * the newly-eligible archetypes). Hard-capped by {@link #hunterCap} (itself bounded by
-     * {@link #MAX_HUNTERS}) and rate-limited to one add per tick, so escalation can never runaway-spawn.
+     * eligible and the roster is below the live ceiling, spawn ONE extra archetype hunter (a weighted
+     * pick over the newly-eligible archetypes). Hard-capped by {@link #maxLiveHunters} (itself bounded
+     * by {@link #MAX_HUNTERS}) and rate-limited to one add per tick, so escalation can never
+     * runaway-spawn.
      */
     private void maybeEscalate(@Nonnull RoundInstance round, @Nonnull World world,
                                @Nonnull Store<EntityStore> store) {
-        if (hunters.size() >= hunterCap) {
+        if (hunters.size() >= maxLiveHunters) {
             return;
         }
         NPCPlugin npc = NPCPlugin.get();
@@ -524,7 +541,8 @@ public final class AiHunterController implements HunterController {
      * Fire one rule if every gate passes: its corruption-tier floor, its per-trigger context match
      * (CORRUPTION_TIER's {@code AtTier}, TIME_ELAPSED's {@code AtSeconds}, PLAYER_PROXIMITY's gate-near
      * check), and the shared {@link EncounterDirector}'s cooldown + max-per-round gate. The wave size is
-     * clamped to the room under the rule's cap and the global {@link #MAX_HUNTERS}, then each extra hunter
+     * the rule's {@code Count} scaled by party size (Count per survivor), then clamped to the room under
+     * the rule's cap and the per-round {@link #maxLiveHunters}, then each extra hunter
      * is placed NEAR the survivors per the rule's {@link SpawnPlacementKind}. World-thread only.
      */
     private void fireRuleIfReady(@Nonnull RoundInstance round, @Nonnull World world,
@@ -556,9 +574,10 @@ public final class AiHunterController implements HunterController {
         if (!encounterDirector.canFire(rule.getId(), now, cooldownMs, rule.maxPerRound())) {
             return;
         }
-        // Per-rule cap LOWERS the ceiling but never raises it above the global MAX_HUNTERS.
-        int ruleCap = rule.cap() > 0 ? Math.min(rule.cap(), MAX_HUNTERS) : MAX_HUNTERS;
-        int requested = Math.max(1, rule.count());
+        // Per-rule cap LOWERS the ceiling but never raises it above the per-round live ceiling.
+        int ruleCap = rule.cap() > 0 ? Math.min(rule.cap(), maxLiveHunters) : maxLiveHunters;
+        // Wave size scales with party size: each fire spawns the rule's Count PER survivor in the round.
+        int requested = Math.max(1, rule.count()) * Math.max(1, round.partySize());
         int allowed = encounterDirector.allowedToSpawn(hunters.size(), ruleCap, requested);
         if (allowed <= 0) {
             return;
@@ -581,7 +600,7 @@ public final class AiHunterController implements HunterController {
             encounterDirector.recordFire(rule.getId(), now);
             SafeLog.info("[Kweebec] spawn rule '" + rule.getId() + "' (" + rule.trigger()
                     + "/" + rule.placement() + ") spawned " + (hunters.size() - before)
-                    + " hunter(s) (now " + hunters.size() + "/" + MAX_HUNTERS + ")");
+                    + " hunter(s) (now " + hunters.size() + "/" + maxLiveHunters + ")");
         }
     }
 
