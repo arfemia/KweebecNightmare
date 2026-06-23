@@ -119,7 +119,7 @@ public final class KweebecClashExperience {
         }
         Leaderboard b = new Leaderboard(layout.boardId());
         b.init(dataDir);
-        leaderboardDeps = new LeaderboardPageDeps(b, layout.primaryTabs(), layout.secondaryTabs(),
+        leaderboardDeps = new LeaderboardPageDeps(b, KweebecExperience.enabledPrimaryTabs(layout), layout.secondaryTabs(),
                 layout.statColumns(), new KweebecClashLeaderboardScreenMessages());
         board = b; // set LAST: it is the ensureLoaded guard.
         SafeLog.info("[Kweebec] PvP leaderboard built from common pack configs (board=" + layout.boardId() + ").");

@@ -166,7 +166,7 @@ public final class KweebecExperience {
                 PartySettingsConfig.getInstance().resolveOrDefault(GAME_ID,
                         new PartyConfig(ARENA_MAX_PARTY, INVITE_TIMEOUT_SECONDS, false)),
                 new KweebecPartyMessages());
-        leaderboardDeps = new LeaderboardPageDeps(b, layout.primaryTabs(), layout.secondaryTabs(),
+        leaderboardDeps = new LeaderboardPageDeps(b, enabledPrimaryTabs(layout), layout.secondaryTabs(),
                 layout.statColumns(), new KweebecLeaderboardScreenMessages());
         partyDeps = new PartyPageDeps(partyService, new KweebecPartyScreenMessages(), KweebecParty::queueParty);
         board = b; // set LAST: it is the ensureLoaded guard.
@@ -196,6 +196,29 @@ public final class KweebecExperience {
                         StatColumnDef.grouped(STAT_MOONBLOOM, Lang.msg(Lang.LB_STAT_MOONBLOOM)),
                         StatColumnDef.grouped(STAT_SHRINES, Lang.msg(Lang.LB_STAT_SHRINES)),
                         StatColumnDef.grouped(STAT_WINS, Lang.msg(Lang.LB_STAT_WINS))));
+    }
+
+    /**
+     * Trim a leaderboard layout's PRIMARY (difficulty / PvP-mode) tabs to presets whose co-keyed
+     * {@link InstancePreset} is present AND enabled, hiding disabled or unconfigured difficulties from
+     * the board - e.g. the dormant Endless / Swarm / Pitch / Blitz presets, which ship a gameplay
+     * {@code RoundPreset} but no {@code ZiggfreedCommon/Instances/} {@link InstancePreset}, so
+     * {@link InstancePresetConfig#resolve} returns {@code null} and they are treated as disabled.
+     * A primary tab's bucket key IS the preset id (the layout contract), so it resolves directly.
+     * Secondary (party-size) tabs are not presets and are passed through untouched by the caller.
+     * Shared by the co-op + PvP boards (PvP reuses this the same way it reuses {@link #partyService()}).
+     */
+    @Nonnull
+    public static List<LeaderboardBucketTab> enabledPrimaryTabs(@Nonnull LeaderboardLayout layout) {
+        InstancePresetConfig presets = InstancePresetConfig.getInstance();
+        List<LeaderboardBucketTab> out = new ArrayList<>(layout.primaryTabs().size());
+        for (LeaderboardBucketTab tab : layout.primaryTabs()) {
+            InstancePreset ip = presets.resolve(tab.bucketKey());
+            if (ip != null && ip.enabled()) {
+                out.add(tab);
+            }
+        }
+        return out;
     }
 
     public static void shutdown() {

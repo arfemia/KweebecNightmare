@@ -1,21 +1,17 @@
 package com.ziggfreed.kweebec.atmosphere;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
-import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.asset.type.weather.config.Weather;
-import com.hypixel.hytale.server.core.modules.time.WorldTimeResource;
 import com.hypixel.hytale.server.core.universe.world.World;
-import com.hypixel.hytale.server.core.universe.world.WorldConfig;
-import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import com.hypixel.hytale.builtin.weather.resources.WeatherResource;
-import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 
 /**
- * Locks a round world into a frozen, dark midnight under a forced dark weather.
- * Midnight ({@code dayTime == 0.0}, the darkest point) + paused clock so the night
- * never advances, plus a whole-world forced weather (validated first; an unknown id
- * would blank the sky). All calls are world-thread-only and self-hop via {@code world.execute}.
+ * Locks a round world into a frozen, dark midnight under a forced dark weather. This is the
+ * mod-SPECIFIC POLICY layer (the dark-weather candidate list + which weather to choose); the
+ * time + weather ENGINE mechanism (set+pause the clock, validate + force the weather) is
+ * delegated to ziggfreed-common's {@link com.ziggfreed.common.world.AtmosphereService}.
+ * Kweebec owns WHICH weather to force; common owns HOW.
  */
 public final class AtmosphereService {
 
@@ -37,34 +33,20 @@ public final class AtmosphereService {
     private AtmosphereService() {
     }
 
-    /** Lock the world to a frozen dark midnight. Safe to call from any thread. */
+    /**
+     * Lock the world to a frozen dark midnight under the first dark weather that resolves.
+     * Safe to call from any thread (the common service self-hops to the world thread).
+     * Kweebec picks the weather id from {@link #DARK_WEATHER_CANDIDATES}; common's
+     * {@link com.ziggfreed.common.world.AtmosphereService#lock} pins + pauses the clock at
+     * {@link #MIDNIGHT} and validates + forces the chosen weather (a {@code null} choice
+     * leaves the weather untouched).
+     */
     public static void lock(@Nonnull World world) {
-        world.execute(() -> {
-            try {
-                Store<EntityStore> store = world.getEntityStore().getStore();
-
-                // Midnight + freeze the clock.
-                WorldTimeResource time = store.getResource(WorldTimeResource.getResourceType());
-                time.setDayTime(MIDNIGHT, world, store);
-                WorldConfig cfg = world.getWorldConfig();
-                cfg.setGameTimePaused(true);
-
-                // Force the first dark weather that resolves (validate before setting).
-                String chosen = firstValidWeather();
-                if (chosen != null) {
-                    WeatherResource weather = store.getResource(WeatherResource.getResourceType());
-                    weather.setForcedWeather(chosen);
-                    cfg.setForcedWeather(chosen);
-                }
-
-                cfg.markChanged();
-            } catch (Throwable t) {
-                KweebecNightmarePlugin.LOGGER.atWarning().log(
-                        "[Kweebec] atmosphere lock failed: " + t.getMessage());
-            }
-        });
+        String chosen = firstValidWeather();
+        com.ziggfreed.common.world.AtmosphereService.lock(world, MIDNIGHT, chosen);
     }
 
+    @Nullable
     private static String firstValidWeather() {
         for (String id : DARK_WEATHER_CANDIDATES) {
             try {
