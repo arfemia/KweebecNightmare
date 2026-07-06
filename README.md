@@ -21,11 +21,11 @@ Caught saplings are cocooned in roots and can be cut free by a teammate. Plays s
 
 ## Standalone, with optional MMO Skill Tree integration
 
-Kweebec Nightmare needs nothing else installed to play. If [MMO Skill Tree](https://www.curseforge.com/hytale/mods/mmo-skill-tree) is also installed, surviving a night feeds your skill progression (quest, achievement, and reward hooks); without it, the minigame grants its own self-contained rewards. The dependency is declared **optional**, so the jar loads either way.
+Kweebec Nightmare runs the minigame on its own; [MMO Skill Tree](https://www.curseforge.com/hytale/mods/mmo-skill-tree) is **optional**. Installed alongside it, surviving a night feeds your skill progression (quest, achievement, and reward hooks, and thrown glow-mushrooms train the Artillery skill); without it, the minigame grants its own self-contained rewards. That dependency is declared optional, so the jar loads either way.
 
 ## Install
 
-Drop `KweebecNightmare-<version>.jar` into your server `Mods/` folder. Requires a Hytale server in the Update 5 range (`>=0.5.0-pre.0 <0.6.0`).
+Drop `KweebecNightmare-<version>.jar` into your server `Mods/` folder, along with its two required companion mods, **Ziggfreed's CommonLib** and **Perfect Utils** (the server loads them first). Requires a Hytale server in the Update 5 range (`>=0.5.0-pre.0 <0.6.0`).
 
 ## Build from source
 

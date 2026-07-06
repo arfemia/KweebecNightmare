@@ -7,6 +7,7 @@ type: moc
 
 User-facing release notes for Kweebec Nightmare, newest first.
 
+- [[1.1.0]] (v1.1.0)
 - [[1.0.0]] (v1.0.0)
 - [[0.6.0]] (v0.6.0)
 - [[0.5.0]] (v0.5.0)

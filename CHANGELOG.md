@@ -2,6 +2,16 @@
 
 Developer changelog for Kweebec Nightmare. User-facing release notes live in `patch-notes/`.
 
+## 1.1.0
+
+A stock, packaging, and compatibility patch on top of 1.0.0: more Emberbloom from the crypts, a return to the standalone (non-fat) jar that declares its two hard dependencies, and a documented MMO Skill Tree hook that trains Artillery from thrown blooms. No gameplay-engine change in this mod.
+
+- **More Emberbloom in the crypts.** The dungeon-crypt prefabs and their chest loot spawn more Emberbloom, so survivors can stock the damage-bursting throwable for the Warden more reliably. Content only; no code change.
+- **Ships as the standalone jar again (not the fat jar).** 1.0.0 was deployed as the merged fat jar (`build-fatjar.ps1`) that embedded ZiggfreedCommon + Perfect Utils as sub-plugins. 1.1.0 ships the plain `build.ps1` jar, which declares both as hard `Dependencies` in the manifest (`narwhals:Perfect Utils`, `Ziggfreed:ZiggfreedCommon`), so install all three jars in `Mods/` (the server loads the two companions first). No manifest change was needed (the dependency declarations were already present); this is a build/deploy + docs change.
+- **MMO Skill Tree compatibility: thrown blooms train Artillery (delivered MMO-side).** Each thrown bloom already carries its own custom `DamageCause` (`KweebecNightmare_Moonbloom` / `KweebecNightmare_GustHit` / `KweebecNightmare_EmberHit`); MMO Skill Tree maps those causes to the ARTILLERY combat skill via its damage-cause -> skill routing, so landing a bloom hit on a hostile mob grants Artillery XP. Kweebec Nightmare stays MMO-agnostic (zero MMO reference); this requires a current MMO Skill Tree with the damage-cause XP routing. Note: XP is awarded only when the bloom hit deals damage (Emberbloom always, Moonbloom via the per-difficulty `ThrowableDamage` override, Gustbloom only if its knockback burst carries a nonzero base damage).
+
+Technical: no Java/engine change in this mod (content + packaging + docs only). Build the plain `build.ps1` jar for release (NOT `build-fatjar.ps1`). The Emberbloom yield and the MMO Artillery-XP grant are NOT gradle-validated - they need an in-game pass (open a crypt chest for the loot bump; on an MMO server, throw a Moonbloom/Emberbloom at a hunter and confirm Artillery XP ticks even with an empty hand).
+
 ## 1.0.0
 
 First public release. The co-op chase ("Relight & Escape") is the shipped, documented experience: relight the grove-shrines, gather and throw glow-mushrooms, survive the Blighted hunter and the Warden capstone, then hold the Heartwood platform together to escape. This cycle adds the boss difficulty/marker pass and merged reward chips, and pins the stable `ziggfreed-common` 1.0.0. The PvP arena modes (Clash + Domination) remain in the build but are NOT advertised on the public listing this release (they have not been live-playtested); `CURSEFORGE.md` describes the chase only.
