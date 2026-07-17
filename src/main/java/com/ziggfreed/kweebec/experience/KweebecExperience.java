@@ -458,9 +458,11 @@ public final class KweebecExperience {
         List<InstanceReward> out = new ArrayList<>(preset.rewards());
         String tableId = preset.rewardTableId();
         if (tableId != null && !tableId.isBlank()) {
-            LootTable table = LootTableConfig.getInstance().resolve(tableId);
+            // resolveUnion folds in any additional pack that contributes to this logical table (e.g. an
+            // installed MMO's xp entries), so a second mod adds rewards without overriding Kweebec's file.
+            LootTable table = LootTableConfig.getInstance().resolveUnion(tableId);
             if (table != null) {
-                out.addAll(table.roll(score, new Random(seed)));
+                out.addAll(table.roll(score, win, new Random(seed)));
             }
         }
         // Collapse the table's repeated picks (and any flat-reward overlap) into one entry per item,

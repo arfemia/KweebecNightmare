@@ -8,7 +8,7 @@
   "LeaderForceStart": false,
   "LeaderboardBucket": "PARTY_SIZE",
   "LeaderboardKey": "kweebecnightmare.leaderboard.title",
-  "RewardOnExit": "ON_WIN",
+  "RewardOnExit": "ALWAYS",
   "RewardTableId": "chase_hardcore",
   "QueueModes": {
     "Public": { "Enabled": true, "IconItemId": "Tool_Map", "Order": 0 },
