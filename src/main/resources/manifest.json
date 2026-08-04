@@ -12,7 +12,7 @@
   "ServerVersion": ">=0.5.0-pre.0 <0.6.0",
   "Dependencies": {
     "narwhals:Perfect Utils": ">=1.0.2 <2.0.0",
-    "Ziggfreed:ZiggfreedCommon": "*"
+    "Ziggfreed:ZiggfreedCommon": ">=1.4.0"
   },
   "OptionalDependencies": {
     "Ziggfreed:MMOSkillTree": "*"

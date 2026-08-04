@@ -2,6 +2,13 @@
 
 Developer changelog for Kweebec Nightmare. User-facing release notes live in `patch-notes/`.
 
+## 1.1.1
+
+A dependency-pin correction plus a reward-payout fix on top of 1.1.0: the `ziggfreed-common` requirement catches up to the jar this mod actually compiles and ships against, and a chase result now pays its authored XP reward for real.
+
+- **`ziggfreed-common` requirement raised to `>=1.4.0` (was drifting on an undeclared `1.3.0`-era pin).** The `ziggfreedCommonJar` compile pin in `gradle.properties` had quietly moved from 1.3.0 to 1.4.0 across two prior commits without a version bump or manifest change; the manifest `Dependencies` entry is now explicit (`>=1.4.0`, was a bare `"*"` wildcard) so a server can no longer load this mod against a `ziggfreed-common` too old for the loot-table reward path below.
+- **Chase results pay their authored XP reward.** `KweebecRewardSink.runCommand` now runs the reward command as CONSOLE through `ziggfreed-common`'s `CommandExecutor` (with `{player}` substituted from the claimer) instead of a v1 stub that did nothing; a win/loss outcome now actually plumbs into the loot roll via `KweebecExperience`. The Amateur/Hardcore/Nightmare instances also flip `RewardOnExit` from `ON_WIN` to `ALWAYS`, so a participation reward pays out on a loss too (entries authored win-only stay gated to a win).
+
 ## 1.1.0
 
 A stock, packaging, and compatibility patch on top of 1.0.0: more Emberbloom from the crypts, a return to the standalone (non-fat) jar that declares its two hard dependencies, and a documented MMO Skill Tree hook that trains Artillery from thrown blooms. No gameplay-engine change in this mod.
