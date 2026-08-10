@@ -30,3 +30,10 @@ dependencies {
 
     compileOnly(files(hytaleServerJar))
 }
+
+// Same repo-wide deprecation gate as the mod's own compileJava (see build.gradle) - this
+// module also compiles against the Hytale server jar and its classes ship bundled in the
+// mod jar, so it gets the same hard-fail treatment.
+compileJava {
+    options.compilerArgs << '-Xlint:removal' << '-Werror'
+}
