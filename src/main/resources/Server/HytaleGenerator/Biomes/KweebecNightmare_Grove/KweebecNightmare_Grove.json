@@ -98,7 +98,7 @@
         {
           "Type": "Multiplier",
           "Skip": false,
-          "$Comment": "EDGE CLIFF (finite-world boundary): 0 inside r112, -100000 beyond (sheer cliff into the void). The old procedural cave-noise term (a Multiplier carving |noise3D|<0.15 air pockets below y66) was REMOVED - it hollowed pockets nobody interacts with and generated with no lower depth bound; the descend-and-return cave SHRINES are unaffected (the runtime Relight_Shaft + the worldgen KN_ShrineDungeon force-carve their own space). See the ISLAND FLOOR term below for the finite-slab bottom.",
+          "$Comment": "EDGE CLIFF (finite-world boundary): 0 inside r112, -100000 beyond (sheer cliff into the void). There is no procedural cave-noise term here (a Multiplier carving |noise3D|<0.15 air pockets below y66) and adding one is not worth it: it hollows pockets nobody interacts with and generates with no lower depth bound; the descend-and-return cave SHRINES are unaffected (the runtime Relight_Shaft + the worldgen KN_ShrineDungeon force-carve their own space). See the ISLAND FLOOR term below for the finite-slab bottom.",
           "Inputs": [
             {
               "Type": "Cylinder",
