@@ -20,6 +20,7 @@ import com.ziggfreed.kweebec.round.PlayerRoundState;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.round.RoundMode;
 import com.ziggfreed.kweebec.round.RoundModeSupport;
+import com.ziggfreed.kweebec.round.RuleSet;
 
 /**
  * The {@link RoundMode} adapter for {@link com.ziggfreed.kweebec.round.KweebecMode#CLASH}: delegates the
@@ -47,7 +48,7 @@ public final class ClashRoundMode implements RoundMode {
     }
 
     @Override
-    public int difficultyScore(@Nonnull com.ziggfreed.kweebec.round.RuleSet ruleSet) {
+    public int difficultyScore(@Nonnull RuleSet ruleSet) {
         return DifficultyScore.computeClash(ruleSet);
     }
 

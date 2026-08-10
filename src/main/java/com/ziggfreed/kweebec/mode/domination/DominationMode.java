@@ -31,6 +31,8 @@ import com.ziggfreed.kweebec.round.PlayerRoundState;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.round.RoundModeSupport;
 import com.ziggfreed.kweebec.util.SafeLog;
+import com.ziggfreed.kweebec.mode.clash.ClashPickupSpawner;
+import com.ziggfreed.kweebec.round.RoundService;
 
 /**
  * The DOMINATION (control-point PvP) round loop, reusing the Clash team / model-swap / PvP-damage / respawn
@@ -92,7 +94,7 @@ public final class DominationMode {
         }
 
         handleRespawns(round, world, store, ds, now);
-        ds.setMushroomWaves(com.ziggfreed.kweebec.mode.clash.ClashPickupSpawner.tick(
+        ds.setMushroomWaves(ClashPickupSpawner.tick(
                 round, world, ds.mushroomWavesFired()));
         updatePoints(round, store, ds, worldUuid, now);
         pushHuds(round, ds);
@@ -114,7 +116,7 @@ public final class DominationMode {
                 int threshold = pd.spawnPlaced ? DISCONNECT_GRACE_TICKS : ARRIVAL_GRACE_TICKS;
                 if (st.incrementMissedTicks() >= threshold) {
                     round.markLeft(uuid);
-                    com.ziggfreed.kweebec.round.RoundService.getInstance().registry().unbindPlayer(uuid);
+                    RoundService.getInstance().registry().unbindPlayer(uuid);
                 }
                 continue;
             }

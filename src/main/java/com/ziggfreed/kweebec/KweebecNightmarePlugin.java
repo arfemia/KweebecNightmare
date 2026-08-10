@@ -8,6 +8,7 @@ import javax.annotation.Nonnull;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.Interaction;
@@ -207,7 +208,17 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         if (player == null) {
             return;
         }
-        java.util.UUID uuid = player.getUuid();
+        // PlayerReadyEvent fires on the world thread, so the Store read is legal right here.
+        Ref<EntityStore> readyRef = event.getPlayerRef();
+        if (readyRef == null || !readyRef.isValid()) {
+            return;
+        }
+        Store<EntityStore> readyStore = readyRef.getStore();
+        if (readyStore == null) {
+            return;
+        }
+        UUIDComponent readyUuidComponent = readyStore.getComponent(readyRef, UUIDComponent.getComponentType());
+        java.util.UUID uuid = readyUuidComponent != null ? readyUuidComponent.getUuid() : null;
         if (uuid == null || !ClashModelSwapper.isSwapped(uuid)) {
             return;
         }

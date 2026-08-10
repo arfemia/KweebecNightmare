@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -522,7 +523,8 @@ public final class KweebecExperience {
                 if (ref == null || !ref.isValid()) {
                     return;
                 }
-                PlayerRef pr = Universe.get().getPlayer(player.getUuid());
+                UUID uuid = ref.getStore().getComponent(ref, UUIDComponent.getComponentType()).getUuid();
+                PlayerRef pr = Universe.get().getPlayer(uuid);
                 if (pr != null) {
                     openResultsPage(pr, ref, ref.getStore());
                 }

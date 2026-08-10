@@ -43,7 +43,7 @@ public final class AtmosphereService {
      */
     public static void lock(@Nonnull World world) {
         String chosen = firstValidWeather();
-        com.ziggfreed.common.world.AtmosphereService.lock(world, MIDNIGHT, chosen);
+        com.ziggfreed.common.world.AtmosphereService.lock(world, MIDNIGHT, chosen); // FQN-OK: collides with this file's own class name
     }
 
     @Nullable

@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -120,8 +121,18 @@ public final class RoundInventoryGuard {
         if (player == null) {
             return;
         }
-        UUID uuid = player.getUuid();
-        if (!STORE.has(uuid)) {
+        // PlayerReadyEvent fires on the world thread, so the Store read is legal right here.
+        Ref<EntityStore> ref = event.getPlayerRef();
+        if (ref == null || !ref.isValid()) {
+            return;
+        }
+        Store<EntityStore> store = ref.getStore();
+        if (store == null) {
+            return;
+        }
+        UUIDComponent uuidComponent = store.getComponent(ref, UUIDComponent.getComponentType());
+        UUID uuid = uuidComponent != null ? uuidComponent.getUuid() : null;
+        if (uuid == null || !STORE.has(uuid)) {
             return;
         }
         // Still mid-round? Leave the snapshot for the round's own exit path.

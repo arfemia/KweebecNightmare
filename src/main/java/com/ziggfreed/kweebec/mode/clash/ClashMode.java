@@ -30,6 +30,7 @@ import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.round.RoundModeSupport;
 import com.ziggfreed.kweebec.round.WinCondition;
 import com.ziggfreed.kweebec.util.SafeLog;
+import com.ziggfreed.kweebec.round.RoundService;
 
 /**
  * The CLASH (team PvP brawl) round loop, driven 1 Hz on the instance world thread (stateless; all state on
@@ -104,7 +105,7 @@ public final class ClashMode {
                 int threshold = pc.spawnPlaced ? DISCONNECT_GRACE_TICKS : ARRIVAL_GRACE_TICKS;
                 if (st.incrementMissedTicks() >= threshold) {
                     round.markLeft(uuid);
-                    com.ziggfreed.kweebec.round.RoundService.getInstance().registry().unbindPlayer(uuid);
+                    RoundService.getInstance().registry().unbindPlayer(uuid);
                 }
                 continue;
             }
