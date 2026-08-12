@@ -2,6 +2,16 @@
 
 Developer changelog for Kweebec Nightmare. User-facing release notes live in `patch-notes/`.
 
+## 1.1.2
+
+A rebuild against the grown `ziggfreed-common` (the dialogue engine's move to a fully structured Pattern A asset, the loot engine's move into the new `zc-loot` module, and the leaderboard's counter-framework re-base), plus the one Java change that re-base forced.
+
+- **Dialogue registration moved to plugin `setup()`.** `ziggfreed-common`'s dialogue store is now Pattern A: every conversation file decodes ONCE at `LoadAssetEvent`, right after every plugin's `setup()` returns, against a shared decode vocabulary (`DialogueTypeTable`) that each mod populates by building its `DialogueEngine`. `KweebecDialogue` used to build its engine (and register its `Play`/`NotInRound`/`Engaged` types) lazily on first use, which is long after that read - under the old raw-`Payload` + hand-called resolver this didn't matter, but under Pattern A it meant every kweebec dialogue file would fail to load on a fresh boot. `KweebecDialogue.init()` is now called explicitly from `KweebecNightmarePlugin.setup()`; `deps()` keeps a defensive (warn-and-build) fallback for any caller that still reaches it first. The dialogue id lookup also moved off a once-populated static map onto a live `DialogueAssetStore.dialogues("kweebec")` read per lookup, since the old populate-at-init timing is gone along with the eager build.
+- **`OpenPlayAction`'s option-sugar registration follows the new shorthand factory shape.** The dialogue engine's `DialogueSugar.string` overload changed from a reflective `(key, order, field, type)` form to `(key, order, Function<String, DialogueAction>)`; `OpenPlayAction.type()` now builds the action directly instead of naming a field.
+- **Authored dialogue JSON and Chase reward-table JSON are unchanged.** The guide's `nightmares_intro` conversation and the `Chase_Amateur`/`Chase_Hardcore`/`Chase_Nightmare` loot tables decode through the re-based codecs with no file edits; `ChaseLootTableLoadTest` pins the loot-table load path (list sizes, roll knobs, that a win roll returns rewards) so a later `zc-loot` change cannot silently break the shipped tables without a red test.
+- **Accepted break: pending claimed rewards and the leaderboard reset on first boot.** Both `PendingRewardStore` and `Leaderboard` are plain JSON files with no migration path across this `ziggfreed-common` re-base (their record shapes changed structurally); a server upgrading to 1.1.2 starts both stores empty. No other persisted state is affected.
+- **Requires `ziggfreed-common` 1.4.0 or newer** (unchanged pin; this release is a rebuild against the same held version, not a new floor).
+
 ## 1.1.1
 
 A dependency-pin correction plus a reward-payout fix on top of 1.1.0: the `ziggfreed-common` requirement catches up to the jar this mod actually compiles and ships against, and a chase result now pays its authored XP reward for real.

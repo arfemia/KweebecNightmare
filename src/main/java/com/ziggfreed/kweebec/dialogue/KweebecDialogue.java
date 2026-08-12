@@ -1,8 +1,6 @@
 package com.ziggfreed.kweebec.dialogue;
 
 import java.util.Locale;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -29,9 +27,17 @@ import com.ziggfreed.kweebec.experience.KweebecExperience;
  * {@link NotInRoundCondition}/
  * {@link EngagedCondition} (gate launch options on engagement), an in-memory
  * {@link KweebecDialogueFlags} store, the {@code kweebecnightmare.} i18n namespace,
- * and a context-aware name header; folds the authored dialogues (the guide NPC's
- * preset-launch backstory and the clash-host PvP entry); and exposes the
- * {@link DialoguePageDeps} a page (command or NPC) opens against.
+ * and a context-aware name header; resolves the authored dialogues (the guide NPC's
+ * preset-launch backstory and the clash-host PvP entry) live off the shared store; and
+ * exposes the {@link DialoguePageDeps} a page (command or NPC) opens against.
+ *
+ * <p><b>Registration timing (Pattern A).</b> The store decodes every dialogue body ONCE, at
+ * {@code LoadAssetEvent}, right after every plugin's {@code setup()} has returned - so kweebec's
+ * {@code Play}/{@code NotInRound}/{@code Engaged} types must be in the shared
+ * {@link com.ziggfreed.common.dialogue.DialogueTypeTable} before that fires. {@link #init()} is
+ * called eagerly from {@link com.ziggfreed.kweebec.KweebecNightmarePlugin#setup()}, not lazily on
+ * first NPC interaction - a late build would still register (the table logs one warning), but
+ * every dialogue file that named its late type would already have failed to load.
  */
 public final class KweebecDialogue {
 
@@ -45,21 +51,38 @@ public final class KweebecDialogue {
     public static final String CLASH_CONTEXT = "clash";
 
     private static volatile DialoguePageDeps deps;
-    private static final Map<String, NpcDialogue> DIALOGUES = new ConcurrentHashMap<>();
 
     private KweebecDialogue() {
     }
 
-    /** The page deps (lazy-built on first use). */
+    /**
+     * The page deps, built by {@link #init()}. Falls back to building them here (with one warn)
+     * if a caller reaches this before plugin setup ran - defensive only; the real registration
+     * point is {@code setup()}.
+     */
     @Nonnull
-    public static synchronized DialoguePageDeps deps() {
-        if (deps == null) {
-            init();
+    public static DialoguePageDeps deps() {
+        DialoguePageDeps d = deps;
+        if (d == null) {
+            synchronized (KweebecDialogue.class) {
+                d = deps;
+                if (d == null) {
+                    warn("KweebecDialogue.deps() reached before KweebecDialogue.init() ran from"
+                            + " plugin setup - building the engine late; any dialogue file naming its"
+                            + " types has already failed to load this boot");
+                    init();
+                    d = deps;
+                }
+            }
         }
-        return deps;
+        return d;
     }
 
-    private static void init() {
+    /**
+     * Register kweebec's dialogue vocabulary and build the page deps. MUST be called from
+     * {@link com.ziggfreed.kweebec.KweebecNightmarePlugin#setup()}, before assets load.
+     */
+    public static synchronized void init() {
         DialogueEngine engine = DialogueEngine.builder()
                 .action(OpenPlayAction.type())
                 .condition(NotInRoundCondition.type())
@@ -68,18 +91,14 @@ public final class KweebecDialogue {
                 .warn(KweebecDialogue::warn)
                 .build();
 
-        // Pull the authored bodies from the common dialogue store (pack JSON under
-        // Server/ZiggfreedCommon/Dialogues/, filtered to this game's Owner) and decode them
-        // through THIS engine (its domain Play/NotInRound/Engaged types). Runs lazily on first
-        // use (an NPC/command opening a dialogue), which is after the LoadedAssetsEvent fold, so
-        // the store is populated. Re-call to pick up a hot re-import.
-        DIALOGUES.clear();
-        DIALOGUES.putAll(DialogueAssetStore.getInstance().resolveAll(engine, "kweebec"));
-
         DialogueI18n i18n = new I18nModuleDialogueI18n("kweebecnightmare.");
         deps = new DialoguePageDeps(
                 engine,
-                id -> id == null ? null : DIALOGUES.get(id.toLowerCase(Locale.ROOT)),
+                // Read the store's decoded, owner-filtered snapshot on every lookup (never cached):
+                // at THIS call (setup time) the store is still empty, and it only fills once the
+                // engine's LoadedAssetsEvent listener folds the pack layer in later in boot.
+                id -> id == null ? null
+                        : DialogueAssetStore.getInstance().dialogues("kweebec").get(id.toLowerCase(Locale.ROOT)),
                 (dialogue, nodeId, optionIndex, contextId, ref, store, playerRef, player) ->
                         new SimpleDialogueExecContext(store, ref, playerRef, player, contextId,
                                 KweebecDialogueFlags.store(playerRef.getUuid()), null,

@@ -21,6 +21,7 @@ def hytaleServerJar = new File("${hytaleHome}/${patchline}/package/game/${game_b
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     implementation(files(hytaleServerJar))
     implementation project(':api')
@@ -39,6 +40,13 @@ dependencies {
     // runtime, so we NEVER bundle it - bundling would double-load its engine-touching
     // classes under two classloaders. Path in gradle.properties (ziggfreedCommonJar).
     compileOnly files(ziggfreedCommonJar)
+
+    // Test-only: unit tests decode shipped asset JSON through common's codecs (e.g. the
+    // LootTableAsset load-path check) and need the server + common classes on the TEST
+    // classpath specifically, since both are compileOnly for main (mirrors mmo-mob-scaling
+    // and rpg-stations' own test wiring).
+    testImplementation(files(hytaleServerJar))
+    testImplementation(files(ziggfreedCommonJar))
 
     // Phase 4 (soft-dep integration): compileOnly the MMOSkillTree api jar - NEVER bundle it
     // (bundling double-loads its event types under two classloaders -> ClassCastException).

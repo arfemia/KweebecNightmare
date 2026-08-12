@@ -74,6 +74,12 @@ public class KweebecNightmarePlugin extends JavaPlugin {
 
     @Override
     protected void setup() {
+        // Register kweebec's dialogue vocabulary (Play/NotInRound/Engaged) into the shared
+        // DialogueTypeTable NOW, before assets load: dialogue bodies are a Pattern A asset,
+        // decoded ONCE at LoadAssetEvent right after every plugin's setup() returns, so a type
+        // registered later has already missed the read (see KweebecDialogue's class doc).
+        KweebecDialogue.init();
+
         // Register the generic ziggfreed-common "press-F opens a dialogue" NPC action
         // (ZigOpenDialogue) and point it at kweebec's DialoguePageDeps, BEFORE any NPC
         // role asset referencing {Type:ZigOpenDialogue} loads - else the guide role

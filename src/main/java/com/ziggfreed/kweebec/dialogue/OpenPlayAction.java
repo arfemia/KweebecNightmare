@@ -56,7 +56,11 @@ public final class OpenPlayAction extends DialogueAction {
     public static DialogueActionType<OpenPlayAction> type() {
         return DialogueActionType.of(TYPE_ID, OpenPlayAction.class, CODEC, OpenPlayAction::handle)
                 .withStyle(DialogueOptionStyle.ACCEPT)
-                .withSugar(DialogueSugar.string(TYPE_ID, 40, "Preset", TYPE_ID));
+                .withSugar(DialogueSugar.string(TYPE_ID, 40, preset -> {
+                    OpenPlayAction action = new OpenPlayAction();
+                    action.preset = preset;
+                    return action;
+                }));
     }
 
     private static void handle(@Nonnull OpenPlayAction action, @Nonnull DialogueExecContext ctx,
