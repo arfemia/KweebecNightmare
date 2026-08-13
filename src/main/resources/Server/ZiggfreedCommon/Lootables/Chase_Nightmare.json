@@ -1,0 +1,74 @@
+{
+  "$Comment": [
+    "The Nightmare chase's end-of-run spoils, rolled by the player's score when the round is won.",
+    "",
+    "Rolls  - what everybody who wins takes home, whatever they scored.",
+    "Pool   - the part that varies. Pool.Rolls says how many picks the run earns: two to start,",
+    "         plus one more per 1800 points (the weight is 1 divided by 1800), never more than 5.",
+    "         Entries compete by Weight and are drawn with replacement, so one can come up twice.",
+    "",
+    "Richer than Amateur on every axis: a bigger baseline, more picks, and premium entries that",
+    "unlock at higher scores. To retune, change the weights, the counts, or the thresholds.",
+    "Another mod can ADD entries by shipping a lootable with \"ContributesTo\": \"chase_nightmare\"."
+  ],
+  "Name": "chase_nightmare",
+  "Rolls": [
+    {
+      "Conditions": [ { "Factor": "ziggfreedcommon:instance_win", "Min": 1 } ],
+      "Grants": {
+        "Items": [
+          { "Item": "KweebecNightmare_Moonbloom", "Count": 5 },
+          { "Item": "Ingredient_Life_Essence", "Count": 25 }
+        ]
+      }
+    }
+  ],
+  "Pool": {
+    "Rolls": {
+      "Base": 2,
+      "Factors": [ { "Factor": "ziggfreedcommon:instance_score", "Weight": 0.00055555556 } ],
+      "Clamp": { "Max": 5 }
+    },
+    "Entries": [
+      {
+        "Weight": 10,
+        "Conditions": [ { "Factor": "ziggfreedcommon:instance_win", "Min": 1 } ],
+        "Grants": { "Items": [ { "Item": "KweebecNightmare_Gustbloom", "Count": 2, "CountMax": 3 } ] }
+      },
+      {
+        "Weight": 10,
+        "Conditions": [ { "Factor": "ziggfreedcommon:instance_win", "Min": 1 } ],
+        "Grants": { "Items": [ { "Item": "KweebecNightmare_Mirebloom", "Count": 2, "CountMax": 3 } ] }
+      },
+      {
+        "Weight": 8,
+        "Conditions": [ { "Factor": "ziggfreedcommon:instance_win", "Min": 1 } ],
+        "Grants": { "Items": [ { "Item": "KweebecNightmare_Moonbloom", "Count": 5, "CountMax": 10 } ] }
+      },
+      {
+        "Weight": 6,
+        "Conditions": [
+          { "Factor": "ziggfreedcommon:instance_win", "Min": 1 },
+          { "Factor": "ziggfreedcommon:instance_score", "Min": 2000 }
+        ],
+        "Grants": { "Items": [ { "Item": "KweebecNightmare_Emberbloom", "Count": 2, "CountMax": 5 } ] }
+      },
+      {
+        "Weight": 5,
+        "Conditions": [
+          { "Factor": "ziggfreedcommon:instance_win", "Min": 1 },
+          { "Factor": "ziggfreedcommon:instance_score", "Min": 2500 }
+        ],
+        "Grants": { "Items": [ { "Item": "Ingredient_Life_Essence", "Count": 20, "CountMax": 30 } ] }
+      },
+      {
+        "Weight": 3,
+        "Conditions": [
+          { "Factor": "ziggfreedcommon:instance_win", "Min": 1 },
+          { "Factor": "ziggfreedcommon:instance_score", "Min": 4000 }
+        ],
+        "Grants": { "Items": [ { "Item": "Ingredient_Life_Essence_Concentrated", "Count": 1 } ] }
+      }
+    ]
+  }
+}

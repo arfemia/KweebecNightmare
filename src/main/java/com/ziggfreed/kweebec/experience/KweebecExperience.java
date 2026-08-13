@@ -43,12 +43,18 @@ import com.ziggfreed.common.instance.result.RewardChip;
 import com.ziggfreed.common.instance.result.RewardChipRenderer;
 import com.ziggfreed.common.instance.result.ScoreColumn;
 import com.ziggfreed.common.instance.result.TeamResult;
+import com.ziggfreed.common.instance.reward.DeferredRewards;
 import com.ziggfreed.common.instance.reward.GrantOutcome;
 import com.ziggfreed.common.instance.reward.InstanceReward;
 import com.ziggfreed.common.instance.reward.InstanceRewardGranter;
-import com.ziggfreed.common.instance.reward.LootTable;
-import com.ziggfreed.common.instance.reward.LootTableConfig;
 import com.ziggfreed.common.instance.reward.PendingRewardStore;
+import com.ziggfreed.common.loot.FactorLookup;
+import com.ziggfreed.common.loot.LootEngine;
+import com.ziggfreed.common.loot.LootFactors;
+import com.ziggfreed.common.loot.LootableAsset;
+import com.ziggfreed.common.loot.LootableConfig;
+import com.ziggfreed.common.loot.reward.RewardKinds;
+import com.ziggfreed.common.subject.Subject;
 import com.ziggfreed.common.party.PartyConfig;
 import com.ziggfreed.common.party.PartyService;
 import com.ziggfreed.common.party.PartySettingsConfig;
@@ -325,7 +331,7 @@ public final class KweebecExperience {
             // CONCRETE rolled list to the claim store (NO grant) so it survives disconnect/restart, and
             // stash the same list for the chip preview. Delivered only when the player presses Claim
             // (results page or play-menu button).
-            List<InstanceReward> rolled = rollRewards(preset, win, score, seedFor(roundId, uuid));
+            List<InstanceReward> rolled = rollRewards(preset, win, score, seedFor(roundId, uuid), uuid);
             if (!rolled.isEmpty()) {
                 pendingRewards.queue(uuid, rolled);
             }
@@ -444,26 +450,48 @@ public final class KweebecExperience {
     }
 
     /**
+     * The subject a deferred payout is decided FOR. Its name is deliberately the {@code {player}}
+     * placeholder rather than a username: a rolled command reward is resolved here, at round resolve,
+     * but only runs when the player presses Claim - possibly after a disconnect, a restart, and a walk
+     * back to the overworld. Leaving the placeholder in lets {@link KweebecRewardSink} fill in whoever
+     * is actually standing there at that moment, which is what it has always done.
+     */
+    @Nonnull
+    private static Subject claimantOf(@Nonnull UUID uuid) {
+        return Subject.of(uuid, "{player}");
+    }
+
+    /**
      * Roll a preset's owed spoils for a player with {@code score}: empty when the outcome does not grant
      * (win-gated by the preset's reward-on-exit policy), else the preset's flat
-     * {@link InstancePreset#rewards()} (backward compat) plus the score-rolled entries of its
-     * {@link InstancePreset#rewardTableId() loot table} when one is referenced. Higher score = more rolls
-     * + premium entries unlocked (see {@code LootTable.roll}). Deterministic for a given {@code seed}.
+     * {@link InstancePreset#rewards()} plus whatever its
+     * {@link InstancePreset#rewardTableId() lootable} decided when one is referenced. Higher score =
+     * more picks + premium entries unlocked. Deterministic for a given {@code seed}.
+     *
+     * <p>The table is DECIDED here and granted later, so this asks the loot engine what a pass would
+     * hand over rather than letting it hand anything over: the concrete answer is what the claim store
+     * keeps and what the results chips show, and rolling a second time at claim would pay out something
+     * other than what the player was shown.
      */
     @Nonnull
     private static List<InstanceReward> rollRewards(@Nullable InstancePreset preset, boolean win,
-                                                    int score, long seed) {
+                                                    int score, long seed, @Nonnull UUID uuid) {
         if (preset == null || !preset.rewardOnExit().grantsOn(win)) {
             return List.of();
         }
         List<InstanceReward> out = new ArrayList<>(preset.rewards());
         String tableId = preset.rewardTableId();
         if (tableId != null && !tableId.isBlank()) {
-            // resolveUnion folds in any additional pack that contributes to this logical table (e.g. an
-            // installed MMO's xp entries), so a second mod adds rewards without overriding Kweebec's file.
-            LootTable table = LootTableConfig.getInstance().resolveUnion(tableId);
+            // resolve folds in any additional pack that CONTRIBUTES to this table (e.g. an installed
+            // MMO's xp entries), so a second mod adds rewards without overriding Kweebec's file.
+            LootableAsset table = LootableConfig.getInstance().resolve(tableId);
             if (table != null) {
-                out.addAll(table.roll(score, win, new Random(seed)));
+                Random rng = new Random(seed);
+                FactorLookup outcome = LootFactors.lookupFor(score, win);
+                List<LootEngine.Selected> decided = LootEngine.select(table.rollsOrEmpty(),
+                        table.poolOrEmpty(), null, outcome, rng::nextDouble);
+                out.addAll(DeferredRewards.fromSelection(decided, RewardKinds.shared(), claimantOf(uuid),
+                        "kweebec:" + tableId, SafeLog::warn));
             }
         }
         // Collapse the table's repeated picks (and any flat-reward overlap) into one entry per item,
