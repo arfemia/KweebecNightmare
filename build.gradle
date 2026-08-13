@@ -41,8 +41,8 @@ dependencies {
     // classes under two classloaders. Path in gradle.properties (ziggfreedCommonJar).
     compileOnly files(ziggfreedCommonJar)
 
-    // Test-only: unit tests decode shipped asset JSON through common's codecs (e.g. the
-    // LootTableAsset load-path check) and need the server + common classes on the TEST
+    // Test-only: unit tests decode shipped asset JSON through common's codecs (e.g.
+    // ChaseLootableLoadTest) and need the server + common classes on the TEST
     // classpath specifically, since both are compileOnly for main (mirrors mmo-mob-scaling
     // and rpg-stations' own test wiring).
     testImplementation(files(hytaleServerJar))

@@ -1,6 +1,5 @@
 {
   "Name": "nightmares_intro",
-  "Owner": "kweebec",
   "Payload": {
     "Start": [{ "Node": "greet" }],
     "Nodes": {

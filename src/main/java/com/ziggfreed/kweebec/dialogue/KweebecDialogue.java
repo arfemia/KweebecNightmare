@@ -94,11 +94,11 @@ public final class KweebecDialogue {
         DialogueI18n i18n = new I18nModuleDialogueI18n("kweebecnightmare.");
         deps = new DialoguePageDeps(
                 engine,
-                // Read the store's decoded, owner-filtered snapshot on every lookup (never cached):
-                // at THIS call (setup time) the store is still empty, and it only fills once the
-                // engine's LoadedAssetsEvent listener folds the pack layer in later in boot.
+                // Read the store's decoded snapshot on every lookup (never cached): at THIS call
+                // (setup time) the store is still empty, and it only fills once the engine's
+                // LoadedAssetsEvent listener folds the pack layer in later in boot.
                 id -> id == null ? null
-                        : DialogueAssetStore.getInstance().dialogues("kweebec").get(id.toLowerCase(Locale.ROOT)),
+                        : DialogueAssetStore.getInstance().dialogues().get(id.toLowerCase(Locale.ROOT)),
                 (dialogue, nodeId, optionIndex, contextId, ref, store, playerRef, player) ->
                         new SimpleDialogueExecContext(store, ref, playerRef, player, contextId,
                                 KweebecDialogueFlags.store(playerRef.getUuid()), null,
