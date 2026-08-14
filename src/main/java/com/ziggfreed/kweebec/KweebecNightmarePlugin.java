@@ -24,6 +24,7 @@ import com.ziggfreed.common.npc.NpcDialogueDepsRegistry;
 import com.ziggfreed.kweebec.asset.KweebecAssetRegistrar;
 import com.ziggfreed.kweebec.command.KweebecCommand;
 import com.ziggfreed.kweebec.death.CocoonOnDeathSystem;
+import com.ziggfreed.kweebec.dialogue.KweebecDestinations;
 import com.ziggfreed.kweebec.dialogue.KweebecDialogue;
 import com.ziggfreed.kweebec.event.KweebecDamageSystem;
 import com.ziggfreed.kweebec.event.MoonbloomCollectSystem;
@@ -79,6 +80,12 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // decoded ONCE at LoadAssetEvent right after every plugin's setup() returns, so a type
         // registered later has already missed the read (see KweebecDialogue's class doc).
         KweebecDialogue.init();
+
+        // Seed kweebec's own two destination types (the round leaderboard, the party invite
+        // screen) into the shared ziggfreed-common routing vocabulary, same timing rule as
+        // above - a dialogue file authoring "Open": "Kweebec_Leaderboard" before this runs
+        // fails to load.
+        KweebecDestinations.register();
 
         // Register the generic ziggfreed-common "press-F opens a dialogue" NPC action
         // (ZigOpenDialogue) and point it at kweebec's DialoguePageDeps, BEFORE any NPC

@@ -7,7 +7,6 @@ import javax.annotation.Nullable;
 
 import com.hypixel.hytale.server.core.Message;
 import com.ziggfreed.common.dialogue.DialogueEngine;
-import com.ziggfreed.common.dialogue.DialogueExecContext;
 import com.ziggfreed.common.dialogue.NpcDialogue;
 import com.ziggfreed.common.dialogue.asset.DialogueAssetStore;
 import com.ziggfreed.common.dialogue.i18n.DialogueI18n;
@@ -16,9 +15,6 @@ import com.ziggfreed.common.dialogue.page.DialoguePageDeps;
 import com.ziggfreed.common.dialogue.page.SimpleDialogueExecContext;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.i18n.Lang;
-import com.ziggfreed.common.instance.leaderboard.LeaderboardPage;
-import com.ziggfreed.common.party.page.PartyInvitePage;
-import com.ziggfreed.kweebec.experience.KweebecExperience;
 
 /**
  * Kweebec's consumer-side wiring of the generic {@code ziggfreed-common} dialogue
@@ -30,6 +26,12 @@ import com.ziggfreed.kweebec.experience.KweebecExperience;
  * and a context-aware name header; resolves the authored dialogues (the guide NPC's
  * preset-launch backstory and the clash-host PvP entry) live off the shared store; and
  * exposes the {@link DialoguePageDeps} a page (command or NPC) opens against.
+ *
+ * <p>What an authored option's generic {@code Open} action opens is no longer a router this
+ * class runs - it is a {@link com.ziggfreed.common.ui.route.Destination} the shared engine
+ * resolves through the process-wide {@link com.ziggfreed.common.ui.route.Destinations} registry.
+ * {@link KweebecDestinations} seeds kweebec's own two (the round leaderboard, the party invite
+ * screen) into it.
  *
  * <p><b>Registration timing (Pattern A).</b> The store decodes every dialogue body ONCE, at
  * {@code LoadAssetEvent}, right after every plugin's {@code setup()} has returned - so kweebec's
@@ -87,7 +89,6 @@ public final class KweebecDialogue {
                 .action(OpenPlayAction.type())
                 .condition(NotInRoundCondition.type())
                 .condition(EngagedCondition.type())
-                .router(KweebecDialogue::route)
                 .warn(KweebecDialogue::warn)
                 .build();
 
@@ -115,26 +116,6 @@ public final class KweebecDialogue {
             return Lang.msg(Lang.DIALOGUE_CLASH_NPC);
         }
         return Lang.msg(Lang.DIALOGUE_NIGHTMARES_NPC);
-    }
-
-    /**
-     * The {@link com.ziggfreed.common.dialogue.DialoguePageRouter} for the engine's generic
-     * {@code OpenPage} action: an option authored {@code { "Open": "leaderboard" }} opens the
-     * shared {@link LeaderboardPage}; {@code { "Open": "party" }} opens the {@link PartyInvitePage}.
-     * Returns true so the dialogue page does not re-open over it.
-     */
-    private static boolean route(@Nonnull String target, @Nonnull DialogueExecContext ctx) {
-        if ("leaderboard".equalsIgnoreCase(target)) {
-            ctx.player().getPageManager().openCustomPage(ctx.ref(), ctx.store(),
-                    new LeaderboardPage(ctx.playerRef(), KweebecExperience.leaderboardDeps()));
-            return true;
-        }
-        if ("party".equalsIgnoreCase(target)) {
-            ctx.player().getPageManager().openCustomPage(ctx.ref(), ctx.store(),
-                    new PartyInvitePage(ctx.playerRef(), KweebecExperience.partyDeps()));
-            return true;
-        }
-        return false;
     }
 
     private static void warn(@Nullable String msg) {
