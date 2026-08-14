@@ -1,5 +1,5 @@
 {
-  "Name": "clash_intro",
+  "Name": "Clash_Intro",
   "Payload": {
     "Start": [{ "Node": "greet" }],
     "Nodes": {

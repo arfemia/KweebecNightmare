@@ -36,7 +36,7 @@ import com.ziggfreed.kweebec.round.RuleSet;
  *
  * <p>Pack JSON shape (all delta fields optional; absent = 0 = no change to that knob):
  * <pre>{@code
- * { "Name": "swarm", "NameKey": "kweebecnightmare.mutator.swarm.name",
+ * { "Name": "Swarm", "NameKey": "kweebecnightmare.mutator.swarm.name",
  *   "HunterCountDelta": 1, "HunterSpeedMaxDelta": 0.0,
  *   "CaveShrineCountDelta": 0, "CorruptionPerSecondDelta": 0.0,
  *   "ShrineRelightSecondsDelta": 0.0, "RoundCapSecondsDelta": 0,

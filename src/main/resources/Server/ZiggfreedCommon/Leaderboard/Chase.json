@@ -1,5 +1,5 @@
 {
-  "Name": "chase",
+  "Name": "Chase",
   "BoardId": "leaderboard-chase",
   "PrimaryAxisLabelKey": "kweebecnightmare.leaderboard.axis.difficulty",
   "SecondaryAxisLabelKey": "kweebecnightmare.leaderboard.axis.players",

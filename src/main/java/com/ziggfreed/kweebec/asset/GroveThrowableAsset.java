@@ -31,7 +31,7 @@ import com.hypixel.hytale.codec.KeyedCodec;
  *
  * <p>Pack JSON shape (all knobs optional; absent = the documented default):
  * <pre>{@code
- * { "Name": "gustbloom", "Enabled": false,
+ * { "Name": "Gustbloom", "Enabled": false,
  *   "PrefabKey": "KweebecNightmare/Gustbloom",
  *   "PerShrineCount": 0, "ScatterCount": 6,
  *   "RespawnWithWaves": true, "MinCorruptionTier": 0,

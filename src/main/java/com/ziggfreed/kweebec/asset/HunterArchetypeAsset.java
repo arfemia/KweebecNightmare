@@ -30,7 +30,7 @@ import com.hypixel.hytale.codec.KeyedCodec;
  * arrays - index i's multiplier maps to index i's pace effect id; an empty string
  * effect id = the role's 1.0x baseline, no effect):
  * <pre>{@code
- * { "Name": "stalker", "Kind": "stalker", "RoleName": "KweebecNightmare_Blight",
+ * { "Name": "Stalker", "Kind": "stalker", "RoleName": "KweebecNightmare_Blight",
  *   "Count": 1, "Weight": 1.0, "SpawnTier": 0,
  *   "SpeedBands": [0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5],
  *   "BandEffectIds": ["KweebecNightmare_HunterPace_090", "",

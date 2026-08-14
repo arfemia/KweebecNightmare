@@ -1,5 +1,5 @@
 {
-  "Name": "nightmares_intro",
+  "Name": "Nightmares_Intro",
   "Payload": {
     "Start": [{ "Node": "greet" }],
     "Nodes": {

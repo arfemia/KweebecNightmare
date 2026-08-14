@@ -1,6 +1,6 @@
 {
   "$Comment": "PvP queue policy for the domination_koth preset (2v2 King-of-the-Hill control). Public fills both teams; Party queues a premade. Solo card disabled. Scoring / capture knobs live on the gameplay RoundPreset (domination_koth).",
-  "Name": "domination_koth",
+  "Name": "Domination_Koth",
   "Enabled": true,
   "NameKey": "kweebecnightmare.preset.domination_koth.name",
   "FillTimeoutSeconds": 30,

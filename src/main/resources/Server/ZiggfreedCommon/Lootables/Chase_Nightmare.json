@@ -11,7 +11,7 @@
     "unlock at higher scores. To retune, change the weights, the counts, or the thresholds.",
     "Another mod can ADD entries by shipping a lootable with \"ContributesTo\": \"chase_nightmare\"."
   ],
-  "Name": "chase_nightmare",
+  "Name": "Chase_Nightmare",
   "Rolls": [
     {
       "Conditions": [ { "Factor": "ziggfreedcommon:instance_win", "Min": 1 } ],

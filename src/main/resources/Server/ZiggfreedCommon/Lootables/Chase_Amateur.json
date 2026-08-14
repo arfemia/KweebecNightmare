@@ -15,7 +15,7 @@
     "nothing here needs code. Another mod can ADD entries without touching this file by shipping",
     "its own lootable with \"ContributesTo\": \"chase_amateur\"."
   ],
-  "Name": "chase_amateur",
+  "Name": "Chase_Amateur",
   "Rolls": [
     {
       "Conditions": [ { "Factor": "ziggfreedcommon:instance_win", "Min": 1 } ],

@@ -49,7 +49,7 @@ import com.ziggfreed.kweebec.score.ScoringConfig;
  * <p>Pack JSON shape (all fields optional; absent = the Nightmare-baseline default
  * from the {@link RuleSet} builder):
  * <pre>{@code
- * { "Name": "nightmare",
+ * { "Name": "Nightmare",
  *   "ReviveStyle": "COOP_RESCUE", "MaxDowns": 1, "BleedOutSeconds": 30,
  *   "HunterCount": 1, "HunterSpeedBase": 1.0, "HunterSpeedMax": 1.35,
  *   "ShrineBase": 2, "ShrinePerPlayer": 1, "CaveShrineCount": 2,

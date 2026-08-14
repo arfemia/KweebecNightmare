@@ -1,5 +1,5 @@
 {
-  "Name": "shrine_reinforce",
+  "Name": "ShrineReinforce",
   "Trigger": "SHRINE_LIT",
   "Placement": "NEAR_RANDOM_PLAYER",
   "UnitId": "",

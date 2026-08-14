@@ -12,7 +12,7 @@
     "play for. Another mod can ADD entries by shipping a lootable with",
     "\"ContributesTo\": \"chase_hardcore\"."
   ],
-  "Name": "chase_hardcore",
+  "Name": "Chase_Hardcore",
   "Rolls": [
     {
       "Conditions": [ { "Factor": "ziggfreedcommon:instance_win", "Min": 1 } ],

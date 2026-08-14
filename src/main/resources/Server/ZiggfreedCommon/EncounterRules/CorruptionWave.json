@@ -1,5 +1,5 @@
 {
-  "Name": "corruption_wave",
+  "Name": "CorruptionWave",
   "Trigger": "CORRUPTION_TIER",
   "Placement": "RING_AROUND_PLAYERS",
   "UnitId": "",
