@@ -90,7 +90,7 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // Register the generic ziggfreed-common "press-F opens a dialogue" NPC action
         // (ZigOpenDialogue) and point it at kweebec's DialoguePageDeps, BEFORE any NPC
         // role asset referencing {Type:ZigOpenDialogue} loads - else the guide role
-        // silently fails to parse. Mirrors how the MMO registers OpenMmoUi in setup().
+        // silently fails to parse.
         NpcDialogueDepsRegistry.set(KweebecDialogue::deps);
         NpcActions.register();
 
