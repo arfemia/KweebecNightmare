@@ -57,6 +57,14 @@ public class KweebecNightmarePlugin extends JavaPlugin {
 
     public static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
 
+    /**
+     * How this mod attributes itself when it claims an id in one of ziggfreed-common's shared
+     * registries (dialogue types, the dialogue deps provider). The attribution is what a boot line
+     * prints beside a claimed id, so a server owner running several mods can tell which one owns
+     * what.
+     */
+    public static final String REGISTRY_OWNER = "KweebecNightmare";
+
     private static KweebecNightmarePlugin instance;
 
     /** The data dir the Clash Host placement marker persists in (set at setup, read by {@code /kweebec clashhost}). */
@@ -75,10 +83,10 @@ public class KweebecNightmarePlugin extends JavaPlugin {
 
     @Override
     protected void setup() {
-        // Register kweebec's dialogue vocabulary (Play/NotInRound/Engaged) into the shared
-        // DialogueTypeTable NOW, before assets load: dialogue bodies are a Pattern A asset,
-        // decoded ONCE at LoadAssetEvent right after every plugin's setup() returns, so a type
-        // registered later has already missed the read (see KweebecDialogue's class doc).
+        // Contribute kweebec's dialogue vocabulary (Play/NotInRound/Engaged) to the server's one
+        // dialogue engine NOW, before assets load: dialogue bodies are a Pattern A asset, decoded
+        // ONCE at LoadAssetEvent right after every plugin's setup() returns, so a type registered
+        // later has already missed the read (see KweebecDialogue's class doc).
         KweebecDialogue.init();
 
         // Seed kweebec's own two destination types (the round leaderboard, the party invite
@@ -90,8 +98,10 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // Register the generic ziggfreed-common "press-F opens a dialogue" NPC action
         // (ZigOpenDialogue) and point it at kweebec's DialoguePageDeps, BEFORE any NPC
         // role asset referencing {Type:ZigOpenDialogue} loads - else the guide role
-        // silently fails to parse.
-        NpcDialogueDepsRegistry.set(KweebecDialogue::deps);
+        // silently fails to parse. The registration names this mod, so a server also running
+        // another dialogue mod gets one boot line saying which one holds the un-keyed slot
+        // instead of a silent swap.
+        NpcDialogueDepsRegistry.setDefault(REGISTRY_OWNER, KweebecDialogue::deps);
         NpcActions.register();
 
         // Custom asset stores (Presets, Hunters, Control) - registered FIRST so they

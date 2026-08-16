@@ -19,10 +19,10 @@ import com.ziggfreed.kweebec.i18n.Lang;
 
 /**
  * Kweebec's consumer-side wiring of the generic {@code ziggfreed-common} dialogue
- * engine. Builds ONE {@link DialogueEngine} with the generics PLUS kweebec's own
- * {@link OpenPlayAction} (open the Play / queue-mode chooser for a preset) and
- * {@link NotInRoundCondition}/
- * {@link EngagedCondition} (gate launch options on engagement), the
+ * engine. Contributes kweebec's own {@link OpenPlayAction} (open the Play / queue-mode chooser for
+ * a preset) and {@link NotInRoundCondition}/
+ * {@link EngagedCondition} (gate launch options on engagement) to the server's ONE
+ * {@link DialogueEngine}, declares the
  * {@code kweebecnightmare.} i18n namespace,
  * and a context-aware name header; resolves the authored dialogues (the guide NPC's
  * preset-launch backstory and the clash-host PvP entry) live off the shared store; and
@@ -46,8 +46,8 @@ import com.ziggfreed.kweebec.i18n.Lang;
  * {@code Play}/{@code NotInRound}/{@code Engaged} types must be in the shared
  * {@link com.ziggfreed.common.dialogue.DialogueTypeTable} before that fires. {@link #init()} is
  * called eagerly from {@link com.ziggfreed.kweebec.KweebecNightmarePlugin#setup()}, not lazily on
- * first NPC interaction - a late build would still register (the table logs one warning), but
- * every dialogue file that named its late type would already have failed to load.
+ * first NPC interaction - a late registration would still take effect (the table logs one
+ * warning), but every dialogue file that named its late type would already have failed to load.
  */
 public final class KweebecDialogue {
 
@@ -93,12 +93,14 @@ public final class KweebecDialogue {
      * {@link com.ziggfreed.kweebec.KweebecNightmarePlugin#setup()}, before assets load.
      */
     public static synchronized void init() {
-        DialogueEngine engine = DialogueEngine.builder()
-                .action(OpenPlayAction.type())
-                .condition(NotInRoundCondition.type())
-                .condition(EngagedCondition.type())
-                .warn(KweebecDialogue::warn)
-                .build();
+        // Contributed, not built: there is ONE engine per server and kweebec's three types join
+        // whatever else is installed, so a conversation may carry a Play option beside another
+        // mod's action and both run.
+        String owner = KweebecNightmarePlugin.REGISTRY_OWNER;
+        DialogueEngine.registerShared(owner, OpenPlayAction.type());
+        DialogueEngine.registerShared(owner, NotInRoundCondition.type());
+        DialogueEngine.registerShared(owner, EngagedCondition.type());
+        DialogueEngine engine = DialogueEngine.shared();
 
         // This mod's namespace, declared once: registered with the shared library so any surface
         // painting kweebec's authored content resolves a key against the kweebecnightmare.lang
