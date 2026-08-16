@@ -39,8 +39,8 @@ import com.ziggfreed.common.instance.result.PlayerResultRow;
 import com.ziggfreed.common.instance.result.ResultKind;
 import com.ziggfreed.common.instance.result.ResultsPage;
 import com.ziggfreed.common.instance.result.ResultsPageDeps;
-import com.ziggfreed.common.instance.result.RewardChip;
 import com.ziggfreed.common.instance.result.RewardChipRenderer;
+import com.ziggfreed.common.loot.reward.RewardChip;
 import com.ziggfreed.common.instance.result.ScoreColumn;
 import com.ziggfreed.common.instance.result.TeamResult;
 import com.ziggfreed.common.instance.reward.DeferredRewards;
@@ -514,17 +514,17 @@ public final class KweebecExperience {
     private static List<RewardChip> chipsFor(@Nonnull List<InstanceReward> rewards) {
         List<RewardChip> chips = new ArrayList<>();
         for (InstanceReward r : rewards) {
-            chips.add(toChip(r, false));
+            chips.add(toChip(r));
         }
         return chips;
     }
 
     @Nonnull
-    private static RewardChip toChip(@Nonnull InstanceReward r, boolean pending) {
+    private static RewardChip toChip(@Nonnull InstanceReward r) {
         // Common auto-generates the label from the item's own engine display name ("Moonbloom x2"),
         // so a pack author needs no per-reward displayKey; an authored displayKey (optional override)
         // resolves through Lang here.
-        return RewardChipRenderer.toChip(r, pending, (key, qty) -> Lang.msg(key).param("0", qty));
+        return RewardChipRenderer.toChip(r, (key, qty) -> Lang.msg(key).param("0", qty));
     }
 
     /**

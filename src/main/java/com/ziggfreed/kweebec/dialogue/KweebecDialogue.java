@@ -9,10 +9,11 @@ import com.hypixel.hytale.server.core.Message;
 import com.ziggfreed.common.dialogue.DialogueEngine;
 import com.ziggfreed.common.dialogue.NpcDialogue;
 import com.ziggfreed.common.dialogue.asset.DialogueAssetStore;
-import com.ziggfreed.common.dialogue.i18n.DialogueI18n;
-import com.ziggfreed.common.dialogue.i18n.I18nModuleDialogueI18n;
 import com.ziggfreed.common.dialogue.page.DialoguePageDeps;
 import com.ziggfreed.common.dialogue.page.SimpleDialogueExecContext;
+import com.ziggfreed.common.i18n.ContentI18n;
+import com.ziggfreed.common.i18n.ContentKeys;
+import com.ziggfreed.common.i18n.I18nModuleContentI18n;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.i18n.Lang;
 
@@ -21,11 +22,18 @@ import com.ziggfreed.kweebec.i18n.Lang;
  * engine. Builds ONE {@link DialogueEngine} with the generics PLUS kweebec's own
  * {@link OpenPlayAction} (open the Play / queue-mode chooser for a preset) and
  * {@link NotInRoundCondition}/
- * {@link EngagedCondition} (gate launch options on engagement), an in-memory
- * {@link KweebecDialogueFlags} store, the {@code kweebecnightmare.} i18n namespace,
+ * {@link EngagedCondition} (gate launch options on engagement), the
+ * {@code kweebecnightmare.} i18n namespace,
  * and a context-aware name header; resolves the authored dialogues (the guide NPC's
  * preset-launch backstory and the clash-host PvP entry) live off the shared store; and
  * exposes the {@link DialoguePageDeps} a page (command or NPC) opens against.
+ *
+ * <p><b>Where a conversation's memory is kept is not wired here, and must not be.</b> The library
+ * owns both lifetimes now and routes each memory to the right one by what its author declared: a
+ * {@code Memories} entry carrying {@code "Session": true} lasts as long as the player's visit,
+ * anything else survives a restart. Neither of kweebec's two conversations declares a memory or a
+ * {@code Once} at all, so nothing here changes either way - but a round-scoped beat added later
+ * declares {@code Session} in its own file rather than being given a store from Java.
  *
  * <p>What an authored option's generic {@code Open} action opens is no longer a router this
  * class runs - it is a {@link com.ziggfreed.common.ui.route.Destination} the shared engine
@@ -92,7 +100,11 @@ public final class KweebecDialogue {
                 .warn(KweebecDialogue::warn)
                 .build();
 
-        DialogueI18n i18n = new I18nModuleDialogueI18n("kweebecnightmare.");
+        // This mod's namespace, declared once: registered with the shared library so any surface
+        // painting kweebec's authored content resolves a key against the kweebecnightmare.lang
+        // catalogue, and handed to the dialogue page for its own node/option text.
+        ContentI18n i18n = new I18nModuleContentI18n("kweebecnightmare.");
+        ContentKeys.install(i18n);
         deps = new DialoguePageDeps(
                 engine,
                 // Read the store's decoded snapshot on every lookup (never cached): at THIS call
@@ -102,8 +114,7 @@ public final class KweebecDialogue {
                         : DialogueAssetStore.getInstance().dialogues().get(id.toLowerCase(Locale.ROOT)),
                 (dialogue, nodeId, optionIndex, contextId, ref, store, playerRef, player) ->
                         new SimpleDialogueExecContext(store, ref, playerRef, player, contextId,
-                                KweebecDialogueFlags.store(playerRef.getUuid()), null,
-                                dialogue, nodeId, optionIndex),
+                                null, dialogue, nodeId, optionIndex),
                 i18n,
                 KweebecDialogue::npcName,
                 null);
