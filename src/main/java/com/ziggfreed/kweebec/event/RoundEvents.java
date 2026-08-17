@@ -9,6 +9,10 @@ import javax.annotation.Nullable;
 
 import com.hypixel.hytale.event.IEventDispatcher;
 import com.hypixel.hytale.server.core.HytaleServer;
+import com.ziggfreed.common.instance.metadata.InstanceRoundCompletedEvent;
+import com.ziggfreed.common.instance.metadata.InstanceRounds;
+import com.ziggfreed.common.instance.metadata.RoundMetadata;
+import com.ziggfreed.common.instance.result.ResultKind;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.api.KweebecRoundScoredEvent;
 import com.ziggfreed.kweebec.api.PlayerCocoonedEvent;
@@ -30,6 +34,9 @@ import com.ziggfreed.kweebec.api.RoundStartedEvent;
  * matches across the jar boundary).
  */
 public final class RoundEvents {
+
+    /** Producer id this mod stamps on every generic {@link RoundMetadata} envelope. */
+    private static final String MOD_ID = "kweebec";
 
     private RoundEvents() {
     }
@@ -94,6 +101,37 @@ public final class RoundEvents {
             }
         } catch (Throwable t) {
             log("RoundCompleted", t);
+        }
+    }
+
+    /**
+     * Fire the generic ziggfreed-common {@code InstanceRoundCompletedEvent} alongside this mod's own
+     * {@link #fireRoundCompleted}, so a quest or achievement built on the shared progression engine can
+     * count a Kweebec round win in ANY mod, without knowing this mod's own outcome vocabulary. Call it
+     * immediately after {@code fireRoundCompleted} at every resolve site, so ordering stays this mod's
+     * own event first and the generic one second.
+     *
+     * <p>{@code winners} is {@code participants} on a co-op win, the winning team's members on a PvP win,
+     * or empty on a loss / abort - the caller decides that shape, this method only wraps it. Same dispatch
+     * contract as every other fire here; {@link InstanceRounds#fireCompleted} carries its own guard too,
+     * so this wrapper's try/catch only needs to cover building the {@link RoundMetadata} envelope.
+     */
+    public static void fireInstanceCompleted(@Nonnull String modeId, @Nullable String presetId,
+                                             int difficultyScore, int durationSeconds,
+                                             @Nonnull ResultKind resultKind,
+                                             @Nonnull List<UUID> participants, @Nonnull List<UUID> winners) {
+        try {
+            RoundMetadata metadata = RoundMetadata.builder(MOD_ID)
+                    .modeId(modeId)
+                    .presetId(presetId)
+                    .difficulty(difficultyScore)
+                    .playerCount(participants.size())
+                    .durationSeconds(durationSeconds)
+                    .resultKind(resultKind)
+                    .build();
+            InstanceRounds.fireCompleted(new InstanceRoundCompletedEvent(metadata, participants, winners));
+        } catch (Throwable t) {
+            log("InstanceRoundCompleted", t);
         }
     }
 

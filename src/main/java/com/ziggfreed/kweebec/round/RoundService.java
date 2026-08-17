@@ -1,5 +1,6 @@
 package com.ziggfreed.kweebec.round;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -19,6 +20,7 @@ import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.ziggfreed.common.health.HealthUtil;
+import com.ziggfreed.common.instance.result.ResultKind;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
 import com.ziggfreed.kweebec.atmosphere.MusicBedService;
@@ -302,6 +304,8 @@ public final class RoundService {
         Integer winnerTeam = mode != null ? mode.winnerTeam(round, outcome) : null;
         List<UUID> participants = round.participantList();
         World world = round.world();
+        ResultKind resultKind = resolveResultKind(outcome, win);
+        List<UUID> instanceWinners = resolveWinners(round, win, winnerTeam, participants);
 
         KweebecNightmarePlugin.LOGGER.atInfo().log(
                 "[Kweebec] round " + round.roundId() + " resolved: " + outcome
@@ -310,6 +314,8 @@ public final class RoundService {
         if (world == null) {
             RoundEvents.fireRoundCompleted(round.roundId(), round.mode().id(), outcome,
                     participants, duration, progress, difficultyScore, winnerTeam);
+            RoundEvents.fireInstanceCompleted(round.mode().id(), round.ruleSet().presetId(), difficultyScore,
+                    duration, resultKind, participants, instanceWinners);
             if (mode != null) {
                 mode.onResolve(round, outcome, duration, difficultyScore, null, null);
             }
@@ -321,6 +327,8 @@ public final class RoundService {
             // Fire the native events on the world thread so listeners can hop safely.
             RoundEvents.fireRoundCompleted(round.roundId(), round.mode().id(), outcome,
                     participants, duration, progress, difficultyScore, winnerTeam);
+            RoundEvents.fireInstanceCompleted(round.mode().id(), round.ruleSet().presetId(), difficultyScore,
+                    duration, resultKind, participants, instanceWinners);
             Store<EntityStore> store = world.getEntityStore().getStore();
             if (mode != null) {
                 mode.onResolve(round, outcome, duration, difficultyScore, world, store);
@@ -336,6 +344,43 @@ public final class RoundService {
     private static boolean isWinFallback(@Nonnull RoundCompletedEvent.Outcome outcome) {
         return outcome == RoundCompletedEvent.Outcome.ESCAPED
                 || outcome == RoundCompletedEvent.Outcome.SURVIVED;
+    }
+
+    /** Maps this mod's own {@code Outcome} onto the generic {@code ResultKind} the shared instance event
+     *  carries: WIN on a mode win (co-op escape/survive, or a resolved PvP winning team), ABORT on a
+     *  force-ended round, LOSS for everything else (caught, timed out, or a PvP draw). */
+    @Nonnull
+    private static ResultKind resolveResultKind(@Nonnull RoundCompletedEvent.Outcome outcome, boolean win) {
+        if (outcome == RoundCompletedEvent.Outcome.ABORTED) {
+            return ResultKind.ABORT;
+        }
+        return win ? ResultKind.WIN : ResultKind.LOSS;
+    }
+
+    /** Resolves the {@code winners} list for the generic shared instance event: empty on a loss/abort;
+     *  on a PvP win, just the winning team's still-present members ({@code round.membersOfTeam}, filtered
+     *  by the same {@code !hasLeftRound} rule {@code ClashRoundMode}/{@code DominationRoundMode} already
+     *  apply for their own end-of-round titles); on a co-op win ({@code winnerTeam == null}), every
+     *  participant, but ONLY when the round genuinely assigned no teams at all - a co-op round with an
+     *  unresolved {@code winnerTeam} is not "everybody won", it is a mode that has not said who did. */
+    @Nonnull
+    private static List<UUID> resolveWinners(@Nonnull RoundInstance round, boolean win,
+                                             @Nullable Integer winnerTeam, @Nonnull List<UUID> participants) {
+        if (!win) {
+            return List.of();
+        }
+        if (winnerTeam != null) {
+            List<UUID> winners = new ArrayList<>();
+            for (UUID member : round.membersOfTeam(winnerTeam)) {
+                PlayerRoundState st = round.playerState(member);
+                if (st != null && !st.hasLeftRound()) {
+                    winners.add(member);
+                }
+            }
+            return winners;
+        }
+        boolean anyTeamAssigned = participants.stream().anyMatch(p -> round.teamOf(p) != -1);
+        return anyTeamAssigned ? List.of() : participants;
     }
 
     private void teardown(@Nonnull RoundInstance round, @Nonnull World world) {
