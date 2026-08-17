@@ -114,8 +114,8 @@ public final class KweebecDialogue {
                 // LoadedAssetsEvent listener folds the pack layer in later in boot.
                 id -> id == null ? null
                         : DialogueAssetStore.getInstance().dialogues().get(id.toLowerCase(Locale.ROOT)),
-                (dialogue, nodeId, optionIndex, contextId, ref, store, playerRef, player) ->
-                        new SimpleDialogueExecContext(store, ref, playerRef, player, contextId,
+                (dialogue, nodeId, optionIndex, contextId, ref, store, player) ->
+                        new SimpleDialogueExecContext(store, ref, player, contextId,
                                 null, dialogue, nodeId, optionIndex),
                 i18n,
                 KweebecDialogue::npcName,

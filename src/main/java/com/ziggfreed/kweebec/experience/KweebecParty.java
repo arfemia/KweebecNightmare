@@ -12,6 +12,7 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import com.ziggfreed.common.instance.play.PlayModePage;
+import com.ziggfreed.common.inventory.PlayerAccess;
 import com.ziggfreed.common.party.Party;
 import com.ziggfreed.kweebec.asset.PresetConfig;
 import com.ziggfreed.kweebec.lobby.KweebecLobby;
@@ -30,8 +31,12 @@ public final class KweebecParty {
     private KweebecParty() {
     }
 
-    public static void queueParty(@Nonnull PlayerRef initiator, @Nonnull Ref<EntityStore> ref,
+    public static void queueParty(@Nonnull Ref<EntityStore> ref,
                                   @Nonnull Store<EntityStore> store, @Nullable String presetId) {
+        PlayerRef initiator = PlayerAccess.playerRef(store, ref);
+        if (initiator == null) {
+            return;
+        }
         String preset = (presetId == null || presetId.isBlank()) ? PresetConfig.DEFAULT : presetId;
         Party party = KweebecExperience.partyService().partyOf(initiator.getUuid());
         if (party != null && party.size() > 1) {
@@ -41,15 +46,16 @@ public final class KweebecParty {
         } else {
             KweebecLobby.join(initiator.getUuid(), preset);
         }
-        openQueue(initiator, ref, store);
+        openQueue(ref, store);
     }
 
-    /** Open the Play screen for {@code pr} (the live roster state, since the player is now queued). */
-    public static void openQueue(@Nonnull PlayerRef pr, @Nonnull Ref<EntityStore> ref,
+    /** Open the Play screen (the live roster state, since the player is now queued). */
+    public static void openQueue(@Nonnull Ref<EntityStore> ref,
                                  @Nonnull Store<EntityStore> store) {
         try {
+            PlayerRef pr = PlayerAccess.playerRef(store, ref);
             Player player = store.getComponent(ref, Player.getComponentType());
-            if (player != null) {
+            if (pr != null && player != null) {
                 player.getPageManager().openCustomPage(ref, store,
                         new PlayModePage(pr, KweebecExperience.playModeDeps(), null));
             }

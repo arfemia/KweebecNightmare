@@ -3,6 +3,7 @@ package com.ziggfreed.kweebec.dialogue;
 import javax.annotation.Nonnull;
 
 import com.hypixel.hytale.codec.builder.BuilderCodec;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.ziggfreed.common.instance.leaderboard.LeaderboardPage;
 import com.ziggfreed.common.party.page.PartyInvitePage;
 import com.ziggfreed.common.ui.route.Destination;
@@ -51,15 +52,23 @@ public final class KweebecDestinations {
 
     /** Put the round leaderboard on screen, the same page the old router opened for {@code "leaderboard"}. */
     private static boolean openLeaderboard(@Nonnull Leaderboard destination, @Nonnull DestinationContext ctx) {
+        PlayerRef playerRef = ctx.playerRef();
+        if (playerRef == null) {
+            return false;
+        }
         ctx.player().getPageManager().openCustomPage(ctx.playerReference(), ctx.store(),
-                new LeaderboardPage(ctx.playerRef(), KweebecExperience.leaderboardDeps()));
+                new LeaderboardPage(playerRef, KweebecExperience.leaderboardDeps()));
         return true;
     }
 
     /** Put the party invite screen on screen, the same page the old router opened for {@code "party"}. */
     private static boolean openParty(@Nonnull Party destination, @Nonnull DestinationContext ctx) {
+        PlayerRef playerRef = ctx.playerRef();
+        if (playerRef == null) {
+            return false;
+        }
         ctx.player().getPageManager().openCustomPage(ctx.playerReference(), ctx.store(),
-                new PartyInvitePage(ctx.playerRef(), KweebecExperience.partyDeps()));
+                new PartyInvitePage(playerRef, KweebecExperience.partyDeps()));
         return true;
     }
 

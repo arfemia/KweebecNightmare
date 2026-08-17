@@ -12,7 +12,6 @@ import javax.annotation.Nullable;
 
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -34,6 +33,7 @@ import com.ziggfreed.common.instance.result.ResultsPage;
 import com.ziggfreed.common.instance.result.ResultsPageDeps;
 import com.ziggfreed.common.instance.result.ScoreColumn;
 import com.ziggfreed.common.instance.result.TeamResult;
+import com.ziggfreed.common.inventory.PlayerAccess;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
 import com.ziggfreed.kweebec.i18n.Lang;
 import com.ziggfreed.kweebec.mode.clash.ClashState;
@@ -337,11 +337,7 @@ public final class KweebecClashExperience {
                 if (ref == null || !ref.isValid()) {
                     return;
                 }
-                UUID uuid = ref.getStore().getComponent(ref, UUIDComponent.getComponentType()).getUuid();
-                PlayerRef pr = Universe.get().getPlayer(uuid);
-                if (pr != null) {
-                    openResultsPage(pr, ref, ref.getStore());
-                }
+                openResultsPage(ref, ref.getStore());
             } catch (Throwable t) {
                 SafeLog.warn("[Kweebec] deferred PvP results open failed: " + t.getMessage());
             }
@@ -353,8 +349,12 @@ public final class KweebecClashExperience {
      * (the deferred open from {@link #onPlayerReady}): the two-team breakdown, the viewer's row highlighted,
      * and the leaderboard CTA deep-linked to the just-played preset bucket. No snapshot = nothing to do.
      */
-    public static void openResultsPage(@Nonnull PlayerRef pr, @Nonnull Ref<EntityStore> ref,
+    public static void openResultsPage(@Nonnull Ref<EntityStore> ref,
                                        @Nonnull Store<EntityStore> store) {
+        PlayerRef pr = PlayerAccess.playerRef(store, ref);
+        if (pr == null) {
+            return;
+        }
         PendingResult pend = pendingResults.remove(pr.getUuid());
         if (pend == null) {
             return;

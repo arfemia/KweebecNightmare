@@ -12,6 +12,7 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.ziggfreed.common.instance.leaderboard.LeaderboardPage;
 import com.ziggfreed.common.instance.play.PlayModePage;
 import com.ziggfreed.common.instance.result.ResultsActions;
+import com.ziggfreed.common.inventory.PlayerAccess;
 
 /**
  * The PvP results-screen footer handlers: "View Leaderboard" deep-links the generic
@@ -26,11 +27,14 @@ public final class KweebecClashResultsActions implements ResultsActions {
     private static final String DEFAULT_PVP_PRESET = "clash_1v1";
 
     @Override
-    public void viewLeaderboard(@Nonnull PlayerRef player, @Nonnull Ref<EntityStore> ref,
+    public void viewLeaderboard(@Nonnull Ref<EntityStore> ref,
                                 @Nonnull Store<EntityStore> store, @Nullable String bucket) {
         try {
+            // Inside the guard: a raw component read on a ref that no longer resolves throws, and
+            // this whole surface is fail-soft.
+            PlayerRef player = PlayerAccess.playerRef(store, ref);
             Player p = store.getComponent(ref, Player.getComponentType());
-            if (p != null) {
+            if (player != null && p != null) {
                 p.getPageManager().openCustomPage(ref, store,
                         new LeaderboardPage(player, KweebecClashExperience.leaderboardDeps(), bucket));
             }
@@ -39,11 +43,14 @@ public final class KweebecClashResultsActions implements ResultsActions {
     }
 
     @Override
-    public void playAgain(@Nonnull PlayerRef player, @Nonnull Ref<EntityStore> ref,
+    public void playAgain(@Nonnull Ref<EntityStore> ref,
                           @Nonnull Store<EntityStore> store) {
         try {
+            // Inside the guard: a raw component read on a ref that no longer resolves throws, and
+            // this whole surface is fail-soft.
+            PlayerRef player = PlayerAccess.playerRef(store, ref);
             Player p = store.getComponent(ref, Player.getComponentType());
-            if (p != null) {
+            if (player != null && p != null) {
                 p.getPageManager().openCustomPage(ref, store,
                         new PlayModePage(player, KweebecExperience.playModeDeps(), DEFAULT_PVP_PRESET));
             }

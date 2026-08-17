@@ -8,6 +8,7 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import com.ziggfreed.common.instance.reward.InstanceRewardGranter;
+import com.ziggfreed.common.inventory.PlayerAccess;
 import com.ziggfreed.common.util.CommandExecutor;
 
 /**
@@ -31,14 +32,19 @@ public final class KweebecRewardSink implements InstanceRewardGranter.Sink {
     }
 
     @Override
-    public boolean grantCurrency(@Nonnull String currencyId, int amount, @Nonnull PlayerRef player,
+    public boolean grantCurrency(@Nonnull String currencyId, int amount,
                                  @Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
         return false; // no standalone currency system
     }
 
     @Override
-    public boolean runCommand(@Nonnull String command, @Nonnull PlayerRef player,
+    public boolean runCommand(@Nonnull String command,
                               @Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store) {
+        PlayerRef player = PlayerAccess.playerRef(store, ref);
+        if (player == null) {
+            // No claimer to substitute, and a command carrying a raw {player} would run as garbage.
+            return false;
+        }
         String resolved = command.replace("{player}", player.getUsername());
         return CommandExecutor.executeAsConsole(resolved, player.getUsername());
     }

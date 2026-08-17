@@ -6,6 +6,7 @@ import javax.annotation.Nullable;
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.ziggfreed.common.dialogue.DialogueAction;
 import com.ziggfreed.common.dialogue.DialogueActionExecutor;
 import com.ziggfreed.common.dialogue.DialogueActionType;
@@ -66,8 +67,12 @@ public final class OpenPlayAction extends DialogueAction {
     private static void handle(@Nonnull OpenPlayAction action, @Nonnull DialogueExecContext ctx,
                                @Nonnull DialogueActionExecutor.Mut out) {
         try {
+            PlayerRef playerRef = ctx.playerRef();
+            if (playerRef == null) {
+                return;
+            }
             ctx.player().getPageManager().openCustomPage(ctx.ref(), ctx.store(),
-                    new PlayModePage(ctx.playerRef(), KweebecExperience.playModeDeps(), action.getPreset()));
+                    new PlayModePage(playerRef, KweebecExperience.playModeDeps(), action.getPreset()));
             // The chooser is now the active page; do not let the dialogue re-render over it.
             out.markOpenedOtherPage();
         } catch (Throwable t) {

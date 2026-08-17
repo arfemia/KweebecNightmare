@@ -10,11 +10,13 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import com.ziggfreed.common.instance.play.PlayModeHandler;
+import com.ziggfreed.common.inventory.PlayerAccess;
 import com.ziggfreed.common.lobby.GroupJoinResult;
 import com.ziggfreed.common.lobby.JoinResult;
 import com.ziggfreed.common.party.page.PartyInvitePage;
 import com.ziggfreed.kweebec.i18n.Lang;
 import com.ziggfreed.kweebec.lobby.KweebecLobby;
+import com.ziggfreed.kweebec.util.SafeLog;
 
 /**
  * Kweebec's {@link PlayModeHandler}: maps the Play screen's three cards onto the three
@@ -25,15 +27,23 @@ import com.ziggfreed.kweebec.lobby.KweebecLobby;
 public final class KweebecPlayMode implements PlayModeHandler {
 
     @Override
-    public void queuePublic(@Nonnull PlayerRef player, @Nonnull Ref<EntityStore> ref,
+    public void queuePublic(@Nonnull Ref<EntityStore> ref,
                             @Nonnull Store<EntityStore> store, @Nullable String presetId) {
+        PlayerRef player = playerOrNull(store, ref, "queue");
+        if (player == null) {
+            return;
+        }
         KweebecLobby.join(player.getUuid(), presetId);
         // The PlayModePage reopens itself after this call, morphing to the live roster.
     }
 
     @Override
-    public void launchSolo(@Nonnull PlayerRef player, @Nonnull Ref<EntityStore> ref,
+    public void launchSolo(@Nonnull Ref<EntityStore> ref,
                            @Nonnull Store<EntityStore> store, @Nullable String presetId) {
+        PlayerRef player = playerOrNull(store, ref, "solo launch");
+        if (player == null) {
+            return;
+        }
         GroupJoinResult result = KweebecLobby.launchSolo(player.getUuid(), presetId);
         // On success the round launches immediately and the PlayModePage closes itself. On a clean
         // block (already in a round / already queued elsewhere) the group-join sends no toast, so
@@ -53,8 +63,12 @@ public final class KweebecPlayMode implements PlayModeHandler {
     }
 
     @Override
-    public void openParty(@Nonnull PlayerRef player, @Nonnull Ref<EntityStore> ref,
+    public void openParty(@Nonnull Ref<EntityStore> ref,
                           @Nonnull Store<EntityStore> store, @Nullable String presetId) {
+        PlayerRef player = playerOrNull(store, ref, "party manager");
+        if (player == null) {
+            return;
+        }
         try {
             Player p = store.getComponent(ref, Player.getComponentType());
             if (p != null) {
@@ -64,5 +78,19 @@ public final class KweebecPlayMode implements PlayModeHandler {
         } catch (Throwable ignored) {
             // a page-open failure must not break the Play screen interaction
         }
+    }
+
+    /**
+     * The player behind this entity, or null having said so: every card on the Play screen is
+     * pressed by somebody, so an entity with no {@link PlayerRef} means the press outlived them.
+     */
+    @Nullable
+    private static PlayerRef playerOrNull(@Nonnull Store<EntityStore> store,
+            @Nonnull Ref<EntityStore> ref, @Nonnull String what) {
+        PlayerRef player = PlayerAccess.playerRef(store, ref);
+        if (player == null) {
+            SafeLog.fine("[play] no player behind the entity that asked for a " + what);
+        }
+        return player;
     }
 }

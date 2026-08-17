@@ -5,6 +5,7 @@ import java.util.UUID;
 import javax.annotation.Nonnull;
 
 import com.hypixel.hytale.codec.builder.BuilderCodec;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.ziggfreed.common.dialogue.DialogueCondition;
 import com.ziggfreed.common.dialogue.DialogueConditionType;
 import com.ziggfreed.common.dialogue.DialogueContext;
@@ -38,7 +39,13 @@ public final class EngagedCondition extends DialogueCondition {
 
     private static boolean passes(@Nonnull EngagedCondition condition, @Nonnull DialogueContext ctx) {
         try {
-            UUID uuid = ctx.playerRef().getUuid();
+            // The reference is read off the talking entity, so it can genuinely be absent; answer
+            // deliberately rather than letting a null trip the catch below.
+            PlayerRef playerRef = ctx.playerRef();
+            if (playerRef == null) {
+                return false;
+            }
+            UUID uuid = playerRef.getUuid();
             return RoundService.getInstance().registry().isInRound(uuid)
                     || KweebecLobby.isQueued(uuid);
         } catch (Throwable t) {

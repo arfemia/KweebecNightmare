@@ -14,7 +14,6 @@ import javax.annotation.Nullable;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.Message;
-import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -48,6 +47,7 @@ import com.ziggfreed.common.instance.reward.GrantOutcome;
 import com.ziggfreed.common.instance.reward.InstanceReward;
 import com.ziggfreed.common.instance.reward.InstanceRewardGranter;
 import com.ziggfreed.common.instance.reward.PendingRewardStore;
+import com.ziggfreed.common.inventory.PlayerAccess;
 import com.ziggfreed.common.loot.FactorLookup;
 import com.ziggfreed.common.loot.LootEngine;
 import com.ziggfreed.common.loot.LootFactors;
@@ -371,8 +371,12 @@ public final class KweebecExperience {
      * the atomic {@code remove} makes a second call a no-op. No snapshot = nothing to do (e.g. a
      * PlayerReadyEvent for the instance entry, or a player who never finished a run).
      */
-    public static void openResultsPage(@Nonnull PlayerRef pr, @Nonnull Ref<EntityStore> ref,
+    public static void openResultsPage(@Nonnull Ref<EntityStore> ref,
                                        @Nonnull Store<EntityStore> store) {
+        PlayerRef pr = PlayerAccess.playerRef(store, ref);
+        if (pr == null) {
+            return;
+        }
         PendingResult pend = pendingResults.remove(pr.getUuid());
         if (pend == null) {
             return;
@@ -551,11 +555,7 @@ public final class KweebecExperience {
                 if (ref == null || !ref.isValid()) {
                     return;
                 }
-                UUID uuid = ref.getStore().getComponent(ref, UUIDComponent.getComponentType()).getUuid();
-                PlayerRef pr = Universe.get().getPlayer(uuid);
-                if (pr != null) {
-                    openResultsPage(pr, ref, ref.getStore());
-                }
+                openResultsPage(ref, ref.getStore());
             } catch (Throwable t) {
                 SafeLog.warn("[Kweebec] deferred results open failed: " + t.getMessage());
             }
@@ -567,13 +567,17 @@ public final class KweebecExperience {
      * re-queuing anything that still does not fit). Returns {@code true} when everything was delivered.
      * Shared by the results-page Claim button and the play-menu Claim button.
      */
-    public static boolean claimPending(@Nonnull PlayerRef pr, @Nonnull Ref<EntityStore> ref,
+    public static boolean claimPending(@Nonnull Ref<EntityStore> ref,
                                        @Nonnull Store<EntityStore> store) {
+        PlayerRef pr = PlayerAccess.playerRef(store, ref);
+        if (pr == null) {
+            return true; // nobody to hand anything to, so nothing is left owed on this screen
+        }
         if (pendingRewards == null || !pendingRewards.has(pr.getUuid())) {
             return true; // nothing to claim
         }
         List<InstanceReward> due = pendingRewards.drain(pr.getUuid());
-        GrantOutcome outcome = InstanceRewardGranter.grantAll(due, pr, ref, store, KweebecRewardSink.INSTANCE);
+        GrantOutcome outcome = InstanceRewardGranter.grantAll(due, ref, store, KweebecRewardSink.INSTANCE);
         if (!outcome.pending().isEmpty()) {
             pendingRewards.queue(pr.getUuid(), outcome.pending()); // still no space -> hold again
             return false;
@@ -592,9 +596,9 @@ public final class KweebecExperience {
             return hasPendingRewards(uuid);
         }
 
-        @Override public boolean claim(@Nonnull PlayerRef player, @Nonnull Ref<EntityStore> ref,
+        @Override public boolean claim(@Nonnull Ref<EntityStore> ref,
                                        @Nonnull Store<EntityStore> store) {
-            return claimPending(player, ref, store);
+            return claimPending(ref, store);
         }
     }
 }
