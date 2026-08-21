@@ -1,5 +1,9 @@
 {
   "Name": "Nightmares_Intro",
+  "Chrome": {
+    "FarewellKey": "dialogue.kweebec.farewell",
+    "MissingKey": "dialogue.kweebec.missing"
+  },
   "Start": { "Fallback": "greet" },
   "Nodes": {
     "greet": {

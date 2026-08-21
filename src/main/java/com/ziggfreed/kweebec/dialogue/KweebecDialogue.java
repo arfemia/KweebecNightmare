@@ -1,6 +1,5 @@
 package com.ziggfreed.kweebec.dialogue;
 
-import java.util.Locale;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -8,10 +7,6 @@ import javax.annotation.Nullable;
 import com.hypixel.hytale.server.core.Message;
 import com.ziggfreed.common.dialogue.DialogueEngine;
 import com.ziggfreed.common.dialogue.NpcDialogue;
-import com.ziggfreed.common.dialogue.asset.DialogueAssetStore;
-import com.ziggfreed.common.dialogue.page.DialoguePageDeps;
-import com.ziggfreed.common.dialogue.page.SimpleDialogueExecContext;
-import com.ziggfreed.common.i18n.ContentI18n;
 import com.ziggfreed.common.i18n.ContentKeys;
 import com.ziggfreed.common.i18n.I18nModuleContentI18n;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
@@ -23,10 +18,10 @@ import com.ziggfreed.kweebec.i18n.Lang;
  * a preset) and {@link NotInRoundCondition}/
  * {@link EngagedCondition} (gate launch options on engagement) to the server's ONE
  * {@link DialogueEngine}, declares the
- * {@code kweebecnightmare.} i18n namespace,
- * and a context-aware name header; resolves the authored dialogues (the guide NPC's
- * preset-launch backstory and the clash-host PvP entry) live off the shared store; and
- * exposes the {@link DialoguePageDeps} a page (command or NPC) opens against.
+ * {@code kweebecnightmare.} i18n namespace, so its authored keys resolve wherever they are
+ * painted. Its two conversations (the guide NPC's preset-launch backstory and the clash-host PvP
+ * entry) live in the shared store like everybody else's, and the SCREEN they open on is the
+ * library's, built from process-wide state, so there is nothing here to hand a page.
  *
  * <p><b>Where a conversation's memory is kept is not wired here, and must not be.</b> The library
  * owns both lifetimes now and routes each memory to the right one by what its author declared: a
@@ -60,36 +55,13 @@ public final class KweebecDialogue {
     /** The {@code ContextNpc} the clash-host role passes, used to pick the dialogue's name header. */
     public static final String CLASH_CONTEXT = "clash";
 
-    private static volatile DialoguePageDeps deps;
 
     private KweebecDialogue() {
     }
 
-    /**
-     * The page deps, built by {@link #init()}. Falls back to building them here (with one warn)
-     * if a caller reaches this before plugin setup ran - defensive only; the real registration
-     * point is {@code setup()}.
-     */
-    @Nonnull
-    public static DialoguePageDeps deps() {
-        DialoguePageDeps d = deps;
-        if (d == null) {
-            synchronized (KweebecDialogue.class) {
-                d = deps;
-                if (d == null) {
-                    warn("KweebecDialogue.deps() reached before KweebecDialogue.init() ran from"
-                            + " plugin setup - building the engine late; any dialogue file naming its"
-                            + " types has already failed to load this boot");
-                    init();
-                    d = deps;
-                }
-            }
-        }
-        return d;
-    }
 
     /**
-     * Register kweebec's dialogue vocabulary and build the page deps. MUST be called from
+     * Register kweebec's dialogue vocabulary. MUST be called from
      * {@link com.ziggfreed.kweebec.KweebecNightmarePlugin#setup()}, before assets load.
      */
     public static synchronized void init() {
@@ -100,36 +72,12 @@ public final class KweebecDialogue {
         DialogueEngine.registerShared(owner, OpenPlayAction.type());
         DialogueEngine.registerShared(owner, NotInRoundCondition.type());
         DialogueEngine.registerShared(owner, EngagedCondition.type());
-        DialogueEngine engine = DialogueEngine.shared();
-
         // This mod's namespace, declared once: registered with the shared library so any surface
         // painting kweebec's authored content resolves a key against the kweebecnightmare.lang
-        // catalogue, and handed to the dialogue page for its own node/option text.
-        ContentI18n i18n = new I18nModuleContentI18n("kweebecnightmare.");
-        ContentKeys.install(i18n);
-        deps = new DialoguePageDeps(
-                engine,
-                // Read the store's decoded snapshot on every lookup (never cached): at THIS call
-                // (setup time) the store is still empty, and it only fills once the engine's
-                // LoadedAssetsEvent listener folds the pack layer in later in boot.
-                id -> id == null ? null
-                        : DialogueAssetStore.getInstance().dialogues().get(id.toLowerCase(Locale.ROOT)),
-                (dialogue, nodeId, optionIndex, contextId, ref, store, player) ->
-                        new SimpleDialogueExecContext(store, ref, player, contextId,
-                                null, dialogue, nodeId, optionIndex),
-                i18n,
-                KweebecDialogue::npcName,
-                null);
+        // catalogue, wherever that content is painted and whoever opened the screen.
+        ContentKeys.install(new I18nModuleContentI18n("kweebecnightmare."));
     }
 
-    /** The dialogue header name, chosen by the opening NPC's context id (guide is the default). */
-    @Nonnull
-    private static Message npcName(@Nullable String contextId) {
-        if (CLASH_CONTEXT.equals(contextId)) {
-            return Lang.msg(Lang.DIALOGUE_CLASH_NPC);
-        }
-        return Lang.msg(Lang.DIALOGUE_NIGHTMARES_NPC);
-    }
 
     private static void warn(@Nullable String msg) {
         try {

@@ -20,7 +20,6 @@ import com.narwhals.perfectutils.api.AggroAPI;
 import com.narwhals.perfectutils.api.StunMobAPI;
 import com.ziggfreed.common.npc.NpcActions;
 import com.ziggfreed.common.npc.NpcAutoSpawn;
-import com.ziggfreed.common.npc.NpcDialogueDepsRegistry;
 import com.ziggfreed.kweebec.asset.KweebecAssetRegistrar;
 import com.ziggfreed.kweebec.command.KweebecCommand;
 import com.ziggfreed.kweebec.death.CocoonOnDeathSystem;
@@ -34,9 +33,7 @@ import com.ziggfreed.kweebec.mode.chase.ChaseRoundMode;
 import com.ziggfreed.kweebec.mode.clash.ClashModelSwapper;
 import com.ziggfreed.kweebec.mode.clash.ClashRoundMode;
 import com.ziggfreed.kweebec.mode.domination.DominationRoundMode;
-import com.ziggfreed.kweebec.npc.KweebecGuideConfig;
-import com.ziggfreed.kweebec.npc.KweebecGuidePlacementStore;
-import com.ziggfreed.kweebec.npc.KweebecGuideSpawn;
+import com.ziggfreed.kweebec.npc.LegacyGuideFiles;
 import com.ziggfreed.kweebec.experience.KweebecClashExperience;
 import com.ziggfreed.kweebec.experience.KweebecExperience;
 import com.ziggfreed.kweebec.round.KweebecMode;
@@ -96,12 +93,8 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         KweebecDestinations.register();
 
         // Register the generic ziggfreed-common "press-F opens a dialogue" NPC action
-        // (ZigOpenDialogue) and point it at kweebec's DialoguePageDeps, BEFORE any NPC
-        // role asset referencing {Type:ZigOpenDialogue} loads - else the guide role
-        // silently fails to parse. The registration names this mod, so a server also running
-        // another dialogue mod gets one boot line saying which one holds the un-keyed slot
-        // instead of a silent swap.
-        NpcDialogueDepsRegistry.setDefault(REGISTRY_OWNER, KweebecDialogue::deps);
+        // (ZigOpenDialogue) BEFORE any NPC role asset referencing {Type:ZigOpenDialogue} loads,
+        // else the guide role silently fails to parse.
         NpcActions.register();
 
         // Custom asset stores (Presets, Hunters, Control) - registered FIRST so they
@@ -141,15 +134,10 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // The PvP twin of the experience layer (Clash + Domination team results + the arena leaderboard).
         KweebecClashExperience.init(getDataDirectory());
 
-        // Grove Warden guide auto-spawn config (<data dir>/guide.json; defaults written on first run):
-        // which worlds get the guide (default the "default" overworld only) + its spawn offset/yaw.
-        // Mirrors MMO Skill Tree's spawn-hub.json.
-        KweebecGuideConfig.getInstance().load(getDataDirectory());
-
-        // Persistent once-per-world marker (<data dir>/guide-placements.json) so a reboot never stacks a
-        // second guide beside the one already saved in the world. Loaded BEFORE the player-ready hook
-        // below can fire. Mirrors MMO Skill Tree's MmoNpcPlacementStore auto-spawn marker.
-        KweebecGuidePlacementStore.getInstance().init(getDataDirectory());
+        // The Grove Warden is stood up by the shared NPC placement engine now, from the asset
+        // Server/ZiggfreedCommon/NpcPlacements/Kweebec_Grove_Warden.json, so the two owner files the
+        // old spawner kept are renamed aside with one notice saying where their settings went.
+        LegacyGuideFiles.retire(getDataDirectory());
 
         // Inventory preserve/restore: snapshot + strip a survivor's gear on round entry, restore it
         // exactly on exit. Persisted under the data dir so a crash/disconnect/restart mid-round never
@@ -167,7 +155,7 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // catch-all, so a tiny-hitbox Sapling is never stranded in the overworld across disconnect/restart).
         ClashModelSwapper.init(getDataDirectory());
 
-        // Clash Host auto-spawn marker (the PvP entry NPC, placed once per overworld; mirrors the guide).
+        // Clash Host placement marker (the PvP entry NPC, placed once per overworld).
         clashHostDir = getDataDirectory();
         NpcAutoSpawn.init(clashHostDir);
 
@@ -177,10 +165,6 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // Matchmaking lobby: the fill-window + countdown queue the guide dialogue and
         // /kweebec start feed (its launcher closes over RoundService.startChase).
         KweebecLobby.init();
-
-        // Auto-spawn the "Grove Warden" guide once per world on player-ready (the diegetic
-        // entry trigger); press-F opens the backstory dialogue + preset launcher.
-        getEventRegistry().registerGlobal(PlayerReadyEvent.class, KweebecGuideSpawn::onPlayerReady);
 
         // Inventory-restore crash/disconnect net: re-apply a leftover inventory snapshot for a player
         // who entered a round but never got restored in-instance (crash / disconnect / restart mid-round).

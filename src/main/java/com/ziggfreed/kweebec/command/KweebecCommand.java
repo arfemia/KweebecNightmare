@@ -33,7 +33,6 @@ import com.ziggfreed.kweebec.experience.KweebecExperience;
 import com.ziggfreed.kweebec.i18n.Lang;
 import com.ziggfreed.kweebec.lobby.KweebecLobby;
 import com.ziggfreed.kweebec.moonbloom.Moonbloom;
-import com.ziggfreed.kweebec.npc.KweebecGuideSpawn;
 import com.ziggfreed.kweebec.round.KweebecMode;
 import com.ziggfreed.kweebec.round.RoundService;
 
@@ -79,7 +78,6 @@ public final class KweebecCommand extends CommandBase {
             case "score" -> score(ctx);
             case "leaderboard", "lb" -> leaderboard(ctx);
             case "party" -> party(ctx);
-            case "spawnguide", "guide" -> spawnGuide(ctx);
             case "clashhost", "host" -> spawnClashHost(ctx);
             default -> ctx.sendMessage(Lang.msg(Lang.CMD_USAGE));
         }
@@ -211,37 +209,6 @@ public final class KweebecCommand extends CommandBase {
         ctx.sendMessage(Lang.msg(Lang.CMD_NOT_QUEUED_OR_IN_ROUND));
     }
 
-    /** {@code spawnguide} - (re)place the Grove Warden guide at the caller's position (debug). */
-    private void spawnGuide(@Nonnull CommandContext ctx) {
-        if (!(ctx.sender() instanceof PlayerRef player)) {
-            ctx.sendMessage(Lang.msg(Lang.CMD_PLAYERS_ONLY));
-            return;
-        }
-        World world = Universe.get().getWorld(player.getWorldUuid());
-        if (world == null) {
-            ctx.sendMessage(Lang.msg(Lang.CMD_GUIDE_FAILED));
-            return;
-        }
-        ctx.sendMessage(Lang.msg(Lang.CMD_GUIDE_SPAWNED));
-        world.execute(() -> {
-            try {
-                Store<EntityStore> store = world.getEntityStore().getStore();
-                Ref<EntityStore> ref = player.getReference();
-                if (ref == null || !ref.isValid()) {
-                    return;
-                }
-                TransformComponent tc = store.getComponent(ref, TransformComponent.getComponentType());
-                if (tc == null) {
-                    return;
-                }
-                KweebecGuideSpawn.reposition(world, store, tc.getPosition(), 0.0f);
-            } catch (Throwable t) {
-                KweebecNightmarePlugin.LOGGER.atWarning().log(
-                        "[Kweebec] spawnguide failed: " + t.getMessage());
-            }
-        });
-    }
-
     /** {@code clashhost} - ensure the PvP Clash Host NPC exists in the caller's world (debug placement). */
     private void spawnClashHost(@Nonnull CommandContext ctx) {
         if (!(ctx.sender() instanceof PlayerRef player)) {
@@ -250,10 +217,10 @@ public final class KweebecCommand extends CommandBase {
         }
         World world = Universe.get().getWorld(player.getWorldUuid());
         if (world == null) {
-            ctx.sendMessage(Lang.msg(Lang.CMD_GUIDE_FAILED));
+            ctx.sendMessage(Lang.msg(Lang.CMD_CLASH_HOST_FAILED));
             return;
         }
-        ctx.sendMessage(Lang.msg(Lang.CMD_GUIDE_SPAWNED));
+        ctx.sendMessage(Lang.msg(Lang.CMD_CLASH_HOST_SPAWNED));
         world.execute(() -> KweebecNightmarePlugin.debugSpawnClashHost(world));
     }
 

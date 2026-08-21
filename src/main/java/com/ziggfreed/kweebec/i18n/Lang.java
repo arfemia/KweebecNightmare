@@ -173,8 +173,8 @@ public final class Lang {
     public static final String CMD_ALREADY_QUEUED = "kweebecnightmare.cmd.already_queued";
     public static final String CMD_NOT_QUEUED_OR_IN_ROUND = "kweebecnightmare.cmd.not_queued_or_in_round";
     public static final String CMD_LEFT_QUEUE = "kweebecnightmare.cmd.left_queue";
-    public static final String CMD_GUIDE_SPAWNED = "kweebecnightmare.cmd.guide_spawned";
-    public static final String CMD_GUIDE_FAILED = "kweebecnightmare.cmd.guide_failed";
+    public static final String CMD_CLASH_HOST_SPAWNED = "kweebecnightmare.cmd.clash_host_spawned";
+    public static final String CMD_CLASH_HOST_FAILED = "kweebecnightmare.cmd.clash_host_failed";
 
     // Matchmaking queue feedback (toasts + the launch-countdown banner). The queue itself
     // delivers these via the shared ziggfreed-common Notify / EventTitles primitives.

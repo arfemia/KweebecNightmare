@@ -1,0 +1,50 @@
+{
+  "$Comment": [
+    "The Grove Warden, the surviving uncorrupted Kweebec who sends players into a round. Standing",
+    "beside the spawn point of the ordinary world, this is the diegetic way into Kweebec Nightmare:",
+    "press F to hear the backstory and pick a preset.",
+    "",
+    "Where: the world named 'default', which is the persistent world players log into, never a round",
+    "instance and never the creative hub. A bare word under Match is an exact name, so if your main",
+    "world is called something else, change it here or the Warden appears nowhere. Anchor: that",
+    "world's own spawn point, shifted 5 blocks along X so the Warden stands beside the arrival spot",
+    "rather than on top of it, facing 90 degrees.",
+    "",
+    "Requires: the Warden stands only where MMO Skill Tree is NOT installed. A server running both",
+    "mods has its own guide at spawn already, so a second character offering a different thing beside",
+    "them reads as clutter; there, place the Warden deliberately with the native NPC spawn tooling,",
+    "somewhere that suits your world. Max 0 is how 'that mod is absent' is written: the reading",
+    "answers 1 when the named mod is loaded and 0 when it is not, so an upper bound of 0 passes only",
+    "on a server without it. To have the Warden appear at spawn on a server running both, put a file",
+    "of your own with this same id in a pack and leave the Requires block out of it.",
+    "",
+    "Lifecycle: KeepAlive holds the Warden's chunk in memory so players can always find them, Respawn",
+    "places them again if something removes them, and Fortify raises their health far beyond anything",
+    "that can be dealt. Fortify matters because a role's Invulnerable flag does not cover a direct",
+    "health write, and an entry NPC that can be killed takes every player's way into a round with",
+    "them.",
+    "",
+    "There is no Interact block here on purpose: the KweebecNightmare_Guide role opens the conversation",
+    "itself, so pressing F behaves the same whether this placement stood the Warden up or an admin",
+    "spawned one by hand. To change what the Warden opens, edit that role.",
+    "",
+    "To move the Warden, edit Anchor. To stop them appearing, set Enabled false here, or leave this",
+    "file untouched and switch it off in mods/ziggfreedcommon/npc-placements.json."
+  ],
+  "Name": "Kweebec_Grove_Warden",
+  "Enabled": true,
+  "Identity": { "Role": "KweebecNightmare_Guide" },
+  "Where": { "Match": ["default"] },
+  "Anchor": {
+    "WorldSpawn": {
+      "Offset": { "X": 5.0 },
+      "Yaw": 90.0
+    }
+  },
+  "Requires": {
+    "Conditions": [
+      { "Factor": "hytale:mod_installed", "Param": "Ziggfreed:MMOSkillTree", "Max": 0 }
+    ]
+  },
+  "Lifecycle": { "KeepAlive": true, "Respawn": true, "Fortify": true }
+}
