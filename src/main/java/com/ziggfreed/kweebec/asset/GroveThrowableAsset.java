@@ -1,5 +1,6 @@
 package com.ziggfreed.kweebec.asset;
 
+import java.util.Locale;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -96,7 +97,7 @@ public final class GroveThrowableAsset
         if (nameKey != null && !nameKey.isBlank()) {
             return nameKey;
         }
-        return "kweebecnightmare.item." + (id == null ? "" : id.toLowerCase()) + ".name";
+        return "kweebecnightmare.item." + (id == null ? "" : id.toLowerCase(Locale.ROOT)) + ".name";
     }
 
     /** Whether this grove throwable is DISTRIBUTED this build (false = the gather loop ships but stays dormant). */

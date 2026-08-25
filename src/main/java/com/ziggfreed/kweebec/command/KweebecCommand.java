@@ -2,6 +2,7 @@ package com.ziggfreed.kweebec.command;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -67,7 +68,7 @@ public final class KweebecCommand extends CommandBase {
 
     @Override
     protected void executeSync(@Nonnull CommandContext ctx) {
-        String sub = ctx.provided(subArg) ? subArg.get(ctx).toLowerCase() : "start";
+        String sub = ctx.provided(subArg) ? subArg.get(ctx).toLowerCase(Locale.ROOT) : "start";
         switch (sub) {
             case "start" -> start(ctx);
             case "clash" -> startMode(ctx, KweebecMode.CLASH, "clash_1v1");

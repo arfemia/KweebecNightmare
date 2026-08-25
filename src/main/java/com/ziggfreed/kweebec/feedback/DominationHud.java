@@ -1,5 +1,7 @@
 package com.ziggfreed.kweebec.feedback;
 
+import java.util.Locale;
+
 import javax.annotation.Nonnull;
 
 import com.hypixel.hytale.server.core.Message;
@@ -40,7 +42,7 @@ public final class DominationHud extends CustomUIHud {
         UICommandBuilder cb = new UICommandBuilder();
 
         int rs = Math.max(0, s.remainingSec());
-        String clock = String.format("%d:%02d", rs / 60, rs % 60);
+        String clock = String.format(Locale.ROOT, "%d:%02d", rs / 60, rs % 60);
         cb.set("#MatchTimer.Text", Lang.msg(Lang.CLASH_HUD_TIMER).param("0", clock));
 
         String scoreKey = s.teamIndex() == 1 ? Lang.CLASH_HUD_SCORE_BLUE : Lang.CLASH_HUD_SCORE_RED;

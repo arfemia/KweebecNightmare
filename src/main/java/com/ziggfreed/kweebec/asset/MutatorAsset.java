@@ -1,5 +1,6 @@
 package com.ziggfreed.kweebec.asset;
 
+import java.util.Locale;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -137,7 +138,7 @@ public final class MutatorAsset
         if (nameKey != null && !nameKey.isBlank()) {
             return nameKey;
         }
-        return "kweebecnightmare.mutator." + mutatorId.toLowerCase() + ".name";
+        return "kweebecnightmare.mutator." + mutatorId.toLowerCase(Locale.ROOT) + ".name";
     }
 
     public int hunterCountDelta() {

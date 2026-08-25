@@ -1,6 +1,7 @@
 package com.ziggfreed.kweebec.asset;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
@@ -404,7 +405,7 @@ public final class RoundPresetAsset
      */
     @Nonnull
     public RuleSet toRuleSet(@Nonnull String presetId) {
-        RuleSet.Builder b = RuleSet.builder(presetId.toLowerCase());
+        RuleSet.Builder b = RuleSet.builder(presetId.toLowerCase(Locale.ROOT));
         if (worldStructure != null && !worldStructure.isBlank()) {
             b.worldStructure(worldStructure);
         }
@@ -455,7 +456,7 @@ public final class RoundPresetAsset
         }
         b.inventoryMode(InventoryMode.fromString(inventoryMode));
         if (hunterArchetype != null && !hunterArchetype.isBlank()) {
-            b.hunterArchetype(hunterArchetype.toLowerCase());
+            b.hunterArchetype(hunterArchetype.toLowerCase(Locale.ROOT));
         }
         // Moonbloom loop knobs (each absent = the RuleSet builder default).
         if (cleanseCost != UNSET_INT) {
@@ -496,7 +497,7 @@ public final class RoundPresetAsset
         }
         if (shrineDiscovery != null && !shrineDiscovery.isBlank()) {
             try {
-                b.shrineDiscovery(DiscoveryMode.valueOf(shrineDiscovery.trim().toUpperCase()));
+                b.shrineDiscovery(DiscoveryMode.valueOf(shrineDiscovery.trim().toUpperCase(Locale.ROOT)));
             } catch (IllegalArgumentException ignored) {
                 // Unknown trigger -> keep the builder default (ON_INTERACT).
             }
@@ -518,7 +519,7 @@ public final class RoundPresetAsset
             b.bossEnabled(bossEnabled);
         }
         if (bossId != null && !bossId.isBlank()) {
-            b.bossId(bossId.toLowerCase());
+            b.bossId(bossId.toLowerCase(Locale.ROOT));
         }
         if (bossBarsGate != null) {
             b.bossBarsGate(bossBarsGate);
@@ -611,7 +612,7 @@ public final class RoundPresetAsset
             b.dominationPointRadius(dominationPointRadius);
         }
         if (dominationContestRule != null && !dominationContestRule.isBlank()) {
-            b.dominationContestRule(ContestRule.valueOf(dominationContestRule.trim().toUpperCase()));
+            b.dominationContestRule(ContestRule.valueOf(dominationContestRule.trim().toUpperCase(Locale.ROOT)));
         }
         if (dominationCaptureNeutralizes != null) {
             b.dominationCaptureNeutralizes(dominationCaptureNeutralizes);
@@ -633,7 +634,7 @@ public final class RoundPresetAsset
         if (raw == null || raw.isBlank()) {
             return null;
         }
-        switch (raw.trim().toUpperCase()) {
+        switch (raw.trim().toUpperCase(Locale.ROOT)) {
             case "SELF":
             case "PER_PLAYER":
                 return MapDiscovery.Visibility.PER_PLAYER;

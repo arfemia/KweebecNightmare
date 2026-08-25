@@ -1,5 +1,7 @@
 package com.ziggfreed.kweebec.feedback;
 
+import java.util.Locale;
+
 import javax.annotation.Nonnull;
 
 import com.hypixel.hytale.server.core.Message;
@@ -42,7 +44,7 @@ public final class ClashHud extends CustomUIHud {
         UICommandBuilder cb = new UICommandBuilder();
 
         int rs = Math.max(0, s.remainingSec());
-        String clock = String.format("%d:%02d", rs / 60, rs % 60);
+        String clock = String.format(Locale.ROOT, "%d:%02d", rs / 60, rs % 60);
         cb.set("#MatchTimer.Text", Lang.msg(Lang.CLASH_HUD_TIMER).param("0", clock));
 
         // Your-vs-enemy score, coloured per the viewer's team. RED (team 0) renders their own score red and

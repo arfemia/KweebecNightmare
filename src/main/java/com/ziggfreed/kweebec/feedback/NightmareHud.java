@@ -1,5 +1,7 @@
 package com.ziggfreed.kweebec.feedback;
 
+import java.util.Locale;
+
 import javax.annotation.Nonnull;
 
 import com.hypixel.hytale.server.core.Message;
@@ -50,7 +52,7 @@ public final class NightmareHud extends CustomUIHud {
         UICommandBuilder cb = new UICommandBuilder();
 
         int rs = Math.max(0, remainingSec);
-        String clock = String.format("%d:%02d", rs / 60, rs % 60);
+        String clock = String.format(Locale.ROOT, "%d:%02d", rs / 60, rs % 60);
         cb.set("#Timer.Text", Lang.msg(Lang.HUD_TIMER).param("0", clock));
 
         Message objective = phase == ChasePhase.ESCAPE

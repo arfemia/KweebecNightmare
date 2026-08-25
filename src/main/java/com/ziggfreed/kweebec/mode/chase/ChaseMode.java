@@ -1,5 +1,6 @@
 package com.ziggfreed.kweebec.mode.chase;
 
+import java.util.Locale;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
@@ -614,7 +615,7 @@ public final class ChaseMode {
     }
 
     private static String fmt(double v) {
-        return String.format(java.util.Locale.ROOT, "%.1f", v);
+        return String.format(Locale.ROOT, "%.1f", v);
     }
 
     // --- HUD ---

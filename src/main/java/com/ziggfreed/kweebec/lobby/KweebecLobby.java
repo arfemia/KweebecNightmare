@@ -1,6 +1,7 @@
 package com.ziggfreed.kweebec.lobby;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.function.Predicate;
 
@@ -184,7 +185,7 @@ public final class KweebecLobby {
     /** Derive the gameplay mode from a preset id ({@code clash_*} -> CLASH, {@code domination_*} -> DOMINATION, else CHASE). */
     @Nonnull
     public static KweebecMode modeFor(@Nullable String presetId) {
-        String p = presetId == null ? "" : presetId.toLowerCase();
+        String p = presetId == null ? "" : presetId.toLowerCase(Locale.ROOT);
         if (p.startsWith("clash")) {
             return KweebecMode.CLASH;
         }

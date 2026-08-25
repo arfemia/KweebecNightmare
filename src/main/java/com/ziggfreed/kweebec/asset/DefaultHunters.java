@@ -1,6 +1,7 @@
 package com.ziggfreed.kweebec.asset;
 
 import java.util.List;
+import java.util.Locale;
 
 import javax.annotation.Nonnull;
 
@@ -34,7 +35,7 @@ public final class DefaultHunters {
     public static HunterArchetypeAsset stalker() {
         return HunterArchetypeAsset.of(
                 DEFAULT,
-                HunterArchetypeAsset.Kind.STALKER.name().toLowerCase(),
+                HunterArchetypeAsset.Kind.STALKER.name().toLowerCase(Locale.ROOT),
                 "KweebecNightmare_Blight",
                 1,
                 1.0,
