@@ -43,9 +43,7 @@
     "ParticleColor": "#5C583E",
     "BlockSoundSetId": "Stone",
     "PhysicalMaterialId": "Stone",
-    "Flags": {
-      "IsUsable": true
-    },
+    "Flags": {},
     "InteractionHint": "kweebecnightmare.interaction.shrine.hint",
     "Interactions": {
       "Use": "KweebecNightmare_Shrine_Use"

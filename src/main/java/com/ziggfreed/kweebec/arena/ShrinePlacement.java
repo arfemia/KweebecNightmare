@@ -20,6 +20,7 @@ import com.hypixel.hytale.server.core.modules.entity.component.TransformComponen
 import com.hypixel.hytale.server.core.prefab.selection.buffer.impl.IPrefabBuffer;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.hypixel.hytale.server.core.universe.world.storage.GetChunkFlags;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.util.SafeLog;
@@ -42,8 +43,9 @@ import com.ziggfreed.kweebec.util.SafeLog;
  *
  * <p><b>The one catch (handled here): queries see only LOADED chunks</b>, and the Chase instance unloads
  * chunks ({@code IsUnloadingChunks:true}). So we first FORCE-LOAD the play core
- * ({@link #DETECT_RADIUS}) via {@link World#getChunkAsync(long)} (generates if missing), then query on the
- * world thread once the loads settle. A timeout backstops a slow/hung load.
+ * ({@link #DETECT_RADIUS}) via {@link com.hypixel.hytale.server.core.universe.world.storage.ChunkStore#getChunkReferenceAsync(long, int)}
+ * (generates if missing), then query on the world thread once the loads settle. A timeout backstops a
+ * slow/hung load.
  *
  * <p><b>Degrade-to-deterministic safety.</b> If detection finds nothing (load slow, marker missing), the
  * deficit equals the full target and we place all of them at spaced anchors - the round is ALWAYS winnable
@@ -112,7 +114,8 @@ public final class ShrinePlacement {
         List<CompletableFuture<?>> futures = new ArrayList<>();
         for (int chX = minCX; chX <= maxCX; chX++) {
             for (int chZ = minCZ; chZ <= maxCZ; chZ++) {
-                futures.add(world.getChunkAsync(ChunkUtil.indexChunk(chX, chZ)));
+                futures.add(world.getChunkStore().getChunkReferenceAsync(
+                        ChunkUtil.indexChunk(chX, chZ), GetChunkFlags.SET_TICKING));
             }
         }
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));

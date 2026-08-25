@@ -18,6 +18,8 @@ import com.hypixel.hytale.server.core.modules.entity.component.TransformComponen
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
+import com.hypixel.hytale.server.core.universe.world.chunk.BlockOperations;
+import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.ziggfreed.common.instance.zone.ZoneHoldTimer;
 import com.ziggfreed.common.sound.BlockStateSound;
@@ -359,7 +361,12 @@ public final class ChaseMode {
             if (bt == null || bt.getData() == null || bt.getBlockForState(Shrine.LIT_STATE) == null) {
                 return; // chunk not ready / not the shrine block; retry next reconcile tick
             }
-            world.setBlockInteractionState(p, bt, Shrine.LIT_STATE);
+            Ref<ChunkStore> sectionRef = world.getChunkStore().getChunkSectionReferenceAtBlock(p.x(), p.y(), p.z());
+            if (sectionRef == null || !sectionRef.isValid()) {
+                return; // section not resident; retry next reconcile tick
+            }
+            BlockOperations.setBlockInteractionState(world.getChunkStore(), sectionRef, p.x(), p.y(), p.z(), bt,
+                    Shrine.LIT_STATE, false);
             shrine.setLitRendered(true);
         } catch (Throwable t) {
             KweebecNightmarePlugin.LOGGER.atFine().log("[Kweebec] shrine relight render failed: " + t.getMessage());

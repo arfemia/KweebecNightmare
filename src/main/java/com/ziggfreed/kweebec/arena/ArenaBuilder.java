@@ -22,6 +22,7 @@ import com.hypixel.hytale.server.core.prefab.selection.buffer.PrefabBufferUtil;
 import com.hypixel.hytale.server.core.prefab.selection.buffer.impl.IPrefabBuffer;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.hypixel.hytale.server.core.universe.world.storage.GetChunkFlags;
 import com.ziggfreed.common.world.BlockTypeLists;
 import com.ziggfreed.common.world.SurfaceProbe;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
@@ -421,7 +422,8 @@ public final class ArenaBuilder {
         List<CompletableFuture<?>> futures = new ArrayList<>();
         for (int chX = cx - chunkRadius; chX <= cx + chunkRadius; chX++) {
             for (int chZ = cz - chunkRadius; chZ <= cz + chunkRadius; chZ++) {
-                futures.add(world.getChunkAsync(ChunkUtil.indexChunk(chX, chZ)));
+                futures.add(world.getChunkStore().getChunkReferenceAsync(
+                        ChunkUtil.indexChunk(chX, chZ), GetChunkFlags.SET_TICKING));
             }
         }
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
@@ -631,8 +633,16 @@ public final class ArenaBuilder {
         static void paste(@Nonnull IPrefabBuffer buffer, @Nonnull World world,
                           @Nonnull Vector3i pos, @Nonnull Store<EntityStore> store, boolean force,
                           @Nonnull Rotation rotation) {
+            // NO_ENTITIES always: the engine's default is to paste a prefab's baked entities, and
+            // five shrine prefabs carry NPC_Path_Marker entities that would spawn (and duplicate on
+            // the +4s/+9s re-stamp passes). Arena pastes place BLOCKS only; markers are detected
+            // from worldgen, never spawned by us.
+            int pasteFlags = com.hypixel.hytale.server.core.util.PrefabUtil.Flags.NO_ENTITIES
+                    | (force ? com.hypixel.hytale.server.core.util.PrefabUtil.Flags.FORCE
+                            : com.hypixel.hytale.server.core.util.PrefabUtil.Flags.NONE);
             com.hypixel.hytale.server.core.util.PrefabUtil.paste(
-                    buffer, world, pos, rotation, force, RNG, store);
+                    buffer, world, pos, rotation, RNG, pasteFlags,
+                    com.hypixel.hytale.server.core.universe.world.SetBlockSettings.NONE, store);
         }
     }
 }
