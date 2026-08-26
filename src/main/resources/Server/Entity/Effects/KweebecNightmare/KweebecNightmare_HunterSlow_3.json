@@ -1,8 +1,10 @@
 {
+  "$Comment": "The engine reads a different leaf per target kind: HorizontalSpeedMultiplier throttles an NPC's own AI movement, MovementEffects.SpeedMultiplier is what a player target's client applies. Keep the two values equal when retuning this tier.",
   "ApplicationEffects": {
     "EntityTopTint": "#221830",
     "EntityBottomTint": "#3a2050",
     "HorizontalSpeedMultiplier": 0.4,
+    "MovementEffects": { "SpeedMultiplier": 0.4 },
     "ScreenEffect": "ScreenEffects/Snow.png",
     "MouseSensitivityAdjustmentTarget": 0.6,
     "MouseSensitivityAdjustmentDuration": 0.25
