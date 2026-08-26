@@ -42,7 +42,7 @@
     }
   },
   "Requires": {
-    "Conditions": [
+    "Factors": [
       { "Factor": "hytale:mod_installed", "Param": "Ziggfreed:MMOSkillTree", "Max": 0 }
     ]
   },
