@@ -47,10 +47,6 @@ dependencies {
     // and rpg-stations' own test wiring).
     testImplementation(files(hytaleServerJar))
     testImplementation(files(ziggfreedCommonJar))
-
-    // Phase 4 (soft-dep integration): compileOnly the MMOSkillTree api jar - NEVER bundle it
-    // (bundling double-loads its event types under two classloaders -> ClassCastException).
-    // compileOnly files("${rootDir}/../../api/build/libs/mmoskilltree-api-1.3.2.jar")
 }
 
 // Bundle the :api module classes into the plugin jar (excluding service files so the
