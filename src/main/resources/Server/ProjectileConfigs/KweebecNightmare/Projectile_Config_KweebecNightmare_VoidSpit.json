@@ -1,5 +1,5 @@
 {
-  "$Comment": "The Spitter's Void glob. Cloned from vanilla Projectile_Config_Scarak_Seeker_Spitball (flat/fast/sticks) - NOT parented to the bomb base (that adds a fuse + bounce, wrong for a direct spit). Reuses the vanilla Scarak_Seeker_Spitball green-acid model + Impact_Poison splat (reads as corruption). Deals the custom KweebecNightmare_VoidSpit cause so it routes through KweebecDamageSystem's hunter on-hit punishment + scoring; removes itself on hit/miss.",
+  "$Comment": "The Spitter's Void glob. Cloned from vanilla Projectile_Config_Scarak_Seeker_Spitball (flat/fast/sticks) - NOT parented to the bomb base (that adds a fuse + bounce, wrong for a direct spit). Reuses the vanilla Scarak_Seeker_Spitball green-acid model + Impact_Poison splat (reads as corruption). Deals the custom KweebecNightmare_VoidSpit cause so it routes through KweebecDamageSystem's hunter on-hit punishment + scoring; removes itself on hit/miss. SpawnOffset.Y MUST stay 0 (matches vanilla Scarak_Seeker): the launch base is already the NPC eye height (TargetUtil.getLook), and the engine treats SpawnOffset.Y (verticalCenterShot) with OPPOSITE signs in its two paths - the ballistic solver (HeadMotionAim/computeStartOffset) subtracts it but the actual spawn (ProjectileModule.getCalculatedOffset) ADDS it - so any non-zero Y makes the glob launch ~2*Y above where it was aimed and sail over the target.",
   "Model": "Scarak_Seeker_Spitball",
   "Physics": {
     "Type": "Standard",
@@ -11,7 +11,6 @@
     "SticksVertically": true
   },
   "LaunchForce": 170,
-  "$Comment_SpawnOffset": "Y MUST stay 0 (matches vanilla Scarak_Seeker). The launch base is already the NPC eye height (TargetUtil.getLook). The engine treats SpawnOffset.Y (verticalCenterShot) with OPPOSITE signs in its two paths: the ballistic solver (HeadMotionAim/computeStartOffset) subtracts it, but the actual spawn (ProjectileModule.getCalculatedOffset) ADDS it - so any non-zero Y makes the glob launch ~2*Y above where it was aimed and sail over the target. A raised Y=1.4 was exactly the 'spits above the player' bug.",
   "SpawnOffset": {
     "X": 0,
     "Y": 0,
