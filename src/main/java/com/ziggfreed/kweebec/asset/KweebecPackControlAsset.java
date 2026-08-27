@@ -8,6 +8,8 @@ import com.hypixel.hytale.assetstore.map.DefaultAssetMap;
 import com.hypixel.hytale.assetstore.map.JsonAssetWithMap;
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
+import com.hypixel.hytale.codec.schema.metadata.Metadata;
+import com.ziggfreed.common.asset.EditorSchema;
 
 /**
  * Per-pack merge-mode declaration, loaded from a pack's
@@ -40,6 +42,14 @@ public final class KweebecPackControlAsset
     private String presets;
     private String hunters;
 
+    /** The closed per-type vocabulary every control leaf shares: add (the default) or replace. */
+    private static final Metadata MODE_VALUES = EditorSchema.oneOfDocumented(
+            "add", "Union with the content already loaded for this type",
+            "replace", "Drop the built-in default layer for this type");
+
+    /** What an absent control leaf means. */
+    private static final Metadata MODE_DEFAULT = EditorSchema.defaultValue("add");
+
     public static final AssetBuilderCodec<String, KweebecPackControlAsset> CODEC = AssetBuilderCodec.builder(
                     KweebecPackControlAsset.class,
                     KweebecPackControlAsset::new,
@@ -55,8 +65,10 @@ public final class KweebecPackControlAsset
                     a -> a.id)
             .add()
             .append(new KeyedCodec<>("Presets", Codec.STRING, false), (a, v) -> a.presets = v, a -> a.presets)
+            .metadata(MODE_VALUES).metadata(MODE_DEFAULT)
             .add()
             .append(new KeyedCodec<>("Hunters", Codec.STRING, false), (a, v) -> a.hunters = v, a -> a.hunters)
+            .metadata(MODE_VALUES).metadata(MODE_DEFAULT)
             .add()
             .build();
 

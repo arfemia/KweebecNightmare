@@ -4,6 +4,8 @@ Developer changelog for Kweebec Nightmare. User-facing release notes live in `pa
 
 ## 1.1.2
 
+- **The pack control file's add/replace switches render as dropdowns with their real default in the Asset Editor.** `KweebecPackControlAsset`'s per-type leaves export the closed add/replace pair plus the add default in the schema, so an unauthored leaf shows the value it actually means. Decode is unchanged.
+
 A rebuild against the grown `ziggfreed-common` (the dialogue engine's move to a fully structured Pattern A asset, the loot engine's move into the new `zc-loot` module, and the leaderboard's counter-framework re-base), plus the one Java change that re-base forced.
 
 - **Dialogue registration moved to plugin `setup()`.** `ziggfreed-common`'s dialogue store is now Pattern A: every conversation file decodes ONCE at `LoadAssetEvent`, right after every plugin's `setup()` returns, against a shared decode vocabulary (`DialogueTypeTable`) that each mod populates by building its `DialogueEngine`. `KweebecDialogue` used to build its engine (and register its `Play`/`NotInRound`/`Engaged` types) lazily on first use, which is long after that read - under the old raw-`Payload` + hand-called resolver this didn't matter, but under Pattern A it meant every kweebec dialogue file would fail to load on a fresh boot. `KweebecDialogue.init()` is now called explicitly from `KweebecNightmarePlugin.setup()`; `deps()` keeps a defensive (warn-and-build) fallback for any caller that still reaches it first. The dialogue id lookup also moved off a once-populated static map onto a live `DialogueAssetStore.dialogues("kweebec")` read per lookup, since the old populate-at-init timing is gone along with the eager build.
