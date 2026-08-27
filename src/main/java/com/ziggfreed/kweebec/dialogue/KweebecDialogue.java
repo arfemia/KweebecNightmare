@@ -7,8 +7,6 @@ import javax.annotation.Nullable;
 import com.hypixel.hytale.server.core.Message;
 import com.ziggfreed.common.dialogue.DialogueEngine;
 import com.ziggfreed.common.dialogue.NpcDialogue;
-import com.ziggfreed.common.i18n.ContentKeys;
-import com.ziggfreed.common.i18n.I18nModuleContentI18n;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.i18n.Lang;
 
@@ -17,11 +15,12 @@ import com.ziggfreed.kweebec.i18n.Lang;
  * engine. Contributes kweebec's own {@link OpenPlayAction} (open the Play / queue-mode chooser for
  * a preset) and {@link NotInRoundCondition}/
  * {@link EngagedCondition} (gate launch options on engagement) to the server's ONE
- * {@link DialogueEngine}, declares the
- * {@code kweebecnightmare.} i18n namespace, so its authored keys resolve wherever they are
- * painted. Its two conversations (the guide NPC's preset-launch backstory and the clash-host PvP
- * entry) live in the shared store like everybody else's, and the SCREEN they open on is the
- * library's, built from process-wide state, so there is nothing here to hand a page.
+ * {@link DialogueEngine}. Its authored keys resolve wherever they are painted because the
+ * {@code kweebecnightmare.lang} files this mod ships ARE the declaration: the shared library
+ * attributes a bare authored key against the server's loaded lang catalogue, so nothing is
+ * registered for i18n. Its two conversations (the guide NPC's preset-launch backstory and the
+ * clash-host PvP entry) live in the shared store like everybody else's, and the SCREEN they open on
+ * is the library's, built from process-wide state, so there is nothing here to hand a page.
  *
  * <p><b>Where a conversation's memory is kept is not wired here, and must not be.</b> The library
  * owns both lifetimes now and routes each memory to the right one by what its author declared: a
@@ -72,10 +71,6 @@ public final class KweebecDialogue {
         DialogueEngine.registerShared(owner, OpenPlayAction.type());
         DialogueEngine.registerShared(owner, NotInRoundCondition.type());
         DialogueEngine.registerShared(owner, EngagedCondition.type());
-        // This mod's namespace, declared once: registered with the shared library so any surface
-        // painting kweebec's authored content resolves a key against the kweebecnightmare.lang
-        // catalogue, wherever that content is painted and whoever opened the screen.
-        ContentKeys.install(new I18nModuleContentI18n("kweebecnightmare."));
     }
 
 

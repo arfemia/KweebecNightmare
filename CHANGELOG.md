@@ -4,6 +4,7 @@ Developer changelog for Kweebec Nightmare. User-facing release notes live in `pa
 
 ## 1.1.2
 
+- **Kweebec no longer registers its lang namespace with `ziggfreed-common`.** The `ContentKeys.install(new I18nModuleContentI18n("kweebecnightmare."))` call in `KweebecDialogue.init()` is deleted along with the library's whole registration surface: the shared `ContentKeys` now attributes a bare authored key against the server's live loaded lang catalogue, so the shipped `kweebecnightmare.lang` files are the declaration and there is nothing to register. No authored content key changed; every dialogue and content key resolves to the same registered id as before.
 - **The pack control file's add/replace switches render as dropdowns with their real default in the Asset Editor.** `KweebecPackControlAsset`'s per-type leaves export the closed add/replace pair plus the add default in the schema, so an unauthored leaf shows the value it actually means. Decode is unchanged.
 
 A rebuild against the grown `ziggfreed-common` (the dialogue engine's move to a fully structured Pattern A asset, the loot engine's move into the new `zc-loot` module, and the leaderboard's counter-framework re-base), plus the one Java change that re-base forced.
