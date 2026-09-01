@@ -6,8 +6,8 @@ import javax.annotation.Nonnull;
 
 import com.hypixel.hytale.codec.builder.BuilderCodec;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
-import com.ziggfreed.common.dialogue.DialogueCondition;
-import com.ziggfreed.common.dialogue.DialogueConditionType;
+import com.ziggfreed.common.dialogue.type.DialogueCondition;
+import com.ziggfreed.common.dialogue.type.DialogueConditionType;
 import com.ziggfreed.common.dialogue.DialogueContext;
 import com.ziggfreed.kweebec.lobby.KweebecLobby;
 import com.ziggfreed.kweebec.round.RoundService;

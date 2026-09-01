@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 
 import com.hypixel.hytale.server.core.Message;
 import com.ziggfreed.common.dialogue.DialogueEngine;
-import com.ziggfreed.common.dialogue.NpcDialogue;
+import com.ziggfreed.common.dialogue.schema.NpcDialogue;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.i18n.Lang;
 
@@ -38,7 +38,7 @@ import com.ziggfreed.kweebec.i18n.Lang;
  * <p><b>Registration timing (Pattern A).</b> The store decodes every dialogue body ONCE, at
  * {@code LoadAssetEvent}, right after every plugin's {@code setup()} has returned - so kweebec's
  * {@code Play}/{@code NotInRound}/{@code Engaged} types must be in the shared
- * {@link com.ziggfreed.common.dialogue.DialogueTypeTable} before that fires. {@link #init()} is
+ * {@link com.ziggfreed.common.dialogue.schema.DialogueTypeTable} before that fires. {@link #init()} is
  * called eagerly from {@link com.ziggfreed.kweebec.KweebecNightmarePlugin#setup()}, not lazily on
  * first NPC interaction - a late registration would still take effect (the table logs one
  * warning), but every dialogue file that named its late type would already have failed to load.
