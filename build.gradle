@@ -50,7 +50,7 @@ dependencies {
 }
 
 // Bundle the :api module classes into the plugin jar (excluding service files so the
-// engine does not double-register), mirroring the hyDungeons standalone skeleton.
+// engine does not double-register).
 configurations {
     apiBundle
 }
