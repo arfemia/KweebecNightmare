@@ -117,7 +117,7 @@
   ],
   "MaxHealth": { "Compute": "MaxHealth" },
   "CombatConfig": {
-    "EntityEffect": "Immunity_Environmental"
+    "EntityEffects": ["Immunity_Environmental"]
   },
   "InteractionVars": {
     "Melee_Damage": {

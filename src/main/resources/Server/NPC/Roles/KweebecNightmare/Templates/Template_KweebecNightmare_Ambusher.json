@@ -112,7 +112,7 @@
   ],
   "MaxHealth": { "Compute": "MaxHealth" },
   "CombatConfig": {
-    "EntityEffect": "Immunity_Environmental"
+    "EntityEffects": ["Immunity_Environmental"]
   },
   "$Comment": "Devastating-attack override (Ambusher tier, the fast blink striker): the spear attack Replaces Melee_Damage with a flat Absolute Physical 9 + a moderate shove (Knockback Force 3 / VelocityY 4). Sound/particle impact fx inherited from NPC_Attack_Melee_Damage.",
   "InteractionVars": {

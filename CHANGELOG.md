@@ -2,6 +2,10 @@
 
 Developer changelog for Kweebec Nightmare. User-facing release notes live in `patch-notes/`.
 
+## 1.1.3 (unreleased)
+
+- **Every Kweebec role's environmental immunity applies.** The seven roles (the five hunter templates, the Guide and the Clash Host) asked for `Immunity_Environmental` under `CombatConfig.EntityEffect`, a key the engine's role codec does not read; it reads `EntityEffects`, a list, the spelling the base game's passive NPCs use. The roles author that now, and the boot log loses seven unused-key warnings.
+
 ## 1.1.2
 
 - **Kweebec no longer registers its lang namespace with `ziggfreed-common`.** The `ContentKeys.install(new I18nModuleContentI18n("kweebecnightmare."))` call in `KweebecDialogue.init()` is deleted along with the library's whole registration surface: the shared `ContentKeys` now attributes a bare authored key against the server's live loaded lang catalogue, so the shipped `kweebecnightmare.lang` files are the declaration and there is nothing to register. No authored content key changed; every dialogue and content key resolves to the same registered id as before.

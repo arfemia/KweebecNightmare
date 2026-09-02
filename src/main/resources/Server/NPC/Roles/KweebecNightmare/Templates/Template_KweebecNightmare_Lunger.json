@@ -112,7 +112,7 @@
   ],
   "MaxHealth": { "Compute": "MaxHealth" },
   "CombatConfig": {
-    "EntityEffect": "Immunity_Environmental"
+    "EntityEffects": ["Immunity_Environmental"]
   },
   "$Comment": "Devastating-attack override (Lunger tier, the charge bruiser - hits hardest): the spear attack Replaces Melee_Damage with a flat Absolute Physical 14 + a heavy launch (Knockback Force 8 / VelocityY 5). Sound/particle impact fx inherited from NPC_Attack_Melee_Damage.",
   "InteractionVars": {
