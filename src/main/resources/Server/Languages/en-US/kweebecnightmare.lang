@@ -28,6 +28,7 @@ npc.lunger.name = Lunging Blight
 npc.spitter.name = Spitting Blight
 npc.ambusher.name = Blinking Blight
 npc.warden.name = The Blight Warden
+encounter.hunters.name = The Blighted Hunt
 
 title.hunt_begins = The Hunt Begins
 title.hunt_begins.sub = Collect moonbloom and relight the grove shrines

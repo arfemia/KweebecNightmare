@@ -28,6 +28,8 @@ import com.ziggfreed.kweebec.dialogue.KweebecDestinations;
 import com.ziggfreed.kweebec.dialogue.KweebecDialogue;
 import com.ziggfreed.kweebec.event.KweebecDamageSystem;
 import com.ziggfreed.kweebec.event.MoonbloomCollectSystem;
+import com.ziggfreed.kweebec.hunter.HunterFactors;
+import com.ziggfreed.kweebec.hunter.HunterWaveType;
 import com.ziggfreed.kweebec.interaction.ShrineSubmitInteraction;
 import com.ziggfreed.kweebec.lobby.KweebecLobby;
 import com.ziggfreed.kweebec.mode.chase.ChaseRoundMode;
@@ -97,6 +99,13 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // (ZigOpenDialogue) BEFORE any NPC role asset referencing {Type:ZigOpenDialogue} loads,
         // else the guide role silently fails to parse.
         NpcActions.register();
+
+        // The hunter waves' encounter script (Server/EncounterManager/KweebecNightmare_Hunters.json)
+        // fires this mod's one encounter instruction Type, KweebecHunterWave, and gates its rungs on
+        // two factors only a chase round can answer. Both go in NOW, before the engine reads any
+        // builder file (the manifest depends on Hytale:NPC so the NPC plugin is up for the Type).
+        HunterWaveType.register();
+        HunterFactors.contribute();
 
         // Custom asset stores (Presets, Hunters, Control) - registered FIRST so they
         // exist before the engine's asset-load event; their load listeners fold pack

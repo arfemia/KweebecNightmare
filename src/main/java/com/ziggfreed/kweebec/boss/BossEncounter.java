@@ -1,7 +1,5 @@
 package com.ziggfreed.kweebec.boss;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -29,7 +27,6 @@ import com.ziggfreed.kweebec.arena.ArenaBuilder;
 import com.ziggfreed.kweebec.arena.ArenaLayout;
 import com.ziggfreed.kweebec.i18n.Lang;
 import com.ziggfreed.kweebec.moonbloom.GlowThrowables;
-import com.ziggfreed.kweebec.round.PlayerRoundState;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.round.RuleSet;
 import com.ziggfreed.kweebec.util.SafeLog;
@@ -115,13 +112,8 @@ public final class BossEncounter {
     @Nonnull
     static SpawnOptions optionsFor(@Nonnull RoundInstance round) {
         RuleSet rules = round.ruleSet();
-        List<UUID> party = new ArrayList<>();
-        for (PlayerRoundState st : round.playerStates()) {
-            if (!st.hasLeftRound()) {
-                party.add(st.playerId());
-            }
-        }
-        return SpawnOptions.forRound(round.roundId(), rules.presetId(), rules.bossHealthMultiplier(), party);
+        return SpawnOptions.forRound(round.roundId(), rules.presetId(), rules.bossHealthMultiplier(),
+                round.presentPlayerIds());
     }
 
     private static boolean adopt(@Nonnull RoundInstance round, @Nonnull World world,

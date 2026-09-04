@@ -104,6 +104,10 @@ public final class ChaseRoundMode implements RoundMode {
         if (round.hunterController() != null) {
             round.hunterController().despawnAll(world, store);
         }
+        // Take the hunter waves' encounter down too (the hunters it drew were the controller's, gone above).
+        if (round.hunterEncounter() != null) {
+            round.hunterEncounter().dismiss(store);
+        }
         // Take the Warden encounter down (the script's CleanupOnRemove cascades to the Warden and its adds,
         // and the framework settles a fight still open as a wipe) so nothing leaks past the round.
         if (round.bossEncounter() != null) {

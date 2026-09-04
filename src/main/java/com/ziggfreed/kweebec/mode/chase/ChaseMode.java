@@ -28,7 +28,6 @@ import com.ziggfreed.common.worldmap.MapDiscovery;
 import com.ziggfreed.common.worldmap.WorldMapMarkers;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
-import com.ziggfreed.kweebec.hunter.SpawnTrigger;
 import com.ziggfreed.kweebec.atmosphere.MusicBedService;
 import com.ziggfreed.kweebec.boss.BossEncounter;
 import com.ziggfreed.kweebec.arena.Anchor;
@@ -41,6 +40,7 @@ import com.ziggfreed.kweebec.feedback.NightmareHud;
 import com.ziggfreed.kweebec.feedback.RoundFeedback;
 import com.ziggfreed.kweebec.feedback.ScareDirector;
 import com.ziggfreed.kweebec.hunter.HunterController;
+import com.ziggfreed.kweebec.hunter.HunterEncounter;
 import com.ziggfreed.kweebec.i18n.Lang;
 import com.ziggfreed.kweebec.round.ChasePhase;
 import com.ziggfreed.kweebec.round.ExtractionMode;
@@ -132,18 +132,6 @@ public final class ChaseMode {
             HunterController hunter = round.hunterController();
             if (hunter != null) {
                 hunter.tick(round, world, store);
-                // Asset-driven extra-spawn rules: a corruption-tier crossing fires CORRUPTION_TIER once;
-                // TIME_ELAPSED + PLAYER_PROXIMITY are evaluated every tick (each gated by its own rule's
-                // cooldown / max-per-round / threshold inside the controller). Best-effort.
-                int newTier = chase.pollTierIncrease();
-                if (newTier >= 0) {
-                    hunter.evaluateSpawnRules(round, world, store,
-                            SpawnTrigger.CORRUPTION_TIER, newTier);
-                }
-                hunter.evaluateSpawnRules(round, world, store,
-                        SpawnTrigger.TIME_ELAPSED, round.durationSeconds());
-                hunter.evaluateSpawnRules(round, world, store,
-                        SpawnTrigger.PLAYER_PROXIMITY, 0);
             }
             // Per-survivor horror conductor: proximity vignette (hysteresis) + jumpscare +
             // whisper layer + tier music escalation. Best-effort; never throws into the loop.
@@ -265,11 +253,14 @@ public final class ChaseMode {
         HunterController hunter = round.hunterController();
         if (hunter != null) {
             hunter.spawn(round, world, store);
-            // Round-start extra-spawn rules (e.g. an opening flanker near the party). Best-effort.
-            hunter.evaluateSpawnRules(round, world, store, SpawnTrigger.ROUND_START, 0);
         }
+        // The hunter WAVES are the native encounter script's (KweebecNightmare_Hunters): it reads the
+        // round's corruption tier and cleansed-shrine count and asks the controller for a wave at each
+        // rung of its escalation. The round only stands it up here and keeps its handle; a refused spawn
+        // (its binding switched off) leaves the den roster hunting alone, so nothing waits on the answer.
+        HunterEncounter.raise(round, world);
         HeartbeatService.start(round);
-        forEachPresent(round, pr -> RoundFeedback.title(pr,
+        round.forEachPresent(pr -> RoundFeedback.title(pr,
                 Lang.TITLE_HUNT_BEGINS, Lang.TITLE_HUNT_BEGINS_SUB, true));
     }
 
@@ -326,20 +317,9 @@ public final class ChaseMode {
         KweebecNightmarePlugin.LOGGER.atInfo().log(
                 "[Kweebec][win] shrine " + shrine.index() + " CLEANSED ("
                         + chase.litShrines() + "/" + chase.totalShrines() + ")");
-        forEachPresent(round, pr -> RoundFeedback.successToast(pr, Lang.TOAST_CLEANSE_DONE));
-        // Asset-driven extra-spawn rules: cleansing a shrine can summon reinforcements NEAR the party.
-        // Same world thread as the 1 Hz tick, so the store read is safe. Best-effort; the rule layer's
-        // own cooldown / max-per-round / cap gate the actual spawn. A toast cues the player if one fires.
-        HunterController hunter = round.hunterController();
-        if (hunter != null) {
-            int liveBefore = hunter.hunterPositions(world.getEntityStore().getStore()).size();
-            hunter.evaluateSpawnRules(round, world, world.getEntityStore().getStore(),
-                    SpawnTrigger.SHRINE_LIT, 0);
-            int liveAfter = hunter.hunterPositions(world.getEntityStore().getStore()).size();
-            if (liveAfter > liveBefore) {
-                forEachPresent(round, pr -> RoundFeedback.dangerToast(pr, Lang.TOAST_HUNTERS_DRAWN));
-            }
-        }
+        round.forEachPresent(pr -> RoundFeedback.successToast(pr, Lang.TOAST_CLEANSE_DONE));
+        // The hunters the light draws are the hunter encounter script's: its shrine rungs read the lit
+        // count this call just raised and ask the controller for a wave, announcing it themselves.
     }
 
     /**
@@ -390,7 +370,7 @@ public final class ChaseMode {
             // Regrow any ENABLED grove throwable (Gust/Mire) on the same wave (RespawnWithWaves entries).
             ArenaBuilder.plantGroveThrowables(round, world, wave, true);
             chase.incrementMoonbloomRespawnsFired();
-            forEachPresent(round, pr -> RoundFeedback.warningToast(pr, Lang.TOAST_MOONBLOOM_RESPAWN));
+            round.forEachPresent(pr -> RoundFeedback.warningToast(pr, Lang.TOAST_MOONBLOOM_RESPAWN));
         }
     }
 
@@ -530,7 +510,7 @@ public final class ChaseMode {
         if (hunter != null) {
             hunter.onAlert(round, world, store);
         }
-        forEachPresent(round, pr -> {
+        round.forEachPresent(pr -> {
             RoundFeedback.title(pr, Lang.TITLE_GATE_OPEN, Lang.TITLE_GATE_OPEN_SUB, true);
             RoundFeedback.dangerToast(pr, Lang.TOAST_HUNTER_LOCKED);
         });
@@ -611,7 +591,7 @@ public final class ChaseMode {
         boolean wasHolding = hold.isHolding();
         boolean complete = hold.update(onPad, required, now);
         if (!wasHolding && hold.isHolding()) {
-            forEachPresent(round, pr -> RoundFeedback.warningToast(pr, Lang.TOAST_EXTRACTION_HOLD));
+            round.forEachPresent(pr -> RoundFeedback.warningToast(pr, Lang.TOAST_EXTRACTION_HOLD));
         }
         if (!complete) {
             return;
@@ -692,18 +672,6 @@ public final class ChaseMode {
     }
 
     // --- helpers ---
-
-    private static void forEachPresent(@Nonnull RoundInstance round, @Nonnull java.util.function.Consumer<PlayerRef> action) {
-        for (PlayerRoundState st : round.playerStates()) {
-            if (st.hasLeftRound()) {
-                continue;
-            }
-            PlayerRef pr = Universe.get().getPlayer(st.playerId());
-            if (pr != null) {
-                action.accept(pr);
-            }
-        }
-    }
 
     /**
      * Vertical tolerance (blocks) for the proximity test against a SUB-SURFACE anchor (the cave

@@ -81,7 +81,7 @@ public final class KweebecAssetRegistrar {
         plugin.getEventRegistry().register(LoadedAssetsEvent.class, GroveThrowableAsset.class,
                 KweebecAssetRegistrar::onGroveThrowableAssetsLoaded);
 
-        SafeLog.info("[Kweebec][AssetPacks] Registered Kweebec content asset stores (Presets, Hunters, Mutators, GroveThrowables, Control); Bosses + BandedEffects + Placements + EncounterRules + Instances are owned by ziggfreed-common");
+        SafeLog.info("[Kweebec][AssetPacks] Registered Kweebec content asset stores (Presets, Hunters, Mutators, GroveThrowables, Control); BandedEffects + Placements + Encounters + Instances are owned by ziggfreed-common");
     }
 
     // ==================== load listeners (Pattern A typed-map fold) ====================

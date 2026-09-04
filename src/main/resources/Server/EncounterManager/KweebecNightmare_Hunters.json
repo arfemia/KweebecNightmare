@@ -1,0 +1,193 @@
+{
+  "$Comment": [
+    "The hunter waves of a chase round, run by the game's own encounter scripts. The round stands",
+    "this script up at the grove's centre the moment the hunt begins (the den roster is already out;",
+    "this file is what sends MORE hunters as the night gets worse) and takes it down with the round.",
+    "It never spawns a hunter itself: each rung below asks the round's hunter controller for one",
+    "wave through the KweebecHunterWave action, and the controller places the bodies, picks their",
+    "archetype off the round's own weighted, corruption-gated roster (Server/KweebecNightmare/Hunters),",
+    "paces them and counts them against the preset's live-hunter ceiling exactly as it does the den",
+    "roster, so a wave hunter is a hunter like any other.",
+    "",
+    "The escalation is the five rungs under Hunt, each a Once sensor over ONE wave. Two read the",
+    "corruption tier through kweebecnightmare:corruption_tier (0 calm, 1 from a third of the meter, 2",
+    "from two thirds): the first fires when the tier reaches 1, the second when it reaches 2, each a",
+    "ring of hunters spaced evenly 18 blocks around the party's centre (Even true, AroundOnePlayer",
+    "false, Radius [18, 18]). Three read the cleansed-shrine count through",
+    "kweebecnightmare:shrines_lit and fire at the first, second and third shrine, each scattering",
+    "hunters between 8.4 and 14 blocks of ONE survivor picked at random (Even false, AroundOnePlayer",
+    "true) and telling the party the light drew them (Announce true). Count [1, 1] with PerPlayer",
+    "true is one hunter per party member per wave; the ceiling the preset's MaxHunters sets always",
+    "wins, so a wave that finds no room puts nobody down.",
+    "",
+    "A rung is spent the moment it fires, so there is no cooldown and no per-round cap to tune: the",
+    "number of rungs IS the cap, and two shrines cleansed seconds apart draw two waves. Make the",
+    "hunt harder by adding a rung (a fourth shrine at Value [4, 99], a bigger Count, a narrower",
+    "Radius) and gentler by removing one. A rung may name an Archetype (Stalker, Lunger, Spitter,",
+    "Ambusher, or a pack's own id under Server/KweebecNightmare/Hunters) to fix what rises instead",
+    "of taking the roster's weighted pick. Beside the two factors above, the library's own readings",
+    "answer a ZigFactor sensor here too: ziggfreedcommon:encounter_members,",
+    "encounter_elapsed_seconds, encounter_waves, encounter_phase_index and encounter_deaths.",
+    "",
+    "The SignalWorldEvent beat after each wave (zc:wave:corruption, zc:wave:shrine) lets the library",
+    "count the waves and fire its signal event; it announces nothing to a player. The script never",
+    "sends zc:engaged, binds no boss and shows no bar: it is a silent director, which is why its",
+    "binding row, Server/ZiggfreedCommon/Encounters/KweebecNightmare_Hunters.json, carries only the",
+    "Enabled switch. The Player sensor keeps the party on the encounter's roster so /zigencounter",
+    "inspect reads sensibly; the wave size reads the round's party, not this roster. No",
+    "CleanupOnRemove is authored on purpose: the round's own teardown removes every hunter, and this",
+    "entity owns none of them.",
+    "",
+    "Override this file by id from your own pack to change the escalation for every server. Keep",
+    "the file name distinct from every NPC role's: an encounter script and a role share one id",
+    "namespace, and a script named after a role replaces that role at load."
+  ],
+  "Class": "EncounterManager",
+  "Type": "Generic",
+  "StartState": "Hunt",
+  "Instructions": [
+    {
+      "Continue": true,
+      "Sensor": {
+        "Type": "Player",
+        "Range": 128,
+        "Collector": {
+          "Type": "EncounterMembers"
+        }
+      },
+      "Actions": [
+        {
+          "Type": "Nothing"
+        }
+      ]
+    },
+    {
+      "Sensor": {
+        "Type": "State",
+        "State": "Hunt"
+      },
+      "Instructions": [
+        {
+          "Continue": true,
+          "Sensor": {
+            "Type": "ZigFactor",
+            "Factor": "kweebecnightmare:corruption_tier",
+            "Value": [ 1, 99 ],
+            "Once": true
+          },
+          "Actions": [
+            {
+              "Type": "KweebecHunterWave",
+              "Count": [ 1, 1 ],
+              "PerPlayer": true,
+              "Radius": [ 18, 18 ],
+              "Even": true,
+              "AroundOnePlayer": false,
+              "Announce": false
+            },
+            {
+              "Type": "SignalWorldEvent",
+              "SignalId": "zc:wave:corruption"
+            }
+          ]
+        },
+        {
+          "Continue": true,
+          "Sensor": {
+            "Type": "ZigFactor",
+            "Factor": "kweebecnightmare:corruption_tier",
+            "Value": [ 2, 99 ],
+            "Once": true
+          },
+          "Actions": [
+            {
+              "Type": "KweebecHunterWave",
+              "Count": [ 1, 1 ],
+              "PerPlayer": true,
+              "Radius": [ 18, 18 ],
+              "Even": true,
+              "AroundOnePlayer": false,
+              "Announce": false
+            },
+            {
+              "Type": "SignalWorldEvent",
+              "SignalId": "zc:wave:corruption"
+            }
+          ]
+        },
+        {
+          "Continue": true,
+          "Sensor": {
+            "Type": "ZigFactor",
+            "Factor": "kweebecnightmare:shrines_lit",
+            "Value": [ 1, 99 ],
+            "Once": true
+          },
+          "Actions": [
+            {
+              "Type": "KweebecHunterWave",
+              "Count": [ 1, 1 ],
+              "PerPlayer": true,
+              "Radius": [ 8.4, 14 ],
+              "Even": false,
+              "AroundOnePlayer": true,
+              "Announce": true
+            },
+            {
+              "Type": "SignalWorldEvent",
+              "SignalId": "zc:wave:shrine"
+            }
+          ]
+        },
+        {
+          "Continue": true,
+          "Sensor": {
+            "Type": "ZigFactor",
+            "Factor": "kweebecnightmare:shrines_lit",
+            "Value": [ 2, 99 ],
+            "Once": true
+          },
+          "Actions": [
+            {
+              "Type": "KweebecHunterWave",
+              "Count": [ 1, 1 ],
+              "PerPlayer": true,
+              "Radius": [ 8.4, 14 ],
+              "Even": false,
+              "AroundOnePlayer": true,
+              "Announce": true
+            },
+            {
+              "Type": "SignalWorldEvent",
+              "SignalId": "zc:wave:shrine"
+            }
+          ]
+        },
+        {
+          "Continue": true,
+          "Sensor": {
+            "Type": "ZigFactor",
+            "Factor": "kweebecnightmare:shrines_lit",
+            "Value": [ 3, 99 ],
+            "Once": true
+          },
+          "Actions": [
+            {
+              "Type": "KweebecHunterWave",
+              "Count": [ 1, 1 ],
+              "PerPlayer": true,
+              "Radius": [ 8.4, 14 ],
+              "Even": false,
+              "AroundOnePlayer": true,
+              "Announce": true
+            },
+            {
+              "Type": "SignalWorldEvent",
+              "SignalId": "zc:wave:shrine"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

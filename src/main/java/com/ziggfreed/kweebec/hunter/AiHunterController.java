@@ -2,6 +2,7 @@ package com.ziggfreed.kweebec.hunter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
@@ -26,9 +27,6 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.npc.NPCPlugin;
 import com.narwhals.perfectutils.api.AggroAPI;
 import com.ziggfreed.common.instance.effect.EntityEffectService;
-import com.ziggfreed.common.instance.encounter.EncounterDirector;
-import com.ziggfreed.common.instance.encounter.SpawnRoster;
-import com.ziggfreed.common.instance.encounter.SpawnUnit;
 import com.ziggfreed.common.sound.Sound3D;
 import com.ziggfreed.common.world.BlockTypeLists;
 import com.ziggfreed.common.world.SpawnPlacement;
@@ -38,8 +36,6 @@ import com.ziggfreed.kweebec.arena.Anchor;
 import com.ziggfreed.kweebec.arena.ArenaLayout;
 import com.ziggfreed.kweebec.asset.HunterArchetypeAsset;
 import com.ziggfreed.kweebec.asset.HunterArchetypeConfig;
-import com.ziggfreed.common.instance.encounter.EncounterRuleAsset;
-import com.ziggfreed.kweebec.integration.KweebecNightmareAPI;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
 import com.ziggfreed.kweebec.round.PlayerRoundState;
 import com.ziggfreed.kweebec.round.RoundInstance;
@@ -55,14 +51,17 @@ import com.ziggfreed.kweebec.util.SafeLog;
  * being pulled back by its leash. That is the smooth, native pursuit; there is no per-tick target
  * re-stamp.
  *
- * <p><b>Roster selection.</b> {@code spawn} builds the roster off the round: the rule-set's
+ * <p><b>Roster selection.</b> {@code spawn} builds the den roster off the round: the rule-set's
  * {@code hunterArchetype()} (if set) seeds a primary archetype, then weighted picks fill out the rest;
  * each archetype's eligibility is gated by its {@code spawnTier()} against the current corruption tier,
  * and the total hunter count scales modestly with {@code hunterCount()} + party size (capped by
- * {@link #MAX_HUNTERS}). As corruption rises past a higher {@code spawnTier} mid-round, {@code tick}
- * may spawn ONE extra archetype hunter (hard-capped, so it can never runaway-spawn). Each spawned
- * hunter is tracked as a {@link HunterUnit} carrying its ref + its archetype + its own applied speed
- * band, so every archetype paces on its OWN {@code SpeedBands}/{@code BandEffectIds} ladder.
+ * {@link #MAX_HUNTERS}). The waves that follow as the night gets worse are the hunter encounter
+ * script's ({@code Server/EncounterManager/KweebecNightmare_Hunters.json}): it fires a
+ * {@link HunterWave} at each rung of its escalation and {@link #spawnWave} puts the bodies down
+ * around the survivors, picking each one's archetype off the same tier-gated weighted roster unless
+ * the rung names one, under the same live ceiling. Each spawned hunter is tracked as a
+ * {@link HunterUnit} carrying its ref + its archetype + its own applied speed band, so every
+ * archetype paces on its OWN {@code SpeedBands}/{@code BandEffectIds} ladder.
  *
  * <p><b>Aggro override (Perfect Utils, a hard dependency, kept for criteria-based aggro switching).</b>
  * On top of the natural chase we use {@code AggroAPI.taunt} ONLY to FORCE a target the natural AI would
@@ -128,13 +127,6 @@ public final class AiHunterController implements HunterController {
      */
     private static final int MAX_HUNTERS = 200;
     /**
-     * Blocks within the gate corridor a survivor must be for a PLAYER_PROXIMITY spawn rule to fire.
-     * STABLE engine constant (arena gate geometry), NOT an author-tunable difficulty knob; if a future
-     * variant needs a different gate trigger radius, promote it to a {@code RuleSet} field rather than
-     * editing this constant.
-     */
-    private static final double GATE_NEAR_RADIUS = 16.0;
-    /**
      * Total hunters cannot exceed {@code base hunterCount + this * (partySize - 1)} (modest party scaling).
      * STABLE engine constant (the party-scaling budget), NOT an author-tunable difficulty knob; promote to a
      * {@code RuleSet} field (alongside {@code hunterCount}) if a future variant needs different party scaling.
@@ -163,7 +155,7 @@ public final class AiHunterController implements HunterController {
     /**
      * Engine {@code BlockTypeList} ids whose blocks are SURFACE DECORATION the worldgen scatters ON TOP of
      * the terrain (dead trees + ground scatter), passed to the foliage-skipping {@link SpawnPlacement}
-     * overloads so a runtime extra-hunter spawn floor-snaps to the genuine GROUND under the canopy instead
+     * overloads so a wave hunter's spawn floor-snaps to the genuine GROUND under the canopy instead
      * of onto a trunk/branch/leaf block. Asset-driven (resolved via {@link BlockTypeLists#keys(String...)}),
      * so new tree/scatter blocks are skipped automatically. Mirrors {@code ArenaBuilder}'s own list.
      */
@@ -171,19 +163,14 @@ public final class AiHunterController implements HunterController {
 
     /** Live roster of spawned hunters, each with its own archetype + band state. World-thread only. */
     private final List<HunterUnit> hunters = new ArrayList<>();
-    /**
-     * Mid-round wave bookkeeping for the asset-driven spawn rules (cooldown + max-per-round gating), keyed
-     * per rule id. Reset at {@code despawnAll}/{@code spawn}. World-thread only (the round tick owns it).
-     */
-    private final EncounterDirector encounterDirector = new EncounterDirector();
-    /** The archetypes that spawned this round (for mid-round corruption escalation). World-thread only. */
+    /** The archetypes the den roster spawned this round. World-thread only. */
     private final List<HunterArchetypeAsset> rosterPlan = new ArrayList<>();
     /** Ceiling on the INITIAL roster size for this round (computed in {@code spawn} from party size). */
     private int hunterCap = 1;
     /**
      * The per-round LIVE hunter ceiling: {@code RuleSet.maxHunters()} + per-extra-player scaling,
-     * clamped to {@link #MAX_HUNTERS}. Escalation + extra-spawn waves fill up toward this (NOT the
-     * smaller initial {@link #hunterCap}). Computed in {@code spawn}.
+     * clamped to {@link #MAX_HUNTERS}. The waves fill up toward this (NOT the smaller initial
+     * {@link #hunterCap}). Computed in {@code spawn}.
      */
     private int maxLiveHunters = MAX_HUNTERS;
     /**
@@ -245,12 +232,10 @@ public final class AiHunterController implements HunterController {
         }
 
         this.activeRuleSet = round.ruleSet();
-        // Fresh per-round wave bookkeeping (cooldowns + max-per-round fire counts) for the spawn rules.
-        encounterDirector.reset();
         int partySize = Math.max(1, round.partySize());
         int extraForParty = EXTRA_PER_EXTRA_PLAYER * Math.max(0, partySize - 1);
         // The per-round LIVE ceiling is difficulty-driven (RuleSet.maxHunters()) plus per-extra-player
-        // scaling, clamped to the absolute backstop. Waves + escalation fill toward this.
+        // scaling, clamped to the absolute backstop. The waves fill toward this.
         this.maxLiveHunters = Math.min(MAX_HUNTERS,
                 Math.max(1, round.ruleSet().maxHunters()) + extraForParty);
         // The INITIAL roster stays driven by hunterCount (small); never above the live ceiling.
@@ -307,9 +292,9 @@ public final class AiHunterController implements HunterController {
 
     /**
      * Spawn one hunter at an explicit (already floor-snapped) world {@code pos}, tracking it as a
-     * {@link HunterUnit} that paces on {@code bandSource}'s ladder. This is the generalized seam the
-     * extra-spawn rules use to place a reinforcement NEAR the survivors (via {@link SpawnPlacement}),
-     * while the den-based {@code spawnArchetypeAt} delegates here. Best-effort: an unregistered role or a
+     * {@link HunterUnit} that paces on {@code bandSource}'s ladder. This is the seam {@link #spawnWave}
+     * uses to place a wave hunter NEAR the survivors (via {@link SpawnPlacement}), while the den-based
+     * {@code spawnArchetypeAt} delegates here. Best-effort: an unregistered role or a
      * spawn failure is logged and skipped, never thrown into the round loop. World-thread only.
      */
     private void spawnArchetypeAtPos(@Nonnull NPCPlugin npc, @Nonnull Store<EntityStore> store,
@@ -343,10 +328,10 @@ public final class AiHunterController implements HunterController {
 
     /**
      * Plan a roster of up to {@code cap} archetypes eligible at the given corruption {@code tier}: the
-     * rule-set's primary archetype first (when set + eligible), then the shared, deterministic
-     * {@link SpawnRoster} fills the rest by weighted pick (honoring each archetype's {@code count()}).
+     * rule-set's primary archetype first (when set + eligible), then repeated weighted picks over the
+     * eligible archetypes fill the rest, each pick adding that archetype's {@code count()} copies.
      * Reads only {@link HunterArchetypeConfig} - no hardcoded ids; an empty result means the caller
-     * falls back. Determinism: the roster is seeded off the round world seed XOR a per-call salt.
+     * falls back. Determinism: the fill is seeded off the round world seed XOR a per-call salt.
      */
     @Nonnull
     private List<HunterArchetypeAsset> planRoster(@Nonnull RoundInstance round, int tier, int cap) {
@@ -363,33 +348,62 @@ public final class AiHunterController implements HunterController {
             addArchetype(plan, primary, cap);
         }
 
-        // The shared roster fills the rest by deterministic weighted pick over the eligible archetypes.
-        SpawnRoster<HunterArchetypeAsset> roster = buildRoster();
-        long seed = round.worldSeed() ^ 0x4B57_4545L;
-        for (HunterArchetypeAsset a : roster.planRoster(tier, cap, seed)) {
-            if (plan.size() >= cap) {
+        // Weighted picks (with replacement) over the eligible archetypes fill the rest.
+        List<HunterArchetypeAsset> pool = eligible(tier);
+        if (pool.isEmpty()) {
+            return plan;
+        }
+        Random rng = new Random(round.worldSeed() ^ 0x4B57_4545L);
+        int guard = 0;
+        while (plan.size() < cap && guard++ < cap * 8) {
+            HunterArchetypeAsset pick = weightedPick(pool, rng);
+            if (pick == null) {
                 break;
             }
-            plan.add(a);
+            addArchetype(plan, pick, cap);
         }
         return plan;
     }
 
     /**
-     * Build a {@link SpawnRoster} over the SPAWNABLE archetypes (those with a non-blank role). Each
-     * archetype becomes a {@link SpawnUnit} carrying its {@code weight()}/{@code spawnTier()}/{@code count()}
-     * so the shared planner reproduces the historical eligibility + weighting. Reads only
-     * {@link HunterArchetypeConfig}; never null (an empty roster yields an empty plan).
+     * The SPAWNABLE archetypes eligible at {@code tier}: a non-blank role and a {@code spawnTier()} at
+     * or below it. Reads only {@link HunterArchetypeConfig}, in its own order; never null.
      */
     @Nonnull
-    private static SpawnRoster<HunterArchetypeAsset> buildRoster() {
-        List<SpawnUnit<HunterArchetypeAsset>> units = new ArrayList<>();
+    private static List<HunterArchetypeAsset> eligible(int tier) {
+        List<HunterArchetypeAsset> out = new ArrayList<>();
         for (HunterArchetypeAsset a : HunterArchetypeConfig.getInstance().getArchetypes().values()) {
-            if (a.roleName() != null && !a.roleName().isBlank()) {
-                units.add(new SpawnUnit<>(a, a.weight(), a.spawnTier(), Math.max(1, a.count())));
+            if (a.spawnTier() <= tier && a.roleName() != null && !a.roleName().isBlank()) {
+                out.add(a);
             }
         }
-        return new SpawnRoster<>(units);
+        return out;
+    }
+
+    /**
+     * One weighted pick over {@code pool} by each archetype's {@code weight()} (a negative weight reads
+     * as 0; when every weight is 0 the pick is uniform). {@code null} only when the pool is empty.
+     */
+    @Nullable
+    private static HunterArchetypeAsset weightedPick(@Nonnull List<HunterArchetypeAsset> pool, @Nonnull Random rng) {
+        if (pool.isEmpty()) {
+            return null;
+        }
+        double total = 0.0;
+        for (HunterArchetypeAsset a : pool) {
+            total += Math.max(0.0, a.weight());
+        }
+        if (total <= 0.0) {
+            return pool.get(rng.nextInt(pool.size()));
+        }
+        double r = rng.nextDouble() * total;
+        for (HunterArchetypeAsset a : pool) {
+            r -= Math.max(0.0, a.weight());
+            if (r <= 0.0) {
+                return a;
+            }
+        }
+        return pool.get(pool.size() - 1);
     }
 
     /** Add an archetype's {@code count()} copies to the plan, never exceeding {@code cap}. */
@@ -410,12 +424,6 @@ public final class AiHunterController implements HunterController {
     @Override
     public void tick(@Nonnull RoundInstance round, @Nonnull World world, @Nonnull Store<EntityStore> store) {
         hunters.removeIf(u -> u.ref == null || !u.ref.isValid());
-        // Corruption-tier escalation: as the round rots, a higher-tier archetype may join (hard-capped).
-        // Asset-driven spawn rules supersede this legacy escalation; it runs ONLY as the zero-rules fallback
-        // so a deployment without any SpawnRule asset keeps the historical mid-round escalation behavior.
-        if (!hasSpawnRules()) {
-            maybeEscalate(round, world, store);
-        }
         // Speed ramp is independent of targeting and always runs (now per-hunter).
         applySpeed(round, store);
         // Desperation enrage: a hunter that has not connected in enrageAfterSeconds gets a speed+damage
@@ -460,230 +468,97 @@ public final class AiHunterController implements HunterController {
         }
     }
 
-    /**
-     * Corruption-tier escalation: when the tier has risen so that a higher-tier archetype is now
-     * eligible and the roster is below the live ceiling, spawn ONE extra archetype hunter (a weighted
-     * pick over the newly-eligible archetypes). Hard-capped by {@link #maxLiveHunters} (itself bounded
-     * by {@link #MAX_HUNTERS}) and rate-limited to one add per tick, so escalation can never
-     * runaway-spawn.
-     */
-    private void maybeEscalate(@Nonnull RoundInstance round, @Nonnull World world,
-                               @Nonnull Store<EntityStore> store) {
-        if (hunters.size() >= maxLiveHunters) {
-            return;
-        }
-        NPCPlugin npc = NPCPlugin.get();
-        if (npc == null) {
-            return;
-        }
-        int tier = currentTier(round);
-        // The minimum spawnTier already present; only escalate to something STRICTLY scarier than that.
-        int spawnedMaxTier = -1;
-        for (HunterUnit u : hunters) {
-            spawnedMaxTier = Math.max(spawnedMaxTier, u.archetype.spawnTier());
-        }
-        List<SpawnUnit<HunterArchetypeAsset>> newlyEligible = new ArrayList<>();
-        for (HunterArchetypeAsset a : HunterArchetypeConfig.getInstance().getArchetypes().values()) {
-            if (a.spawnTier() <= tier && a.spawnTier() > spawnedMaxTier
-                    && a.roleName() != null && !a.roleName().isBlank()) {
-                newlyEligible.add(new SpawnUnit<>(a, a.weight(), a.spawnTier(), Math.max(1, a.count())));
-            }
-        }
-        if (newlyEligible.isEmpty()) {
-            return;
-        }
-        // Deterministic weighted pick over the newly-eligible (strictly scarier) set via the shared roster.
-        long seed = round.worldSeed() ^ (0x5CA1_E000L + hunters.size());
-        HunterArchetypeAsset pick = new SpawnRoster<>(newlyEligible).weightedPick(tier, seed);
-        if (pick == null) {
-            return;
-        }
-        Anchor den = ArenaLayout.HUNTER_DEN;
-        int denZ = (int) Math.floor(den.z());
-        int before = hunters.size();
-        spawnArchetypeAt(npc, store, world, pick, pick.roleName(), hunters.size(), hunterCap, den, denZ);
-        if (hunters.size() > before) {
-            SafeLog.info("[Kweebec] corruption escalation spawned a '" + pick.getId()
-                    + "' hunter (tier=" + tier + ", now " + hunters.size() + "/" + hunterCap + ")");
-        }
-    }
-
-    // --- asset-driven extra-spawn rules (NEAR the survivors, on triggers) ---
-
-    /** True when at least one extra-spawn rule is resolved (the runtime tier over the static fold). */
-    private static boolean hasSpawnRules() {
-        return !KweebecNightmareAPI.resolveSpawnRules().isEmpty();
-    }
+    // --- the waves the hunter encounter script asks for (NEAR the survivors) ---
 
     @Override
-    public void evaluateSpawnRules(@Nonnull RoundInstance round, @Nonnull World world,
-                                   @Nonnull Store<EntityStore> store,
-                                   @Nonnull SpawnTrigger trigger, int tierOrSeconds) {
-        List<EncounterRuleAsset> rules = KweebecNightmareAPI.resolveSpawnRules();
-        if (rules.isEmpty()) {
-            return;
-        }
+    public int spawnWave(@Nonnull RoundInstance round, @Nonnull World world, @Nonnull Store<EntityStore> store,
+                         @Nonnull HunterWave wave) {
         NPCPlugin npc = NPCPlugin.get();
         if (npc == null) {
-            return;
+            return 0;
         }
-        int tier = currentTier(round);
-        long now = System.currentTimeMillis();
-        for (EncounterRuleAsset rule : rules) {
-            if (rule == null || SpawnTrigger.fromString(rule.trigger()) != trigger) {
-                continue;
-            }
-            fireRuleIfReady(round, world, store, npc, rule, tier, tierOrSeconds, now);
-        }
-    }
-
-    /**
-     * Fire one rule if every gate passes: its corruption-tier floor, its per-trigger context match
-     * (CORRUPTION_TIER's {@code AtTier}, TIME_ELAPSED's {@code AtSeconds}, PLAYER_PROXIMITY's gate-near
-     * check), and the shared {@link EncounterDirector}'s cooldown + max-per-round gate. The wave size is
-     * the rule's {@code Count} scaled by party size (Count per survivor), then clamped to the room under
-     * the rule's cap and the per-round {@link #maxLiveHunters}, then each extra hunter
-     * is placed NEAR the survivors per the rule's {@link SpawnPlacementKind}. World-thread only.
-     */
-    private void fireRuleIfReady(@Nonnull RoundInstance round, @Nonnull World world,
-                                 @Nonnull Store<EntityStore> store, @Nonnull NPCPlugin npc,
-                                 @Nonnull EncounterRuleAsset rule, int tier, int tierOrSeconds, long now) {
-        if (tier < rule.minTier()) {
-            return;
-        }
-        switch (SpawnTrigger.fromString(rule.trigger())) {
-            case CORRUPTION_TIER -> {
-                if (rule.atTier() > 0 && tierOrSeconds != rule.atTier()) {
-                    return; // this rule only fires on a specific tier crossing
-                }
-            }
-            case TIME_ELAPSED -> {
-                if (tierOrSeconds < rule.atSeconds()) {
-                    return; // the elapsed time has not reached this rule's threshold yet
-                }
-            }
-            case PLAYER_PROXIMITY -> {
-                if (!anySurvivorNearGate(round, store)) {
-                    return; // no survivor is closing on the gate corridor
-                }
-            }
-            default -> { /* ROUND_START / SHRINE_LIT fire unconditionally once gates below pass */ }
-        }
-
-        long cooldownMs = (long) (Math.max(0.0, rule.cooldownSeconds()) * 1000.0);
-        if (!encounterDirector.canFire(rule.getId(), now, cooldownMs, rule.maxPerRound())) {
-            return;
-        }
-        // Per-rule cap LOWERS the ceiling but never raises it above the per-round live ceiling.
-        int ruleCap = rule.cap() > 0 ? Math.min(rule.cap(), maxLiveHunters) : maxLiveHunters;
-        // Wave size scales with party size: each fire spawns the rule's Count PER survivor in the round.
-        int requested = Math.max(1, rule.count()) * Math.max(1, round.partySize());
-        int allowed = encounterDirector.allowedToSpawn(hunters.size(), ruleCap, requested);
+        hunters.removeIf(u -> u.ref == null || !u.ref.isValid());
+        long seed = round.worldSeed() ^ System.currentTimeMillis();
+        // The wave asks for its count (per survivor when it says so); the round's live ceiling wins.
+        int allowed = HunterWave.room(hunters.size(), maxLiveHunters, wave.requested(round.partySize(), seed));
         if (allowed <= 0) {
-            return;
+            SafeLog.fine("[Kweebec] hunter wave found no room in " + round.roundId()
+                    + " (" + hunters.size() + "/" + maxLiveHunters + ")");
+            return 0;
         }
-
-        List<Vector3d> targets = placementTargets(round, world, store, rule, allowed, now);
+        List<Vector3d> targets = placementTargets(round, world, store, wave, allowed, seed);
         if (targets.isEmpty()) {
-            return;
+            return 0;
         }
-        HunterArchetypeAsset primary = HunterArchetypeConfig.getInstance().byId(rule.unitId());
+        // A rung that names an archetype gets it; otherwise the tier-gated weighted roster picks per body.
+        HunterArchetypeAsset fixed = fixedArchetype(wave);
+        List<HunterArchetypeAsset> pool = fixed != null ? List.of() : eligible(currentTier(round));
+        Random rng = new Random(seed ^ 0x5CA1_E000L);
         int before = hunters.size();
         for (Vector3d pos : targets) {
-            HunterArchetypeAsset a = pickRuleArchetype(round, rule, tier, primary, now);
-            if (a == null || a.roleName() == null || a.roleName().isBlank()) {
-                continue;
+            HunterArchetypeAsset a = fixed != null ? fixed : weightedPick(pool, rng);
+            if (a == null) {
+                break;
             }
             spawnArchetypeAtPos(npc, store, a, a.roleName(), pos, ArenaLayout.HUNTER_DEN.yaw());
         }
-        if (hunters.size() > before) {
-            encounterDirector.recordFire(rule.getId(), now);
-            SafeLog.info("[Kweebec] spawn rule '" + rule.getId() + "' (" + rule.trigger()
-                    + "/" + rule.placement() + ") spawned " + (hunters.size() - before)
-                    + " hunter(s) (now " + hunters.size() + "/" + maxLiveHunters + ")");
+        int spawned = hunters.size() - before;
+        if (spawned > 0) {
+            SafeLog.info("[Kweebec] hunter wave spawned " + spawned + " hunter(s)"
+                    + (fixed != null ? " ('" + fixed.getId() + "')" : "")
+                    + " in " + round.roundId() + " (now " + hunters.size() + "/" + maxLiveHunters + ")");
         }
+        return spawned;
     }
 
     /**
-     * Choose the archetype a rule's extra hunter spawns: the rule's authored {@code ArchetypeId} (when
-     * set + role-bound + tier-eligible) WINS as the primary, else a deterministic weighted pick over the
-     * tier-eligible roster. Determinism: seeded off the round world seed XOR the rule id + the fire clock,
-     * so each fire varies while a given round is reproducible.
+     * The archetype a wave names outright, when it names one that is role-bound: the rung's own choice,
+     * taken whatever the corruption tier says. An id nothing answers to, or one with no role, warns and
+     * leaves the pick to the roster.
      */
     @Nullable
-    private HunterArchetypeAsset pickRuleArchetype(@Nonnull RoundInstance round, @Nonnull EncounterRuleAsset rule,
-                                                   int tier, @Nullable HunterArchetypeAsset primary, long now) {
-        if (primary != null && primary.spawnTier() <= tier
-                && primary.roleName() != null && !primary.roleName().isBlank()) {
-            return primary;
+    private static HunterArchetypeAsset fixedArchetype(@Nonnull HunterWave wave) {
+        if (wave.archetype() == null) {
+            return null;
         }
-        long seed = round.worldSeed() ^ ((long) rule.getId().hashCode() << 16) ^ now;
-        return buildRoster().weightedPick(tier, seed);
+        HunterArchetypeAsset fixed = HunterArchetypeConfig.getInstance().byId(wave.archetype());
+        if (fixed != null && fixed.roleName() != null && !fixed.roleName().isBlank()) {
+            return fixed;
+        }
+        SafeLog.warn("[Kweebec] hunter wave names archetype '" + wave.archetype() + "', which "
+                + (fixed == null ? "is not a hunter archetype" : "has no RoleName") + "; the roster picks instead");
+        return null;
     }
 
     /**
-     * Resolve {@code count} floor-snapped spawn positions for a rule, NEAR the survivors per its
-     * {@link SpawnPlacementKind}: a ring band around one random active survivor, a surrounding ring
-     * around the survivors' centroid, a scatter around the centroid, or the fixed den. All player-relative
-     * placements use the shared {@link SpawnPlacement} (foliage-skipping so a spawn lands on the genuine
-     * ground under the grove canopy) and are seeded off the round world seed XOR the rule id + the fire
-     * clock for determinism. Empty when no active survivor exists. World-thread only.
+     * Resolve {@code count} floor-snapped spawn positions for a wave, NEAR the survivors: anchored on
+     * one random active survivor or on the survivors' centroid, spaced evenly on a ring at one radius
+     * drawn from the wave's band, or scattered through the band. Every placement goes through the shared
+     * {@link SpawnPlacement} (foliage-skipping so a spawn lands on the genuine ground under the grove
+     * canopy) and is seeded off the round world seed and the moment, so each wave varies while a given
+     * one is reproducible. Empty when no active survivor exists. World-thread only.
      */
     @Nonnull
     private List<Vector3d> placementTargets(@Nonnull RoundInstance round, @Nonnull World world,
-                                            @Nonnull Store<EntityStore> store, @Nonnull EncounterRuleAsset rule,
-                                            int count, long now) {
+                                            @Nonnull Store<EntityStore> store, @Nonnull HunterWave wave,
+                                            int count, long seed) {
         List<Vector3d> out = new ArrayList<>(count);
-        long seed = round.worldSeed() ^ ((long) rule.getId().hashCode() << 8) ^ now;
+        Vector3d anchor = wave.aroundOnePlayer()
+                ? randomActiveSurvivorPos(round, store, seed)
+                : survivorCentroid(round, store);
+        if (anchor == null) {
+            return out;
+        }
         Set<String> skip = BlockTypeLists.keys(SURFACE_DECORATION_LISTS);
         int fallbackY = (int) ArenaLayout.STAND_Y;
-        double radius = Math.max(2.0, rule.ringRadius());
-
-        switch (SpawnPlacementKind.fromString(rule.placement())) {
-            case DEN -> {
-                Anchor den = ArenaLayout.HUNTER_DEN;
-                int denZ = (int) Math.floor(den.z());
-                for (int i = 0; i < count; i++) {
-                    double offset = (i - (count - 1) / 2.0) * 2.0;
-                    double hx = den.x() + offset;
-                    int y = SurfaceProbe.standableY(world, (int) Math.floor(hx), denZ, fallbackY, skip);
-                    out.add(new Vector3d(hx, y, den.z()));
-                }
+        if (wave.even()) {
+            out.addAll(SpawnPlacement.ringAround(world, anchor.x(), anchor.z(), wave.radius(seed), count,
+                    fallbackY, skip));
+        } else {
+            for (int i = 0; i < count; i++) {
+                out.add(SpawnPlacement.nearPlayer(world, anchor.x(), anchor.z(), wave.radiusMin(), wave.radiusMax(),
+                        seed + i * 0x9E3779B1L, fallbackY, skip));
             }
-            case NEAR_RANDOM_PLAYER -> {
-                Vector3d player = randomActiveSurvivorPos(round, store, seed);
-                if (player == null) {
-                    return out;
-                }
-                // A ring band [radius*0.6, radius] around the chosen survivor; each point seeded distinctly.
-                // The 0.6 (and the SCATTER 0.4 below) are FIXED ring-band geometry, NOT author-tunable
-                // difficulty knobs: they shape the inner edge of the scatter pattern relative to the
-                // rule-defined ringRadius. If a future pack needs per-rule placement geometry, add
-                // minRadiusFraction()/maxRadiusFraction() to EncounterRuleAsset rather than editing these.
-                double minR = radius * 0.6;
-                for (int i = 0; i < count; i++) {
-                    out.add(SpawnPlacement.nearPlayer(world, player.x(), player.z(),
-                            minR, radius, seed + i * 0x9E3779B1L, fallbackY, skip));
-                }
-            }
-            case RING_AROUND_PLAYERS -> {
-                Vector3d c = survivorCentroid(round, store);
-                if (c == null) {
-                    return out;
-                }
-                out.addAll(SpawnPlacement.ringAround(world, c.x(), c.z(), radius, count, fallbackY, skip));
-            }
-            case SCATTER -> {
-                Vector3d c = survivorCentroid(round, store);
-                if (c == null) {
-                    return out;
-                }
-                for (int i = 0; i < count; i++) {
-                    out.add(SpawnPlacement.nearPlayer(world, c.x(), c.z(),
-                            radius * 0.4, radius, seed + i * 0x85EBCA77L, fallbackY, skip));
-                }
-            }
-            default -> { /* unreachable */ }
         }
         return out;
     }
@@ -735,21 +610,6 @@ public final class AiHunterController implements HunterController {
         return new Vector3d(sx / n, sy / n, sz / n);
     }
 
-    /** True when any active survivor is within {@link #GATE_NEAR_RADIUS} of the gate corridor (XZ). */
-    private boolean anySurvivorNearGate(@Nonnull RoundInstance round, @Nonnull Store<EntityStore> store) {
-        Anchor gate = ArenaLayout.GATE;
-        for (PlayerRoundState st : round.playerStates()) {
-            if (!st.isActive()) {
-                continue;
-            }
-            Vector3d p = positionOf(store, survivorRef(st.playerId()));
-            if (p != null && gate.horizontalDistanceSq(p.x(), p.z()) <= GATE_NEAR_RADIUS * GATE_NEAR_RADIUS) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /**
      * Release the current aggro override, if any. Guarded by {@code isTaunting} so we never ask
      * Perfect Utils to remove an {@code AggroComponent} from a survivor whose archetype no longer has
@@ -796,7 +656,6 @@ public final class AiHunterController implements HunterController {
         }
         hunters.clear();
         rosterPlan.clear();
-        encounterDirector.reset();
         hunterCap = 1;
         currentTaunt = null;
         alertTarget = null;

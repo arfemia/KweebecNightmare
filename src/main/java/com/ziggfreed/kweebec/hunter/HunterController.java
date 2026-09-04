@@ -81,25 +81,23 @@ public interface HunterController {
     void noteHunterLandedHit(@Nullable Ref<EntityStore> attacker, long nowMs);
 
     /**
-     * Evaluate the asset-driven EXTRA-SPAWN RULES for the given {@code trigger} and spawn any extra
-     * hunters whose rule fires now (placed NEAR the survivors per the rule's placement, respecting each
-     * rule's cooldown / max-per-round / cap and the controller's global hunter cap). A no-op by default
-     * (the human-driven mode has no roster); the AI controller implements it.
+     * Put one wave of hunters down NEAR the survivors, as the hunter encounter script asks for it at
+     * each rung of its escalation (the {@code KweebecHunterWave} action): the wave's count, scaled by
+     * the party when it says so and clamped to the room under the round's live-hunter ceiling, placed
+     * on a ring around or scattered near one survivor or the party's centre, each body the archetype
+     * the wave names or the round's own tier-gated weighted pick. A no-op by default (the human-driven
+     * mode has no roster); the AI controller implements it.
      *
-     * <p>Called from {@link com.ziggfreed.kweebec.mode.chase.ChaseMode} on the instance world thread at
-     * each trigger moment (round start, a shrine lit, a corruption-tier crossing, time elapsed, a survivor
-     * nearing the gate).
+     * <p>Called on the instance world thread, between ticks.
      *
-     * @param round   the live round
-     * @param world   the instance world (world thread)
-     * @param store   the entity store (world thread)
-     * @param trigger the gameplay moment that just occurred
-     * @param tierOrSeconds context for the trigger: the new corruption tier (CORRUPTION_TIER), the
-     *                      round-elapsed seconds (TIME_ELAPSED), else ignored (pass 0)
+     * @param round the live round
+     * @param world the instance world (world thread)
+     * @param store the entity store (world thread)
+     * @param wave  what the script asked for
+     * @return how many hunters actually went down (0 when the wave found no room or no survivor)
      */
-    default void evaluateSpawnRules(@Nonnull RoundInstance round, @Nonnull World world,
-                                    @Nonnull Store<EntityStore> store,
-                                    @Nonnull SpawnTrigger trigger, int tierOrSeconds) {
-        // no-op default - the human-driven hunter mode has no asset roster
+    default int spawnWave(@Nonnull RoundInstance round, @Nonnull World world,
+                          @Nonnull Store<EntityStore> store, @Nonnull HunterWave wave) {
+        return 0; // the human-driven hunter mode has no roster to draw a wave from
     }
 }

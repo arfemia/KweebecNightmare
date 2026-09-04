@@ -1,0 +1,18 @@
+{
+  "$Comment": [
+    "What the server owes for the hunter waves' script,",
+    "Server/EncounterManager/KweebecNightmare_Hunters.json, which is almost nothing. The script binds",
+    "no boss, so there is no subject to name, no health to scale, no loot to pay, no leaderboard to",
+    "write and no notice to fire, and every group is left unauthored on purpose; the waves themselves,",
+    "their size and their placement are all in the script.",
+    "",
+    "The one thing this row does is the Enabled switch. Set it false here, or from",
+    "mods/ziggfreedcommon/encounters.json under the key kweebecnightmare_hunters followed by",
+    "/zigencounter reload, and no chase round asks for the script at all: the den roster is the",
+    "night's only hunters. That is the server-wide way to turn the waves off without touching the",
+    "script or a preset."
+  ],
+  "EncounterAsset": "KweebecNightmare_Hunters",
+  "NameKey": "kweebecnightmare.encounter.hunters.name",
+  "Enabled": true
+}

@@ -7,16 +7,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.ziggfreed.common.instance.arena.ArenaDefinitionAsset;
 import com.ziggfreed.common.worldmap.MapDiscovery;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
 import com.ziggfreed.kweebec.boss.BossEncounter;
 import com.ziggfreed.kweebec.hunter.HunterController;
+import com.ziggfreed.kweebec.hunter.HunterEncounter;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
 
 /**
@@ -101,6 +105,8 @@ public final class RoundInstance {
     private volatile ChaseState chaseState;
     @Nullable
     private volatile HunterController hunterController;
+    @Nullable
+    private volatile HunterEncounter hunterEncounter;
     @Nullable
     private volatile BossEncounter bossEncounter;
     /** Shrine-discovery map markers for this round, created + attached when {@code shrineDiscovery != OFF}. */
@@ -235,6 +241,35 @@ public final class RoundInstance {
 
     public int partySize() {
         return participants.size();
+    }
+
+    /** Every player still in the round (not left), in join order: the party a spawn call seeds. */
+    @Nonnull
+    public List<UUID> presentPlayerIds() {
+        List<UUID> out = new java.util.ArrayList<>();
+        for (UUID id : participants) {
+            PlayerRoundState st = players.get(id);
+            if (st != null && !st.hasLeftRound()) {
+                out.add(id);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Run {@code action} for every player still in the round who is online, wherever they stand. The
+     * fan-out every round notice (a title, a toast) goes through. World-thread only.
+     */
+    public void forEachPresent(@Nonnull Consumer<PlayerRef> action) {
+        for (PlayerRoundState st : players.values()) {
+            if (st.hasLeftRound()) {
+                continue;
+            }
+            PlayerRef pr = Universe.get().getPlayer(st.playerId());
+            if (pr != null) {
+                action.accept(pr);
+            }
+        }
     }
 
     public void markLeft(@Nonnull UUID playerId) {
@@ -374,6 +409,20 @@ public final class RoundInstance {
 
     public void setHunterController(@Nullable HunterController hunterController) {
         this.hunterController = hunterController;
+    }
+
+    /**
+     * The round's handle on its hunter waves (the native encounter the framework stood up at the grove's
+     * centre when the hunt began, plus its run id), set once {@code HunterEncounter.raise} completes.
+     * {@code null} until then, and for good when its binding row is switched off.
+     */
+    @Nullable
+    public HunterEncounter hunterEncounter() {
+        return hunterEncounter;
+    }
+
+    public void setHunterEncounter(@Nullable HunterEncounter hunterEncounter) {
+        this.hunterEncounter = hunterEncounter;
     }
 
     /**

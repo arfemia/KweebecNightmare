@@ -1,6 +1,5 @@
 package com.ziggfreed.kweebec.integration;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.UnaryOperator;
 
@@ -8,8 +7,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.ziggfreed.kweebec.asset.PresetConfig;
-import com.ziggfreed.common.instance.encounter.EncounterRuleAsset;
-import com.ziggfreed.common.instance.encounter.EncounterRuleConfig;
 import com.ziggfreed.kweebec.round.RuleSet;
 import com.ziggfreed.kweebec.score.ScoringConfig;
 import com.ziggfreed.kweebec.util.SafeLog;
@@ -53,12 +50,6 @@ public final class KweebecNightmareAPI {
 
     /** Runtime scoring-config scale; {@code null} = identity. */
     private static final AtomicReference<UnaryOperator<ScoringConfig>> SCORING_SCALE = new AtomicReference<>(null);
-
-    /** Runtime spawn-rules override; {@code null} = use the common {@link EncounterRuleConfig} fold. */
-    private static final AtomicReference<List<EncounterRuleAsset>> SPAWN_RULES_OVERRIDE = new AtomicReference<>(null);
-
-    /** Runtime spawn-rules scale (post-transform of the resolved list); {@code null} = identity. */
-    private static final AtomicReference<UnaryOperator<List<EncounterRuleAsset>>> SPAWN_RULES_SCALE = new AtomicReference<>(null);
 
     private KweebecNightmareAPI() {
     }
@@ -184,71 +175,6 @@ public final class KweebecNightmareAPI {
             return scaled != null ? scaled : base;
         } catch (Throwable t) {
             SafeLog.warn("[Kweebec][API] scoring scale threw; using unscaled config: " + t.getMessage());
-            return base;
-        }
-    }
-
-    // ==================== spawn-rules runtime tier (extra-hunter escalation) ====================
-
-    /**
-     * Force the EXTRA-SPAWN RULE set for every subsequent round, replacing whatever the
-     * {@code defaults < pack} {@link EncounterRuleConfig} fold yields (e.g. an MMO scripting a bespoke
-     * escalation for a capstone run, or disabling extra spawns by passing an empty list). Pass
-     * {@code null} to clear the override and honor the static fold again. The list is copied defensively.
-     *
-     * @param rules the rule set to force, or {@code null} to clear (empty list = no extra spawns)
-     */
-    public static void overrideSpawnRules(@Nullable List<EncounterRuleAsset> rules) {
-        SPAWN_RULES_OVERRIDE.set(rules == null ? null : List.copyOf(rules));
-        SafeLog.info("[Kweebec][API] spawn-rules override "
-                + (rules == null ? "cleared" : "set to " + rules.size() + " rule(s)"));
-    }
-
-    /** The active spawn-rules override, or {@code null} when none is set. */
-    @Nullable
-    public static List<EncounterRuleAsset> spawnRulesOverride() {
-        return SPAWN_RULES_OVERRIDE.get();
-    }
-
-    /**
-     * Register a runtime transform applied to the resolved EXTRA-SPAWN RULE list (after any override, over
-     * the static fold) - e.g. filter out a trigger, or remap counts. The operator receives the resolved
-     * list and returns the effective one. Pass {@code null} to clear the scale.
-     *
-     * @param scale the per-round transform, or {@code null} to clear
-     */
-    public static void scaleSpawnRules(@Nullable UnaryOperator<List<EncounterRuleAsset>> scale) {
-        SPAWN_RULES_SCALE.set(scale);
-        SafeLog.info("[Kweebec][API] spawn-rules scale " + (scale == null ? "cleared" : "registered"));
-    }
-
-    /** The active spawn-rules scale operator, or {@code null} when none is set. */
-    @Nullable
-    public static UnaryOperator<List<EncounterRuleAsset>> spawnRulesScale() {
-        return SPAWN_RULES_SCALE.get();
-    }
-
-    /**
-     * Resolve the effective EXTRA-SPAWN RULE list for a round, composing all tiers: the runtime override
-     * (if set) ELSE the static {@code defaults < pack < owner} fold via {@link EncounterRuleConfig}, then the
-     * registered runtime scale (if any). Always returns a non-null (possibly empty) list. Consumed by
-     * {@code AiHunterController.evaluateSpawnRules}.
-     */
-    @Nonnull
-    public static List<EncounterRuleAsset> resolveSpawnRules() {
-        List<EncounterRuleAsset> base = SPAWN_RULES_OVERRIDE.get();
-        if (base == null) {
-            base = List.copyOf(EncounterRuleConfig.getInstance().all().values());
-        }
-        UnaryOperator<List<EncounterRuleAsset>> scale = SPAWN_RULES_SCALE.get();
-        if (scale == null) {
-            return base;
-        }
-        try {
-            List<EncounterRuleAsset> scaled = scale.apply(base);
-            return scaled != null ? scaled : base;
-        } catch (Throwable t) {
-            SafeLog.warn("[Kweebec][API] spawn-rules scale threw; using unscaled list: " + t.getMessage());
             return base;
         }
     }
