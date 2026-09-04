@@ -1,7 +1,5 @@
 {
   "Name": "Hardcore",
-  "Enabled": true,
-  "NameKey": "kweebecnightmare.preset.hardcore.name",
   "WorldStructure": "KweebecNightmare_Grove_Dread",
   "ReviveStyle": "HARDCORE",
   "MaxDowns": 0,
@@ -19,7 +17,6 @@
   "CorruptionPerShrine": 0.15,
   "ShrineRelightSeconds": 7.0,
   "InventoryMode": "PRESERVE_AND_STRIP",
-  "RewardOnExit": "ON_WIN",
   "HunterArchetype": "stalker",
   "CleanseCost": 4,
   "ThrowableDamage": {

@@ -1,7 +1,5 @@
 {
   "Name": "Amateur",
-  "Enabled": true,
-  "NameKey": "kweebecnightmare.preset.amateur.name",
   "WorldStructure": "KweebecNightmare_Grove_Calm",
   "ReviveStyle": "FORGIVING",
   "MaxDowns": 2147483647,
@@ -19,7 +17,6 @@
   "CorruptionPerShrine": 0.08,
   "ShrineRelightSeconds": 5.0,
   "InventoryMode": "PRESERVE_AND_STRIP",
-  "RewardOnExit": "ON_WIN",
   "HunterArchetype": "stalker",
   "CleanseCost": 3,
   "ThrowableDamage": {

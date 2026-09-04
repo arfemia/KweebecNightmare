@@ -1,7 +1,5 @@
 {
   "Name": "Endless",
-  "Enabled": false,
-  "NameKey": "kweebecnightmare.preset.endless.name",
   "ReviveStyle": "COOP_RESCUE",
   "MaxDowns": 2,
   "BleedOutSeconds": 40,
@@ -16,7 +14,6 @@
   "CorruptionPerShrine": 0.1,
   "ShrineRelightSeconds": 6.0,
   "InventoryMode": "PRESERVE_AND_STRIP",
-  "RewardOnExit": "ON_WIN",
   "HunterArchetype": "stalker",
   "CleanseCost": 3,
   "Mutators": []

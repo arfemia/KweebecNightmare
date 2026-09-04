@@ -1,7 +1,5 @@
 {
   "Name": "Pitch",
-  "Enabled": false,
-  "NameKey": "kweebecnightmare.preset.pitch.name",
   "ReviveStyle": "COOP_RESCUE",
   "MaxDowns": 1,
   "BleedOutSeconds": 25,
@@ -16,7 +14,6 @@
   "CorruptionPerShrine": 0.16,
   "ShrineRelightSeconds": 7.0,
   "InventoryMode": "PRESERVE_AND_STRIP",
-  "RewardOnExit": "ON_WIN",
   "HunterArchetype": "stalker",
   "CleanseCost": 4,
   "JumpscareShakeIntensity": 0.12,

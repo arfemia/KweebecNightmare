@@ -1,7 +1,5 @@
 {
   "Name": "Blitz",
-  "Enabled": false,
-  "NameKey": "kweebecnightmare.preset.blitz.name",
   "ReviveStyle": "COOP_RESCUE",
   "MaxDowns": 1,
   "BleedOutSeconds": 20,
@@ -16,7 +14,6 @@
   "CorruptionPerShrine": 0.14,
   "ShrineRelightSeconds": 5.0,
   "InventoryMode": "PRESERVE_AND_STRIP",
-  "RewardOnExit": "ON_WIN",
   "HunterArchetype": "stalker",
   "CleanseCost": 2,
   "Mutators": ["blitz"]
