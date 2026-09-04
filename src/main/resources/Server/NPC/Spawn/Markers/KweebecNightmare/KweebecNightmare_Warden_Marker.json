@@ -1,0 +1,16 @@
+{
+  "$Comment": "The spawn marker the Blight Warden rises from. ManualTrigger means it never spawns on its own: only the Warden encounter script's TriggerSpawners fires it, once, when the fight begins. It stands in the grove as the KweebecNightmare_Warden_Spawner block (stamped at the Heartwood Gate by the round), whose SpawnMarkerBlock component keeps this marker alive one block above it. Respawn here is real time because the chase world's game clock is paused; the value only says how soon the marker may fire again after its spawn is gone, which the fight never asks for. Point the roster at another role to change what rises.",
+  "Model": "NPC_Spawn_Marker",
+  "NPCs": [
+    {
+      "Name": "KweebecNightmare_Warden",
+      "Weight": 10,
+      "RealtimeRespawnTime": 5
+    }
+  ],
+  "ExclusionRadius": 0,
+  "RealtimeRespawn": true,
+  "MaxDropHeight": 6,
+  "DeactivationDistance": 256,
+  "ManualTrigger": true
+}

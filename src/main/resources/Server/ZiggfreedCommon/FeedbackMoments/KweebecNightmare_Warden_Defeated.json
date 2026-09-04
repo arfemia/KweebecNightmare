@@ -1,0 +1,24 @@
+{
+  "$Comment": [
+    "What a participant sees the instant the Blight Warden falls: the gate is theirs, and beneath it",
+    "their own share of the fight. The Warden's binding row points its Defeated beat here",
+    "(Feedback.Defeated), so the words belong to this fight alone.",
+    "",
+    "The moment fires once per participant the fight credited and carries 'share' (that reader's",
+    "credited share of the fight as whole percent points, the top contributor reading 100) and",
+    "'seconds' (how long the Warden stood). The second line is the library's own share line, which",
+    "ships translated in every language the library does, so it reads right on a client the Warden's",
+    "own lines are not translated for yet. The round pays its spoils at the end of the night, so",
+    "there is no reward row here to list."
+  ],
+  "Toast": {
+    "Title": {
+      "Key": "kweebecnightmare.boss.toast.defeated"
+    },
+    "Secondary": {
+      "Key": "ziggfreedcommon.feedback.encounter.defeated.share",
+      "Args": ["share", "seconds"]
+    },
+    "Tone": "Success"
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "$Comment": "Phase 1 of the Warden boss capstone (full HP). BossController spawns THIS role at the escape climax and swaps it to _Phase2 / _Phase3 as its HP crosses the thresholds.",
+  "$Comment": "The Blight Warden as it rises: the role the KweebecNightmare_Warden_Marker spawn marker raises when the Warden encounter script (Server/EncounterManager/KweebecNightmare_Warden_Encounter.json) begins the fight. MaxHealth here is the whole fight's pool: the script changes the Warden's role in place to _Phase2 at half of it and to _Phase3 at half of what it carries into _Phase2, and the engine keeps the Warden's current health across each change, so the three roles together add up to this number. Raise it to lengthen the whole fight (the party scale and the preset's BossHealthMultiplier multiply on top of it). The three Variants differ by MaxHealth, MaxSpeed and Burn only; everything about how the Warden fights is the template.",
   "Type": "Variant",
   "Reference": "Template_KweebecNightmare_Warden",
   "Modify": {

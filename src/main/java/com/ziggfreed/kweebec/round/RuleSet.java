@@ -488,19 +488,19 @@ public final class RuleSet {
     }
 
     /**
-     * Whether this round spawns the multi-phase boss capstone (the corrupted-Kweebec Warden) at the escape
-     * climax (all shrines lit, gate open). Default off; the harder presets author it on. Asset-driven via the
-     * preset's {@code BossEnabled} knob. {@code boss/BossController} reads this in {@code ChaseMode.openGate}.
+     * Whether this round stands the boss capstone (the Blight Warden's native encounter) up at the escape
+     * climax (all shrines lit). Default off; the harder presets author it on. Asset-driven via the preset's
+     * {@code BossEnabled} knob; {@code ChaseMode.enterEscape} reads it.
      */
     public boolean bossEnabled() {
         return bossEnabled;
     }
 
     /**
-     * The boss id this round spawns when {@link #bossEnabled()} (resolved against ziggfreed-common's
-     * {@link com.ziggfreed.common.instance.encounter.MultiPhaseBossConfig} via
-     * {@link com.ziggfreed.kweebec.integration.KweebecNightmareAPI#resolveBoss});
-     * {@code null}/blank = the default Warden. Asset-driven via the preset's {@code BossId} knob.
+     * The ENCOUNTER SCRIPT id this round stands up when {@link #bossEnabled()}: the file name under
+     * {@code Server/EncounterManager}, case-sensitive, handed to ziggfreed-common's {@code EncounterSpawner}
+     * by {@code boss/BossEncounter}. {@code null}/blank = no boss, however {@code bossEnabled} reads.
+     * Asset-driven via the preset's {@code BossId} knob.
      */
     @Nullable
     public String bossId() {
@@ -519,20 +519,21 @@ public final class RuleSet {
     }
 
     /**
-     * Whether an enabled boss drops a WORLD-MAP marker that tracks it (a compass/world-map POI the
-     * {@code BossController} places at spawn and follows as it moves). Default on; a preset can author it
-     * off (e.g. Hardcore, which also ships the exit marker dark). Asset-driven via the preset's
-     * {@code BossMarker} knob. Mirrors {@link #exitMarker()}.
+     * Whether an enabled boss drops a WORLD-MAP marker that tracks it (a compass/world-map POI
+     * {@code boss/BossEncounter} places when the fight engages and follows as the Warden moves). Default
+     * on; a preset can author it off (e.g. Hardcore, which also ships the exit marker dark). Asset-driven
+     * via the preset's {@code BossMarker} knob. Mirrors {@link #exitMarker()}.
      */
     public boolean bossMarker() {
         return bossMarker;
     }
 
     /**
-     * Per-difficulty flat multiplier on the boss's MAX health, composed with the boss asset's
-     * {@code HealthPerPlayer} party scaling ({@code final = bossHealthMultiplier * (1 + perPlayer*(players-1))}).
-     * Default {@code 1.0} (no change); harder presets author it up. Asset-driven via the preset's
-     * {@code BossHealthMultiplier} knob; {@code BossController} reads it at spawn.
+     * Per-difficulty flat multiplier on the boss's MAX health, handed to the encounter framework as the
+     * run multiplier that its binding row's party scale composes with
+     * ({@code final = bossHealthMultiplier * (1 + HealthPerMember * (members - 1))}). Default {@code 1.0}
+     * (no change); harder presets author it up. Asset-driven via the preset's {@code BossHealthMultiplier}
+     * knob; {@code boss/BossEncounter} reads it as it stands the encounter up.
      */
     public double bossHealthMultiplier() {
         return bossHealthMultiplier;

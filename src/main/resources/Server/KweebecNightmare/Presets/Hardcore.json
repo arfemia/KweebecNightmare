@@ -33,7 +33,7 @@
   "ExitMarker": false,
   "ShrineDiscovery": "OFF",
   "BossEnabled": true,
-  "BossId": "warden",
+  "BossId": "KweebecNightmare_Warden_Encounter",
   "BossBarsGate": true,
   "BossMarker": false,
   "BossHealthMultiplier": 1.4,

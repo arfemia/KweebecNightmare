@@ -1,0 +1,17 @@
+{
+  "$Comment": [
+    "What a member of the Warden fight sees as the Warden sheds its bark and moves into its next",
+    "phase: one red line in the notice feed. The Warden's binding row points its PhaseChanged beat",
+    "here (Feedback.PhaseChanged), so the words belong to this fight alone.",
+    "",
+    "The moment fires once per live member at each phase and carries 'phase' (the script's state",
+    "name, Phase_2 or Phase_3) should a line want to name it; this one keeps the same words for both",
+    "changes on purpose, since the fight speaks for itself. Add a Sound for a roar."
+  ],
+  "Toast": {
+    "Title": {
+      "Key": "kweebecnightmare.boss.toast.phase"
+    },
+    "Tone": "Error"
+  }
+}

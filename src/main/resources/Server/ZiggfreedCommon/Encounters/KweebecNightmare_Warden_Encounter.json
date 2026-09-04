@@ -1,0 +1,55 @@
+{
+  "$Comment": [
+    "What the server owes for the Blight Warden fight, which the fight's own script,",
+    "Server/EncounterManager/KweebecNightmare_Warden_Encounter.json, never describes. Phases, thresholds, the",
+    "role changes, the adds and the boss bar all live in that script and in the three Warden roles;",
+    "nothing here restates them.",
+    "",
+    "Subject names the script's Boss slot, the one it binds the Warden into. Scale grows the Warden's",
+    "maximum health with the party: HealthPerMember 0.35 makes a party of four fight a Warden with",
+    "2.05 times the health of a solo one. The per-difficulty multiplier is not here because it varies",
+    "per round: each round hands its preset's BossHealthMultiplier to the fight as it stands it up,",
+    "and the two compose. The preset id rides with the run the same way, as its difficulty, so a quest",
+    "step naming ENCOUNTER_DEFEATED can ask for the Warden on nightmare in particular; that is why no",
+    "Progression.Difficulty is authored here.",
+    "",
+    "Timing keeps the library's own guards out of the round's way. A wipe here is every member dead",
+    "or gone for WipeGraceSeconds, which a chase round decides for itself long before; MaxRunSeconds",
+    "sits well above the longest round cap so the library never cuts a live fight short.",
+    "",
+    "Feedback names the Warden's own notices, the four KweebecNightmare_Warden_* files under",
+    "Server/ZiggfreedCommon/FeedbackMoments, so the Warden speaks in its own words and no other",
+    "encounter on the server borrows them. Discovery is off because the round places and follows the",
+    "Warden's world-map marker itself, under each preset's own BossMarker knob (Nightmare shows it,",
+    "Hardcore does not).",
+    "",
+    "The Warden pays no loot of its own: the round pays its score-tiered spoils at the end, and the",
+    "fight already counts towards quests and achievements through the encounter kinds. Add a Loot",
+    "block by overriding this file by id if your server wants the Warden itself to drop something.",
+    "",
+    "Switch the fight off with Enabled false, or from mods/ziggfreedcommon/encounters.json under the",
+    "key kweebecnightmare_warden, and the round opens the gate without a boss."
+  ],
+  "EncounterAsset": "KweebecNightmare_Warden_Encounter",
+  "NameKey": "kweebecnightmare.npc.warden.name",
+  "Enabled": true,
+  "Subject": {
+    "TargetSlot": "Boss"
+  },
+  "Scale": {
+    "HealthPerMember": 0.35
+  },
+  "Timing": {
+    "WipeGraceSeconds": 30,
+    "MaxRunSeconds": 3600
+  },
+  "Feedback": {
+    "Engaged": "KweebecNightmare_Warden_Engaged",
+    "PhaseChanged": "KweebecNightmare_Warden_Phase_Changed",
+    "Defeated": "KweebecNightmare_Warden_Defeated",
+    "Wiped": "KweebecNightmare_Warden_Wiped"
+  },
+  "Discovery": {
+    "MapMarker": false
+  }
+}

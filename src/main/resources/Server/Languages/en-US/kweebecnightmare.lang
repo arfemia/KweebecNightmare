@@ -65,6 +65,8 @@ item.emberbloom_plant.name = Emberbloom Cluster
 item.emberbloom_plant.description = Harvest this smouldering cluster to gather <color is="#ff8a3c">Emberbloom</color>, the bloom that burns the blight away.\n\n<i>It takes root only where the Warden has walked, and it is always warm to the touch.</i>
 item.shrine.name = Blighted Shrine
 item.shrine.description = Offer <color is="#7affa0">Moonbloom</color> here to cleanse the blight. A relit shrine burns with green fire, and the hunt turns toward the light.\n\n<i>It once carried the grove's song. Now it waits cold for someone warm to wake it.</i>
+item.warden_spawner.name = Warden Roost
+item.blight_spawner.name = Blight Nest
 
 interaction.shrine.hint = Press [{key}] to offer Moonbloom
 
@@ -99,11 +101,13 @@ hud.extraction.wait = Extraction {0}/{1}  gather on the platform
 marker.exit = Exit
 marker.shrine = Shrine
 
-boss.hud.phase = Phase {0}/{1}
+# The Warden fight's notices, named by the KweebecNightmare_Warden_* FeedbackMoment assets (the bar
+# itself shows npc.warden.name).
 boss.title.awakens = The Warden Awakens
 boss.title.awakens.sub = It rose to bar the gate
 boss.toast.phase = The Warden sheds its bark and surges
 boss.toast.defeated = The Warden falls. The gate is yours.
+boss.toast.wiped = The Warden keeps the gate.
 
 cmd.players_only = Only players can run this.
 cmd.already_in_round = You are already in a round.

@@ -104,9 +104,10 @@ public final class ChaseRoundMode implements RoundMode {
         if (round.hunterController() != null) {
             round.hunterController().despawnAll(world, store);
         }
-        // Tear the boss capstone (the Warden + adds + boss HUD) down so it never leaks past the round.
-        if (round.bossController() != null) {
-            round.bossController().despawnAll(world, store);
+        // Take the Warden encounter down (the script's CleanupOnRemove cascades to the Warden and its adds,
+        // and the framework settles a fight still open as a wipe) so nothing leaks past the round.
+        if (round.bossEncounter() != null) {
+            round.bossEncounter().dismiss(world, store);
         }
         // Drop the shrine-discovery marker provider (defensive; the world is destroyed right after).
         if (round.mapDiscovery() != null) {

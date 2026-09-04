@@ -21,6 +21,7 @@ import com.narwhals.perfectutils.api.StunMobAPI;
 import com.ziggfreed.common.npc.NpcActions;
 import com.ziggfreed.common.npc.NpcAutoSpawn;
 import com.ziggfreed.kweebec.asset.KweebecAssetRegistrar;
+import com.ziggfreed.kweebec.boss.BossEncounterListener;
 import com.ziggfreed.kweebec.command.KweebecCommand;
 import com.ziggfreed.kweebec.death.CocoonOnDeathSystem;
 import com.ziggfreed.kweebec.dialogue.KweebecDestinations;
@@ -180,6 +181,11 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // round, restore their real model if they are still flagged swapped (covers exit / disconnect / relog
         // / crash mid-match). The single guarantee against a stranded Sapling.
         getEventRegistry().registerGlobal(PlayerReadyEvent.class, KweebecNightmarePlugin::onPlayerReadyRestoreModel);
+
+        // How the round hears the Warden fight: the ziggfreed-common encounter framework fires a native
+        // event at every beat (engaged, phase, defeated, the script's own beats, reset), and this one
+        // inbound listener routes each to the round holding that run id (the gate opens on the defeat).
+        BossEncounterListener.install(this);
 
         // The PvP Clash Host is NOT auto-spawned; place it deliberately via /kweebec clashhost
         // (debugSpawnClashHost). The auto-spawn-on-player-ready hook was removed by request so the

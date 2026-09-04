@@ -140,12 +140,14 @@ public final class RoundPresetAsset
     // the platform (ALL_MOBILE / EVERYONE); ExtractionHoldSeconds is how long the group holds it together.
     @Nullable private String extractionMode;
     private double extractionHoldSeconds = UNSET_DOUBLE;
-    // Boss capstone toggle + id (null = absent = the RuleSet default = off / default Warden). The harder
-    // presets author BossEnabled=true; BossId selects a non-default boss from the BossConfig fold;
-    // BossBarsGate=true holds the Heartwood Gate shut until the boss is defeated (else the boss is a
-    // pure obstacle beside an already-open gate). BossMarker toggles the boss world-map marker (default on,
-    // mirrors ExitMarker); BossHealthMultiplier is the per-difficulty flat MAX-health scale (default 1.0,
-    // composed with the boss asset's HealthPerPlayer party scaling).
+    // Boss capstone toggle + id (null = absent = the RuleSet default = off / no boss). The harder presets
+    // author BossEnabled=true; BossId is the ENCOUNTER SCRIPT id the round stands up at the gate (the file
+    // name under Server/EncounterManager, case-sensitive, e.g. KweebecNightmare_Warden_Encounter; a script
+    // shares its id namespace with every NPC role, so it can never carry a role's name); BossBarsGate=true
+    // holds the Heartwood Gate shut until the boss is defeated (else the boss is a pure obstacle beside an
+    // already-open gate). BossMarker toggles the boss world-map marker (default on, mirrors ExitMarker);
+    // BossHealthMultiplier is the per-difficulty flat MAX-health scale (default 1.0), handed to the
+    // framework as the run multiplier its binding row's party scale composes with.
     @Nullable private Boolean bossEnabled;
     @Nullable private String bossId;
     @Nullable private Boolean bossBarsGate;
@@ -519,7 +521,9 @@ public final class RoundPresetAsset
             b.bossEnabled(bossEnabled);
         }
         if (bossId != null && !bossId.isBlank()) {
-            b.bossId(bossId.toLowerCase(Locale.ROOT));
+            // An encounter script id is case-sensitive (it is the file name the engine indexed), so it is
+            // carried verbatim: folding it would make every preset's boss unresolvable.
+            b.bossId(bossId);
         }
         if (bossBarsGate != null) {
             b.bossBarsGate(bossBarsGate);

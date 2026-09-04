@@ -30,7 +30,7 @@ import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
 import com.ziggfreed.kweebec.hunter.SpawnTrigger;
 import com.ziggfreed.kweebec.atmosphere.MusicBedService;
-import com.ziggfreed.kweebec.boss.BossController;
+import com.ziggfreed.kweebec.boss.BossEncounter;
 import com.ziggfreed.kweebec.arena.Anchor;
 import com.ziggfreed.kweebec.arena.ArenaBuilder;
 import com.ziggfreed.kweebec.arena.ArenaLayout;
@@ -158,18 +158,13 @@ public final class ChaseMode {
             enterEscape(round, world, store, chase);
         }
         if (chase.phase() == ChasePhase.ESCAPE) {
-            // Boss capstone tick: track the Warden's HP, backstop its phase swaps, drive the boss HUD.
-            // Best-effort; never throws into the loop.
-            BossController boss = round.bossController();
+            // The Warden fight is the native encounter the framework runs; the round only keeps its own
+            // world-map marker on the moving boss (the preset's bossMarker knob). A BARRING boss holds the
+            // gate shut until it falls, and the gate opens from BossEncounterListener the instant the
+            // framework reports the defeat (or the fight's no-show beat), never from a poll here.
+            BossEncounter boss = round.bossEncounter();
             if (boss != null) {
-                boss.tick(round, world, store);
-            }
-            // A BARRING boss (RuleSet.bossBarsGate) holds the Heartwood Gate shut until it falls: open the
-            // gate the instant the Warden is defeated. boss == null here means either a non-barring round
-            // (enterEscape already opened the gate) or a barring boss that failed to spawn (enterEscape
-            // opened the gate as the no-soft-lock fallback) - in both cases isGateOpen() is already true.
-            if (!chase.isGateOpen() && (boss == null || boss.isDefeated())) {
-                openGate(round, world, store, chase);
+                boss.followMarker(world, store, now);
             }
             // Escape is only possible once the gate is physically open (a barring boss blocks it until dead).
             if (chase.isGateOpen()) {
@@ -434,56 +429,78 @@ public final class ChaseMode {
 
     /**
      * Enter the ESCAPE climax (the last shrine just lit): raise corruption to max and decide how the gate
-     * behaves. A BARRING boss round (bossEnabled + bossBarsGate, e.g. Nightmare / Hardcore) spawns the
-     * Warden and holds the Heartwood Gate SHUT - the gate opens later in {@link #tick} the instant the boss
-     * falls. Every other round (no boss, or a non-barring obstacle boss) opens the gate immediately here. If
-     * a barring boss fails to spawn we open the gate anyway, so the escape is never soft-locked.
+     * behaves. A BARRING boss round (bossEnabled + bossBarsGate, e.g. Nightmare / Hardcore) asks for the
+     * Warden and holds the Heartwood Gate SHUT; the gate opens later, from {@code BossEncounterListener},
+     * the instant the framework reports the boss's defeat. Every other round (no boss, or a non-barring
+     * obstacle boss) opens the gate immediately here.
+     *
+     * <p>The barring decision is "an encounter was REQUESTED", not "a boss is standing": the Warden rises
+     * asynchronously, because its chunk at the gate is far from the party and has to be brought up ticking
+     * before an entity can be added there (one added into a cold chunk is unloaded on the spot). So the
+     * request itself bars the gate, and every way the request can fail to become a fight opens it later
+     * from the listener (a refused spawn, the script's own no-show beat, a run ending before a defeat), so
+     * the escape is never soft-locked.
      */
     private static void enterEscape(@Nonnull RoundInstance round, @Nonnull World world,
                                     @Nonnull Store<EntityStore> store, @Nonnull ChaseState chase) {
         chase.setPhase(ChasePhase.ESCAPE);
         chase.setCorruption(1.0);
         boolean barring = round.ruleSet().bossEnabled() && round.ruleSet().bossBarsGate();
-        boolean bossUp = spawnBossIfEnabled(round, world, store);
-        if (barring && bossUp) {
-            // The Warden rose to bar the gate: leave it SHUT. boss.spawn already cued the
-            // "The Warden Awakens / It rose to bar the gate" title; the gate opens on the boss's defeat.
+        boolean bossRequested = requestBoss(round, world);
+        if (barring && bossRequested) {
+            // The Warden was asked for: leave the gate SHUT. The "The Warden Awakens / It rose to bar the
+            // gate" banner is the fight's own Engaged moment; the gate opens on the boss's defeat.
             KweebecNightmarePlugin.LOGGER.atInfo().log(
                     "[Kweebec][win] all shrines lit (" + chase.litShrines() + "/" + chase.totalShrines()
                             + "); the Warden BARS the Heartwood Gate - defeat it to open the escape.");
             return;
         }
-        // No barring boss (or it failed to spawn): open the gate now. A non-barring obstacle boss that just
-        // spawned simply stands beside the open gate.
+        // No barring boss: open the gate now. A non-barring obstacle boss that was asked for simply rises
+        // beside the open gate.
         openGate(round, world, store, chase);
     }
 
     /**
-     * Spawn the round's capstone boss when the rule-set enables one and none is live yet. Returns
-     * {@code true} only when a phase-1 boss entity actually spawned (so a barring round can defer the gate
-     * on it); {@code false} when no boss is enabled, none resolves, or the spawn no-shows - the caller must
-     * then open the gate normally rather than wait on a boss that will never die. World-thread; best-effort.
+     * Ask the framework for the round's Warden encounter when the rule-set enables a boss and none has been
+     * asked for yet. Returns {@code true} when a spawn was REQUESTED (so a barring round can bar the gate on
+     * it); {@code false} when no boss is enabled or the preset names no encounter, in which case the caller
+     * opens the gate normally. A request that fails to rise (the framework refused it, or the round ended
+     * first) opens the gate itself on the world thread, the no-soft-lock fallback. World-thread.
      */
-    private static boolean spawnBossIfEnabled(@Nonnull RoundInstance round, @Nonnull World world,
-                                              @Nonnull Store<EntityStore> store) {
-        if (!round.ruleSet().bossEnabled() || round.bossController() != null) {
+    private static boolean requestBoss(@Nonnull RoundInstance round, @Nonnull World world) {
+        RuleSet rules = round.ruleSet();
+        if (!rules.bossEnabled() || round.bossEncounter() != null) {
             return false;
         }
-        BossController boss = BossController.forRound(round);
-        if (boss == null) {
+        if (rules.bossId() == null || rules.bossId().isBlank()) {
+            KweebecNightmarePlugin.LOGGER.atWarning().log(
+                    "[Kweebec][boss] preset '" + rules.presetId() + "' enables a boss but names no BossId; no boss.");
             return false;
         }
-        round.setBossController(boss);
-        return boss.spawn(round, world, store);
+        BossEncounter.raise(round, world).whenCompleteAsync((rose, error) -> {
+            if (error == null && Boolean.TRUE.equals(rose)) {
+                return;
+            }
+            ChaseState chase = round.chaseState();
+            if (chase == null || round.isResolved()) {
+                return;
+            }
+            KweebecNightmarePlugin.LOGGER.atWarning().log("[Kweebec][boss] the Warden did not rise in round "
+                    + round.roundId() + (error == null ? "" : ": " + error.getMessage())
+                    + "; opening the gate so the escape is not soft-locked.");
+            openGate(round, world, world.getEntityStore().getStore(), chase);
+        }, world);
+        return true;
     }
 
     /**
      * Physically open the Heartwood Gate: reveal the gate prefab, place the exit marker, lock the hunter
      * onto the nearest survivor, and cue the "gate open" beat. Called immediately by {@link #enterEscape}
-     * for a non-barring round, or from {@link #tick} the moment a barring boss is defeated. Idempotent.
+     * for a non-barring round, or from {@code BossEncounterListener} the moment a barring boss is
+     * defeated (or its fight ends without one). Idempotent.
      */
-    private static void openGate(@Nonnull RoundInstance round, @Nonnull World world,
-                                 @Nonnull Store<EntityStore> store, @Nonnull ChaseState chase) {
+    public static void openGate(@Nonnull RoundInstance round, @Nonnull World world,
+                                @Nonnull Store<EntityStore> store, @Nonnull ChaseState chase) {
         if (chase.isGateOpen()) {
             return;
         }

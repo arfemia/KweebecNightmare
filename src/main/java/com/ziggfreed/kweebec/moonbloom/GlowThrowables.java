@@ -37,7 +37,7 @@ public final class GlowThrowables {
     // --- Emberbloom (boss-phase damage) ---
     public static final String EMBER_ITEM = "KweebecNightmare_Emberbloom";
     public static final String EMBER_PLANT = "KweebecNightmare_Emberbloom_Plant";
-    /** Prefab key (one plant block) the BossController/ArenaBuilder pastes for an Emberbloom cluster. */
+    /** Prefab key (one plant block) {@code boss/BossEncounter} pastes through {@code ArenaBuilder} for an Emberbloom cluster. */
     public static final String EMBER_PREFAB = "KweebecNightmare/Emberbloom";
 
     /** The custom DamageCause the Emberbloom burst deals (so the friendly-fire guard can null it on a survivor). */

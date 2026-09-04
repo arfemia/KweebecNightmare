@@ -14,8 +14,8 @@ Real INVENTORY items, not an abstract counter.
   `DamageEffects.Knockback` (Type Point), slow via an `ApplyEffect` step + a slow EntityEffect, damage via a
   real `BaseDamage`. The same gather loop as Moonbloom (item / `_Plant` block / `_Drop` droplist / `/Prefab`
   cluster / throw chain). Distribution: Gust/Mire are DATA-DRIVEN via [`../asset/GroveThrowableConfig`](../asset/CLAUDE.md)
-  (shipped `Enabled:false`); Emberbloom clusters are placed by [`../boss/BossController`](../boss/BossController.java)
-  during the Warden phases. The only Java touch beyond ids is the Emberbloom friendly-fire guard in
+  (shipped `Enabled:false`); Emberbloom clusters are ringed around the Warden by [`../boss/BossEncounter`](../boss/CLAUDE.md)
+  on the fight's engage and each phase change. The only Java touch beyond ids is the Emberbloom friendly-fire guard in
   [`../event/KweebecDamageSystem`](../event/CLAUDE.md) (`EMBER_DAMAGE_CAUSE` nulled on a survivor victim).
 - **Gather** is asset-only: the `Moonbloom_Plant` block's `Gathering.Harvest.DropList`
   (`Server/Drops/KweebecNightmare/KweebecNightmare_Moonbloom_Drop.json`) yields the charge item.

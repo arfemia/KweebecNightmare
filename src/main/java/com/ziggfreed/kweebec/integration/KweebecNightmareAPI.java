@@ -7,8 +7,6 @@ import java.util.function.UnaryOperator;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.ziggfreed.common.instance.encounter.MultiPhaseBossAsset;
-import com.ziggfreed.common.instance.encounter.MultiPhaseBossConfig;
 import com.ziggfreed.kweebec.asset.PresetConfig;
 import com.ziggfreed.common.instance.encounter.EncounterRuleAsset;
 import com.ziggfreed.common.instance.encounter.EncounterRuleConfig;
@@ -61,15 +59,6 @@ public final class KweebecNightmareAPI {
 
     /** Runtime spawn-rules scale (post-transform of the resolved list); {@code null} = identity. */
     private static final AtomicReference<UnaryOperator<List<EncounterRuleAsset>>> SPAWN_RULES_SCALE = new AtomicReference<>(null);
-
-    /** Runtime boss-id override; {@code null} = use the boss id the round requested (or the default). */
-    private static final AtomicReference<String> BOSS_OVERRIDE = new AtomicReference<>(null);
-
-    /** Runtime boss scale (post-transform of the resolved boss); {@code null} = identity. */
-    private static final AtomicReference<UnaryOperator<MultiPhaseBossAsset>> BOSS_SCALE = new AtomicReference<>(null);
-
-    /** Kweebec's default boss id (the corrupted-Kweebec Warden), the resolve fallback. */
-    private static final String DEFAULT_BOSS = "warden";
 
     private KweebecNightmareAPI() {
     }
@@ -261,71 +250,6 @@ public final class KweebecNightmareAPI {
         } catch (Throwable t) {
             SafeLog.warn("[Kweebec][API] spawn-rules scale threw; using unscaled list: " + t.getMessage());
             return base;
-        }
-    }
-
-    // ==================== boss runtime tier (capstone) ====================
-
-    /**
-     * Force the boss id for every subsequent round, replacing whatever the round requested (e.g. an MMO
-     * scripting a bespoke capstone). Pass {@code null} to clear and honor each round's own id again.
-     */
-    public static void overrideBoss(@Nullable String bossId) {
-        BOSS_OVERRIDE.set(bossId == null || bossId.isBlank() ? null : bossId);
-        SafeLog.info("[Kweebec][API] boss override " + (bossId == null ? "cleared" : "set to '" + bossId + "'"));
-    }
-
-    /** The active boss-id override, or {@code null} when none is set. */
-    @Nullable
-    public static String bossOverride() {
-        return BOSS_OVERRIDE.get();
-    }
-
-    /**
-     * Register a runtime transform applied to the resolved {@link MultiPhaseBossAsset} (after any override,
-     * over the static fold). Pass {@code null} to clear.
-     */
-    public static void scaleBoss(@Nullable UnaryOperator<MultiPhaseBossAsset> scale) {
-        BOSS_SCALE.set(scale);
-        SafeLog.info("[Kweebec][API] boss scale " + (scale == null ? "cleared" : "registered"));
-    }
-
-    /** The active boss scale operator, or {@code null} when none is set. */
-    @Nullable
-    public static UnaryOperator<MultiPhaseBossAsset> bossScale() {
-        return BOSS_SCALE.get();
-    }
-
-    /**
-     * Resolve the boss id a round requested to its effective {@link MultiPhaseBossAsset}, composing all
-     * tiers: the runtime boss-id override (if any) replaces the requested id, the ziggfreed-common
-     * {@link MultiPhaseBossConfig} fold ({@code defaults < pack < owner}) resolves it (falling back to the
-     * default Warden for an unknown id), then the registered runtime scale (if any) post-transforms the
-     * result. May return {@code null} when neither the requested id nor the Warden is authored (the boss is
-     * pack JSON now, so a missing pack yields no boss - {@code BossController.forRound} skips it gracefully).
-     * Consumed by {@code boss/BossController}.
-     *
-     * @param bossId the boss id the round requested ({@code null}/blank = the default Warden)
-     */
-    @Nullable
-    public static MultiPhaseBossAsset resolveBoss(@Nullable String bossId) {
-        String override = BOSS_OVERRIDE.get();
-        String effectiveId = override != null ? override : bossId;
-        MultiPhaseBossConfig config = MultiPhaseBossConfig.getInstance();
-        MultiPhaseBossAsset resolved = config.resolve(effectiveId == null || effectiveId.isBlank() ? DEFAULT_BOSS : effectiveId);
-        if (resolved == null) {
-            resolved = config.resolve(DEFAULT_BOSS); // common has no built-in fallback; pin Kweebec's Warden
-        }
-        UnaryOperator<MultiPhaseBossAsset> scale = BOSS_SCALE.get();
-        if (scale == null || resolved == null) {
-            return resolved;
-        }
-        try {
-            MultiPhaseBossAsset scaled = scale.apply(resolved);
-            return scaled != null ? scaled : resolved;
-        } catch (Throwable t) {
-            SafeLog.warn("[Kweebec][API] boss scale threw; using unscaled boss: " + t.getMessage());
-            return resolved;
         }
     }
 }

@@ -1,12 +1,12 @@
 {
-  "$Comment": "Phase 3 of the Warden boss (sub-25% HP, the final desperate phase). Burn=true wreathes it in fire (the enrage signal, mirrors Goblin_Duke_Phase_3_Fast). Fastest CAE + top move speed.",
+  "$Comment": "The Blight Warden's last phase: the Warden encounter script changes the Warden's role to this one, in place, when the second phase's health falls to half. Keep MaxHealth at exactly half the second role's, for the same reason as there: the Warden carries its current health across the change, so this maximum is the health it arrives with and the bar reads full as the phase begins. Burn wreathes it in fire, the sign that it is desperate, and it moves at its fastest.",
   "Type": "Variant",
   "Reference": "Template_KweebecNightmare_Warden",
   "Modify": {
     "DefaultPlayerAttitude": "Hostile",
     "Appearance": "KweebecNightmare_Warden",
     "DropList": "Empty",
-    "MaxHealth": 300,
+    "MaxHealth": 150,
     "Burn": true,
     "IsMemory": false,
     "MaxSpeed": 7.5,

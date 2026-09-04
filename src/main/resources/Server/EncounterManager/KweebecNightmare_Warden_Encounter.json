@@ -1,0 +1,267 @@
+{
+  "$Comment": [
+    "The Blight Warden's fight, run by the game's own encounter scripts. The round stands this script",
+    "up at the Heartwood Gate the moment the last shrine is lit; the script raises the Warden, runs",
+    "its three phases and its adds, and tells the Ziggfreed Common library every beat through the zc:",
+    "signals, which is how the gate opens, how the party's health scale and credit work, and how the",
+    "notices in Server/ZiggfreedCommon/FeedbackMoments/KweebecNightmare_Warden_*.json fire. What the",
+    "server owes for the fight (the party scale, the notices, the map marker) is the binding row",
+    "Server/ZiggfreedCommon/Encounters/KweebecNightmare_Warden_Encounter.json; nothing about the fight itself",
+    "is written anywhere but here and in the three Warden roles.",
+    "",
+    "The shape follows Ziggfreed Common's Zc_Encounter_Base and adds the phase states the base leaves",
+    "to a script of its own. The first three instructions run every tick beside whatever state the",
+    "fight is in: the Player sensor keeps the roster the boss bar, the scale and the credit read;",
+    "TriggerSpawners raises the Warden from the KweebecNightmare_Warden_Marker spawn marker while",
+    "the fight is in Intro and no boss is bound yet (the round stamps that marker and the four",
+    "Blight markers into the ground at the gate as blocks when the grove is built, so the markers are",
+    "already standing here); and the release, on the Target sensor alone, makes the Warden",
+    "vulnerable, puts the bar up under its name, sends zc:engaged and moves into Phase_1. The",
+    "release keys on the bound boss and never on a beacon, so the Warden role does not have to send",
+    "one.",
+    "",
+    "Intro also carries the fight's one safety net: if no Warden has bound within the Timeout below",
+    "(twenty seconds; a missing marker, a role that failed to load), the script sends",
+    "zc:kweebec:no_show and retires to Complete, and the round opens the gate rather than leave the",
+    "party barred behind a boss that never came. The countdown stops the instant a boss binds.",
+    "",
+    "The phases. Phase_1 is the Warden as spawned. At half its health it sheds its bark: the role",
+    "changes in place to KweebecNightmare_Warden_Phase2 (the engine keeps its aggro, its target",
+    "slot and its current health across the change; only the maximum re-rolls), zc:phase:Phase_2",
+    "goes out, and the first wave of two Blighted Kweebec rises from the Blight markers. At half of",
+    "what it carried into Phase_2 it changes to KweebecNightmare_Warden_Phase3, wreathed in fire,",
+    "with a wave of three. Each phase role's MaxHealth is authored as the health the Warden carries",
+    "into that phase, so the bar reads full at every phase start and the three phases together add",
+    "up to the first role's 600; retune the first role to lengthen the whole fight, retune",
+    "HealthRange here to move where the phases begin. Count on the waves is how many Blight markers",
+    "fire; a marker whose spawn is still alive does not fire again, so four stamped markers cap the",
+    "live adds at four however the waves fall.",
+    "",
+    "The defeat beat sits in every phase, because the Warden can fall in any of them: when the Target",
+    "sensor loses the boss the bar comes down, the slot is released, zc:defeated goes out and the",
+    "script retires to Complete. The library settles the credit the instant the death lands, so the",
+    "beat here is the authoritative place the bar comes down. Complete is terminal on purpose: the",
+    "round world is torn down seconds after the fight, so there is nothing to re-arm for and a",
+    "second fight would only be noise.",
+    "",
+    "Every Target sensor reaches 256 blocks from the encounter entity at the gate, which covers the",
+    "whole grove: the Warden hunts wherever the party runs and must never drop out of the fight for",
+    "being far from where it rose. There is no fight music here; the round already keeps its own",
+    "dread bed playing on every survivor's client.",
+    "",
+    "Override this file by id from your own pack to change the fight for every server, or retune",
+    "the Warden roles under Server/NPC/Roles/KweebecNightmare for the numbers alone. Keep the file",
+    "name distinct from every NPC role's: an encounter script and a role share one id namespace, and",
+    "a script named after a role replaces that role at load."
+  ],
+  "Class": "EncounterManager",
+  "Type": "Generic",
+  "StartState": "Intro",
+  "CleanupOnRemove": true,
+  "Instructions": [
+    {
+      "Continue": true,
+      "Sensor": {
+        "Type": "Player",
+        "Range": 64,
+        "Collector": {
+          "Type": "EncounterMembers"
+        }
+      },
+      "Actions": [
+        {
+          "Type": "Nothing"
+        }
+      ]
+    },
+    {
+      "Continue": true,
+      "Sensor": {
+        "Type": "And",
+        "Sensors": [
+          {
+            "Type": "State",
+            "State": "Intro"
+          },
+          {
+            "Type": "Not",
+            "Sensor": {
+              "Type": "Target",
+              "TargetSlot": "Boss",
+              "Range": 256
+            }
+          }
+        ]
+      },
+      "Actions": [
+        {
+          "Type": "TriggerSpawners",
+          "Count": 1,
+          "Range": 30,
+          "SpawnMarker": "KweebecNightmare_Warden_Marker",
+          "TargetSlot": "Boss",
+          "Rebind": true
+        }
+      ]
+    },
+    {
+      "Sensor": {
+        "Type": "State",
+        "State": "Intro"
+      },
+      "Instructions": [
+        {
+          "Sensor": {
+            "Type": "Target",
+            "TargetSlot": "Boss",
+            "Range": 256
+          },
+          "Actions": [
+            {
+              "Type": "SetTargetNPCInvulnerable",
+              "Invulnerable": false
+            },
+            {
+              "Type": "SetEncounterBossBar",
+              "Name": "kweebecnightmare.npc.warden.name"
+            },
+            {
+              "Type": "SignalWorldEvent",
+              "SignalId": "zc:engaged"
+            },
+            {
+              "Type": "State",
+              "State": "Phase_1"
+            }
+          ]
+        },
+        {
+          "Sensor": {
+            "Type": "Not",
+            "Sensor": {
+              "Type": "Target",
+              "TargetSlot": "Boss",
+              "Range": 256
+            }
+          },
+          "ActionsBlocking": true,
+          "Actions": [
+            {
+              "Type": "Timeout",
+              "Delay": [ 20, 20 ]
+            },
+            {
+              "Type": "SignalWorldEvent",
+              "SignalId": "zc:kweebec:no_show"
+            },
+            {
+              "Type": "State",
+              "State": "Complete"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "Sensor": {
+        "Type": "State",
+        "State": "Phase_1"
+      },
+      "Instructions": [
+        {
+          "Reference": "Zc_Phase_At_Health",
+          "Modify": {
+            "_ExportStates": [ "Phase_2" ],
+            "Slot": "Boss",
+            "Range": 256,
+            "HealthRange": [ 0, 0.5 ],
+            "Signal": "zc:phase:Phase_2",
+            "SwapRole": true,
+            "Role": "KweebecNightmare_Warden_Phase2"
+          }
+        },
+        {
+          "Reference": "Zc_Defeat_Beat",
+          "Modify": {
+            "_ExportStates": [ "Complete" ],
+            "Slot": "Boss",
+            "Range": 256
+          }
+        }
+      ]
+    },
+    {
+      "Sensor": {
+        "Type": "State",
+        "State": "Phase_2"
+      },
+      "Instructions": [
+        {
+          "Reference": "Zc_Adds_Wave",
+          "Modify": {
+            "Spawner": "KweebecNightmare_Blight_Marker",
+            "Count": 2,
+            "Range": 30,
+            "Signal": "zc:wave:Phase_2"
+          }
+        },
+        {
+          "Reference": "Zc_Phase_At_Health",
+          "Modify": {
+            "_ExportStates": [ "Phase_3" ],
+            "Slot": "Boss",
+            "Range": 256,
+            "HealthRange": [ 0, 0.5 ],
+            "Signal": "zc:phase:Phase_3",
+            "SwapRole": true,
+            "Role": "KweebecNightmare_Warden_Phase3"
+          }
+        },
+        {
+          "Reference": "Zc_Defeat_Beat",
+          "Modify": {
+            "_ExportStates": [ "Complete" ],
+            "Slot": "Boss",
+            "Range": 256
+          }
+        }
+      ]
+    },
+    {
+      "Sensor": {
+        "Type": "State",
+        "State": "Phase_3"
+      },
+      "Instructions": [
+        {
+          "Reference": "Zc_Adds_Wave",
+          "Modify": {
+            "Spawner": "KweebecNightmare_Blight_Marker",
+            "Count": 3,
+            "Range": 30,
+            "Signal": "zc:wave:Phase_3"
+          }
+        },
+        {
+          "Reference": "Zc_Defeat_Beat",
+          "Modify": {
+            "_ExportStates": [ "Complete" ],
+            "Slot": "Boss",
+            "Range": 256
+          }
+        }
+      ]
+    },
+    {
+      "Sensor": {
+        "Type": "State",
+        "State": "Complete"
+      },
+      "Actions": [
+        {
+          "Type": "Nothing"
+        }
+      ]
+    }
+  ]
+}

@@ -30,7 +30,7 @@
     "KweebecNightmare_Emberbloom": 5
   },
   "BossEnabled": true,
-  "BossId": "warden",
+  "BossId": "KweebecNightmare_Warden_Encounter",
   "BossBarsGate": true,
   "BossMarker": true,
   "BossHealthMultiplier": 1.0,

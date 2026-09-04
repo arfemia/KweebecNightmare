@@ -29,7 +29,7 @@
   "RequiredPlugins": {},
   "GameMode": "Adventure",
   "IsSpawningNPC": false,
-  "IsSpawnMarkersEnabled": false,
+  "IsSpawnMarkersEnabled": true,
   "IsAllNPCFrozen": false,
   "IsCompassUpdating": false,
   "IsSavingPlayers": false,

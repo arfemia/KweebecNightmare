@@ -96,14 +96,11 @@ public final class Lang {
     /** The shrine-discovery marker placed on a survivor's map when they first touch a shrine furnace. */
     public static final String MARKER_SHRINE = "kweebecnightmare.marker.shrine";
 
-    // Boss capstone (the corrupted-Kweebec Warden): NPC name, the boss HUD label + phase indicator, and
-    // the spawn banner + roar toast. The phase indicator interpolates {0}=current phase, {1}=total phases.
+    // Boss capstone (the Blight Warden): its name, shown on the native boss bar (the encounter script names
+    // the key), the world-map marker (boss/BossEncounter) and the three Warden roles. The fight's banner and
+    // toasts (boss.title.* / boss.toast.*) are named by the KweebecNightmare_Warden_* FeedbackMoment assets,
+    // never from Java, so they carry no constant here.
     public static final String NPC_WARDEN = "kweebecnightmare.npc.warden.name";
-    public static final String BOSS_HUD_PHASE = "kweebecnightmare.boss.hud.phase";
-    public static final String BOSS_TITLE_AWAKENS = "kweebecnightmare.boss.title.awakens";
-    public static final String BOSS_TITLE_AWAKENS_SUB = "kweebecnightmare.boss.title.awakens.sub";
-    public static final String BOSS_TOAST_PHASE = "kweebecnightmare.boss.toast.phase";
-    public static final String BOSS_TOAST_DEFEATED = "kweebecnightmare.boss.toast.defeated";
 
     // --- Clash / Domination (PvP) ---
     // Match title banners (start / win / lose / draw) + the team names used as title args.

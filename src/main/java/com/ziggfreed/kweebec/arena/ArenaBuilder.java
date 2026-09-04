@@ -79,6 +79,20 @@ public final class ArenaBuilder {
     private static final String[] SHAFT_PREFABS = {
             "KweebecNightmare/Relight_Shaft",  // spiral staircase (the runtime force-carved cave style)
     };
+    /**
+     * The Warden's spawn markers, stamped as BLOCKS at {@link ArenaLayout#GATE}: one
+     * {@code KweebecNightmare_Warden_Spawner} the Warden rises from and four
+     * {@code KweebecNightmare_Blight_Spawner} its adds rise from, each a block whose
+     * {@code SpawnMarkerBlock} component keeps a live manual-trigger spawn marker standing over it. The
+     * native encounter script the round stands up at the same anchor fires them ({@code TriggerSpawners}
+     * measures its range from the encounter entity, so the five blocks sit within a few blocks of it, all
+     * inside the encounter's own chunk, which the framework keeps ticking while the fight is open). Stamped
+     * at arena build rather than at the escape beat: a manual marker never spawns on its own, so an early
+     * stamp costs nothing and the markers have long synthesized by the time the fight asks for them. Rides
+     * the objective re-paste loop because a marker block clobbered by chunk generation would mean a fight
+     * with nothing to raise.
+     */
+    private static final String WARDEN_SPAWNERS_PREFAB = "KweebecNightmare/Warden_Spawners";
 
     /** The single Moonbloom plant prefab (one harvestable glowing-mushroom block, floor-snapped per paste). */
     private static final String MOONBLOOM_PREFAB = "KweebecNightmare/Moonbloom";
@@ -114,8 +128,9 @@ public final class ArenaBuilder {
      * The foliage-skip block-key set ({@link #SURFACE_DECORATION_LISTS}, resolved + cached via
      * {@link BlockTypeLists}): the worldgen-scattered trees and ground scatter a runtime surface probe must
      * scan PAST to reach the genuine ground under the grove canopy. The ONE authority any runtime
-     * spawn/paste shares (the arena pastes, the hunter spawn, and the boss spawn) so a placement never
-     * anchors on a tree trunk or a leaf. World-thread / post-asset-load (the engine lists resolve lazily).
+     * spawn/paste shares (the arena pastes, the hunter spawn, and the Warden encounter's rise point) so a
+     * placement never anchors on a tree trunk or a leaf. World-thread / post-asset-load (the engine lists
+     * resolve lazily).
      */
     @Nonnull
     public static Set<String> surfaceDecorationKeys() {
@@ -243,9 +258,9 @@ public final class ArenaBuilder {
 
     /**
      * Paste {@code count} of {@code prefabKey} in a ring of {@code radius} blocks around {@code (cx, cz)},
-     * each floor-snapped to the local surface - the boss-phase Emberbloom cluster placer ({@code BossController}
-     * rings these around the Warden, mirroring its {@code summonAdds} ring math). Best-effort + thread-safe
-     * like {@link #plantClusters} (blocking load off-thread, each paste hops to the world thread).
+     * each floor-snapped to the local surface - the boss-phase Emberbloom cluster placer
+     * ({@code boss/BossEncounter} rings these around the Warden as each phase begins). Best-effort +
+     * thread-safe like {@link #plantClusters} (blocking load off-thread, each paste hops to the world thread).
      */
     public static void plantClusterRing(@Nonnull World world, @Nonnull String prefabKey,
                                         double cx, double cz, double radius, int count) {
@@ -363,9 +378,24 @@ public final class ArenaBuilder {
                     pasteCaveShaft(world, shaft, caves.get(caveIndex), caveIndex, chase);
                 }
             }
+            pasteWardenSpawners(world);
         } catch (Throwable t) {
             KweebecNightmarePlugin.LOGGER.atWarning().log(
                     "[Kweebec] arena objective paste failed: " + t.getMessage());
+        }
+    }
+
+    /**
+     * Stamp the Warden's spawn-marker blocks at the gate ({@link #WARDEN_SPAWNERS_PREFAB}), floor-snapped to
+     * the surface at the anchor and {@code force}d so the five cells are written whatever the worldgen put
+     * there (a bramble on a tree cell is still a bramble). Idempotent: re-stamping the same blocks on the
+     * same cells is how the re-paste loop beats a chunk-generation clobber. A missing prefab is logged; the
+     * fight then has nothing to raise and its own no-show beat opens the gate, so the round still ends.
+     */
+    private static void pasteWardenSpawners(@Nonnull World world) {
+        IPrefabBuffer spawners = load(WARDEN_SPAWNERS_PREFAB);
+        if (spawners != null) {
+            paste(world, spawners, ArenaLayout.GATE, true, true);
         }
     }
 

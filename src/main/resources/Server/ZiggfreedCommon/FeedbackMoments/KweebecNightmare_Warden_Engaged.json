@@ -1,0 +1,27 @@
+{
+  "$Comment": [
+    "What the party sees the moment the Blight Warden rises to bar the Heartwood Gate: the big",
+    "banner, its title and its line underneath. The Warden's binding row points its Engaged beat here",
+    "(Server/ZiggfreedCommon/Encounters/KweebecNightmare_Warden_Encounter.json, Feedback.Engaged), so these",
+    "words belong to this one fight and no other encounter borrows them.",
+    "",
+    "The moment fires once per member of the fight. The banner is kept to the world the fight is in",
+    "(SameWorldOnly, and a chase round has a world of its own), always reaches the members themselves",
+    "(ToParticipants), and shows once a minute per fight however many members fire it",
+    "(MinSecondsBetween), so every survivor sees it exactly once. Add a Toast group for a quieter",
+    "notice beside the banner, or a Sound for a sting; the round's own dread music keeps playing",
+    "underneath either way."
+  ],
+  "Broadcast": {
+    "Title": {
+      "Key": "kweebecnightmare.boss.title.awakens"
+    },
+    "Secondary": {
+      "Key": "kweebecnightmare.boss.title.awakens.sub"
+    },
+    "Major": true,
+    "ToParticipants": true,
+    "SameWorldOnly": true,
+    "MinSecondsBetween": 60
+  }
+}

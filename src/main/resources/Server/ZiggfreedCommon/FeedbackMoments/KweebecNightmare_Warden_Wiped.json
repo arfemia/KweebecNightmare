@@ -1,0 +1,18 @@
+{
+  "$Comment": [
+    "What a participant sees when the night ends with the Blight Warden still standing: the party",
+    "was caught or the clock ran out with the fight open, and the round tore the fight down. The",
+    "Warden's binding row points its Wiped beat here (Feedback.Wiped), so the words belong to this",
+    "fight alone.",
+    "",
+    "A quiet line in the plain tone, on purpose: the round has already told the party how the night",
+    "ended, and this only says who kept the gate. It fires once per participant and carries 'share'",
+    "and 'seconds' should a line want them."
+  ],
+  "Toast": {
+    "Title": {
+      "Key": "kweebecnightmare.boss.toast.wiped"
+    },
+    "Tone": "Info"
+  }
+}

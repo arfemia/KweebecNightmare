@@ -1,0 +1,68 @@
+{
+  "$Comment": "A bramble knot that keeps the Warden's spawn marker alive: the SpawnMarkerBlock component below stands the KweebecNightmare_Warden_Marker entity one block above wherever this block is placed, and the Warden encounter script fires that marker when the fight begins. The round stamps one of these at the Heartwood Gate from the KweebecNightmare/Warden_Spawners prefab; place one by hand to raise the Warden somewhere else, or change SpawnMarker to hang another marker off the same block. It carries no Gathering group and no Support rule on purpose, so nobody can harvest it away and it never pops off uneven ground before the fight.",
+  "TranslationProperties": {
+    "Name": "kweebecnightmare.item.warden_spawner.name"
+  },
+  "Categories": [
+    "Blocks.Plants"
+  ],
+  "Interactions": {
+    "Primary": "Block_Primary",
+    "Secondary": "Block_Secondary"
+  },
+  "BlockType": {
+    "BlockEntity": {
+      "Components": {
+        "SpawnMarkerBlock": {
+          "Config": {
+            "SpawnMarker": "KweebecNightmare_Warden_Marker",
+            "MarkerOffset": {
+              "X": 0,
+              "Y": 1,
+              "Z": 0
+            }
+          }
+        }
+      }
+    },
+    "DrawType": "Model",
+    "CustomModel": "Blocks/Foliage/Plants/Bramble_Ball.blockymodel",
+    "CustomModelTexture": [
+      {
+        "Texture": "Blocks/Foliage/Plants/Bramble_Ball_Texture.png",
+        "Weight": 1
+      }
+    ],
+    "CustomModelScale": 1.2,
+    "Opacity": "Transparent",
+    "Group": "Plant",
+    "HitboxType": "Plant_Large",
+    "Flags": {},
+    "RandomRotation": "YawStep1",
+    "BlockParticleSetId": "Grass",
+    "ParticleColor": "#6a4a2a",
+    "BlockSoundSetId": "Bush",
+    "PhysicalMaterialId": "Foliage",
+    "TextureComputedColor": "#927412"
+  },
+  "PlayerAnimationsId": "Item",
+  "Icon": "Icons/ItemsGenerated/Plant_Flower_Bushy_Yellow.png",
+  "IconProperties": {
+    "Scale": 0.54,
+    "Translation": [
+      -2.4,
+      -14.4
+    ],
+    "Rotation": [
+      22.5,
+      65.25,
+      22.5
+    ]
+  },
+  "Tags": {
+    "Type": [
+      "Plant"
+    ]
+  },
+  "ItemSoundSetId": "ISS_Items_Foliage"
+}

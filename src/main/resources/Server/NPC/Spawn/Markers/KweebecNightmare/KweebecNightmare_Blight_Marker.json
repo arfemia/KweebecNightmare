@@ -1,0 +1,16 @@
+{
+  "$Comment": "The spawn marker the Warden's Blighted Kweebec adds rise from. ManualTrigger means it never spawns on its own: the Warden encounter script fires it with each phase's wave, and a marker whose spawn is still alive does not fire again, so how many of these stand in the arena is the cap on live adds (the round stamps four, as KweebecNightmare_Blight_Spawner blocks around the gate). Respawn is real time because the chase world's game clock is paused; once a spawned add dies the marker is free to fire on the next wave after this many seconds. MaxDropHeight is generous because the marker floats two blocks over its spawner block, on ground that rolls.",
+  "Model": "NPC_Spawn_Marker",
+  "NPCs": [
+    {
+      "Name": "KweebecNightmare_Blight",
+      "Weight": 10,
+      "RealtimeRespawnTime": 5
+    }
+  ],
+  "ExclusionRadius": 0,
+  "RealtimeRespawn": true,
+  "MaxDropHeight": 8,
+  "DeactivationDistance": 256,
+  "ManualTrigger": true
+}

@@ -1,12 +1,12 @@
 {
-  "$Comment": "Phase 2 of the Warden boss (sub-50% HP). BossController swaps the live entity to this role on the HP threshold; the swap re-rolls HP to this MaxHealth, so the phase fraction the HUD shows is per-phase. Faster CAE + a touch faster move speed.",
+  "$Comment": "The Blight Warden's second phase: the Warden encounter script changes the Warden's role to this one, in place, when the first role's health falls to half (the script's own HealthRange). Keep MaxHealth at exactly half the first role's: the engine carries the Warden's current health across the change and only re-rolls the maximum, so a maximum equal to the health it arrives with reads as a full bar at the phase's start and costs it nothing; lower and the Warden loses the difference the moment the phase begins, higher and the bar reads part-empty from the first tick. A touch faster on its feet than the first phase.",
   "Type": "Variant",
   "Reference": "Template_KweebecNightmare_Warden",
   "Modify": {
     "DefaultPlayerAttitude": "Hostile",
     "Appearance": "KweebecNightmare_Warden",
     "DropList": "Empty",
-    "MaxHealth": 450,
+    "MaxHealth": 300,
     "Burn": false,
     "IsMemory": false,
     "MaxSpeed": 7.0,

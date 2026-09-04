@@ -15,7 +15,7 @@ import com.hypixel.hytale.server.core.universe.world.World;
 import com.ziggfreed.common.instance.arena.ArenaDefinitionAsset;
 import com.ziggfreed.common.worldmap.MapDiscovery;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
-import com.ziggfreed.kweebec.boss.BossController;
+import com.ziggfreed.kweebec.boss.BossEncounter;
 import com.ziggfreed.kweebec.hunter.HunterController;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
 
@@ -102,7 +102,7 @@ public final class RoundInstance {
     @Nullable
     private volatile HunterController hunterController;
     @Nullable
-    private volatile BossController bossController;
+    private volatile BossEncounter bossEncounter;
     /** Shrine-discovery map markers for this round, created + attached when {@code shrineDiscovery != OFF}. */
     @Nullable
     private volatile MapDiscovery mapDiscovery;
@@ -377,16 +377,17 @@ public final class RoundInstance {
     }
 
     /**
-     * The boss-capstone controller for this round, set when {@code ChaseMode.openGate} spawns the multi-phase
-     * Warden (only on a {@code bossEnabled} round). {@code null} on a round without a boss.
+     * The round's handle on its Warden fight (the native encounter the framework stood up at the gate plus
+     * its run id), set once {@code BossEncounter.raise} completes at the escape beat of a
+     * {@code bossEnabled} round. {@code null} on a round without a boss, and until the encounter is up.
      */
     @Nullable
-    public BossController bossController() {
-        return bossController;
+    public BossEncounter bossEncounter() {
+        return bossEncounter;
     }
 
-    public void setBossController(@Nullable BossController bossController) {
-        this.bossController = bossController;
+    public void setBossEncounter(@Nullable BossEncounter bossEncounter) {
+        this.bossEncounter = bossEncounter;
     }
 
     /**
