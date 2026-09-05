@@ -7,7 +7,7 @@ A standalone co-op horror minigame for Hytale, set in a Void-blighted Emerald Gr
 
 1-4 player co-op, or solo against the AI.
 
-> **Status: in development (mod-jam build).** The Chase round ("Relight & Escape") is built end to end and the server build is green; it has not been playtested in a live server yet. The top-down survival mode is next. See [the changelog](CHANGELOG.md) and [patch notes](patch-notes/) for what is live.
+> **Status: 1.2.0 is built and held for release; 1.1.2 is the last public build.** The Chase round ("Relight & Escape") is complete: the Warden fights three phases on the game's own boss bar, the hunters arrive on a schedule and the Heartwood Gate opens on the killing blow, all of it on the game's encounter scripts through Ziggfreed's CommonLib 2.1.0 or newer. The three-phase fight and the scheduled waves are waiting on a live play session before the build ships. The top-down survival mode is next. See [the changelog](CHANGELOG.md) and [patch notes](patch-notes/) for what is live.
 
 ## The chase loop (Relight & Escape)
 
