@@ -5,10 +5,105 @@
   "anchorY": 0,
   "anchorZ": 0,
   "blocks": [
-    { "x": 0, "y": 1, "z": 0, "name": "KweebecNightmare_Warden_Spawner" },
-    { "x": 3, "y": 1, "z": 3, "name": "KweebecNightmare_Blight_Spawner" },
-    { "x": 3, "y": 1, "z": -3, "name": "KweebecNightmare_Blight_Spawner" },
-    { "x": 7, "y": 1, "z": 2, "name": "KweebecNightmare_Blight_Spawner" },
-    { "x": 7, "y": 1, "z": -2, "name": "KweebecNightmare_Blight_Spawner" }
+    {
+      "x": 0,
+      "y": 1,
+      "z": 0,
+      "name": "KweebecNightmare_Warden_Spawner",
+      "components": {
+        "Components": {
+          "SpawnMarkerBlock": {
+            "Config": {
+              "SpawnMarker": "KweebecNightmare_Warden_Marker",
+              "MarkerOffset": {
+                "X": 0,
+                "Y": 1,
+                "Z": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "x": 3,
+      "y": 1,
+      "z": 3,
+      "name": "KweebecNightmare_Blight_Spawner",
+      "components": {
+        "Components": {
+          "SpawnMarkerBlock": {
+            "Config": {
+              "SpawnMarker": "KweebecNightmare_Blight_Marker",
+              "MarkerOffset": {
+                "X": 0,
+                "Y": 2,
+                "Z": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "x": 3,
+      "y": 1,
+      "z": -3,
+      "name": "KweebecNightmare_Blight_Spawner",
+      "components": {
+        "Components": {
+          "SpawnMarkerBlock": {
+            "Config": {
+              "SpawnMarker": "KweebecNightmare_Blight_Marker",
+              "MarkerOffset": {
+                "X": 0,
+                "Y": 2,
+                "Z": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "x": 7,
+      "y": 1,
+      "z": 2,
+      "name": "KweebecNightmare_Blight_Spawner",
+      "components": {
+        "Components": {
+          "SpawnMarkerBlock": {
+            "Config": {
+              "SpawnMarker": "KweebecNightmare_Blight_Marker",
+              "MarkerOffset": {
+                "X": 0,
+                "Y": 2,
+                "Z": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "x": 7,
+      "y": 1,
+      "z": -2,
+      "name": "KweebecNightmare_Blight_Spawner",
+      "components": {
+        "Components": {
+          "SpawnMarkerBlock": {
+            "Config": {
+              "SpawnMarker": "KweebecNightmare_Blight_Marker",
+              "MarkerOffset": {
+                "X": 0,
+                "Y": 2,
+                "Z": 0
+              }
+            }
+          }
+        }
+      }
+    }
   ]
 }
