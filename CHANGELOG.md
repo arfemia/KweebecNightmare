@@ -2,7 +2,7 @@
 
 Developer changelog for Kweebec Nightmare. User-facing release notes live in `patch-notes/`.
 
-## 1.2.0 - unreleased
+## 1.2.0 - 2026-09-12
 
 The Blight Warden fight and the hunter waves run on the game's own encounter scripts and Ziggfreed Common's encounter framework. Requires Ziggfreed Common 2.1.0 or newer.
 
