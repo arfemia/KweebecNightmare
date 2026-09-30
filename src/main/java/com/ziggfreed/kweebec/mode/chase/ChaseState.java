@@ -27,8 +27,7 @@ import com.ziggfreed.kweebec.round.RuleSet;
  * mode. We never pre-compute shrine positions: the furnace's own {@code Use} RootInteraction fires from
  * the placed block, and {@link #shrineForBlock} lazily registers a {@link ShrineState} keyed by that block
  * position the first time a survivor offers Moonbloom at it. The win is a COUNT ({@link #allShrinesLit});
- * the total is known up front from the deterministic worldgen/carve placement. See
- * [[kweebec-worldgen-both-seams]] (the objective-as-block correction).
+ * the total is known up front from the deterministic worldgen/carve placement.
  */
 public final class ChaseState {
 

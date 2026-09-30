@@ -10,7 +10,7 @@ a Void-blight equivalent.
 Why a build-time DATA edit (no engine hook): PrefabUtil.paste reads the block
 "name" straight out of the prefab buffer (PrefabUtil.java:156-194); there is NO
 per-cell repaint hook at paste time, so a recolor MUST live in the prefab file.
-The committed Corrupted_* outputs mean the runtime never touches hytale-resources.
+The committed Corrupted_* outputs mean the runtime never touches hytale-shared-source.
 
 Determinism: when a source block maps to a SET of blight targets, the pick is a
 hash of (x, y, z). The same structure looks identical every run; NO random module.
@@ -38,7 +38,7 @@ paste does not load them, but zeroing them is belt-and-suspenders.
 Usage:
   python repaint_kweebec_prefab.py <source.prefab.json> <OutName>
     e.g. python repaint_kweebec_prefab.py \
-         ../../../hytale-resources/.../Kweebec_Oak_Well_001.prefab.json Well
+         ../../../hytale-shared-source/HytaleAssets/Server/Prefabs/Npc/Kweebec/Oak/Well/Kweebec_Oak_Well_001.prefab.json Well
     writes ../src/main/resources/Server/Prefabs/KweebecNightmare/Corrupted_Well.prefab.json
 
   python repaint_kweebec_prefab.py --all
@@ -59,11 +59,11 @@ from typing import Dict, List, Optional, Set, Tuple
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # tools/ -> kweebec-nightmare/ -> additional-mods/ -> hyMMO/
 HYMMO_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "..", ".."))
-RESOURCES = os.path.join(HYMMO_ROOT, "hytale-resources")
-BLOCKTYPELIST_DIR = os.path.join(RESOURCES, "assets", "Server", "BlockTypeList")
-ITEMS_INDEX = os.path.join(RESOURCES, "items-index.json")
+RESOURCES = os.path.join(HYMMO_ROOT, "hytale-shared-source")
+BLOCKTYPELIST_DIR = os.path.join(RESOURCES, "HytaleAssets", "Server", "BlockTypeList")
+ITEMS_DIR = os.path.join(RESOURCES, "HytaleAssets", "Server", "Item", "Items")
 NATIVE_KWEEBEC = os.path.join(
-    RESOURCES, "assets", "Server", "Prefabs", "Npc", "Kweebec"
+    RESOURCES, "HytaleAssets", "Server", "Prefabs", "Npc", "Kweebec"
 )
 PACK_PREFAB_DIR = os.path.join(
     SCRIPT_DIR, "..", "src", "main", "resources", "Server", "Prefabs", "KweebecNightmare"
@@ -202,7 +202,7 @@ def _wood_suffix(name: str) -> Optional[str]:
 
 
 def build_valid_id_set() -> Set[str]:
-    """Union of every BlockTypeList id + every items-index id."""
+    """Union of every BlockTypeList id + every vanilla item id (item id = file name)."""
     ids: Set[str] = set()
 
     if not os.path.isdir(BLOCKTYPELIST_DIR):
@@ -222,16 +222,11 @@ def build_valid_id_set() -> Set[str]:
                         ids.add(b[k])
                         break
 
-    if os.path.isfile(ITEMS_INDEX):
-        try:
-            d = json.load(open(ITEMS_INDEX, encoding="utf-8"))
-            for it in d.get("items", []):
-                if isinstance(it, dict) and "id" in it:
-                    ids.add(it["id"])
-        except Exception as e:  # noqa: BLE001
-            print(f"WARN: could not parse items-index.json: {e}", file=sys.stderr)
+    if os.path.isdir(ITEMS_DIR):
+        for f in glob.glob(os.path.join(ITEMS_DIR, "**", "*.json"), recursive=True):
+            ids.add(os.path.splitext(os.path.basename(f))[0])
     else:
-        print(f"WARN: items-index.json not found at {ITEMS_INDEX}; "
+        print(f"WARN: vanilla item assets not found at {ITEMS_DIR}; "
               f"validation rests on BlockTypeList only (incomplete).", file=sys.stderr)
 
     if not ids:
