@@ -5,6 +5,7 @@ Co-op horror minigame mod (Relight & Escape chase, one instance world per round)
 ## Build and dependencies
 
 - Build with `.\build.ps1` (`-Install:$false` builds only; `-ModsDir` overrides `HYTALE_MODS_DIR`). Release the plain `build.ps1` jar.
+- `gradle/deprecation-gate.gradle` (run by `check`) is hyMMO's, copied byte for byte: it changes only by copying hyMMO's.
 - Perfect Utils and `ziggfreed-common` are hard runtime deps compiled `compileOnly`: install both jars in `Mods/` or the load fails. `perfectUtilsJar` points at the Developer-Utils build output, which is the maintainer's own mod: when an engine update breaks it, rebuilding it is our work, never an external wait. `ziggfreedCommonJar` is a relative path that works from a worktree pair; `-PziggfreedCommonJar=` overrides it.
 - The `api/` event POJOs are for third parties and are bundled into the jar minus `META-INF/services`; never bundle the MMO api jar.
 
