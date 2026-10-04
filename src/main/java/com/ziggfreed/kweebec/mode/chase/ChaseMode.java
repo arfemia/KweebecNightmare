@@ -19,11 +19,11 @@ import com.hypixel.hytale.server.core.modules.entity.component.TransformComponen
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
-import com.hypixel.hytale.server.core.universe.world.chunk.BlockOperations;
 import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.ziggfreed.common.instance.zone.ZoneHoldTimer;
 import com.ziggfreed.common.sound.BlockStateSound;
+import com.ziggfreed.common.world.BlockOps;
 import com.ziggfreed.common.worldmap.MapDiscovery;
 import com.ziggfreed.common.worldmap.WorldMapMarkers;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
@@ -323,9 +323,12 @@ public final class ChaseMode {
     }
 
     /**
-     * Switch a shrine's furnace block to its {@code "lit"} interaction state (green fire), once. No-ops if
-     * the block position is unset, the chunk is not yet queryable, or the cell is no longer the shrine
-     * furnace (so the per-tick reconciler retries next tick). World-thread only; best-effort.
+     * Switch a shrine's furnace block to its {@link Shrine#LIT_STATE} interaction state (green fire), once.
+     * No-ops if the block position is unset, the furnace's section is not resident (this never loads a
+     * chunk), or the cell is no longer the shrine furnace, so the per-tick reconciler retries next tick; the
+     * shrine counts as rendered only once the write went through. The read and the write go through
+     * Ziggfreed Common's {@code BlockOps}, never a {@code World} block accessor, which Update 7 removes.
+     * World-thread only; best-effort.
      */
     private static void renderLit(@Nonnull World world, @Nonnull ShrineState shrine) {
         Vector3i p = shrine.blockPos();
@@ -333,17 +336,15 @@ public final class ChaseMode {
             return;
         }
         try {
-            BlockType bt = world.getBlockType(p.x(), p.y(), p.z());
+            ChunkStore chunkStore = world.getChunkStore();
+            String blockId = BlockOps.blockItemIdAt(chunkStore, p.x(), p.y(), p.z());
+            BlockType bt = blockId != null ? BlockType.getAssetMap().getAsset(blockId) : null;
             if (bt == null || bt.getData() == null || bt.getBlockForState(Shrine.LIT_STATE) == null) {
-                return; // chunk not ready / not the shrine block; retry next reconcile tick
+                return; // section not resident / not the shrine block; retry next reconcile tick
             }
-            Ref<ChunkStore> sectionRef = world.getChunkStore().getChunkSectionReferenceAtBlock(p.x(), p.y(), p.z());
-            if (sectionRef == null || !sectionRef.isValid()) {
-                return; // section not resident; retry next reconcile tick
+            if (BlockOps.setInteractionState(chunkStore, p.x(), p.y(), p.z(), Shrine.LIT_STATE, false)) {
+                shrine.setLitRendered(true);
             }
-            BlockOperations.setBlockInteractionState(world.getChunkStore(), sectionRef, p.x(), p.y(), p.z(), bt,
-                    Shrine.LIT_STATE, false);
-            shrine.setLitRendered(true);
         } catch (Throwable t) {
             KweebecNightmarePlugin.LOGGER.atFine().log("[Kweebec] shrine relight render failed: " + t.getMessage());
         }

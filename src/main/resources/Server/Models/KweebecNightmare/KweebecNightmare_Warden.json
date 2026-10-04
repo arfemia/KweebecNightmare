@@ -1,28 +1,28 @@
 {
-  "$Comment": "The corrupted-Kweebec WARDEN boss appearance. Extends the vanilla Razorleaf sapling (so the spear silhouette + the entire Kweebec attack/locomotion animation set the Warden role's instruction tree drives resolves correctly, exactly like the working Blight/HunterCorrupted reskin), swaps to the darkest vanilla Kweebec body texture as a corrupted stopgap, and wreathes it in a persistent Void-aura particle on the eye + chest + hand bones so it reads as the dread capstone (mechanism mirrors vanilla Golem_Guardian_Void and the existing KweebecNightmare_HunterCorrupted model: Particles[] with TargetNodeName). MODEL SCALE (asset-driven, RESOLVED): a ModelAsset carries MinScale/MaxScale; at spawn RoleBuilderSystem calls generateRandomScale()=randomFloat(min,max) -> Model.createScaledModel, which scales the RENDERED MESH (packet.scale to client) plus the inherited HitBox, EyeHeight, particle offsets, camera and physics. MinScale==MaxScale==5.0 gives a constant true 5x boss off the base Razorleaf silhouette - so the prior manual HitBox/EyeHeight padding is removed (it would double-count: the inherited base box is scaled 5x to match the 5x mesh). In-game caveat: a 5x entity is tall; verify it fits/pathfinds in the arena and tune MinScale/MaxScale down if it clips. SPIKE - bone names: the eye bones (L-Eye-Attachment / R-Eye-Attachment) are the documented Kweebec names reused from KweebecNightmare_HunterCorrupted; the body/hand bone names below (Chest / L-Arm / R-Arm) are a BEST GUESS from the standard humanoid skeleton and MUST be verified against the Razorleaf .blockymodel in-game - a wrong TargetNodeName no-ops that one particle (no crash), so fall back to the eye-only set if the body bones are absent. Body + eye TEXTURE art (a bespoke dark-corrupted body PNG and a white emissive eye PNG) is a pending art swap: drop the PNGs in and point Texture / an Eyes override at them, no Java change needed.",
+  "$Comment": "The corrupted-Kweebec WARDEN boss appearance. Extends the vanilla Razorleaf sapling (so the spear silhouette + the entire Kweebec attack/locomotion animation set the Warden role's instruction tree drives resolves correctly, exactly like the working Blight/HunterCorrupted reskin), swaps to the darkest vanilla Kweebec body texture as a corrupted stopgap, and wreathes it in a persistent Void-aura particle on the eye + chest + hand bones so it reads as the dread capstone (mechanism mirrors vanilla Golem_Guardian_Void and the existing KweebecNightmare_HunterCorrupted model: Particles[] with TargetNodeName). MODEL SCALE (asset-driven, RESOLVED): a ModelAsset carries MinScale/MaxScale; at spawn RoleBuilderSystem calls generateRandomScale()=randomFloat(min,max) -> Model.createScaledModel, which scales the RENDERED MESH (packet.scale to client) plus the inherited HitBox, EyeHeight, particle offsets, camera and physics. MinScale==MaxScale==5.0 gives a constant true 5x boss off the base Razorleaf silhouette - so the prior manual HitBox/EyeHeight padding is removed (it would double-count: the inherited base box is scaled 5x to match the 5x mesh). In-game caveat: a 5x entity is tall; verify it fits/pathfinds in the arena and tune MinScale/MaxScale down if it clips. SPIKE - bone names: the eye bones (L-Eye-Attachment / R-Eye-Attachment) are the documented Kweebec names reused from KweebecNightmare_HunterCorrupted; the body/hand bone names below (Chest / L-Arm / R-Arm) are a BEST GUESS from the standard humanoid skeleton and MUST be verified against the Razorleaf .blockymodel in-game - a wrong TargetNodeName no-ops that one particle (no crash), so fall back to the eye-only set if the body bones are absent. Body + eye TEXTURE art (a bespoke dark-corrupted body PNG and a white emissive eye PNG) is a pending art swap: drop the PNGs in and point Texture / an Eyes override at them, no Java change needed. The aura is this mod's own particle system, KweebecNightmare_Void_Hands (Server/Particles/KweebecNightmare/), a copy of the base game's void spectre hands effect. Keep every SystemId here on a system this mod ships: a model that names a particle system the server cannot find fails to load, and takes the roles that wear it and the server's boot down with it.",
   "Parent": "Kweebec_Sapling_Razorleaf",
   "Texture": "NPC/Intelligent/Kweebec_Sapling/Models/Model_Textures/Brown.png",
   "MinScale": 5.0,
   "MaxScale": 5.0,
   "Particles": [
     {
-      "SystemId": "Spectre_Void_Hands",
+      "SystemId": "KweebecNightmare_Void_Hands",
       "TargetNodeName": "L-Eye-Attachment"
     },
     {
-      "SystemId": "Spectre_Void_Hands",
+      "SystemId": "KweebecNightmare_Void_Hands",
       "TargetNodeName": "R-Eye-Attachment"
     },
     {
-      "SystemId": "Spectre_Void_Hands",
+      "SystemId": "KweebecNightmare_Void_Hands",
       "TargetNodeName": "Chest"
     },
     {
-      "SystemId": "Spectre_Void_Hands",
+      "SystemId": "KweebecNightmare_Void_Hands",
       "TargetNodeName": "L-Arm"
     },
     {
-      "SystemId": "Spectre_Void_Hands",
+      "SystemId": "KweebecNightmare_Void_Hands",
       "TargetNodeName": "R-Arm"
     }
   ]
