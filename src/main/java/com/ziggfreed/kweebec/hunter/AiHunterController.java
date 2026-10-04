@@ -260,11 +260,13 @@ public final class AiHunterController implements HunterController {
 
         // The den stands where no survivor need be when the hunt begins, and the surface probe reads only
         // ground in memory, so load the columns the whole roster stands in first (the fallback hunter
-        // stands at the anchor, inside them), then put the roster down on the world thread.
+        // stands at the anchor, inside them), then put the roster down on the world thread. Nothing waits
+        // on that, so a throw from it is logged here.
         Anchor den = ArenaLayout.HUNTER_DEN;
         ColumnLoads.settled(world, "hunter den", den.x(), den.z(), denReach(Math.max(1, rosterPlan.size())),
                         DEN_FORCE_LOAD_TIMEOUT_SEC)
-                .thenRunAsync(() -> spawnDenRoster(npc, round, world, tier), world);
+                .thenRunAsync(() -> spawnDenRoster(npc, round, world, tier), world)
+                .whenComplete(ColumnLoads.logFailure("hunter den"));
     }
 
     /**

@@ -66,14 +66,18 @@ record ChunkColumns(int minX, int maxX, int minZ, int maxZ) {
         return out;
     }
 
-    /** Force-load (generate if missing) every column of the span, set ticking; settles when all are loaded. */
+    /**
+     * Force-load (generate if missing) every column of the span, set ticking: one future per column, in
+     * {@link #columns()} order, of that column's chunk reference. The chunk store completes one with null, not
+     * a failure, when no chunk came of its load; {@link ColumnLoads#allReferenced} reads that.
+     */
     @Nonnull
-    CompletableFuture<Void> forceLoad(@Nonnull World world) {
+    List<CompletableFuture<?>> forceLoad(@Nonnull World world) {
         List<CompletableFuture<?>> futures = new ArrayList<>();
         for (int[] column : columns()) {
             futures.add(world.getChunkStore().getChunkReferenceAsync(
                     ChunkUtil.indexChunk(column[0], column[1]), GetChunkFlags.SET_TICKING));
         }
-        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        return futures;
     }
 }

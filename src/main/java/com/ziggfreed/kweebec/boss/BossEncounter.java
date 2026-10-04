@@ -91,7 +91,8 @@ public final class BossEncounter {
      * memory). Completes on the world thread with {@code true} when the encounter is up and the round holds
      * its handle, {@code false} when the preset names no encounter, the framework refused the spawn, or the
      * round ended first (in which case the encounter is taken straight back down). The caller decides what to
-     * do with a {@code false}; this never opens the gate itself.
+     * do with a {@code false}; this never opens the gate itself. A throw on the way is logged here and fails
+     * the answer.
      */
     @Nonnull
     public static CompletableFuture<Boolean> raise(@Nonnull RoundInstance round, @Nonnull World world) {
@@ -107,7 +108,8 @@ public final class BossEncounter {
                     TransformComponent transform = new TransformComponent(at, new Rotation3f(0f, gate.yaw(), 0f));
                     return EncounterSpawner.spawnWhenLoaded(world, assetId, transform, optionsFor(round));
                 }, world)
-                .thenApplyAsync(outcome -> adopt(round, world, outcome, rules.bossMarker()), world);
+                .thenApplyAsync(outcome -> adopt(round, world, outcome, rules.bossMarker()), world)
+                .whenComplete(ColumnLoads.logFailure("Warden rise point"));
     }
 
     /**

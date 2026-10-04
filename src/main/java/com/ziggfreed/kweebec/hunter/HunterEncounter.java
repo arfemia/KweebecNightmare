@@ -61,7 +61,7 @@ public final class HunterEncounter {
      * force-loaded ({@link ColumnLoads}). Completes on the world thread with {@code true} when the encounter
      * is up and the round holds its handle, {@code false} when the framework refused the spawn (its binding
      * row switched off, say) or the round ended first, in which case the round runs on with its den roster
-     * alone.
+     * alone. A throw on the way is logged here and fails the answer.
      */
     @Nonnull
     public static CompletableFuture<Boolean> raise(@Nonnull RoundInstance round, @Nonnull World world) {
@@ -73,7 +73,8 @@ public final class HunterEncounter {
                     TransformComponent transform = new TransformComponent(at, new Rotation3f(0f, spawn.yaw(), 0f));
                     return EncounterSpawner.spawnWhenLoaded(world, SCRIPT_ID, transform, optionsFor(round));
                 }, world)
-                .thenApplyAsync(outcome -> adopt(round, world, outcome), world);
+                .thenApplyAsync(outcome -> adopt(round, world, outcome), world)
+                .whenComplete(ColumnLoads.logFailure("hunter encounter centre"));
     }
 
     /**
