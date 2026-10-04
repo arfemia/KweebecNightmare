@@ -15,14 +15,12 @@ import org.joml.Vector3i;
 
 import com.hypixel.hytale.server.core.HytaleServer;
 import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.math.util.ChunkUtil;
 import com.hypixel.hytale.server.core.asset.type.blocktype.config.Rotation;
 import com.hypixel.hytale.server.core.prefab.PrefabStore;
 import com.hypixel.hytale.server.core.prefab.selection.buffer.PrefabBufferUtil;
 import com.hypixel.hytale.server.core.prefab.selection.buffer.impl.IPrefabBuffer;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import com.hypixel.hytale.server.core.universe.world.storage.GetChunkFlags;
 import com.ziggfreed.common.world.BlockTypeLists;
 import com.ziggfreed.common.world.SurfaceProbe;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
@@ -447,16 +445,7 @@ public final class ArenaBuilder {
     /** Force-load (generate if missing) the {@code (2r+1)^2} chunks around a world XZ; settles when loaded. */
     @Nonnull
     private static CompletableFuture<Void> forceLoadAround(@Nonnull World world, double x, double z, int chunkRadius) {
-        int cx = ((int) Math.floor(x)) >> 4;
-        int cz = ((int) Math.floor(z)) >> 4;
-        List<CompletableFuture<?>> futures = new ArrayList<>();
-        for (int chX = cx - chunkRadius; chX <= cx + chunkRadius; chX++) {
-            for (int chZ = cz - chunkRadius; chZ <= cz + chunkRadius; chZ++) {
-                futures.add(world.getChunkStore().getChunkReferenceAsync(
-                        ChunkUtil.indexChunk(chX, chZ), GetChunkFlags.SET_TICKING));
-            }
-        }
-        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        return ChunkColumns.around(x, z, chunkRadius).forceLoad(world);
     }
 
     /**

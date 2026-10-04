@@ -74,8 +74,9 @@ class BlockAccessorScanTest {
         assertTrue(scanned.stream().anyMatch(f -> f.endsWith(Path.of("mode", "chase", "ChaseMode.java"))),
                 "the scan never reached ChaseMode.java, so it is looking in the wrong place");
         assertTrue(findings.isEmpty(), "Read and write blocks through Ziggfreed Common's BlockOps (blockItemIdAt, "
-                + "setInteractionState, setBlock). World's block and chunk accessors, WorldChunk and BlockChunk are "
-                + "gone on Update 7, where a jar built on 0.6.8 that calls one fails inside its catch:\n"
+                + "setInteractionState, setBlock). World's block and chunk accessors, and the block accessors of "
+                + "WorldChunk and BlockChunk, are gone on Update 7, where a jar built on 0.6.8 that calls one fails "
+                + "inside its catch:\n"
                 + String.join("\n", findings));
     }
 

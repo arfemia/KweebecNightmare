@@ -12,7 +12,6 @@ import org.joml.Vector3i;
 
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.component.query.Query;
-import com.hypixel.hytale.math.util.ChunkUtil;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.modules.entity.component.FromWorldGen;
 import com.hypixel.hytale.server.core.modules.entity.component.PersistentDisplayName;
@@ -20,7 +19,6 @@ import com.hypixel.hytale.server.core.modules.entity.component.TransformComponen
 import com.hypixel.hytale.server.core.prefab.selection.buffer.impl.IPrefabBuffer;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import com.hypixel.hytale.server.core.universe.world.storage.GetChunkFlags;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.util.SafeLog;
@@ -104,21 +102,8 @@ public final class ShrinePlacement {
     /** Generate + load every chunk overlapping the play core, returning a future that completes when all settle. */
     @Nonnull
     private static CompletableFuture<Void> forceLoadCore(@Nonnull World world) {
-        int cx = (int) Math.floor(ArenaLayout.SPAWN.x());
-        int cz = (int) Math.floor(ArenaLayout.SPAWN.z());
-        int r = (int) Math.ceil(DETECT_RADIUS);
-        int minCX = (cx - r) >> 4;
-        int maxCX = (cx + r) >> 4;
-        int minCZ = (cz - r) >> 4;
-        int maxCZ = (cz + r) >> 4;
-        List<CompletableFuture<?>> futures = new ArrayList<>();
-        for (int chX = minCX; chX <= maxCX; chX++) {
-            for (int chZ = minCZ; chZ <= maxCZ; chZ++) {
-                futures.add(world.getChunkStore().getChunkReferenceAsync(
-                        ChunkUtil.indexChunk(chX, chZ), GetChunkFlags.SET_TICKING));
-            }
-        }
-        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        return ChunkColumns.covering(ArenaLayout.SPAWN.x(), ArenaLayout.SPAWN.z(), (int) Math.ceil(DETECT_RADIUS))
+                .forceLoad(world);
     }
 
     /** World-thread: query the baked shrine markers, top up the deficit, publish positions, plant Moonbloom. */
