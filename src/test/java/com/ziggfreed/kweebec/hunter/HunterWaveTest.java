@@ -71,6 +71,38 @@ class HunterWaveTest {
         }
     }
 
+    /**
+     * A wave force-loads the ground within its reach of the anchor before it reads it, so every point the
+     * band can land a hunter on, a ring or a scatter, at any angle and any anchor, must lie within that
+     * many blocks of the anchor's own block on both axes. A point outside reads a column the load never
+     * asked for.
+     */
+    @Test
+    void theReachHoldsEveryPointTheBandCanLandOn() {
+        double[] anchors = {0.0, 0.5, 0.99, -0.5, -31.9, 15.25};
+        double[][] bands = {{2.0, 2.0}, {5.5, 9.3}, {7.0, 13.6}, {16.0, 16.0}};
+        for (double[] band : bands) {
+            HunterWave wave = wave(1, 1, false, band[0], band[1]);
+            int reach = wave.reach();
+            double[] radii = {wave.radiusMin(), (wave.radiusMin() + wave.radiusMax()) / 2.0, wave.radiusMax()};
+            for (double ax : anchors) {
+                for (double az : anchors) {
+                    for (int degrees = 0; degrees < 360; degrees++) {
+                        double angle = Math.toRadians(degrees);
+                        for (double r : radii) {
+                            int dx = (int) Math.floor(ax + Math.cos(angle) * r) - (int) Math.floor(ax);
+                            int dz = (int) Math.floor(az + Math.sin(angle) * r) - (int) Math.floor(az);
+                            assertTrue(Math.abs(dx) <= reach && Math.abs(dz) <= reach, "band [" + band[0] + ", "
+                                    + band[1] + "], anchor (" + ax + ", " + az + "), " + degrees + " degrees at "
+                                    + r + ": the point lands " + dx + ", " + dz + " blocks out, past the reach "
+                                    + reach);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     @Test
     void anInvertedCountRangeIsRaisedToItsFloor() {
         HunterWave wave = wave(3, 1, true, 10.0, 10.0);

@@ -73,12 +73,23 @@ public class ActionKweebecHunterWave extends ActionBase {
                 return;
             }
             Store<EntityStore> store = world.getEntityStore().getStore();
-            int spawned = hunter.spawnWave(round, world, store, wave);
-            if (spawned > 0 && wave.announce()) {
-                round.forEachPresent(pr -> RoundFeedback.dangerToast(pr, Lang.TOAST_HUNTERS_DRAWN));
-            }
+            // The wave lands once its ground is in memory; the party hears of it only when a body went down.
+            hunter.spawnWave(round, world, store, wave)
+                    .thenAccept(spawned -> {
+                        if (spawned > 0 && wave.announce()) {
+                            round.forEachPresent(pr -> RoundFeedback.dangerToast(pr, Lang.TOAST_HUNTERS_DRAWN));
+                        }
+                    })
+                    .exceptionally(t -> {
+                        waveFailed(round, t);
+                        return null;
+                    });
         } catch (Throwable t) {
-            SafeLog.warn(LOG + " a hunter wave failed in round " + round.roundId() + ": " + t.getMessage());
+            waveFailed(round, t);
         }
+    }
+
+    private static void waveFailed(@Nonnull RoundInstance round, @Nonnull Throwable t) {
+        SafeLog.warn(LOG + " a hunter wave failed in round " + round.roundId() + ": " + t.getMessage());
     }
 }

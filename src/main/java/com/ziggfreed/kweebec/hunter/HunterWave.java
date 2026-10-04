@@ -58,6 +58,14 @@ public record HunterWave(@Nullable String archetype, int countMin, int countMax,
     }
 
     /**
+     * The blocks, on either axis, around the anchor's own block that hold every point this wave can land a
+     * hunter on: the ground a wave force-loads before it reads the surface there.
+     */
+    public int reach() {
+        return (int) Math.ceil(radiusMax);
+    }
+
+    /**
      * How many of {@code requested} fit under {@code ceiling} with {@code live} hunters already out.
      * Never negative; a full roster, or nothing asked for, is zero.
      */

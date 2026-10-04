@@ -2,8 +2,6 @@ package com.ziggfreed.kweebec.arena;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 
@@ -88,22 +86,15 @@ public final class ShrinePlacement {
      * force-loads the play core asynchronously, then hops to the world thread for the query + pastes.
      */
     public static void detectAndTopUp(@Nonnull RoundInstance round, @Nonnull World world) {
-        try {
-            forceLoadCore(world)
-                    .orTimeout(FORCE_LOAD_TIMEOUT_SEC, TimeUnit.SECONDS)
-                    .whenComplete((v, ex) -> world.execute(() -> detectAndPlace(round, world)));
-        } catch (Throwable t) {
-            // Could not even start the force-load: still try to detect on whatever is already loaded.
-            SafeLog.warn("[Kweebec] shrine force-load kickoff failed: " + t.getMessage());
-            world.execute(() -> detectAndPlace(round, world));
-        }
+        // A load that cannot start, fails or times out still detects, on whatever is already loaded.
+        ColumnLoads.settled(world, "shrine", coreColumns(), FORCE_LOAD_TIMEOUT_SEC)
+                .thenRunAsync(() -> detectAndPlace(round, world), world);
     }
 
-    /** Generate + load every chunk overlapping the play core, returning a future that completes when all settle. */
+    /** Every chunk column overlapping the play core: the ground the detection query must see loaded. */
     @Nonnull
-    private static CompletableFuture<Void> forceLoadCore(@Nonnull World world) {
-        return ChunkColumns.covering(ArenaLayout.SPAWN.x(), ArenaLayout.SPAWN.z(), (int) Math.ceil(DETECT_RADIUS))
-                .forceLoad(world);
+    private static ChunkColumns coreColumns() {
+        return ChunkColumns.covering(ArenaLayout.SPAWN.x(), ArenaLayout.SPAWN.z(), (int) Math.ceil(DETECT_RADIUS));
     }
 
     /** World-thread: query the baked shrine markers, top up the deficit, publish positions, plant Moonbloom. */

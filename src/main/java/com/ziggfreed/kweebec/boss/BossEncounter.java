@@ -25,6 +25,7 @@ import com.ziggfreed.common.worldmap.WorldMapMarkers;
 import com.ziggfreed.kweebec.arena.Anchor;
 import com.ziggfreed.kweebec.arena.ArenaBuilder;
 import com.ziggfreed.kweebec.arena.ArenaLayout;
+import com.ziggfreed.kweebec.arena.ColumnLoads;
 import com.ziggfreed.kweebec.i18n.Lang;
 import com.ziggfreed.kweebec.moonbloom.GlowThrowables;
 import com.ziggfreed.kweebec.round.RoundInstance;
@@ -52,6 +53,8 @@ public final class BossEncounter {
     private static final String MARKER_ICON = "Home.png";
     /** Throttle (ms) between marker re-placements so it tracks the moving Warden without a per-tick write. */
     private static final long MARKER_FOLLOW_MS = 3000L;
+    /** Seconds the rise waits for the gate's column to load before it reads the ground anyway. */
+    private static final long RISE_FORCE_LOAD_TIMEOUT_SEC = 8L;
 
     /** Emberbloom clusters ringed around the Warden as each phase begins, by phase (the first is the rise). */
     private static final int[] EMBERBLOOM_PER_PHASE = {8, 10, 12};
@@ -83,11 +86,12 @@ public final class BossEncounter {
     /**
      * Stand the round's Warden encounter up at the Heartwood Gate, once its chunk is loaded and ticking
      * (the gate is far from where the party stands when the last shrine lights, and an entity added into a
-     * chunk that is not ticking is unloaded on the spot). Completes on the world thread with {@code true}
-     * when the encounter is up and the round holds its handle, {@code false} when the preset names no
-     * encounter, the framework refused the spawn, or the round ended first (in which case the encounter is
-     * taken straight back down). The caller decides what to do with a {@code false}; this never opens the
-     * gate itself.
+     * chunk that is not ticking is unloaded on the spot). The rise point reads the ground there only after
+     * the gate's column has been force-loaded ({@link ColumnLoads}; the surface probe reads only a column in
+     * memory). Completes on the world thread with {@code true} when the encounter is up and the round holds
+     * its handle, {@code false} when the preset names no encounter, the framework refused the spawn, or the
+     * round ended first (in which case the encounter is taken straight back down). The caller decides what to
+     * do with a {@code false}; this never opens the gate itself.
      */
     @Nonnull
     public static CompletableFuture<Boolean> raise(@Nonnull RoundInstance round, @Nonnull World world) {
@@ -96,9 +100,13 @@ public final class BossEncounter {
         if (assetId == null || assetId.isBlank()) {
             return CompletableFuture.completedFuture(false);
         }
-        Vector3d at = gatePosition(world);
-        TransformComponent transform = new TransformComponent(at, new Rotation3f(0f, ArenaLayout.GATE.yaw(), 0f));
-        return EncounterSpawner.spawnWhenLoaded(world, assetId, transform, optionsFor(round))
+        Anchor gate = ArenaLayout.GATE;
+        return ColumnLoads.settled(world, "Warden rise point", gate.x(), gate.z(), 0, RISE_FORCE_LOAD_TIMEOUT_SEC)
+                .thenComposeAsync(loaded -> {
+                    Vector3d at = gatePosition(world);
+                    TransformComponent transform = new TransformComponent(at, new Rotation3f(0f, gate.yaw(), 0f));
+                    return EncounterSpawner.spawnWhenLoaded(world, assetId, transform, optionsFor(round));
+                }, world)
                 .thenApplyAsync(outcome -> adopt(round, world, outcome, rules.bossMarker()), world);
     }
 
@@ -143,7 +151,8 @@ public final class BossEncounter {
 
     /**
      * The Warden's rise point: the Heartwood Gate anchor, floor-snapped past the grove canopy so the
-     * encounter (and the Warden the marker beside it raises) stands on genuine ground.
+     * encounter (and the Warden the marker beside it raises) stands on genuine ground. World thread, once
+     * {@link #raise} has loaded the gate's column; a column still cold answers the authored stand Y.
      */
     @Nonnull
     private static Vector3d gatePosition(@Nonnull World world) {

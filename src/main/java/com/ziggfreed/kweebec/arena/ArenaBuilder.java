@@ -408,21 +408,17 @@ public final class ArenaBuilder {
      * <p>By gate-open the party is at the LAST SHRINE, not the escape, so the {@link ArenaLayout#ESCAPE}
      * chunk may be UNLOADED (the instance unloads chunks) and a bare paste would silently no-op (the
      * symptom: "the prefab did not spawn but the exit still worked"). So we FORCE-LOAD the chunks around
-     * ESCAPE first (mirrors {@code ShrinePlacement.forceLoadCore}), then paste once they settle. The paste
+     * ESCAPE first, the platform's whole footprint, through {@link ColumnLoads} (a load that cannot start,
+     * fails or times out still pastes, on whatever is in memory), then paste once they settle. The paste
      * is {@code force=true} so the prefab's Empty "carve" cells dig the recess for a lowered platform
      * (a {@code force=false} paste ignores Empty and would bury a lowered circle under the terrain). The
      * win is the pure-anchor co-op hold, so a missing/failed prefab only costs the visual, never the win.
      */
     public static void pasteExit(@Nonnull World world) {
-        try {
-            forceLoadAround(world, ArenaLayout.ESCAPE.x(), ArenaLayout.ESCAPE.z(), EXIT_CHUNK_RADIUS)
-                    .orTimeout(EXIT_FORCE_LOAD_TIMEOUT_SEC, TimeUnit.SECONDS)
-                    .whenComplete((v, ex) -> doPasteExit(world));
-        } catch (Throwable t) {
-            // Could not even start the force-load: still try to paste on whatever is already loaded.
-            SafeLog.warn("[Kweebec] exit force-load kickoff failed: " + t.getMessage());
-            doPasteExit(world);
-        }
+        ColumnLoads.settled(world, "exit",
+                        ChunkColumns.around(ArenaLayout.ESCAPE.x(), ArenaLayout.ESCAPE.z(), EXIT_CHUNK_RADIUS),
+                        EXIT_FORCE_LOAD_TIMEOUT_SEC)
+                .thenRun(() -> doPasteExit(world));
     }
 
     private static void doPasteExit(@Nonnull World world) {
@@ -440,12 +436,6 @@ public final class ArenaBuilder {
             KweebecNightmarePlugin.LOGGER.atWarning().log(
                     "[Kweebec] exit reveal paste failed: " + t.getMessage());
         }
-    }
-
-    /** Force-load (generate if missing) the {@code (2r+1)^2} chunks around a world XZ; settles when loaded. */
-    @Nonnull
-    private static CompletableFuture<Void> forceLoadAround(@Nonnull World world, double x, double z, int chunkRadius) {
-        return ChunkColumns.around(x, z, chunkRadius).forceLoad(world);
     }
 
     /**
@@ -551,13 +541,17 @@ public final class ArenaBuilder {
      * (0,0,0)), and {@code PrefabUtil.paste} places stored (0,0,0) exactly at {@code position}. The
      * grove is now natural rolling terrain (the flat play disc is gone), so a hardcoded Y would float
      * or bury every beat; instead we probe the LOCAL top-solid Y with {@link SurfaceProbe} on the world
-     * thread (after PREP chunk-gen, so the column is queryable) and land the anchor there. If the probe
-     * misses (unloaded chunk) it degrades to the anchor's authored floor block ({@code at.y - 1}).
+     * thread, once the anchor's column has been force-loaded ({@link ColumnLoads}), and land the anchor
+     * there. If the probe still misses (the load timed out) it degrades to the anchor's authored floor
+     * block ({@code at.y - 1}).
      */
     static void paste(@Nonnull World world, @Nonnull IPrefabBuffer buffer, @Nonnull Anchor at,
                       boolean verbose, boolean force) {
         paste(world, buffer, at, verbose, force, Rotation.None);
     }
+
+    /** Seconds a paste waits for its anchor's column to load before it reads the surface anyway. */
+    private static final long PASTE_FORCE_LOAD_TIMEOUT_SEC = 8L;
 
     /**
      * Paste an authored beat (shrine / exit / gate / structure) at an anchor, FLOOR-SNAPPED to the real
@@ -568,15 +562,18 @@ public final class ArenaBuilder {
      * (0,0,0)), and {@code PrefabUtil.paste} places stored (0,0,0) exactly at {@code position}. The
      * grove is now natural rolling terrain (the flat play disc is gone), so a hardcoded Y would float
      * or bury every beat; instead we probe the LOCAL top-solid Y with {@link SurfaceProbe} on the world
-     * thread (after PREP chunk-gen, so the column is queryable) and land the anchor there. If the probe
-     * misses (unloaded chunk) it degrades to the anchor's authored floor block ({@code at.y - 1}).
+     * thread, once the anchor's column has been force-loaded ({@link ColumnLoads}), and land the anchor
+     * there. If the probe still misses (the load timed out) it degrades to the anchor's authored floor
+     * block ({@code at.y - 1}).
      */
     private static void paste(@Nonnull World world, @Nonnull IPrefabBuffer buffer, @Nonnull Anchor at,
                               boolean verbose, boolean force, @Nonnull Rotation rotation) {
         int x = (int) Math.floor(at.x());
         int z = (int) Math.floor(at.z());
         int fallbackTop = (int) Math.floor(at.y() - 1.0);
-        world.execute(() -> {
+        // Most pastes land where no player stands (fixed anchors at round start, grove-wide scatter on a
+        // timer), and the probe reads only a column in memory, so load the anchor's column first.
+        ColumnLoads.settled(world, "prefab paste", x, z, 0, PASTE_FORCE_LOAD_TIMEOUT_SEC).thenRunAsync(() -> {
             try {
                 int topY = SurfaceProbe.topSolidY(world, x, z, fallbackTop,
                         BlockTypeLists.keys(SURFACE_DECORATION_LISTS));
@@ -591,33 +588,48 @@ public final class ArenaBuilder {
                 KweebecNightmarePlugin.LOGGER.atWarning().log(
                         "[Kweebec] prefab paste failed at (" + x + "," + z + "): " + t.getMessage());
             }
-        });
+        }, world);
     }
 
     /**
+     * Seconds a cave shaft pass waits for its column to load. Longer than a paste's: a pass whose column is
+     * still cold carves nothing, and a cave never carved leaves its shrine unreachable, while the wait costs
+     * nothing (the shaft is not needed until a survivor walks to it).
+     */
+    private static final long CAVE_FORCE_LOAD_TIMEOUT_SEC = 15L;
+
+    /**
      * Carve one underground shrine's descent shaft + chamber into the solid grove, floor-snapped to the
-     * rolling surface: probe the LOCAL top-solid Y and force-paste the shaft top there (so the entrance meets
-     * the surface). The shrine FURNACE is BAKED into the shaft prefab at the chamber (no runtime block
-     * placement, no cyan beam) and discovered via its interaction when a survivor descends and offers
-     * Moonbloom. Idempotent across the +4s/+9s re-carve: the resolved surface Y is remembered per cave
-     * ({@code ChaseState.caveCarveY}) so a re-paste reuses it instead of re-probing the already-carved
-     * surface (which would stack a second shaft). On a probe miss it falls back to the flat-disc floor.
+     * rolling surface: once the shaft's column is in memory ({@link ColumnLoads}: the probe reads only a
+     * loaded column, and no player need stand there at round start), probe the LOCAL top-solid Y and
+     * force-paste the shaft top there (so the entrance meets the surface). The shrine FURNACE is BAKED into
+     * the shaft prefab at the chamber (no runtime block placement, no cyan beam) and discovered via its
+     * interaction when a survivor descends and offers Moonbloom. Idempotent across the +4s/+9s re-carve: the
+     * resolved surface Y is remembered per cave ({@code ChaseState.caveCarveY}) so a re-paste reuses it
+     * instead of re-probing the already-carved surface (which would stack a second shaft). It is remembered
+     * only from a probe over a loaded column, so it is the real surface: a pass whose load did not complete
+     * before any height was remembered carves nothing and leaves the cave to the next pass. On a probe miss
+     * over a loaded column it falls back to the flat-disc floor.
      */
     private static void pasteCaveShaft(@Nonnull World world, @Nonnull IPrefabBuffer shaft,
                                        @Nonnull Anchor a, int caveIndex, @Nonnull ChaseState chase) {
         int x = (int) Math.floor(a.x());
         int z = (int) Math.floor(a.z());
         int fallbackTop = (int) Math.floor(ArenaLayout.FLOOR_Y);
-        world.execute(() -> {
+        ColumnLoads.settled(world, "cave shaft", x, z, 0, CAVE_FORCE_LOAD_TIMEOUT_SEC).thenAcceptAsync(loaded -> {
             try {
                 Integer stored = chase.caveCarveY(caveIndex);
                 int topY;
-                if (stored == null) {
+                if (stored != null) {
+                    topY = stored;
+                } else if (loaded) {
                     topY = SurfaceProbe.topSolidY(world, x, z, fallbackTop,
                             BlockTypeLists.keys(SURFACE_DECORATION_LISTS));
                     chase.setCaveCarveY(caveIndex, topY);
                 } else {
-                    topY = stored;
+                    KweebecNightmarePlugin.LOGGER.atWarning().log("[Kweebec] cave shaft column at (" + x + ","
+                            + z + ") did not load in " + CAVE_FORCE_LOAD_TIMEOUT_SEC + "s; this pass carves nothing");
+                    return;
                 }
                 Vector3i pos = new Vector3i(x, topY, z);
                 Store<EntityStore> store = world.getEntityStore().getStore();
@@ -629,7 +641,7 @@ public final class ArenaBuilder {
                 KweebecNightmarePlugin.LOGGER.atWarning().log(
                         "[Kweebec] cave shaft carve failed at (" + x + "," + z + "): " + t.getMessage());
             }
-        });
+        }, world);
     }
 
     /** Tiny indirection so the verified paste signature lives in one place. */

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -34,6 +35,7 @@ import com.ziggfreed.common.world.SurfaceProbe;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.arena.Anchor;
 import com.ziggfreed.kweebec.arena.ArenaLayout;
+import com.ziggfreed.kweebec.arena.ColumnLoads;
 import com.ziggfreed.kweebec.asset.HunterArchetypeAsset;
 import com.ziggfreed.kweebec.asset.HunterArchetypeConfig;
 import com.ziggfreed.kweebec.mode.chase.ChaseState;
@@ -161,6 +163,13 @@ public final class AiHunterController implements HunterController {
      */
     private static final String[] SURFACE_DECORATION_LISTS = {"TreeWoodAndLeaves", "AllScatter"};
 
+    /** Blocks between two den hunters standing side by side along x. */
+    private static final double DEN_SPACING = 2.0;
+    /** Seconds the den roster waits for its ground to load before it reads the surface anyway. */
+    private static final long DEN_FORCE_LOAD_TIMEOUT_SEC = 8L;
+    /** Seconds a wave waits for the ground around its anchor to load before it reads the surface anyway. */
+    private static final long WAVE_FORCE_LOAD_TIMEOUT_SEC = 5L;
+
     /** Live roster of spawned hunters, each with its own archetype + band state. World-thread only. */
     private final List<HunterUnit> hunters = new ArrayList<>();
     /** The archetypes the den roster spawned this round. World-thread only. */
@@ -249,6 +258,26 @@ public final class AiHunterController implements HunterController {
         rosterPlan.clear();
         rosterPlan.addAll(planRoster(round, tier, this.hunterCap));
 
+        // The den stands where no survivor need be when the hunt begins, and the surface probe reads only
+        // ground in memory, so load the columns the whole roster stands in first (the fallback hunter
+        // stands at the anchor, inside them), then put the roster down on the world thread.
+        Anchor den = ArenaLayout.HUNTER_DEN;
+        ColumnLoads.settled(world, "hunter den", den.x(), den.z(), denReach(Math.max(1, rosterPlan.size())),
+                        DEN_FORCE_LOAD_TIMEOUT_SEC)
+                .thenRunAsync(() -> spawnDenRoster(npc, round, world, tier), world);
+    }
+
+    /**
+     * Put the planned den roster down at the den, once its ground has loaded (world thread), falling back to
+     * the ctor role when the roster yields nothing spawnable so a round always has a hunter. A round that
+     * ended while the ground loaded gets none.
+     */
+    private void spawnDenRoster(@Nonnull NPCPlugin npc, @Nonnull RoundInstance round, @Nonnull World world,
+                                int tier) {
+        if (round.isResolved()) {
+            return;
+        }
+        Store<EntityStore> store = world.getEntityStore().getStore();
         Anchor den = ArenaLayout.HUNTER_DEN;
         int denZ = (int) Math.floor(den.z());
         for (int i = 0; i < rosterPlan.size(); i++) {
@@ -280,14 +309,31 @@ public final class AiHunterController implements HunterController {
                                   @Nonnull World world, @Nonnull HunterArchetypeAsset bandSource,
                                   @Nullable String roleName, int index, int total,
                                   @Nonnull Anchor den, int denZ) {
-        double offset = (index - (total - 1) / 2.0) * 2.0;
-        double hx = den.x() + offset;
+        double hx = den.x() + denOffset(index, total);
         // Floor-snap the den to the rolling grove surface (the flat disc is gone) so the hunter
-        // spawns ON the ground, never buried in a hill or floating over a valley. World thread
-        // (spawn runs in the round tick), so the column is queryable; degrade to the authored stand Y.
+        // spawns ON the ground, never buried in a hill or floating over a valley. World thread, once
+        // spawn has loaded the columns the roster stands in (denReach); a column still cold degrades
+        // to the authored stand Y.
         int standY = SurfaceProbe.standableY(world, (int) Math.floor(hx), denZ, (int) ArenaLayout.STAND_Y);
         Vector3d pos = new Vector3d(hx, standY, den.z());
         spawnArchetypeAtPos(npc, store, bandSource, roleName, pos, den.yaw());
+    }
+
+    /**
+     * How far along x from the den anchor the {@code index}-th of {@code total} den hunters stands: side by
+     * side, {@link #DEN_SPACING} apart, centred on the anchor.
+     */
+    static double denOffset(int index, int total) {
+        return (index - (total - 1) / 2.0) * DEN_SPACING;
+    }
+
+    /**
+     * The blocks, along x, around the den anchor's own block that hold every one of {@code total} den
+     * hunters: the ground {@link #spawn} force-loads before the surface probe reads it. The end hunters
+     * stand farthest out.
+     */
+    static int denReach(int total) {
+        return (int) Math.ceil(Math.abs(denOffset(0, total)));
     }
 
     /**
@@ -471,14 +517,43 @@ public final class AiHunterController implements HunterController {
     // --- the waves the hunter encounter script asks for (NEAR the survivors) ---
 
     @Override
-    public int spawnWave(@Nonnull RoundInstance round, @Nonnull World world, @Nonnull Store<EntityStore> store,
-                         @Nonnull HunterWave wave) {
+    @Nonnull
+    public CompletableFuture<Integer> spawnWave(@Nonnull RoundInstance round, @Nonnull World world,
+                                                @Nonnull Store<EntityStore> store, @Nonnull HunterWave wave) {
         NPCPlugin npc = NPCPlugin.get();
         if (npc == null) {
+            return CompletableFuture.completedFuture(0);
+        }
+        long seed = round.worldSeed() ^ System.currentTimeMillis();
+        // Anchored on one random active survivor or on the survivors' centroid; none active, no wave.
+        Vector3d found = wave.aroundOnePlayer()
+                ? randomActiveSurvivorPos(round, store, seed)
+                : survivorCentroid(round, store);
+        if (found == null) {
+            return CompletableFuture.completedFuture(0);
+        }
+        // A copy, not the survivor's live position, so the wave reads the very ground it loaded.
+        Vector3d anchor = new Vector3d(found.x(), found.y(), found.z());
+        // The party's centre can lie far from every survivor, and the surface probe reads only ground in
+        // memory, so load the ground within the wave's reach of the anchor first, then put the wave down
+        // on the world thread.
+        return ColumnLoads.settled(world, "hunter wave", anchor.x(), anchor.z(), wave.reach(),
+                        WAVE_FORCE_LOAD_TIMEOUT_SEC)
+                .thenApplyAsync(loaded -> placeWave(npc, round, world, wave, anchor, seed), world);
+    }
+
+    /**
+     * Put one wave down around {@code anchor}, once the ground within the wave's reach of it has loaded
+     * (world thread): the room under the live ceiling, then the placements, then the bodies. Answers how many
+     * went down; a round that ended while the ground loaded gets none.
+     */
+    private int placeWave(@Nonnull NPCPlugin npc, @Nonnull RoundInstance round, @Nonnull World world,
+                          @Nonnull HunterWave wave, @Nonnull Vector3d anchor, long seed) {
+        if (round.isResolved()) {
             return 0;
         }
+        Store<EntityStore> store = world.getEntityStore().getStore();
         hunters.removeIf(u -> u.ref == null || !u.ref.isValid());
-        long seed = round.worldSeed() ^ System.currentTimeMillis();
         // The wave asks for its count (per survivor when it says so); the round's live ceiling wins.
         int allowed = HunterWave.room(hunters.size(), maxLiveHunters, wave.requested(round.partySize(), seed));
         if (allowed <= 0) {
@@ -486,7 +561,7 @@ public final class AiHunterController implements HunterController {
                     + " (" + hunters.size() + "/" + maxLiveHunters + ")");
             return 0;
         }
-        List<Vector3d> targets = placementTargets(round, world, store, wave, allowed, seed);
+        List<Vector3d> targets = placementTargets(world, wave, anchor, allowed, seed);
         if (targets.isEmpty()) {
             return 0;
         }
@@ -531,24 +606,18 @@ public final class AiHunterController implements HunterController {
     }
 
     /**
-     * Resolve {@code count} floor-snapped spawn positions for a wave, NEAR the survivors: anchored on
-     * one random active survivor or on the survivors' centroid, spaced evenly on a ring at one radius
-     * drawn from the wave's band, or scattered through the band. Every placement goes through the shared
-     * {@link SpawnPlacement} (foliage-skipping so a spawn lands on the genuine ground under the grove
-     * canopy) and is seeded off the round world seed and the moment, so each wave varies while a given
-     * one is reproducible. Empty when no active survivor exists. World-thread only.
+     * Resolve {@code count} floor-snapped spawn positions for a wave, NEAR the survivors: around the
+     * {@code anchor} {@link #spawnWave} picked (one random active survivor or the survivors' centroid),
+     * spaced evenly on a ring at one radius drawn from the wave's band, or scattered through the band. Every
+     * placement goes through the shared {@link SpawnPlacement} (foliage-skipping so a spawn lands on the
+     * genuine ground under the grove canopy) and is seeded off the round world seed and the moment, so each
+     * wave varies while a given one is reproducible. World-thread only, once the ground within the wave's
+     * reach of the anchor has loaded.
      */
     @Nonnull
-    private List<Vector3d> placementTargets(@Nonnull RoundInstance round, @Nonnull World world,
-                                            @Nonnull Store<EntityStore> store, @Nonnull HunterWave wave,
-                                            int count, long seed) {
+    private static List<Vector3d> placementTargets(@Nonnull World world, @Nonnull HunterWave wave,
+                                                   @Nonnull Vector3d anchor, int count, long seed) {
         List<Vector3d> out = new ArrayList<>(count);
-        Vector3d anchor = wave.aroundOnePlayer()
-                ? randomActiveSurvivorPos(round, store, seed)
-                : survivorCentroid(round, store);
-        if (anchor == null) {
-            return out;
-        }
         Set<String> skip = BlockTypeLists.keys(SURFACE_DECORATION_LISTS);
         int fallbackY = (int) ArenaLayout.STAND_Y;
         if (wave.even()) {

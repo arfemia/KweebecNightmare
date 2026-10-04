@@ -1,6 +1,7 @@
 package com.ziggfreed.kweebec.hunter;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -88,7 +89,8 @@ public interface HunterController {
      * the wave names or the round's own tier-gated weighted pick. A no-op by default (the human-driven
      * mode has no roster); the AI controller implements it.
      *
-     * <p>Called on the instance world thread, between ticks.
+     * <p>Called on the instance world thread, between ticks. The bodies go down once the ground they land
+     * on is in memory, so the answer can complete later, on the world thread.
      *
      * @param round the live round
      * @param world the instance world (world thread)
@@ -96,8 +98,9 @@ public interface HunterController {
      * @param wave  what the script asked for
      * @return how many hunters actually went down (0 when the wave found no room or no survivor)
      */
-    default int spawnWave(@Nonnull RoundInstance round, @Nonnull World world,
-                          @Nonnull Store<EntityStore> store, @Nonnull HunterWave wave) {
-        return 0; // the human-driven hunter mode has no roster to draw a wave from
+    @Nonnull
+    default CompletableFuture<Integer> spawnWave(@Nonnull RoundInstance round, @Nonnull World world,
+                                                 @Nonnull Store<EntityStore> store, @Nonnull HunterWave wave) {
+        return CompletableFuture.completedFuture(0); // the human-driven hunter mode has no roster to draw a wave from
     }
 }

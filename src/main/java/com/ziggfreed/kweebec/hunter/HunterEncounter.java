@@ -21,6 +21,7 @@ import com.ziggfreed.common.world.SpawnPlacement;
 import com.ziggfreed.kweebec.arena.Anchor;
 import com.ziggfreed.kweebec.arena.ArenaBuilder;
 import com.ziggfreed.kweebec.arena.ArenaLayout;
+import com.ziggfreed.kweebec.arena.ColumnLoads;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.util.SafeLog;
 
@@ -42,6 +43,8 @@ public final class HunterEncounter {
     public static final String SCRIPT_ID = "KweebecNightmare_Hunters";
 
     private static final String LOG = "[Kweebec][hunters]";
+    /** Seconds the raise waits for the grove centre's column to load before it reads the ground anyway. */
+    private static final long CENTRE_FORCE_LOAD_TIMEOUT_SEC = 8L;
 
     private final Ref<EntityStore> encounterRef;
     private final UUID runId;
@@ -52,17 +55,24 @@ public final class HunterEncounter {
     }
 
     /**
-     * Stand the round's hunter encounter up at the grove's centre once its chunk is loaded and ticking
-     * (the party stands there when the hunt begins, so it is up already; the ask costs nothing).
-     * Completes on the world thread with {@code true} when the encounter is up and the round holds its
-     * handle, {@code false} when the framework refused the spawn (its binding row switched off, say) or
-     * the round ended first, in which case the round runs on with its den roster alone.
+     * Stand the round's hunter encounter up at the grove's centre once its chunk is loaded and ticking.
+     * The party spawned there, but by the end of PREP it may have scattered across the grove, and the
+     * surface probe reads only a column in memory, so the centre is read only after its column has been
+     * force-loaded ({@link ColumnLoads}). Completes on the world thread with {@code true} when the encounter
+     * is up and the round holds its handle, {@code false} when the framework refused the spawn (its binding
+     * row switched off, say) or the round ended first, in which case the round runs on with its den roster
+     * alone.
      */
     @Nonnull
     public static CompletableFuture<Boolean> raise(@Nonnull RoundInstance round, @Nonnull World world) {
-        Vector3d at = centre(world);
-        TransformComponent transform = new TransformComponent(at, new Rotation3f(0f, ArenaLayout.SPAWN.yaw(), 0f));
-        return EncounterSpawner.spawnWhenLoaded(world, SCRIPT_ID, transform, optionsFor(round))
+        Anchor spawn = ArenaLayout.SPAWN;
+        return ColumnLoads.settled(world, "hunter encounter centre", spawn.x(), spawn.z(), 0,
+                        CENTRE_FORCE_LOAD_TIMEOUT_SEC)
+                .thenComposeAsync(loaded -> {
+                    Vector3d at = centre(world);
+                    TransformComponent transform = new TransformComponent(at, new Rotation3f(0f, spawn.yaw(), 0f));
+                    return EncounterSpawner.spawnWhenLoaded(world, SCRIPT_ID, transform, optionsFor(round));
+                }, world)
                 .thenApplyAsync(outcome -> adopt(round, world, outcome), world);
     }
 
@@ -111,7 +121,11 @@ public final class HunterEncounter {
         }
     }
 
-    /** The grove's centre, floor-snapped past the canopy so the encounter entity stands on ground. */
+    /**
+     * The grove's centre, floor-snapped past the canopy so the encounter entity stands on ground. World
+     * thread, once {@link #raise} has loaded the centre's column; a column still cold answers the authored
+     * stand Y.
+     */
     @Nonnull
     private static Vector3d centre(@Nonnull World world) {
         Anchor centre = ArenaLayout.SPAWN;
