@@ -548,7 +548,7 @@
               }
             },
             {
-              "$Comment": "LUNGER attack motion: a Charge lunge replaces the plain Intelligent_Chase. Out past melee the hunter winds up briefly then bursts at the target (ChargeAbsoluteSpeed), spawning a Void burst on each charge phase. After/aside the charge it still pursues relentlessly (no soft leash, filterless target, the de-leashed contract). The Charge sensor lives on a Continue branch so the trailing Seek fallback ALWAYS runs and the role never stalls if a charge is obstructed - a wrong charge degrades to a fast stalker, never a broken role.",
+              "$Comment": "LUNGER attack motion: a Charge lunge replaces the plain Intelligent_Chase. Out past melee the hunter winds up briefly then bursts at the target (ChargeAbsoluteSpeed), spawning a Void burst on each charge phase. After/aside the charge it still pursues relentlessly (no soft leash, filterless target, the de-leashed contract). The Charge sensor lives on a Continue branch so the trailing Seek fallback ALWAYS runs and the role never stalls if a charge is obstructed - a wrong charge degrades to a fast stalker, never a broken role. The burst reaches full speed at once and stops dead: ChargeAccelerationDistance and ChargeDecelerationDistance are 0. Raise either (in blocks) for a lunge that eases in or out.",
               "Continue": true,
               "Sensor": {
                 "Type": "Target",
@@ -567,7 +567,8 @@
                 "ChargeRelativeSpeed": 0,
                 "ChargeDistanceRange": [ 6, 12 ],
                 "ChargeAbsoluteSpeed": 16,
-                "ChargeAcceleration": 1000,
+                "ChargeAccelerationDistance": 0,
+                "ChargeDecelerationDistance": 0,
                 "IgnoredBlockSetTriggers": false,
                 "EntityStopsCharge": false,
                 "ClimbSlope": 2,

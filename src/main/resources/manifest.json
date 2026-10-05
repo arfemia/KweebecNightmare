@@ -9,11 +9,11 @@
     }
   ],
   "Website": "https://mmo-skill-tree-docs.ziggfreed.com",
-  "ServerVersion": ">=0.6.0-pre.13 <0.7.0",
+  "ServerVersion": ">=0.7.0-pre.0 <0.8.0",
   "Dependencies": {
     "Hytale:NPC": "*",
     "narwhals:Perfect Utils": ">=1.0.2 <2.0.0",
-    "Ziggfreed:ZiggfreedCommon": ">=2.2.0"
+    "Ziggfreed:ZiggfreedCommon": ">=2.3.0"
   },
   "OptionalDependencies": {
     "Ziggfreed:MMOSkillTree": "*"

@@ -57,7 +57,7 @@
         "Display": true,
         "AlwaysDisplay": true,
         "Icon": "KweebecNightmare_Portal.png",
-        "Major": true,
+        "Style": "Major",
         "Duration": 4.0,
         "FadeInDuration": 1.5,
         "FadeOutDuration": 1.5
