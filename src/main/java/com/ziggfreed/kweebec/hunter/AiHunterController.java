@@ -6,6 +6,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -32,6 +34,7 @@ import com.ziggfreed.common.sound.Sound3D;
 import com.ziggfreed.common.world.BlockTypeLists;
 import com.ziggfreed.common.world.SpawnPlacement;
 import com.ziggfreed.common.world.SurfaceProbe;
+import com.ziggfreed.common.world.TickingSections;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.arena.Anchor;
 import com.ziggfreed.kweebec.arena.ArenaLayout;
@@ -361,10 +364,33 @@ public final class AiHunterController implements HunterController {
         }
         Rotation3f rot = new Rotation3f(0f, yaw, 0f);
         try {
-            // No spawn-time target lock: the first tick's taunt directs the hunter (the aggro
-            // system carries targeting; there is no marked-target seam to seed anymore).
-            var spawned = npc.spawnEntity(store, roleIndex, pos, rot, null,
-                    (npcEntity, npcRef, st) -> { });
+            // Update 7: a hunter added into a chunk section that is not ticking is parked on the spot,
+            // never tracked, and turns up later outside the round's control. A survivor's hot sphere
+            // usually covers the den, but nothing guarantees it when the roster goes down (nor a wave
+            // hunter's spot at a sphere's edge). Wake the section first (the den's columns are loaded, so
+            // the wake lands before this returns), say so when it had to, and skip a hunter whose section
+            // is not in memory.
+            World world = store.getExternalData().getWorld();
+            var spawned = spawnWhenTicking(
+                    () -> {
+                        boolean asleep = TickingSections.stateAt(world, pos.x, pos.y, pos.z)
+                                != TickingSections.State.TICKING;
+                        boolean ticks = TickingSections.ensureTicking(world, pos.x, pos.y, pos.z);
+                        if (asleep && ticks) {
+                            // The evidence for how often the guard matters (Task K's client check).
+                            SafeLog.info("[Kweebec] woke the chunk section under hunter role '" + roleName
+                                    + "' at " + Math.round(pos.x) + "," + Math.round(pos.y) + ","
+                                    + Math.round(pos.z) + " before spawning it");
+                        }
+                        return ticks;
+                    },
+                    // No spawn-time target lock: the first tick's taunt directs the hunter (the aggro
+                    // system carries targeting; there is no marked-target seam to seed anymore).
+                    () -> npc.spawnEntity(store, roleIndex, pos, rot, null, (npcEntity, npcRef, st) -> { }),
+                    () -> SafeLog.warn("[Kweebec] hunter role '" + roleName + "' (archetype '" + bandSource.getId()
+                            + "') not spawned at " + Math.round(pos.x) + "," + Math.round(pos.y) + ","
+                            + Math.round(pos.z) + ": its chunk section is not ticking (not in memory, or not"
+                            + " awake yet)"));
             if (spawned != null) {
                 hunters.add(new HunterUnit(spawned.first(), bandSource, System.currentTimeMillis()));
             }
@@ -372,6 +398,21 @@ public final class AiHunterController implements HunterController {
             SafeLog.warn("[Kweebec] hunter spawn failed (archetype '" + bandSource.getId()
                     + "', role '" + roleName + "'): " + t.getMessage());
         }
+    }
+
+    /**
+     * Spawn only where the spawn will stay: {@code spawn} runs when {@code ticking} answers true; otherwise
+     * {@code asleep} runs and nothing is spawned, so no hunter is parked into a sleeping section.
+     * Package-private for the test; the live answer is ziggfreed-common's {@code TickingSections.ensureTicking}.
+     */
+    @Nullable
+    static <T> T spawnWhenTicking(@Nonnull BooleanSupplier ticking, @Nonnull Supplier<T> spawn,
+                                  @Nonnull Runnable asleep) {
+        if (!ticking.getAsBoolean()) {
+            asleep.run();
+            return null;
+        }
+        return spawn.get();
     }
 
     /**
