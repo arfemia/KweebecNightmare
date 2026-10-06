@@ -7,7 +7,7 @@ A standalone co-op horror minigame for Hytale, set in a Void-blighted Emerald Gr
 
 1-4 player co-op, or solo against the AI.
 
-> **Status: 1.2.0 is the current public build, released 2026-09-12; 1.2.1, a fix release for CommonLib 2.2.0, comes next.** The Chase round ("Relight & Escape") is complete: the Warden fights three phases on the game's own boss bar, the hunters arrive on a schedule and the Heartwood Gate opens on the killing blow, all of it on the game's encounter scripts through Ziggfreed's CommonLib 2.1.0 or newer. The top-down survival mode is next. See [patch notes](patch-notes/) for what is live.
+> **Status: 1.2.0 is the current public build, released 2026-09-12; 1.2.1, a fix release that requires CommonLib 2.2.0, comes next.** The Chase round ("Relight & Escape") is complete: the Warden fights three phases on the game's own boss bar, the hunters arrive on a schedule and the Heartwood Gate opens on the killing blow, all of it on the game's encounter scripts through Ziggfreed's CommonLib 2.1.0 or newer. The top-down survival mode is next. See [patch notes](patch-notes/) for what is live.
 
 ## The chase loop (Relight & Escape)
 
@@ -25,7 +25,7 @@ Kweebec Nightmare runs the minigame on its own; [MMO Skill Tree](https://www.cur
 
 ## Install
 
-Drop `KweebecNightmare-<version>.jar` into your server `Mods/` folder, along with its two required companion mods, **Ziggfreed's CommonLib** (2.1.0 or newer) and **Perfect Utils** (the server loads them first). Requires a Hytale Update 6 server (`>=0.6.0-pre.13 <0.7.0`).
+Drop `KweebecNightmare-<version>.jar` into your server `Mods/` folder, along with its two required companion mods, **Ziggfreed's CommonLib** (2.2.0 or newer) and **Perfect Utils** (the server loads them first). Requires a Hytale Update 6 server (`>=0.6.0-pre.13 <0.7.0`).
 
 ## Build from source
 
