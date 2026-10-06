@@ -1,3 +1,4 @@
+$ZT = "../Common/ZigType.ui";
 // Kweebec CLASH (team PvP) round HUD: a match countdown, the coloured team-vs-team score,
 // the viewer's team name, their personal hits/kills tally, and the per-team alive counts.
 // Texture-free (colour-only) so it cannot red-X on a missing asset, mirroring
@@ -7,10 +8,10 @@
 // side, per-locale); the rest are plain .Text. All five are code-driven each tick, so the
 // literals here are placeholders, never shown once a frame is pushed.
 
-@KnClashTimerStyle = (FontSize: 18, TextColor: #e6e0c8, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
-@KnClashScoreStyle = (FontSize: 22, TextColor: #dee2ef, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
-@KnClashTeamStyle  = (FontSize: 13, TextColor: #9fc6d0, RenderBold: false, HorizontalAlignment: Center, VerticalAlignment: Start);
-@KnClashLineStyle  = (FontSize: 14, TextColor: #c8d2e0, RenderBold: false, HorizontalAlignment: Center, VerticalAlignment: Start);
+@KnClashTimerStyle = (FontSize: $ZT.@ZigFontSubtitle, TextColor: #e6e0c8, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
+@KnClashScoreStyle = (FontSize: $ZT.@ZigFontDisplay, TextColor: #dee2ef, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
+@KnClashTeamStyle  = (FontSize: $ZT.@ZigFontCaption, TextColor: #9fc6d0, RenderBold: false, HorizontalAlignment: Center, VerticalAlignment: Start);
+@KnClashLineStyle  = (FontSize: $ZT.@ZigFontBody, TextColor: #c8d2e0, RenderBold: false, HorizontalAlignment: Center, VerticalAlignment: Start);
 
 Group {
   Group #KweebecClashHud {

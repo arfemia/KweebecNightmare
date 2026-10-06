@@ -1,3 +1,4 @@
+$ZT = "../Common/ZigType.ui";
 // Kweebec DOMINATION (control-point PvP) round HUD: a match countdown, the coloured
 // team-vs-team points score, the viewer's team name, and a live leading-capture readout.
 // Texture-free (colour-only) so it cannot red-X on a missing asset, mirroring
@@ -7,10 +8,10 @@
 // client-side, per-locale); the rest are plain .Text. All are code-driven each tick, so the
 // literals here are placeholders, never shown once a frame is pushed.
 
-@KnDomTimerStyle   = (FontSize: 18, TextColor: #e6e0c8, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
-@KnDomScoreStyle   = (FontSize: 22, TextColor: #dee2ef, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
-@KnDomTeamStyle    = (FontSize: 13, TextColor: #9fc6d0, RenderBold: false, HorizontalAlignment: Center, VerticalAlignment: Start);
-@KnDomCaptureStyle = (FontSize: 14, TextColor: #7ad6ff, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
+@KnDomTimerStyle   = (FontSize: $ZT.@ZigFontSubtitle, TextColor: #e6e0c8, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
+@KnDomScoreStyle   = (FontSize: $ZT.@ZigFontDisplay, TextColor: #dee2ef, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
+@KnDomTeamStyle    = (FontSize: $ZT.@ZigFontCaption, TextColor: #9fc6d0, RenderBold: false, HorizontalAlignment: Center, VerticalAlignment: Start);
+@KnDomCaptureStyle = (FontSize: $ZT.@ZigFontBody, TextColor: #7ad6ff, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
 
 Group {
   Group #KweebecDominationHud {

@@ -1,3 +1,4 @@
+$ZT = "../Common/ZigType.ui";
 // Kweebec Nightmare round HUD: countdown, objective, shrines, alive, corruption,
 // and the co-op extraction line (ESCAPE phase: "X/Y on the dais" + hold countdown).
 // Texture-free (colour-only) so it cannot red-X on a missing asset. Element ids
@@ -5,10 +6,10 @@
 // NightmareHud pushes partial updates against. #Extraction defaults to empty (blank
 // through PREP/RITUAL) and is filled only once the gate opens.
 
-@KnTitleStyle   = (FontSize: 18, TextColor: #c8b0ff, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
-@KnLineStyle    = (FontSize: 14, TextColor: #9fc6d0, RenderBold: false, HorizontalAlignment: Center, VerticalAlignment: Start);
-@KnWarnStyle    = (FontSize: 14, TextColor: #ff6a6a, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
-@KnExtractStyle = (FontSize: 16, TextColor: #7ad6ff, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
+@KnTitleStyle   = (FontSize: $ZT.@ZigFontSubtitle, TextColor: #c8b0ff, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
+@KnLineStyle    = (FontSize: $ZT.@ZigFontBody, TextColor: #9fc6d0, RenderBold: false, HorizontalAlignment: Center, VerticalAlignment: Start);
+@KnWarnStyle    = (FontSize: $ZT.@ZigFontBody, TextColor: #ff6a6a, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
+@KnExtractStyle = (FontSize: $ZT.@ZigFontHeading, TextColor: #7ad6ff, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Start);
 
 Group {
   Group #KweebecHud {
