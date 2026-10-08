@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
 import com.ziggfreed.kweebec.util.SafeLog;
 
 /**
- * Retires the two owner files the Grove Warden's own spawner kept, and tells the server owner
+ * Retires the two owner files the Grove Keeper's own spawner kept, and tells the server owner
  * where the settings went.
  *
  * <p>A retired file is the one moment an owner's customization can vanish without anybody
@@ -23,7 +23,7 @@ import com.ziggfreed.kweebec.util.SafeLog;
  *
  * <p>Nothing is carried across automatically. The two files describe a world list, an offset and
  * a yaw in a shape the placement asset does not share, and quietly guessing a placement out of
- * them would put the Warden somewhere the owner never asked for.
+ * them would put the Keeper somewhere the owner never asked for.
  *
  * <p>Pure {@code java.nio.file} I/O, so it is safe to call from plugin setup before the asset
  * pipeline exists. It never throws: an I/O failure logs and moves on, so a locked or read-only
@@ -31,7 +31,7 @@ import com.ziggfreed.kweebec.util.SafeLog;
  */
 public final class LegacyGuideFiles {
 
-    /** The Grove Warden's old auto-spawn settings (world list, offset, yaw). */
+    /** The Grove Keeper's old auto-spawn settings (world list, offset, yaw). */
     private static final String GUIDE_CONFIG = "guide.json";
 
     /** The old per-world "already placed" marker plus the recorded guide UUID. */
@@ -95,9 +95,9 @@ public final class LegacyGuideFiles {
     }
 
     private static void announce(@Nonnull List<String> retired) {
-        SafeLog.warn("===== The Grove Warden is placed by the NPC placement engine now =====\n"
+        SafeLog.warn("===== The Grove Keeper is placed by the NPC placement engine now =====\n"
                 + "Retired (never read, never deleted): " + String.join(", ", retired) + "\n"
-                + "Where the Warden stands is authored at "
+                + "Where the Keeper stands is authored at "
                 + "Server/ZiggfreedCommon/NpcPlacements/Kweebec_Grove_Warden.json, and the switch "
                 + "to stop them appearing is mods/ziggfreedcommon/npc-placements.json.");
     }

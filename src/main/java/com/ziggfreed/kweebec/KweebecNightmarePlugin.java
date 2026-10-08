@@ -144,7 +144,7 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // The PvP twin of the experience layer (Clash + Domination team results + the arena leaderboard).
         KweebecClashExperience.init(getDataDirectory());
 
-        // The Grove Warden is stood up by the shared NPC placement engine now, from the asset
+        // The Grove Keeper is stood up by the shared NPC placement engine now, from the asset
         // Server/ZiggfreedCommon/NpcPlacements/Kweebec_Grove_Warden.json, so the two owner files the
         // old spawner kept are renamed aside with one notice saying where their settings went.
         LegacyGuideFiles.retire(getDataDirectory());

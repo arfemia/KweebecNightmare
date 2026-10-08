@@ -53,7 +53,7 @@ item.moonbloom.description = Offer it at a blighted shrine to cleanse the grove,
 item.moonbloom_plant.name = Moonbloom Cluster
 item.moonbloom_plant.description = Harvest this glowing cluster to gather <color is="#7affa0">Moonbloom</color>, the light the shrines drink and the hunt fears.\n\n<i>Even choked by the blight, a little of the grove's old light keeps creeping back.</i>
 item.gustbloom.name = Gustbloom
-item.gustbloom.description = Bursts in a sharp <color is="#5a9cff">gust</color> that hurls a hunter back and buys you room to run.\n\n<i>It held its breath since the grove last breathed clean, and lets go all at once.</i>
+item.gustbloom.description = Bursts in a sharp <color is="#5a9cff">gust</color> that hurls a hunter back and buys you room to run.\n\n<i>It has been holding its breath since the grove last breathed clean. It lets go all at once.</i>
 item.gustbloom_plant.name = Gustbloom Cluster
 item.gustbloom_plant.description = Harvest this windswept cluster to gather <color is="#5a9cff">Gustbloom</color>, the bloom that throws a hunter back.\n\n<i>It sways when there is no wind, breathing air the dead grove can no longer use.</i>
 item.mirebloom.name = Mirebloom
@@ -116,18 +116,18 @@ cmd.not_in_round = You are not in a round.
 cmd.starting = Descending into the Blighted Grove...
 cmd.start_failed = Could not start the round. Try again.
 cmd.leaving = Leaving the grove...
-cmd.unknown_preset = Unknown preset. Try amateur, nightmare, hardcore, endless, swarm, pitch, or blitz.
+cmd.unknown_preset = Unknown preset. Try amateur, nightmare, or hardcore.
 cmd.no_active_rounds = No active rounds.
 cmd.ended = Ended all active rounds.
-cmd.usage = Usage: /kweebec [start|exit|endall|give|score|leaderboard|clashhost] [preset|count|partySize]
+cmd.usage = Usage: /kweebec [start|exit|score|leaderboard|party] [preset]
 cmd.give_done = Gave you {0} Moonbloom.
 cmd.score_header = Your Kweebec Nightmare bests:
 cmd.score_none = No recorded score yet. Survive a round first.
 cmd.lb_header = Kweebec Nightmare leaderboard ({0} players):
 cmd.lb_empty = No leaderboard entries for that party size yet.
-cmd.kweebec.desc = Start, leave, or end a Kweebec Nightmare round
-cmd.arg.sub = start | exit | endall | give | score | leaderboard | clashhost
-cmd.arg.preset = preset | count | partySize
+cmd.kweebec.desc = Start, leave, or check on a Kweebec Nightmare round
+cmd.arg.sub = start | exit | score | leaderboard | party
+cmd.arg.preset = amateur | nightmare | hardcore
 
 # Dialogue page chrome (resolved by the shared ziggfreed-common dialogue engine).
 dialogue.kweebec.farewell = Step away
@@ -153,17 +153,17 @@ cmd.left_queue = You leave the gathering.
 cmd.clash_host_spawned = The Duelmaster answers your call.
 cmd.clash_host_failed = The Duelmaster cannot stand here.
 
-# The Grove Warden guide NPC (role KweebecNightmare_Guide). The interaction hint uses
+# The Grove Keeper guide NPC (role KweebecNightmare_Guide). The interaction hint uses
 # the native [{key}] placeholder - the client substitutes the bound interact key (e.g. F).
-npc.guide.name = The Grove Warden
-npc.guide.hint = Press [{key}] to speak with the Grove Warden
+npc.guide.name = The Grove Keeper
+npc.guide.hint = Press [{key}] to speak with the Grove Keeper
 
-# Guide dialogue: the Grove Warden (id "nightmares_intro"). NODE TEXT renders on the
+# Guide dialogue: the Grove Keeper (id "nightmares_intro"). NODE TEXT renders on the
 # Label's TextSpans, so Hytale's native inline markup - <color is="#hex">/<b>/<i> - is
 # parsed CLIENT-side, per-locale (same mechanism as vanilla items.*.description). A
 # translator keeps the markup in their own line. Option labels are TextButtons (no
 # TextSpans), so they take no markup - colour-coded by their DialogueOptionStyle.
-dialogue.nightmares_intro.npc = The Grove Warden
+dialogue.nightmares_intro.npc = The Grove Keeper
 dialogue.nightmares_intro.greet.text = Oh good, you're still breathing. Not many are, this far in. I've lived this same nightmare more times than I can count - the grove goes black, my own kin start wearing my face and chasing me through it, and I never make it out. But I've seen it enough to know where it gets you. Stay a minute, I'll tell you the parts that get people killed.
 dialogue.nightmares_intro.greet.opt.0 = How does this nightmare go?
 dialogue.nightmares_intro.greet.opt.1 = Enough talk, send me in.
@@ -183,7 +183,7 @@ dialogue.nightmares_intro.preset_pick.opt.3 = Not yet. Step back.
 dialogue.nightmares_intro.already_engaged.text = One at a time, warm one. You're already in a hunt - get out of that gathering first, and I'll gladly drop you into the next.
 dialogue.nightmares_intro.already_engaged.opt.0 = Understood.
 
-# Leaderboard page (the Grove Warden's "Who has survived the most?" option, greet.opt.3).
+# Leaderboard page (the Grove Keeper's "Who has survived the most?" option, greet.opt.3).
 # Plain labels shown on Label .Text (no inline markup); column colours come from the .ui styles.
 leaderboard.title = Survivors of the Grove
 leaderboard.tab.solo = Solo
@@ -260,9 +260,9 @@ queue.screen.leave = Leave the Gathering
 queue.screen.not_queued = You are not in a gathering.
 queue.screen.toast_queued = You join the gathering ({0}/{1}).
 
-# Play screen - "Claim Rewards" button (chooser) for spoils missed earlier (closed the results
+# Play screen - "Claim Spoils" button (chooser) for spoils missed earlier (closed the results
 # screen, or a full inventory) + the toast shown after claiming.
-play.btn.claim = Claim Rewards
+play.btn.claim = Claim Spoils
 play.toast.claimed = Spoils claimed.
 
 # Play screen - the mode chooser (the shared PlayModePage, not-queued state): how to enter.

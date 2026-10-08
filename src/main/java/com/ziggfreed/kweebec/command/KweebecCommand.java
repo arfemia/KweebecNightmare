@@ -38,7 +38,7 @@ import com.ziggfreed.kweebec.round.KweebecMode;
 import com.ziggfreed.kweebec.round.RoundService;
 
 /**
- * {@code /kweebec [start|exit|endall] [preset]} - the round entry point.
+ * {@code /kweebec [start|exit|score|leaderboard|party] [preset]} - the round entry point.
  *
  * <ul>
  *   <li>{@code start [preset]} - start a Chase round; the party is the caller plus
@@ -47,6 +47,9 @@ import com.ziggfreed.kweebec.round.RoundService;
  *   <li>{@code exit} - leave your current round.</li>
  *   <li>{@code endall} - force-end every live round (admin/testing).</li>
  * </ul>
+ *
+ * <p>{@code give}, {@code endall}, {@code clashhost}, {@code clash} and {@code domination} are admin-only:
+ * {@link KweebecSubcommand} holds every name the command answers to and who may run it.
  *
  * <p>The diegetic triggers (void-rift pad, shrine block, guide NPC) route through
  * the same {@link RoundService#startChase} entry; the command is the first one.
@@ -68,19 +71,28 @@ public final class KweebecCommand extends CommandBase {
 
     @Override
     protected void executeSync(@Nonnull CommandContext ctx) {
-        String sub = ctx.provided(subArg) ? subArg.get(ctx).toLowerCase(Locale.ROOT) : "start";
+        String name = ctx.provided(subArg) ? subArg.get(ctx).toLowerCase(Locale.ROOT) : "start";
+        KweebecSubcommand sub = KweebecSubcommand.byName(name);
+        if (sub == null) {
+            ctx.sendMessage(Lang.msg(Lang.CMD_USAGE));
+            return;
+        }
+        // The command is open to every player, so an admin subcommand refuses here, before anything runs.
+        if (!sub.mayRun(ctx.sender())) {
+            ctx.sendMessage(Lang.msg(Lang.CMD_NO_PERMISSION));
+            return;
+        }
         switch (sub) {
-            case "start" -> start(ctx);
-            case "clash" -> startMode(ctx, KweebecMode.CLASH, "clash_1v1");
-            case "domination", "dom" -> startMode(ctx, KweebecMode.DOMINATION, "domination_koth");
-            case "exit", "leave" -> exit(ctx);
-            case "endall", "end" -> endAll(ctx);
-            case "give" -> give(ctx);
-            case "score" -> score(ctx);
-            case "leaderboard", "lb" -> leaderboard(ctx);
-            case "party" -> party(ctx);
-            case "clashhost", "host" -> spawnClashHost(ctx);
-            default -> ctx.sendMessage(Lang.msg(Lang.CMD_USAGE));
+            case START -> start(ctx);
+            case CLASH -> startMode(ctx, KweebecMode.CLASH, "clash_1v1");
+            case DOMINATION -> startMode(ctx, KweebecMode.DOMINATION, "domination_koth");
+            case EXIT -> exit(ctx);
+            case END_ALL -> endAll(ctx);
+            case GIVE -> give(ctx);
+            case SCORE -> score(ctx);
+            case LEADERBOARD -> leaderboard(ctx);
+            case PARTY -> party(ctx);
+            case CLASH_HOST -> spawnClashHost(ctx);
         }
     }
 

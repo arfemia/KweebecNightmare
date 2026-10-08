@@ -1,10 +1,10 @@
 {
-  "$Comment": "The 'Grove Warden' guide NPC, a surviving uncorrupted Kweebec. Stationary, invulnerable and neutral; press F opens the backstory and preset launcher, the conversation 'nightmares_intro'. What F opens is authored HERE, on the role, rather than on the placement that stands this character up, so the Warden talks whether the placement engine put them at spawn or an admin spawned one by hand with the native NPC tooling. Point it at a conversation of your own by editing the Dialogue value below. Where the Warden stands is Server/ZiggfreedCommon/NpcPlacements/Kweebec_Grove_Warden.json. The nameplate reads NameTranslationKey, so a role built on this one with its own key shows its own name; the press-F prompt under Hint is read literally by the engine and can only be changed in a full role body like this one.",
+  "$Comment": "The 'Grove Keeper' guide NPC, a surviving uncorrupted Kweebec. Stationary, invulnerable and neutral; press F opens the backstory and preset launcher, the conversation 'nightmares_intro'. What F opens is authored HERE, on the role, rather than on the placement that stands this character up, so the Keeper talks whether the placement engine put them at spawn or an admin spawned one by hand with the native NPC tooling. Point it at a conversation of your own by editing the Dialogue value below. Where the Keeper stands is Server/ZiggfreedCommon/NpcPlacements/Kweebec_Grove_Warden.json. The nameplate reads NameTranslationKey, so a role built on this one with its own key shows its own name; the press-F prompt under Hint is read literally by the engine and can only be changed in a full role body like this one.",
   "Type": "Generic",
   "Parameters": {
     "NameTranslationKey": {
       "Value": "kweebecnightmare.npc.guide.name",
-      "Description": "Display name for the Grove Warden guide NPC"
+      "Description": "Display name for the Grove Keeper guide NPC"
     }
   },
   "StartState": "Idle",

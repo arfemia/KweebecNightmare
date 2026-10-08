@@ -172,6 +172,8 @@ public final class Lang {
     public static final String CMD_LEFT_QUEUE = "kweebecnightmare.cmd.left_queue";
     public static final String CMD_CLASH_HOST_SPAWNED = "kweebecnightmare.cmd.clash_host_spawned";
     public static final String CMD_CLASH_HOST_FAILED = "kweebecnightmare.cmd.clash_host_failed";
+    /** An admin subcommand refused: the engine's own refusal from its {@code server.lang}, so no line here. */
+    public static final String CMD_NO_PERMISSION = "server.commands.parsing.error.noPermissionForCommand";
 
     // Matchmaking queue feedback (toasts + the launch-countdown banner). The queue itself
     // delivers these via the shared ziggfreed-common Notify / EventTitles primitives.
