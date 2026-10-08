@@ -1,9 +1,6 @@
 # Kweebec Nightmare
 
-A standalone co-op horror minigame for Hytale, set in a Void-blighted Emerald Grove at perpetual midnight where the gentle Kweebec tree-folk have been twisted into something that hunts. One mod, **two modes** (each its own instanced world):
-
-- **Relight & Escape** (chase) - relight the corrupted grove-shrines to open the Heartwood Gate before the **Blighted Kweebec** runs you down.
-- **Last Light Till Dawn** (top-down survival) - hold a heart-sapling against escalating waves until dawn, played from a locked overhead camera.
+A standalone co-op horror minigame for Hytale, set in a Void-blighted Emerald Grove at perpetual midnight where the gentle Kweebec tree-folk have been twisted into something that hunts. You play **Relight & Escape**, a chase in its own instanced world: relight the corrupted grove-shrines to open the Heartwood Gate before the **Blighted Kweebec** runs you down.
 
 1-4 player co-op, or solo against the AI.
 
@@ -35,6 +32,6 @@ Drop `KweebecNightmare-<version>.jar` into your server `Mods/` folder, along wit
 ```
 Java 25. The Hytale server jar path is configured in `gradle.properties`. Set `HYTALE_MODS_DIR` once to auto-install on build. See [CLAUDE.md](CLAUDE.md) for the developer guide.
 
-## The survival loop (Last Light Till Dawn)
+## Roadmap
 
-A top-down survival mode: defend a heart-sapling and relight wards in a clearing while escalating corrupted-Kweebec waves close in from spawn lanes. Light pushes back the dark; corruption ramps to a final pre-dawn surge. Survive until dawn to win. Played from a locked overhead camera; downed players are revivable.
+- **Last Light Till Dawn** (planned, not in the mod yet) - a top-down survival mode: hold a heart-sapling against waves of corrupted Kweebec until dawn.
