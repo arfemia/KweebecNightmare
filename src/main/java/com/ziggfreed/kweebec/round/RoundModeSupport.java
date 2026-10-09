@@ -95,8 +95,9 @@ public final class RoundModeSupport {
         int idx = Math.max(0, round.membersOfTeam(team).indexOf(uuid)) % teamSpawns.size();
         ArenaDefinitionAsset.Anchor a = teamSpawns.get(idx);
         try {
+            // The arena asset authors yaw in degrees; Transform's rotation is radians.
             Teleport tp = Teleport.createForPlayer(
-                    new Transform(a.x(), a.y(), a.z(), 0f, (float) a.yaw(), 0f));
+                    new Transform(a.x(), a.y(), a.z(), 0f, (float) Math.toRadians(a.yaw()), 0f));
             store.putComponent(ref, Teleport.getComponentType(), tp);
         } catch (Throwable t) {
             SafeLog.fine("[Kweebec] team-spawn teleport failed: " + t.getMessage());
