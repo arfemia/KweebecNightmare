@@ -8,7 +8,7 @@ basalt + blue-crystal palette that reads as a frozen, blighted platform).
 
 Why a build-time copy (no runtime fetch): vanilla prefab keys do NOT resolve through
 the mod's PrefabStore at runtime - ArenaBuilder.load only finds paths the pack itself
-ships (Files.exists in loaded packs). The vanilla prefab is read from hytale-shared-source/HytaleAssets at build time only. So, like
+ships (Files.exists in loaded packs). The vanilla prefab is read from shared-source/release/HytaleAssets at build time only. So, like
 Corrupted_Well (tools/repaint_kweebec_prefab.py), we copy the geometry into the pack
 once and commit the output; the runtime loads KweebecNightmare/Extraction_Pad.
 
@@ -40,8 +40,22 @@ from collections import Counter, defaultdict
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 HYMMO_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "..", ".."))
+
+
+def _shared_source() -> str:
+    """The workspace's shared-source/release clone, beside hyMMO: the first folder above this script that
+    holds one, so the main checkout and a linked worktree under worktrees/ both find it."""
+    here = SCRIPT_DIR
+    while os.path.dirname(here) != here:
+        candidate = os.path.join(here, "shared-source", "release")
+        if os.path.isdir(candidate):
+            return candidate
+        here = os.path.dirname(here)
+    return os.path.join(os.path.dirname(HYMMO_ROOT), "shared-source", "release")
+
+
 SOURCE = os.path.join(
-    HYMMO_ROOT, "hytale-shared-source", "HytaleAssets", "Server", "Prefabs", "Monuments",
+    _shared_source(), "HytaleAssets", "Server", "Prefabs", "Monuments",
     "Unique", "Elemental_Circles", "Frost", "Middle", "Tier_1",
     "Unique_Middle_Tier_1_Circles_Frost_Middle_001.prefab.json",
 )

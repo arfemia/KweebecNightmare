@@ -10,7 +10,7 @@ a Void-blight equivalent.
 Why a build-time DATA edit (no engine hook): PrefabUtil.paste reads the block
 "name" straight out of the prefab buffer (PrefabUtil.java:156-194); there is NO
 per-cell repaint hook at paste time, so a recolor MUST live in the prefab file.
-The committed Corrupted_* outputs mean the runtime never touches hytale-shared-source.
+The committed Corrupted_* outputs mean the runtime never touches shared-source/release.
 
 Determinism: when a source block maps to a SET of blight targets, the pick is a
 hash of (x, y, z). The same structure looks identical every run; NO random module.
@@ -38,7 +38,7 @@ paste does not load them, but zeroing them is belt-and-suspenders.
 Usage:
   python repaint_kweebec_prefab.py <source.prefab.json> <OutName>
     e.g. python repaint_kweebec_prefab.py \
-         ../../../hytale-shared-source/HytaleAssets/Server/Prefabs/Npc/Kweebec/Oak/Well/Kweebec_Oak_Well_001.prefab.json Well
+         ../../../../shared-source/release/HytaleAssets/Server/Prefabs/Npc/Kweebec/Oak/Well/Kweebec_Oak_Well_001.prefab.json Well
     writes ../src/main/resources/Server/Prefabs/KweebecNightmare/Corrupted_Well.prefab.json
 
   python repaint_kweebec_prefab.py --all
@@ -59,7 +59,21 @@ from typing import Dict, List, Optional, Set, Tuple
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # tools/ -> kweebec-nightmare/ -> additional-mods/ -> hyMMO/
 HYMMO_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "..", ".."))
-RESOURCES = os.path.join(HYMMO_ROOT, "hytale-shared-source")
+
+
+def _shared_source() -> str:
+    """The workspace's shared-source/release clone, beside hyMMO: the first folder above this script that
+    holds one, so the main checkout and a linked worktree under worktrees/ both find it."""
+    here = SCRIPT_DIR
+    while os.path.dirname(here) != here:
+        candidate = os.path.join(here, "shared-source", "release")
+        if os.path.isdir(candidate):
+            return candidate
+        here = os.path.dirname(here)
+    return os.path.join(os.path.dirname(HYMMO_ROOT), "shared-source", "release")
+
+
+RESOURCES = _shared_source()
 BLOCKTYPELIST_DIR = os.path.join(RESOURCES, "HytaleAssets", "Server", "BlockTypeList")
 ITEMS_DIR = os.path.join(RESOURCES, "HytaleAssets", "Server", "Item", "Items")
 NATIVE_KWEEBEC = os.path.join(

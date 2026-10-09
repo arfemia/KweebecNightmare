@@ -1,6 +1,6 @@
 # Kweebec Nightmare
 
-Co-op horror minigame mod (Relight & Escape chase, one instance world per round). Zero MMO dependency. Per-package routers load lazily under `src/main/java/com/ziggfreed/kweebec/`. The family-wide rules apply here; this file adds only what is specific to this mod. Engine facts are verified against `hytale-shared-source`.
+Co-op horror minigame mod (Relight & Escape chase, one instance world per round). Zero MMO dependency. Per-package routers load lazily under `src/main/java/com/ziggfreed/kweebec/`. The family-wide rules apply here; this file adds only what is specific to this mod. Engine facts are verified against `shared-source/release`.
 
 ## Build and dependencies
 
