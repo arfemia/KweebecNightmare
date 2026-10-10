@@ -53,6 +53,12 @@ def ziggfreedCommonJar = findProperty('ziggfreedCommonJar')
         ? file(findProperty('ziggfreedCommonJar'))
         : new File(familyPath('repo.ziggfreed-common'), "build/libs/ZiggfreedCommon-${ziggfreedCommonVersion}.jar")
 
+// Perfect Utils: the Developer-Utils repo's build output (repo.Developer-Utils in the path map) at the
+// pinned perfectUtilsVersion; -PperfectUtilsJar=<path> overrides it.
+def perfectUtilsJar = findProperty('perfectUtilsJar')
+        ? file(findProperty('perfectUtilsJar'))
+        : new File(familyPath('repo.Developer-Utils'), "build/libs/Perfect Utils-${perfectUtilsVersion}.jar")
+
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -67,7 +73,7 @@ dependencies {
     // Perfect Utils (hard runtime dep, manifest Dependencies): compileOnly so AggroAPI
     // (com.narwhals.perfectutils.api.AggroAPI) compiles. The server provides the jar at
     // runtime (loaded first), so we NEVER bundle it - bundling would double-load AggroAPI
-    // under two classloaders. Path in gradle.properties (perfectUtilsJar).
+    // under two classloaders. Resolved above through the workspace's path map.
     compileOnly files(perfectUtilsJar)
 
     // Ziggfreed Common (hard runtime dep, manifest Dependencies, loads first): compileOnly
