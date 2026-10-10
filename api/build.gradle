@@ -12,6 +12,15 @@ javadoc {
     options.addStringOption('Xdoclint:-missing', '-quiet')
 }
 
+// The -javadoc jar is a release artifact, not a build check: `build` leaves it (and the javadoc run
+// behind it) out, `gradlew build -Prelease` builds it with everything else, and naming javadocJar
+// builds it alone.
+if (!providers.gradleProperty('release').map { it != 'false' }.getOrElse(false)) {
+    tasks.named('assemble') {
+        setDependsOn(dependsOn.findAll { !((it instanceof Task || it instanceof TaskProvider) && it.name == 'javadocJar') })
+    }
+}
+
 group = 'ziggfreed'
 version = api_version
 
