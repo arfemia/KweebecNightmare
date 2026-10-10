@@ -52,6 +52,12 @@ def familyPath = { String key ->
 def ziggfreedCommonJar = findProperty('ziggfreedCommonJar')
         ? file(findProperty('ziggfreedCommonJar'))
         : new File(familyPath('repo.ziggfreed-common'), "build/libs/ZiggfreedCommon-${ziggfreedCommonVersion}.jar")
+// Inside the family's umbrella build (the workspace root's settings.gradle includes this one, so it
+// has a parent build), the lib is its coordinate, which the umbrella substitutes with the project
+// that builds that jar in the same run. Built alone, or with -PziggfreedCommonJar, it is the jar above.
+def ziggfreedCommon = gradle.parent != null && !findProperty('ziggfreedCommonJar')
+        ? "ziggfreed:ZiggfreedCommon:${ziggfreedCommonVersion}"
+        : files(ziggfreedCommonJar)
 
 // Perfect Utils: the Developer-Utils repo's build output (repo.Developer-Utils in the path map) at the
 // pinned perfectUtilsVersion; -PperfectUtilsJar=<path> overrides it.
@@ -80,14 +86,14 @@ dependencies {
     // so com.ziggfreed.common.* (Sound3D, ...) compiles. The server provides the jar at
     // runtime, so we NEVER bundle it - bundling would double-load its engine-touching
     // classes under two classloaders. Resolved above through the workspace's path map.
-    compileOnly files(ziggfreedCommonJar)
+    compileOnly(ziggfreedCommon)
 
     // Test-only: unit tests decode shipped asset JSON through common's codecs (e.g.
     // ChaseLootableLoadTest) and need the server + common classes on the TEST
     // classpath specifically, since both are compileOnly for main (mirrors mmo-mob-scaling
     // and rpg-stations' own test wiring).
     testImplementation(files(hytaleServerJar))
-    testImplementation(files(ziggfreedCommonJar))
+    testImplementation(ziggfreedCommon)
 }
 
 // Bundle the :api module classes into the plugin jar (excluding service files so the
