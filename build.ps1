@@ -1,6 +1,6 @@
 # Build + install the Kweebec Nightmare plugin jar in one shot.
 #
-# Self-contained (mirrors the hyMMO root rebuild.ps1 -Jar branch): gradlew build,
+# Self-contained (mirrors mmo-family/mmo-skills' rebuild.ps1 -Jar branch): gradlew build,
 # pin the exact runtime jar by version (NOT the -sources/-javadoc siblings), and copy
 # it into the Hytale Mods folder when one is known.
 #

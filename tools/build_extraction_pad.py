@@ -8,7 +8,7 @@ basalt + blue-crystal palette that reads as a frozen, blighted platform).
 
 Why a build-time copy (no runtime fetch): vanilla prefab keys do NOT resolve through
 the mod's PrefabStore at runtime - ArenaBuilder.load only finds paths the pack itself
-ships (Files.exists in loaded packs). The vanilla prefab is read from shared-source/release/HytaleAssets at build time only. So, like
+ships (Files.exists in loaded packs). The vanilla prefab is read from reference/shared-source/release/HytaleAssets at build time only. So, like
 Corrupted_Well (tools/repaint_kweebec_prefab.py), we copy the geometry into the pack
 once and commit the output; the runtime loads KweebecNightmare/Extraction_Pad.
 

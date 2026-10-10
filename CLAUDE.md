@@ -1,11 +1,11 @@
 # Kweebec Nightmare
 
-Co-op horror minigame mod (Relight & Escape chase, one instance world per round). Zero MMO dependency. Per-package routers load lazily under `src/main/java/com/ziggfreed/kweebec/`. The family-wide rules apply here; this file adds only what is specific to this mod. Engine facts are verified against `shared-source/release`.
+Co-op horror minigame mod (Relight & Escape chase, one instance world per round). Zero MMO dependency. Per-package routers load lazily under `src/main/java/com/ziggfreed/kweebec/`. The family-wide rules apply here; this file adds only what is specific to this mod. Engine facts are verified against `reference/shared-source/release`.
 
 ## Build and dependencies
 
 - Build with `.\build.ps1` (`-Install:$false` builds only; `-ModsDir` overrides `HYTALE_MODS_DIR`). Release the plain `build.ps1` jar.
-- `gradle/deprecation-gate.gradle` (run by `check`) is hyMMO's, copied byte for byte: it changes only by copying hyMMO's.
+- `gradle/deprecation-gate.gradle` (run by `check`) is the MMO's (`mmo-family/mmo-skills`), copied byte for byte: it changes only by copying the MMO's.
 - Perfect Utils and `ziggfreed-common` are hard runtime deps compiled `compileOnly`: install both jars in `Mods/` or the load fails. Both resolve through the workspace's `family.properties` (`repo.Developer-Utils`, `repo.ziggfreed-common`, each `build/libs`) at the pinned `perfectUtilsVersion` and `ziggfreedCommonVersion`, so a tree builds against its own copies; `-PperfectUtilsJar=` and `-PziggfreedCommonJar=` override them. Developer-Utils (Perfect Utils) is the maintainer's own mod: when an engine update breaks it, rebuilding it is our work, never an external wait.
 - The `api/` event POJOs are for third parties and are bundled into the jar minus `META-INF/services`; never bundle the MMO api jar.
 

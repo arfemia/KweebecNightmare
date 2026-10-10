@@ -10,7 +10,7 @@ a Void-blight equivalent.
 Why a build-time DATA edit (no engine hook): PrefabUtil.paste reads the block
 "name" straight out of the prefab buffer (PrefabUtil.java:156-194); there is NO
 per-cell repaint hook at paste time, so a recolor MUST live in the prefab file.
-The committed Corrupted_* outputs mean the runtime never touches shared-source/release.
+The committed Corrupted_* outputs mean the runtime never touches reference/shared-source/release.
 
 Determinism: when a source block maps to a SET of blight targets, the pick is a
 hash of (x, y, z). The same structure looks identical every run; NO random module.
