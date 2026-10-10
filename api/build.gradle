@@ -36,11 +36,12 @@ repositories {
 }
 
 // The server this module compiles against, found as the root build.gradle finds it: the
-// workspace's family.properties keys when it is there, else this repo's gradle.properties.
+// workspace's family.properties keys when it is there, else this repo's gradle.properties (read
+// through providers.fileContents, so the configuration cache tracks the file, its absence included).
 def familyBuildKeys = new Properties()
-def familyBuildKeysFile = new File(rootProject.file(workspaceRoot), 'family.properties')
-if (familyBuildKeysFile.isFile()) {
-    familyBuildKeysFile.withReader('UTF-8') { familyBuildKeys.load(it) }
+def familyBuildKeysBytes = providers.fileContents(rootProject.layout.projectDirectory.file("${workspaceRoot}/family.properties")).asBytes.orNull
+if (familyBuildKeysBytes != null) {
+    familyBuildKeys.load(new StringReader(new String(familyBuildKeysBytes, 'UTF-8')))
 }
 def buildKey = { String key -> familyBuildKeys.getProperty(key)?.trim() ?: property(key).toString() }
 def hytaleHome = buildKey('hytaleHome')
