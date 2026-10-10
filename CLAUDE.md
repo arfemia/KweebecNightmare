@@ -4,7 +4,7 @@ Co-op horror minigame mod (Relight & Escape chase, one instance world per round)
 
 ## Build and dependencies
 
-- Build with `.\build.ps1` (`-Install:$false` builds only; `-ModsDir` overrides `HYTALE_MODS_DIR`). Release the plain `build.ps1` jar.
+- Build with `.\build.ps1` (`-Install:$false` builds only). It installs into the Mods folder of the client the workspace's `family.properties` `patchline` plays, through the workspace's `tools\mods-dir.ps1` (R205); `-ModsDir` overrides it, and `HYTALE_MODS_DIR` applies only when no Hytale install is found or in a lone clone. Release the plain `build.ps1` jar.
 - `gradle/deprecation-gate.gradle` (run by `check`) is the MMO's (`mmo-family/mmo-skills`), copied byte for byte: it changes only by copying the MMO's.
 - Perfect Utils and `ziggfreed-common` are hard runtime deps compiled `compileOnly`: install both jars in `Mods/` or the load fails. Both resolve through the workspace's `family.properties` (`repo.Developer-Utils`, `repo.ziggfreed-common`, each `build/libs`) at the pinned `perfectUtilsVersion` and `ziggfreedCommonVersion`, so a tree builds against its own copies; `-PperfectUtilsJar=` and `-PziggfreedCommonJar=` override them. Developer-Utils (Perfect Utils) is the maintainer's own mod: when an engine update breaks it, rebuilding it is our work, never an external wait. `ziggfreedCommonVersion` equals the manifest's `Ziggfreed:ZiggfreedCommon` floor: move the two together. `ManifestTargetTest` fails when they differ, and checks the manifest's server range against the server jar the build compiles with.
 - The `api/` event POJOs are for third parties and are bundled into the jar minus `META-INF/services`; never bundle the MMO api jar.
