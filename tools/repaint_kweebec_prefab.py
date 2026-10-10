@@ -38,7 +38,7 @@ paste does not load them, but zeroing them is belt-and-suspenders.
 Usage:
   python repaint_kweebec_prefab.py <source.prefab.json> <OutName>
     e.g. python repaint_kweebec_prefab.py \
-         ../../../../shared-source/release/HytaleAssets/Server/Prefabs/Npc/Kweebec/Oak/Well/Kweebec_Oak_Well_001.prefab.json Well
+         ../../../reference/shared-source/release/HytaleAssets/Server/Prefabs/Npc/Kweebec/Oak/Well/Kweebec_Oak_Well_001.prefab.json Well
     writes ../src/main/resources/Server/Prefabs/KweebecNightmare/Corrupted_Well.prefab.json
 
   python repaint_kweebec_prefab.py --all
@@ -57,20 +57,22 @@ from typing import Dict, List, Optional, Set, Tuple
 # Paths (resolved relative to this script so the run is location-independent).
 # ---------------------------------------------------------------------------
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-# tools/ -> kweebec-nightmare/ -> additional-mods/ -> hyMMO/
-HYMMO_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "..", ".."))
 
 
 def _shared_source() -> str:
-    """The workspace's shared-source/release clone, beside hyMMO: the first folder above this script that
-    holds one, so the main checkout and a linked worktree under worktrees/ both find it."""
-    here = SCRIPT_DIR
-    while os.path.dirname(here) != here:
-        candidate = os.path.join(here, "shared-source", "release")
-        if os.path.isdir(candidate):
-            return candidate
-        here = os.path.dirname(here)
-    return os.path.join(os.path.dirname(HYMMO_ROOT), "shared-source", "release")
+    """The shared source: the first folder above this script holding reference/shared-source/release (a
+    tree holds none, so the walk passes its root up to main's), else the first holding
+    shared-source/release (the layout before the un-nest), else the first marker, relative to the
+    working folder."""
+    markers = (os.path.join("reference", "shared-source", "release"), os.path.join("shared-source", "release"))
+    for marker in markers:
+        here = SCRIPT_DIR
+        while os.path.dirname(here) != here:
+            candidate = os.path.join(here, marker)
+            if os.path.isdir(candidate):
+                return candidate
+            here = os.path.dirname(here)
+    return markers[0]
 
 
 RESOURCES = _shared_source()

@@ -39,19 +39,24 @@ import sys
 from collections import Counter, defaultdict
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-HYMMO_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "..", ".."))
+# This repo's root (tools/ -> kweebec-nightmare/), for the paths it prints.
+REPO_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
 
 
 def _shared_source() -> str:
-    """The workspace's shared-source/release clone, beside hyMMO: the first folder above this script that
-    holds one, so the main checkout and a linked worktree under worktrees/ both find it."""
-    here = SCRIPT_DIR
-    while os.path.dirname(here) != here:
-        candidate = os.path.join(here, "shared-source", "release")
-        if os.path.isdir(candidate):
-            return candidate
-        here = os.path.dirname(here)
-    return os.path.join(os.path.dirname(HYMMO_ROOT), "shared-source", "release")
+    """The shared source: the first folder above this script holding reference/shared-source/release (a
+    tree holds none, so the walk passes its root up to main's), else the first holding
+    shared-source/release (the layout before the un-nest), else the first marker, relative to the
+    working folder."""
+    markers = (os.path.join("reference", "shared-source", "release"), os.path.join("shared-source", "release"))
+    for marker in markers:
+        here = SCRIPT_DIR
+        while os.path.dirname(here) != here:
+            candidate = os.path.join(here, marker)
+            if os.path.isdir(candidate):
+                return candidate
+            here = os.path.dirname(here)
+    return markers[0]
 
 
 SOURCE = os.path.join(
@@ -196,7 +201,7 @@ def main() -> int:
     with open(OUT, "w", encoding="utf-8", newline="\n") as f:
         json.dump(out, f, indent=2)
         f.write("\n")
-    print(f"\nwrote {os.path.relpath(OUT, HYMMO_ROOT)} "
+    print(f"\nwrote {os.path.relpath(OUT, REPO_ROOT)} "
           f"({len(kept)} blocks, anchorY={anchor_y})")
     return 0
 
