@@ -18,6 +18,32 @@ repositories {
 
 def hytaleServerJar = new File("${hytaleHome}/${patchline}/package/game/${game_build}/Server/HytaleServer.jar")
 
+// The workspace's path map: family.properties at workspaceRoot (gradle.properties, relative to this
+// project dir) names every family repo and pack by its path under that root. Read on first use.
+def workspaceDir = rootProject.file(workspaceRoot)
+def familyMap = null
+def familyPath = { String key ->
+    if (familyMap == null) {
+        def mapFile = new File(workspaceDir, 'family.properties')
+        if (!mapFile.isFile()) {
+            throw new GradleException("no family.properties at ${workspaceDir.canonicalPath} (workspaceRoot=${workspaceRoot} in gradle.properties)")
+        }
+        familyMap = new Properties()
+        mapFile.withReader('UTF-8') { familyMap.load(it) }
+    }
+    String rel = familyMap.getProperty(key)?.trim()
+    if (!rel) {
+        throw new GradleException("family.properties at ${workspaceDir.canonicalPath} has no ${key}")
+    }
+    new File(workspaceDir, rel)
+}
+
+// Ziggfreed Common: the sibling repo's build output (repo.ziggfreed-common in the path map) at the
+// pinned ziggfreedCommonVersion; -PziggfreedCommonJar=<path> overrides it.
+def ziggfreedCommonJar = findProperty('ziggfreedCommonJar')
+        ? file(findProperty('ziggfreedCommonJar'))
+        : new File(familyPath('repo.ziggfreed-common'), "build/libs/ZiggfreedCommon-${ziggfreedCommonVersion}.jar")
+
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -38,7 +64,7 @@ dependencies {
     // Ziggfreed Common (hard runtime dep, manifest Dependencies, loads first): compileOnly
     // so com.ziggfreed.common.* (Sound3D, ...) compiles. The server provides the jar at
     // runtime, so we NEVER bundle it - bundling would double-load its engine-touching
-    // classes under two classloaders. Path in gradle.properties (ziggfreedCommonJar).
+    // classes under two classloaders. Resolved above through the workspace's path map.
     compileOnly files(ziggfreedCommonJar)
 
     // Test-only: unit tests decode shipped asset JSON through common's codecs (e.g.
