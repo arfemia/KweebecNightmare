@@ -69,6 +69,12 @@ item.shrine.description = Offer <color is="#7affa0">Moonbloom</color> here to cl
 item.warden_spawner.name = Warden Roost
 item.blight_spawner.name = Blight Nest
 
+# Status effect names, shown when a player hovers the effect's icon. The effect JSON names the full
+# key (kweebecnightmare.effect...), because the client reads an effect's Name exactly as written.
+# The four tiers of the hunter's slow share one name.
+effect.hunter_slow.name = Hunter's Grip
+effect.mire_slow.name = Mired
+
 interaction.shrine.hint = Press [{key}] to offer Moonbloom
 
 toast.cleanse_done = The shrine drinks the Moonbloom light

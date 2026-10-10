@@ -7,5 +7,6 @@
   "Duration": 4.0,
   "OverlapBehavior": "Overwrite",
   "Debuff": true,
+  "Name": "kweebecnightmare.effect.mire_slow.name",
   "StatusEffectIcon": "UI/StatusEffects/Icon_Slow.png"
 }
