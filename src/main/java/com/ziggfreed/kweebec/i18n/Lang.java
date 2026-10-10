@@ -153,7 +153,6 @@ public final class Lang {
     // Command + system feedback.
     public static final String CMD_PLAYERS_ONLY = "kweebecnightmare.cmd.players_only";
     public static final String CMD_ALREADY_IN_ROUND = "kweebecnightmare.cmd.already_in_round";
-    public static final String CMD_NOT_IN_ROUND = "kweebecnightmare.cmd.not_in_round";
     public static final String CMD_STARTING = "kweebecnightmare.cmd.starting";
     public static final String CMD_START_FAILED = "kweebecnightmare.cmd.start_failed";
     public static final String CMD_LEAVING = "kweebecnightmare.cmd.leaving";
@@ -164,8 +163,6 @@ public final class Lang {
     public static final String CMD_GIVE_DONE = "kweebecnightmare.cmd.give_done";
     public static final String CMD_SCORE_HEADER = "kweebecnightmare.cmd.score_header";
     public static final String CMD_SCORE_NONE = "kweebecnightmare.cmd.score_none";
-    public static final String CMD_LB_HEADER = "kweebecnightmare.cmd.lb_header";
-    public static final String CMD_LB_EMPTY = "kweebecnightmare.cmd.lb_empty";
     public static final String CMD_QUEUED = "kweebecnightmare.cmd.queued";
     public static final String CMD_ALREADY_QUEUED = "kweebecnightmare.cmd.already_queued";
     public static final String CMD_NOT_QUEUED_OR_IN_ROUND = "kweebecnightmare.cmd.not_queued_or_in_round";

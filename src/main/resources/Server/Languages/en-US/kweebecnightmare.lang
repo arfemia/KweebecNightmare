@@ -118,7 +118,6 @@ boss.toast.wiped = The Warden keeps the gate.
 
 cmd.players_only = Only players can run this.
 cmd.already_in_round = You are already in a round.
-cmd.not_in_round = You are not in a round.
 cmd.starting = Descending into the Blighted Grove...
 cmd.start_failed = Could not start the round. Try again.
 cmd.leaving = Leaving the grove...
@@ -129,8 +128,6 @@ cmd.usage = Usage: /kweebec [start|exit|score|leaderboard|party] [preset]
 cmd.give_done = Gave you {0} Moonbloom.
 cmd.score_header = Your Kweebec Nightmare bests:
 cmd.score_none = No recorded score yet. Survive a round first.
-cmd.lb_header = Kweebec Nightmare leaderboard ({0} players):
-cmd.lb_empty = No leaderboard entries for that party size yet.
 cmd.kweebec.desc = Start, leave, or check on a Kweebec Nightmare round
 cmd.arg.sub = start | exit | score | leaderboard | party
 cmd.arg.preset = amateur | nightmare | hardcore
