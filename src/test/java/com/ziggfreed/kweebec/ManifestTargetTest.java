@@ -39,7 +39,8 @@ import com.hypixel.hytale.common.semver.SemverRange;
  *
  * <p><b>The library floor.</b> The server checks each {@code Dependencies} range against the installed
  * dependency's own version and refuses to load the plugin at all on a miss. The floor is the Ziggfreed
- * Common jar this build compiles against ({@code ziggfreedCommonJar} in {@code gradle.properties}), so a
+ * Common version this build pins ({@code ziggfreedCommonVersion} in {@code gradle.properties}, which
+ * build.gradle passes to this JVM) and the version of the jar that pin resolves to on the classpath, so a
  * server still running an older library refuses this jar by name instead of running it on a library it
  * was never built against.
  *
@@ -53,6 +54,8 @@ class ManifestTargetTest {
     private static final String OWN_NAME = "KweebecNightmare";
     private static final String LIBRARY_NAME = "ZiggfreedCommon";
     private static final String LIBRARY_DEPENDENCY = "Ziggfreed:ZiggfreedCommon";
+    private static final String PINNED_LIBRARY_KEY = "ziggfreedCommonVersion";
+    private static final String PINNED_LIBRARY_PROPERTY = "kweebec.ziggfreedCommonVersion";
 
     @Test
     void theServerRangeAdmitsTheServerThisBuildCompilesAgainst() throws IOException, URISyntaxException {
@@ -85,6 +88,26 @@ class ManifestTargetTest {
                 "the floor must admit the library this jar compiles against: " + floor + " vs " + compiledAgainst);
         assertEquals(">=" + compiledAgainst, floor,
                 "the floor is the library this jar compiles against, so an older library refuses it by name");
+    }
+
+    @Test
+    void theLibraryFloorIsThePinnedLibraryVersion() throws IOException {
+        String floor = dependencyRange(LIBRARY_DEPENDENCY);
+        String pinned = pinnedLibraryVersion();
+
+        assertEquals(">=" + pinned, floor, "the floor is the pinned " + PINNED_LIBRARY_KEY
+                + " in gradle.properties: move the two together");
+        assertEquals(pinned, versionOf(LIBRARY_NAME), "the " + LIBRARY_NAME + " jar on the classpath is the pinned "
+                + PINNED_LIBRARY_KEY + " (a -PziggfreedCommonJar override names a jar of another version)");
+    }
+
+    /** The {@code ziggfreedCommonVersion} gradle.properties pins, which build.gradle passes to this JVM. */
+    private static String pinnedLibraryVersion() {
+        String pinned = System.getProperty(PINNED_LIBRARY_PROPERTY);
+        assertNotNull(pinned, "build.gradle's test task passes " + PINNED_LIBRARY_KEY + " as "
+                + PINNED_LIBRARY_PROPERTY);
+        assertFalse(pinned.isBlank(), PINNED_LIBRARY_KEY + " is set in gradle.properties");
+        return pinned.trim();
     }
 
     /** This module's processed {@code ServerVersion}, parsed as the server parses it. */

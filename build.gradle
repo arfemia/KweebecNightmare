@@ -151,6 +151,9 @@ apply from: "$rootDir/gradle/deprecation-gate.gradle"
 
 test {
     useJUnitPlatform()
+    // ManifestTargetTest checks the manifest's ZiggfreedCommon floor against this pin, as well as
+    // against the jar on the test classpath that the pin resolves to.
+    systemProperty 'kweebec.ziggfreedCommonVersion', ziggfreedCommonVersion
 }
 
 // Every test JVM: a 512 MB heap, the serial collector and C1-only compilation, which start fastest
