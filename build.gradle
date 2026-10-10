@@ -154,6 +154,11 @@ test {
     // ManifestTargetTest checks the manifest's ZiggfreedCommon floor against this pin, as well as
     // against the jar on the test classpath that the pin resolves to.
     systemProperty 'kweebec.ziggfreedCommonVersion', ziggfreedCommonVersion
+    // The release gate (R123): under -PlangGate the effect-name check (ShippedEffectNamesTest, R67)
+    // fails a locale gap in an effect's Name instead of printing it, as the MMO's lang parity does.
+    if (providers.gradleProperty('langGate').present) {
+        systemProperty 'langGate', 'true'
+    }
 }
 
 // Every test JVM: a 512 MB heap, the serial collector and C1-only compilation, which start fastest
