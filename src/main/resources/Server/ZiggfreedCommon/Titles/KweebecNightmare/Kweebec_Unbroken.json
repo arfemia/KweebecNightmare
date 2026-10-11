@@ -1,0 +1,8 @@
+{
+  "$Comment": "The Unbroken: the title the achievement kweebec_hardcore_escape (No Light to Follow) pays for winning a Relight and Escape round on Hardcore. It shows beside a player's name in menus and leaderboards once they pick it. Where it sits around the name is the key title.kweebec_unbroken.display, whose {0} is the name. Enabled false hides it everywhere without taking it from anybody who earned it.",
+  "Order": 1,
+  "Text": {
+    "TitleKey": "title.kweebec_unbroken.name",
+    "FlavorKey": "title.kweebec_unbroken.flavor"
+  }
+}

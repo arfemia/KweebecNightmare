@@ -385,3 +385,20 @@ dialogue.clash_intro.mode_pick.opt.2 = Domination - hold the ground.
 dialogue.clash_intro.mode_pick.opt.3 = Not yet. Step back.
 dialogue.clash_intro.already_engaged.text = One fight at a time, warm-blood. Finish the contest you are in, then come bleed for me again.
 dialogue.clash_intro.already_engaged.opt.0 = Understood.
+
+# Achievements and titles (ziggfreed-common's achievement book and title picker): the book's
+# category, the two achievements and their steps, and the titles they pay on unlock. A title's
+# .display places it around a player's name, {0} being the name.
+achievement.category.kweebec_nightmare = Kweebec Nightmare
+achievement.kweebec_hardcore_escape.title = No Light to Follow
+achievement.kweebec_hardcore_escape.desc = Escape a Relight and Escape round on Hardcore.
+objective.kweebec.hardcore_escape = Escape a round on Hardcore
+achievement.kweebec_warden_falls.title = The Warden Falls
+achievement.kweebec_warden_falls.desc = Help bring down the Blight Warden.
+objective.kweebec.warden_falls = Help bring down the Blight Warden
+title.kweebec_unbroken.name = The Unbroken
+title.kweebec_unbroken.flavor = Escaped a Relight and Escape round on Hardcore.
+title.kweebec_unbroken.display = {0} the Unbroken
+title.kweebec_wardenbane.name = Wardenbane
+title.kweebec_wardenbane.flavor = Helped bring down the Blight Warden.
+title.kweebec_wardenbane.display = {0}, Wardenbane

@@ -1,0 +1,37 @@
+{
+  "$Comment": [
+    "No Light to Follow: win a Relight and Escape round on the Hardcore preset. Earned once and kept.",
+    "",
+    "INSTANCE_ROUND_WON fires once for every player who wins a round, with Target <mod id>:<mode id>",
+    "(kweebec:chase for Relight and Escape) and Qualifier the preset id, so Qualifier hardcore keeps the",
+    "other presets out. Change the Qualifier to nightmare to ask for a Nightmare win instead, or drop it",
+    "to count a win on any preset.",
+    "",
+    "It pays the title Kweebec_Unbroken through the Title reward kind, on unlock: a title is the one",
+    "thing an achievement pays without waiting to be collected. The round itself already pays its spoils,",
+    "so this pays nothing else."
+  ],
+  "Text": {
+    "TitleKey": "achievement.kweebec_hardcore_escape.title",
+    "FlavorKey": "achievement.kweebec_hardcore_escape.desc"
+  },
+  "Listing": {
+    "Category": "Kweebec_Nightmare",
+    "SortOrder": 10,
+    "Icon": "KweebecNightmare_Moonbloom"
+  },
+  "Scoring": { "Points": 50 },
+  "Criteria": {
+    "escape-on-hardcore": {
+      "Kind": "INSTANCE_ROUND_WON",
+      "Target": "kweebec:chase",
+      "MatchMode": "EXACT",
+      "Qualifier": "hardcore",
+      "Amount": 1,
+      "TextKey": "objective.kweebec.hardcore_escape"
+    }
+  },
+  "Rewards": {
+    "Auto": [ { "Kind": "Title", "Params": { "Title": "Kweebec_Unbroken" } } ]
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "$Comment": "Wardenbane: the title the achievement kweebec_warden_falls (The Warden Falls) pays for helping bring down the Blight Warden. It shows beside a player's name in menus and leaderboards once they pick it. Where it sits around the name is the key title.kweebec_wardenbane.display, whose {0} is the name. Enabled false hides it everywhere without taking it from anybody who earned it.",
+  "Order": 2,
+  "Text": {
+    "TitleKey": "title.kweebec_wardenbane.name",
+    "FlavorKey": "title.kweebec_wardenbane.flavor"
+  }
+}

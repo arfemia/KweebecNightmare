@@ -1,0 +1,38 @@
+{
+  "$Comment": [
+    "The Warden Falls: help bring down the Blight Warden, the boss that bars the Heartwood Gate on the",
+    "presets that raise it. Earned once and kept.",
+    "",
+    "ENCOUNTER_DEFEATED fires once for every player the fight credits when the Warden falls: Target is the",
+    "fight's script id, KweebecNightmare_Warden_Encounter, and a player is credited when they dealt at",
+    "least the fight's minimum share of its damage. A teammate who never hit it counts under",
+    "ENCOUNTER_ATTEMPT instead and does not earn this. No Qualifier, so a win on any preset counts; add",
+    "Qualifier hardcore (the round's preset rides with the fight as its difficulty) to ask for that one.",
+    "",
+    "It pays the title Kweebec_Wardenbane through the Title reward kind, on unlock: a title is the one",
+    "thing an achievement pays without waiting to be collected. The round itself already pays its spoils,",
+    "so this pays nothing else."
+  ],
+  "Text": {
+    "TitleKey": "achievement.kweebec_warden_falls.title",
+    "FlavorKey": "achievement.kweebec_warden_falls.desc"
+  },
+  "Listing": {
+    "Category": "Kweebec_Nightmare",
+    "SortOrder": 20,
+    "Icon": "KweebecNightmare_Emberbloom"
+  },
+  "Scoring": { "Points": 25 },
+  "Criteria": {
+    "defeat-the-warden": {
+      "Kind": "ENCOUNTER_DEFEATED",
+      "Target": "KweebecNightmare_Warden_Encounter",
+      "MatchMode": "EXACT",
+      "Amount": 1,
+      "TextKey": "objective.kweebec.warden_falls"
+    }
+  },
+  "Rewards": {
+    "Auto": [ { "Kind": "Title", "Params": { "Title": "Kweebec_Wardenbane" } } ]
+  }
+}
