@@ -116,7 +116,8 @@ public final class RoundPresetAsset
     // 1.4.0 Moonbloom loop knobs.
     private int cleanseCost = UNSET_INT;
     private long stunDurationMs = UNSET_LONG;
-    // Per-throwable damage overrides keyed by DamageCause id (null = absent = each burst's authored damage stands).
+    // Per-throwable damage overrides keyed by hit tag, the thrown item's id that its burst carries in
+    // "Tags": {"Hit": [...]} (null = absent = each burst's authored damage stands).
     @Nullable private Map<String, Double> throwableDamage;
     // Per-gather health-restore overrides keyed by gathered shroom item id (null = absent = no gather heal).
     @Nullable private Map<String, Double> gatherHealthRestore;
@@ -260,6 +261,7 @@ public final class RoundPresetAsset
             .append(new KeyedCodec<>("StunDurationMs", Codec.LONG, false), (a, v) -> a.stunDurationMs = v, a -> a.stunDurationMs)
             .add()
             .append(new KeyedCodec<>("ThrowableDamage", new MapCodec<>(Codec.DOUBLE, HashMap::new), false), (a, v) -> a.throwableDamage = v, a -> a.throwableDamage)
+            .documentation("The damage a thrown bloom's hit deals to a mob in this preset's rounds, keyed by the hit tag its burst carries (the thrown item's id, such as KweebecNightmare_Emberbloom). A bloom left out keeps its burst's own damage.")
             .add()
             .append(new KeyedCodec<>("GatherHealthRestore", new MapCodec<>(Codec.DOUBLE, HashMap::new), false), (a, v) -> a.gatherHealthRestore = v, a -> a.gatherHealthRestore)
             .add()

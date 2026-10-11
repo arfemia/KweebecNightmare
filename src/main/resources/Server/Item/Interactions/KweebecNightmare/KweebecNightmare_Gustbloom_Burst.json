@@ -1,5 +1,11 @@
 {
+  "$Comment": "The Gustbloom's burst: a Wind knockback with a token hit. Tags.Hit names every hit it deals by the thrown item's id, so a preset's ThrowableDamage can tune it and other mods can key on it.",
   "Type": "Selector",
+  "Tags": {
+    "Hit": [
+      "KweebecNightmare_Gustbloom"
+    ]
+  },
   "Selector": {
     "Id": "AOECircle",
     "Range": 3.0
@@ -18,7 +24,7 @@
         "Parent": "DamageEntityParent",
         "DamageCalculator": {
           "BaseDamage": {
-            "KweebecNightmare_GustHit": 1
+            "Wind": 1
           }
         },
         "DamageEffects": {

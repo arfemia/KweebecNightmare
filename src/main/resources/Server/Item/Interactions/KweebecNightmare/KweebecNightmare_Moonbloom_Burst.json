@@ -1,5 +1,11 @@
 {
+  "$Comment": "The Moonbloom's burst: a 1 HP Physical hit that Kweebec Nightmare turns into a stun on a mob. Tags.Hit names every hit it deals by the thrown item's id, which is how the stun finds it and how a preset's ThrowableDamage sets its real damage; other mods can key on the same tag.",
   "Type": "Selector",
+  "Tags": {
+    "Hit": [
+      "KweebecNightmare_Moonbloom"
+    ]
+  },
   "Selector": {
     "Id": "AOECircle",
     "Range": 2.5
@@ -35,7 +41,7 @@
               "Parent": "DamageEntityParent",
               "DamageCalculator": {
                 "BaseDamage": {
-                  "KweebecNightmare_Moonbloom": 1
+                  "Physical": 1
                 }
               },
               "DamageEffects": {

@@ -11,7 +11,10 @@ public final class Moonbloom {
     private Moonbloom() {
     }
 
-    /** The throwable + spendable charge item (drops from a harvested {@link #PLANT_BLOCK}). */
+    /**
+     * The throwable + spendable charge item (drops from a harvested {@link #PLANT_BLOCK}); also the hit tag
+     * its burst carries, by which a Moonbloom hit is told apart.
+     */
     public static final String CHARGE_ITEM = "KweebecNightmare_Moonbloom";
 
     /** The harvestable grove plant block; broken/harvested it yields one {@link #CHARGE_ITEM}. */

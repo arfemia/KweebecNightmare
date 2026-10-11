@@ -20,7 +20,7 @@
   "CleanseCost": 3,
   "ThrowableDamage": {
     "KweebecNightmare_Moonbloom": 12,
-    "KweebecNightmare_EmberHit": 125
+    "KweebecNightmare_Emberbloom": 125
   },
   "GatherHealthRestore": {
     "KweebecNightmare_Moonbloom": 5,

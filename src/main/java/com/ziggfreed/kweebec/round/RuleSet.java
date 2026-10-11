@@ -352,13 +352,14 @@ public final class RuleSet {
     }
 
     /**
-     * Per-difficulty damage override for a thrown glow-throwable, keyed by the throwable's custom
-     * {@code DamageCause} id (e.g. {@code KweebecNightmare_Moonbloom}, {@code KweebecNightmare_EmberHit}).
-     * When a hit lands on a mob in a round and its cause id is present here, {@code KweebecDamageSystem}
-     * overrides the burst's authored damage with this amount, so one preset tunes how hard each authored
-     * throwable hits without touching the shared burst asset. Absent key = the burst's authored damage
-     * stands. Never null; empty when the preset authors no overrides. Authored via the preset's
-     * {@code ThrowableDamage} object knob.
+     * Per-difficulty damage override for a thrown glow-throwable, keyed by the hit tag its burst carries
+     * ({@code "Tags": {"Hit": [...]}} at the burst file's root), which is the thrown item's id (e.g.
+     * {@code KweebecNightmare_Moonbloom}, {@code KweebecNightmare_Emberbloom}). When a hit lands on a mob
+     * in a round and one of its hit tags is present here, {@code KweebecDamageSystem} overrides the
+     * burst's authored damage with this amount, so one preset tunes how hard each authored throwable hits
+     * without touching the shared burst asset; the hit's damage type plays no part. Absent key = the
+     * burst's authored damage stands. Never null; empty when the preset authors no overrides. Authored
+     * via the preset's {@code ThrowableDamage} object knob.
      */
     @Nonnull
     public Map<String, Double> throwableDamage() {
@@ -366,12 +367,22 @@ public final class RuleSet {
     }
 
     /**
-     * The per-difficulty damage override for the throwable identified by {@code damageCauseId}, or
-     * {@code null} when this preset authors none for it (the burst's authored damage stands).
+     * The per-difficulty damage override for the throwable whose hit carries {@code hitTag}, matched
+     * case-insensitively, or {@code null} when this preset authors none for it (the burst's authored
+     * damage stands).
      */
     @Nullable
-    public Double throwableDamage(@Nonnull String damageCauseId) {
-        return throwableDamage.get(damageCauseId);
+    public Double throwableDamage(@Nonnull String hitTag) {
+        Double exact = throwableDamage.get(hitTag);
+        if (exact != null) {
+            return exact;
+        }
+        for (Map.Entry<String, Double> e : throwableDamage.entrySet()) {
+            if (e.getKey().equalsIgnoreCase(hitTag)) {
+                return e.getValue();
+            }
+        }
+        return null;
     }
 
     /**
@@ -853,7 +864,7 @@ public final class RuleSet {
         // The shipped preset JSONs author CleanseCost per preset; this is only the zero-pack fallback.
         private int cleanseCost = 1;
         private long stunDurationMs = 2500L;
-        // Per-throwable damage overrides keyed by DamageCause id (empty = each burst's authored damage stands).
+        // Per-throwable damage overrides keyed by hit tag, the thrown item's id (empty = each burst's authored damage stands).
         private Map<String, Double> throwableDamage = Map.of();
         // Per-gather health restore keyed by gathered shroom item id (empty = no gather heal).
         private Map<String, Double> gatherHealthRestore = Map.of();

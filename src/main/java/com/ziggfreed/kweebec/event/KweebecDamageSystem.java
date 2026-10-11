@@ -19,23 +19,25 @@ import com.hypixel.hytale.server.core.asset.type.entityeffect.config.EntityEffec
 import com.hypixel.hytale.server.core.asset.type.entityeffect.config.OverlapBehavior;
 import com.hypixel.hytale.server.core.entity.effect.EffectControllerComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
-import com.hypixel.hytale.server.core.modules.entity.damage.DamageCause;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageEventSystem;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageModule;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.narwhals.perfectutils.api.StunMobAPI;
+import com.ziggfreed.common.damage.HitTags;
 import com.ziggfreed.common.instance.effect.EntityEffectService;
 import com.ziggfreed.common.sound.Sound3D;
 import com.ziggfreed.common.util.EntityIdentifierUtil;
 import com.ziggfreed.kweebec.hunter.OnHitConfig;
 import com.ziggfreed.kweebec.mode.clash.ClashState;
 import com.ziggfreed.kweebec.moonbloom.GlowThrowables;
+import com.ziggfreed.kweebec.moonbloom.Moonbloom;
 import com.ziggfreed.kweebec.round.KweebecMode;
 import com.ziggfreed.kweebec.round.PlayerRoundState;
 import com.ziggfreed.kweebec.round.RoundInstance;
 import com.ziggfreed.kweebec.round.RoundService;
+import com.ziggfreed.kweebec.round.RuleSet;
 import com.ziggfreed.kweebec.util.SafeLog;
 
 /**
@@ -44,10 +46,10 @@ import com.ziggfreed.kweebec.util.SafeLog;
  *
  * <ol>
  *   <li><b>Throw-to-stun (world-agnostic, Moonbloom-only).</b> A thrown Moonbloom's burst
- *       deals damage tagged with a custom {@link DamageCause} {@value #MOONBLOOM_CAUSE}
- *       (authored at {@code Server/Entity/Damage/KweebecNightmare_Moonbloom.json}), so a
- *       Moonbloom hit is identified by {@code damage.getDamageCauseIndex()} ALONE -
- *       independent of the damage source and the world. When such damage lands on a
+ *       carries the hit tag {@link Moonbloom#CHARGE_ITEM} ({@code "Tags": {"Hit": [...]}} at the
+ *       burst file's root, read back through ziggfreed-common's {@link HitTags}), so a Moonbloom
+ *       hit is identified by its tag ALONE - independent of its damage type (a plain Physical
+ *       hit), the damage source and the world. When such damage lands on a
  *       NON-player entity ANYWHERE (base world OR a round), it freezes that mob via
  *       Perfect Utils {@code StunMobAPI} + the vanilla {@code Stun} visual. Only a
  *       Moonbloom stuns (a melee/other hit on the hunter does nothing); players caught in
@@ -64,8 +66,6 @@ import com.ziggfreed.kweebec.util.SafeLog;
  */
 public final class KweebecDamageSystem extends DamageEventSystem {
 
-    /** Custom damage cause the Moonbloom burst deals, used to identify a Moonbloom hit (authored in the pack). */
-    private static final String MOONBLOOM_CAUSE = "KweebecNightmare_Moonbloom";
     /** Vanilla entity effect carrying the "stunned" particle + tint (the Perfect Utils freeze is particle-less). */
     private static final String STUN_VISUAL_EFFECT = "Stun";
     /** Stun length for a Moonbloom hit thrown OUTSIDE a round (no rule-set to read). */
@@ -77,11 +77,6 @@ public final class KweebecDamageSystem extends DamageEventSystem {
     private static final double SNICKER_ON_HIT_CHANCE = 0.25;
     /** Vanilla eerie SFX used for the snicker (no custom audio); retune here. */
     private static final String SNICKER_SOUND_ID = "SFX_Emit_Temple_Wisps";
-
-    /** Resolved index of the Moonbloom damage cause; cached ONLY once positive (the asset loads after this class). */
-    private volatile int moonbloomCauseIndex = -1;
-    /** Resolved index of the Emberbloom damage cause; cached ONLY once positive (used for the friendly-fire guard). */
-    private volatile int emberCauseIndex = -1;
 
     /** Minimum gap (ms) between re-applying the on-hit slow to the SAME victim (so rapid hits do not thrash it). */
     private static final long SLOW_REAPPLY_COOLDOWN_MS = 500L;
@@ -119,7 +114,7 @@ public final class KweebecDamageSystem extends DamageEventSystem {
             if (targetRef == null || !targetRef.isValid()) {
                 return;
             }
-            boolean isMoonbloom = isMoonbloomCause(damage);
+            boolean isMoonbloom = isMoonbloomHit(damage);
             PlayerRef targetPlayer = store.getComponent(targetRef, PlayerRef.getComponentType());
 
             if (targetPlayer == null) {
@@ -129,7 +124,7 @@ public final class KweebecDamageSystem extends DamageEventSystem {
                 RoundInstance round = thrower != null
                         ? RoundService.getInstance().registry().forPlayer(thrower) : null;
                 // Per-difficulty damage override for ANY authored throwable (Moonbloom, Emberbloom, future);
-                // a non-throwable cause (melee, etc.) is left untouched by the cause-id table lookup.
+                // an untagged hit (melee, etc.) is left untouched by the hit-tag table lookup.
                 if (round != null) {
                     applyThrowableDamageOverride(damage, round);
                 }
@@ -158,7 +153,7 @@ public final class KweebecDamageSystem extends DamageEventSystem {
             if (isMoonbloom) {
                 return; // a friendly Moonbloom splash on a teammate - do not count it as damage taken
             }
-            if (isEmberCause(damage)) {
+            if (isEmberHit(damage)) {
                 // An Emberbloom burst is the boss-damage throwable; it must NEVER hurt a fellow survivor
                 // (the AoE has no asset-level attitude filter), so null the damage on a player victim.
                 damage.setAmount(0f);
@@ -330,83 +325,51 @@ public final class KweebecDamageSystem extends DamageEventSystem {
     }
 
     /**
-     * Generic per-difficulty damage override for a thrown glow-throwable hitting a mob: if this damage's
-     * custom {@link DamageCause} id is listed in the preset's {@link RuleSet#throwableDamage()} table,
-     * replace the burst's authored amount with the per-difficulty value. ONE table tunes how hard EVERY
-     * authored throwable (Moonbloom, Emberbloom, any future one) hits per preset, with no per-item Java; a
-     * cause NOT in the table (a melee/other hit, or a throwable this preset does not tune) is left
+     * Generic per-difficulty damage override for a thrown glow-throwable hitting a mob: the first of this
+     * hit's tags ({@link HitTags#of}) listed in the preset's {@link RuleSet#throwableDamage()} table
+     * replaces the burst's authored amount with the per-difficulty value. ONE table tunes how hard EVERY
+     * authored throwable (Moonbloom, Emberbloom, any future one) hits per preset, with no per-item Java; an
+     * untagged hit (melee/other) or a tag NOT in the table (a throwable this preset does not tune) is left
      * untouched. World thread; best-effort.
      */
     private void applyThrowableDamageOverride(@Nonnull Damage damage, @Nonnull RoundInstance round) {
-        Map<String, Double> table = round.ruleSet().throwableDamage();
-        if (table.isEmpty()) {
+        RuleSet rules = round.ruleSet();
+        if (rules.throwableDamage().isEmpty()) {
             return;
         }
-        String causeId = damageCauseId(damage);
-        if (causeId == null) {
-            return;
-        }
-        Double override = table.get(causeId);
-        if (override != null) {
-            damage.setAmount((float) Math.max(0.0, override));
+        for (String tag : HitTags.of(damage)) {
+            Double override = rules.throwableDamage(tag);
+            if (override != null) {
+                damage.setAmount((float) Math.max(0.0, override));
+                return;
+            }
         }
     }
 
-    /** The id string of this damage's custom {@link DamageCause} (reverse of the index), or null if unresolved. */
-    @Nullable
-    private static String damageCauseId(@Nonnull Damage damage) {
-        try {
-            DamageCause cause = DamageCause.getAssetMap().getAsset(damage.getDamageCauseIndex());
-            return cause != null ? cause.getId() : null;
-        } catch (Throwable ignored) {
-            return null;
-        }
+    /** Whether this hit is a thrown Moonbloom's burst: it carries the Moonbloom item id as a hit tag. */
+    private static boolean isMoonbloomHit(@Nonnull Damage damage) {
+        return HitTags.has(damage, Moonbloom.CHARGE_ITEM);
     }
 
-    /** Whether this damage carries the custom Moonbloom cause (resolved + cached lazily). */
-    private boolean isMoonbloomCause(@Nonnull Damage damage) {
-        int idx = moonbloomCauseIndex;
-        if (idx < 0) {
-            try {
-                idx = DamageCause.getAssetMap().getIndex(MOONBLOOM_CAUSE);
-            } catch (Throwable ignored) {
-                idx = -1;
-            }
-            if (idx >= 0) {
-                moonbloomCauseIndex = idx; // cache only a real index (the asset registers after this class)
-            }
-        }
-        return idx >= 0 && damage.getDamageCauseIndex() == idx;
-    }
-
-    /** Whether this damage carries the custom Emberbloom cause (resolved + cached lazily, like Moonbloom). */
-    private boolean isEmberCause(@Nonnull Damage damage) {
-        int idx = emberCauseIndex;
-        if (idx < 0) {
-            try {
-                idx = DamageCause.getAssetMap().getIndex(GlowThrowables.EMBER_DAMAGE_CAUSE);
-            } catch (Throwable ignored) {
-                idx = -1;
-            }
-            if (idx >= 0) {
-                emberCauseIndex = idx; // cache only a real index (the asset registers after this class)
-            }
-        }
-        return idx >= 0 && damage.getDamageCauseIndex() == idx;
+    /** Whether this hit is a thrown Emberbloom's burst: it carries the Emberbloom item id as a hit tag. */
+    private static boolean isEmberHit(@Nonnull Damage damage) {
+        return HitTags.has(damage, GlowThrowables.EMBER_ITEM);
     }
 
     /**
-     * PvP (Clash / Domination) damage handling for a player victim: friendly-fire cancel (same team +
-     * FriendlyFire off), enemy hit + last-attacker recording (kill credit on death), and a Moonbloom hit
-     * stunning an enemy player (zeroing its damage, since it is the stun utility). The attacker is the
-     * damage source's owning entity = the melee striker OR the thrower of a mushroom (the source is always
-     * the shooter, never the projectile). Unresolved-team damage is allowed (fail-safe). World thread.
+     * PvP (Clash / Domination) damage handling for a player victim: an Emberbloom hit is nulled, the
+     * friendly-fire cancel (same team + FriendlyFire off) drops any teammate hit, a bloom's included,
+     * enemy hit + last-attacker recording (kill credit on death), and a Moonbloom hit stunning an enemy
+     * player (zeroing its damage, since it is the stun utility). Each bloom is told apart by its hit tag.
+     * The attacker is the damage source's owning entity = the melee striker OR the thrower of a mushroom
+     * (the source is always the shooter, never the projectile). Unresolved-team damage is allowed
+     * (fail-safe). World thread.
      */
     private void handleClashDamage(@Nonnull Store<EntityStore> store, @Nonnull Ref<EntityStore> victimRef,
                                    @Nonnull CommandBuffer<EntityStore> cb, @Nonnull Damage damage,
                                    @Nonnull UUID victimId, @Nonnull RoundInstance round) {
         // Emberbloom is a co-op boss throwable; it has no place hurting a PvP player - null it defensively.
-        if (isEmberCause(damage)) {
+        if (isEmberHit(damage)) {
             damage.setAmount(0f);
             return;
         }
@@ -431,7 +394,7 @@ public final class KweebecDamageSystem extends DamageEventSystem {
             cs.setLastAttacker(victimId, attacker);
         }
         // A Moonbloom hit on an enemy player STUNS them; it is a utility, not a damage source here.
-        if (isMoonbloomCause(damage)) {
+        if (isMoonbloomHit(damage)) {
             stunPlayer(store, victimRef, cb, round, attacker);
             damage.setAmount(0f);
         }

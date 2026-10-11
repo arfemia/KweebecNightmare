@@ -14,8 +14,10 @@ package com.ziggfreed.kweebec.moonbloom;
  *
  * <p>One authority for the asset ids so the Java (gather/give/placement, the {@code KweebecDamageSystem}
  * Ember friendly-fire guard, the {@code ArenaBuilder} cluster prefab keys) and the pack assets (item /
- * drop / plant block / throw chain / damage cause) never drift. The {@code _PLANT}/{@code _PREFAB} ids
- * mirror the Moonbloom gather loop ({@code Plant} block -> {@code Drop} droplist -> charge item).
+ * drop / plant block / throw chain / the burst's hit tag) never drift. Each {@code _ITEM} id is also the
+ * hit tag its burst carries ({@code "Tags": {"Hit": [...]}} at the burst file's root), so a hit is told
+ * apart by the thrown item, never by its damage type. The {@code _PLANT}/{@code _PREFAB} ids mirror the
+ * Moonbloom gather loop ({@code Plant} block -> {@code Drop} droplist -> charge item).
  */
 public final class GlowThrowables {
 
@@ -39,7 +41,4 @@ public final class GlowThrowables {
     public static final String EMBER_PLANT = "KweebecNightmare_Emberbloom_Plant";
     /** Prefab key (one plant block) {@code boss/BossEncounter} pastes through {@code ArenaBuilder} for an Emberbloom cluster. */
     public static final String EMBER_PREFAB = "KweebecNightmare/Emberbloom";
-
-    /** The custom DamageCause the Emberbloom burst deals (so the friendly-fire guard can null it on a survivor). */
-    public static final String EMBER_DAMAGE_CAUSE = "KweebecNightmare_EmberHit";
 }

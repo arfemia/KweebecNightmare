@@ -1,5 +1,11 @@
 {
+  "$Comment": "The Emberbloom's burst: Fire damage to everything in range. Tags.Hit names every hit it deals by the thrown item's id, which is how Kweebec Nightmare keeps it off survivors and how a preset's ThrowableDamage tunes it; other mods can key on the same tag.",
   "Type": "Selector",
+  "Tags": {
+    "Hit": [
+      "KweebecNightmare_Emberbloom"
+    ]
+  },
   "Selector": {
     "Id": "AOECircle",
     "Range": 3.0
@@ -18,7 +24,7 @@
         "Parent": "DamageEntityParent",
         "DamageCalculator": {
           "BaseDamage": {
-            "KweebecNightmare_EmberHit": 25
+            "Fire": 25
           }
         },
         "DamageEffects": {
