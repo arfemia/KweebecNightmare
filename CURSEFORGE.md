@@ -15,6 +15,7 @@ The Void has crept into the Emerald Grove, and the gentle Kweebec tree-folk did 
 - Gather corrupted glowcaps and throw them. Each bursts differently: stun the hunter, knock it flying, slow it to a slog, or blast for real damage. Stocking your kit is half of staying alive.
 - Opening the Heartwood Gate is not the end. The survivors have to gather on the extraction platform and hold it together until everyone gets out, and the hold resets if the group breaks.
 - A new instanced grove per round, with shifting shrine layouts, caves, and corrupted ruins. Win well and you earn better loot.
+- New: two achievements that each give you a title. Win a Relight and Escape round on Hardcore for No Light to Follow and the title "the Unbroken". Help bring down the Blight Warden for The Warden Falls and the title "Wardenbane"; it counts for everyone who took a real part in the fight. Both are in your achievement book under Kweebec Nightmare, and an earned title is ready in the title picker straight away, to show beside your name in menus and leaderboards.
 - **Built for dread.** Perpetual midnight, thickening fog, a proximity heartbeat that tightens as the hunter nears, whispers in the trees, cinematic title cards.
 
 ## Install

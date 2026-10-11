@@ -16,6 +16,8 @@ Caught saplings are cocooned in roots and can be cut free by a teammate. Plays s
 
 **Glowing mushrooms** scattered through the grove (and stashed in the deep crypt) can be gathered and thrown, each bursting differently: stun a hunter, knock it flying, slow it to a slog, or blast it for real damage. When the corrupted Warden rises, damage-bursting mushrooms keep sprouting around it so you can wear the boss down.
 
+Two achievements give you a title each. No Light to Follow asks you to win a round on Hardcore and gives "the Unbroken". The Warden Falls gives "Wardenbane" to everyone who took a real part in the fight that brought down the Blight Warden. Both sit in your achievement book under Kweebec Nightmare, and an earned title goes straight into the title picker.
+
 ## Standalone, with optional MMO Skill Tree integration
 
 Kweebec Nightmare runs the minigame on its own; [MMO Skill Tree](https://www.curseforge.com/hytale/mods/mmo-skill-tree) is **optional**. Installed alongside it, surviving a night feeds your skill progression (quest, achievement, and reward hooks, and thrown glow-mushrooms train the Artillery skill); without it, the minigame grants its own self-contained rewards. That dependency is declared optional, so the jar loads either way.
