@@ -2,6 +2,7 @@
 
 - Combat-text and 3D-sound mechanics are `ziggfreed-common`'s `zc-presentation` (its routers).
 - `NightmareHud` element ids (`#Timer`, `#Objective`, `#Shrines`, `#Alive`, `#Corruption`, `#Extraction`) must match `Common/UI/Custom/Hud/KweebecNightmareHud.ui`.
+- A HUD line whose lang value carries `{0}` goes on its Label's `.TextSpans`, which fills params; a `.Text` prints them as written. Only a bare translation (`#Objective`, `#YourTeam`) stays on `.Text`.
 - The Warden's bar is the engine boss bar the encounter script raises and its notices are `FeedbackMoment` assets; there is no custom boss HUD.
 - `ScareDirector`'s vignette swap deliberately does not use `EntityEffectService.applyBand`: that API is tier-agnostic and rung-indexed, so adopting it shifts every vignette one band and drops `minTier`.
 - `ChaseRoundMode.onTeardown` calls `ScareDirector.clear` last so no dread effect rides out on an ejected player.

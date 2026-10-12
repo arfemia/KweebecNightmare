@@ -43,7 +43,8 @@ public final class DominationHud extends CustomUIHud {
 
         int rs = Math.max(0, s.remainingSec());
         String clock = String.format(Locale.ROOT, "%d:%02d", rs / 60, rs % 60);
-        cb.set("#MatchTimer.Text", Lang.msg(Lang.CLASH_HUD_TIMER).param("0", clock));
+        // A line with params goes on its Label's TextSpans, the sink that fills them (a .Text prints "{0}").
+        cb.set("#MatchTimer.TextSpans", Lang.msg(Lang.CLASH_HUD_TIMER).param("0", clock));
 
         String scoreKey = s.teamIndex() == 1 ? Lang.CLASH_HUD_SCORE_BLUE : Lang.CLASH_HUD_SCORE_RED;
         cb.set("#TeamScore.TextSpans", Lang.msg(scoreKey)
@@ -52,7 +53,7 @@ public final class DominationHud extends CustomUIHud {
         cb.set("#YourTeam.Text", teamName(s.teamIndex()));
 
         int pct = Math.max(0, Math.min(100, s.capturePct()));
-        cb.set("#Capture.Text", Lang.msg(Lang.CLASH_HUD_CAPTURE).param("0", pct));
+        cb.set("#Capture.TextSpans", Lang.msg(Lang.CLASH_HUD_CAPTURE).param("0", pct));
 
         update(false, cb);
     }

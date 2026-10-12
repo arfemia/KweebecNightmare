@@ -45,7 +45,8 @@ public final class ClashHud extends CustomUIHud {
 
         int rs = Math.max(0, s.remainingSec());
         String clock = String.format(Locale.ROOT, "%d:%02d", rs / 60, rs % 60);
-        cb.set("#MatchTimer.Text", Lang.msg(Lang.CLASH_HUD_TIMER).param("0", clock));
+        // A line with params goes on its Label's TextSpans, the sink that fills them (a .Text prints "{0}").
+        cb.set("#MatchTimer.TextSpans", Lang.msg(Lang.CLASH_HUD_TIMER).param("0", clock));
 
         // Your-vs-enemy score, coloured per the viewer's team. RED (team 0) renders their own score red and
         // the enemy blue; BLUE (team 1) the reverse. Set on TextSpans so the <color> markup is parsed.
@@ -58,9 +59,9 @@ public final class ClashHud extends CustomUIHud {
         Message tally = s.byKills()
                 ? Lang.msg(Lang.CLASH_HUD_TALLY_KILLS).param("0", s.tally())
                 : Lang.msg(Lang.CLASH_HUD_TALLY_HITS).param("0", s.tally());
-        cb.set("#Tally.Text", tally);
+        cb.set("#Tally.TextSpans", tally);
 
-        cb.set("#Alive.Text", Lang.msg(Lang.CLASH_HUD_ALIVE)
+        cb.set("#Alive.TextSpans", Lang.msg(Lang.CLASH_HUD_ALIVE)
                 .param("0", Math.max(0, s.aliveYour())).param("1", Math.max(0, s.aliveEnemy())));
 
         update(false, cb);

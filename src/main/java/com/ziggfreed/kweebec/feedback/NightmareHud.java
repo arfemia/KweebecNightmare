@@ -53,18 +53,19 @@ public final class NightmareHud extends CustomUIHud {
 
         int rs = Math.max(0, remainingSec);
         String clock = String.format(Locale.ROOT, "%d:%02d", rs / 60, rs % 60);
-        cb.set("#Timer.Text", Lang.msg(Lang.HUD_TIMER).param("0", clock));
+        // A line with params goes on its Label's TextSpans, the sink that fills them (a .Text prints "{0}").
+        cb.set("#Timer.TextSpans", Lang.msg(Lang.HUD_TIMER).param("0", clock));
 
         Message objective = phase == ChasePhase.ESCAPE
                 ? Lang.msg(Lang.HUD_OBJECTIVE_ESCAPE)
                 : Lang.msg(Lang.HUD_OBJECTIVE_RITUAL);
         cb.set("#Objective.Text", objective);
 
-        cb.set("#Shrines.Text", Lang.msg(Lang.HUD_SHRINES).param("0", lit).param("1", total));
-        cb.set("#Alive.Text", Lang.msg(Lang.HUD_ALIVE).param("0", alive));
+        cb.set("#Shrines.TextSpans", Lang.msg(Lang.HUD_SHRINES).param("0", lit).param("1", total));
+        cb.set("#Alive.TextSpans", Lang.msg(Lang.HUD_ALIVE).param("0", alive));
 
         int pct = (int) Math.round(Math.max(0.0, Math.min(1.0, corruption)) * 100.0);
-        cb.set("#Corruption.Text", Lang.msg(Lang.HUD_CORRUPTION).param("0", pct));
+        cb.set("#Corruption.TextSpans", Lang.msg(Lang.HUD_CORRUPTION).param("0", pct));
 
         // Extraction line: the live "X / Y on the platform" count plus the hold countdown, shown only during
         // the gate-open ESCAPE climax. When the whole required group is on the platform the hold is ticking
@@ -75,7 +76,7 @@ public final class NightmareHud extends CustomUIHud {
                     ? Lang.msg(Lang.HUD_EXTRACTION_HOLD)
                             .param("0", onPad).param("1", required).param("2", Math.max(0, holdRemain))
                     : Lang.msg(Lang.HUD_EXTRACTION_WAIT).param("0", onPad).param("1", required);
-            cb.set("#Extraction.Text", ext);
+            cb.set("#Extraction.TextSpans", ext);
         }
 
         update(false, cb);
