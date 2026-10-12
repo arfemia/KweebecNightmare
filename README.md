@@ -24,7 +24,7 @@ Kweebec Nightmare runs the minigame on its own; [MMO Skill Tree](https://www.cur
 
 ## Install
 
-Drop `KweebecNightmare-<version>.jar` into your server `Mods/` folder, along with its two required companion mods, **Ziggfreed's CommonLib** (2.3.0 or newer) and **Perfect Utils** (the server loads them first). Requires a Hytale Update 7 server (`>=0.7.0-pre.0 <0.8.0`).
+Drop `KweebecNightmare-<version>.jar` into your server `Mods/` folder, along with its two required companion mods, **Ziggfreed's CommonLib** (2.3.0 or newer) and **Perfect Utils** (the server loads them first). Requires a Hytale Update 7 (0.7.x) server.
 
 ## Build from source
 
