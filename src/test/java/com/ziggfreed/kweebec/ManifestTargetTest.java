@@ -38,11 +38,11 @@ import com.hypixel.hytale.common.semver.SemverRange;
  * the build compiles against, and that line's release, and claims no later line.
  *
  * <p><b>The library floor.</b> The server checks each {@code Dependencies} range against the installed
- * dependency's own version and refuses to load the plugin at all on a miss. The floor is the Ziggfreed
- * Common version this build pins ({@code ziggfreedCommonVersion} in {@code gradle.properties}, which
- * build.gradle passes to this JVM) and the version of the jar that pin resolves to on the classpath, so a
- * server still running an older library refuses this jar by name instead of running it on a library it
- * was never built against.
+ * dependency's own version and refuses to load the plugin at all on a miss. The floor is the oldest
+ * library this jar really needs (R364): it must admit the library the build compiles against, and it
+ * moves up only when the code starts using newer library API, so a library release alone never forces a
+ * release of this jar. The jar on the classpath is the version this build pins
+ * ({@code ziggfreedCommonVersion} in {@code gradle.properties}, which build.gradle passes to this JVM).
  *
  * <p>Every manifest read here is a processed one on the test classpath (this module's after resource
  * templating, the library's inside its jar), so the test reads exactly what a server reads. It calls
@@ -80,23 +80,18 @@ class ManifestTargetTest {
     }
 
     @Test
-    void theLibraryFloorIsTheLibraryThisBuildCompilesAgainst() throws IOException {
+    void theLibraryFloorAdmitsTheLibraryThisBuildCompilesAgainst() throws IOException {
         String floor = dependencyRange(LIBRARY_DEPENDENCY);
         String compiledAgainst = versionOf(LIBRARY_NAME);
 
         assertTrue(Semver.fromString(compiledAgainst).satisfies(SemverRange.fromString(floor)),
                 "the floor must admit the library this jar compiles against: " + floor + " vs " + compiledAgainst);
-        assertEquals(">=" + compiledAgainst, floor,
-                "the floor is the library this jar compiles against, so an older library refuses it by name");
     }
 
     @Test
-    void theLibraryFloorIsThePinnedLibraryVersion() throws IOException {
-        String floor = dependencyRange(LIBRARY_DEPENDENCY);
+    void theLibraryJarIsThePinnedLibraryVersion() throws IOException {
         String pinned = pinnedLibraryVersion();
 
-        assertEquals(">=" + pinned, floor, "the floor is the pinned " + PINNED_LIBRARY_KEY
-                + " in gradle.properties: move the two together");
         assertEquals(pinned, versionOf(LIBRARY_NAME), "the " + LIBRARY_NAME + " jar on the classpath is the pinned "
                 + PINNED_LIBRARY_KEY + " (a -PziggfreedCommonJar override names a jar of another version)");
     }
