@@ -54,10 +54,6 @@ public final class ShrineSubmitInteraction extends SimpleInstantInteraction {
                     SimpleInstantInteraction.CODEC)
                     .build();
 
-    public static BuilderCodec<ShrineSubmitInteraction> getCODEC() {
-        return CODEC;
-    }
-
     /**
      * The predicted CLIENT-simulation pass. {@link SimpleInstantInteraction} would otherwise route this to
      * {@link #firstRun} too, double-running our Moonbloom consume + block mutation against a non-authoritative

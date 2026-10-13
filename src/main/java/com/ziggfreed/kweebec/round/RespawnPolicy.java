@@ -35,9 +35,4 @@ public enum RespawnPolicy {
         }
         return DEFAULT;
     }
-
-    /** Whether a player gets at least one respawn under this policy (LIMITED/INFINITE). */
-    public boolean respawns() {
-        return this != NONE;
-    }
 }

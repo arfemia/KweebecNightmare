@@ -486,7 +486,6 @@ public final class ChaseMode {
             return;
         }
         chase.setGateOpen(true);
-        chase.setAlertFired(true);
         KweebecNightmarePlugin.LOGGER.atInfo().log(
                 "[Kweebec][win] GATE OPEN. Hold ESCAPE z=" + ArenaLayout.ESCAPE.z()
                         + " (radius " + ArenaLayout.ESCAPE_RADIUS + ") as a group for "

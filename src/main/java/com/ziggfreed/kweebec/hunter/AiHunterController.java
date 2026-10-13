@@ -70,8 +70,7 @@ import com.ziggfreed.kweebec.util.SafeLog;
  *
  * <p><b>Aggro override (Perfect Utils, a hard dependency, kept for criteria-based aggro switching).</b>
  * On top of the natural chase we use {@code AggroAPI.taunt} ONLY to FORCE a target the natural AI would
- * not pick on its own: the gate-alert hard-lock, or the loudest shrine channeller when it is not already
- * the nearest survivor. {@code chooseTarget} ranks gate-alert &gt; channeller &gt; nearest; if the choice
+ * not pick on its own: the gate-alert hard-lock. {@code chooseTarget} ranks gate-alert &gt; nearest; if the choice
  * equals the natural nearest (always true in solo play) we issue NO taunt, so no {@code AggroComponent}
  * lands on the lone survivor - which is what crashed teardown (Perfect Utils removing the component from
  * a just-killed player's changed archetype) and ejected them dead. When an override IS needed, the taunt
@@ -776,21 +775,13 @@ public final class AiHunterController implements HunterController {
     // --- target selection ---
 
     /**
-     * Who the hunter hunts this tick: the gate-alert lock first; else the loudest active shrine
-     * channeller (channelling noise draws the hunter); else the active survivor nearest to any hunter.
+     * Who the hunter hunts this tick: the gate-alert lock first; else the active survivor nearest to any hunter.
      */
     @Nullable
     private UUID chooseTarget(@Nonnull RoundInstance round, @Nonnull Store<EntityStore> store) {
         UUID forced = alertTarget;
         if (forced != null && isActiveSurvivor(round, forced)) {
             return forced;
-        }
-        ChaseState chase = round.chaseState();
-        if (chase != null) {
-            UUID channeller = chase.loudestChanneller();
-            if (channeller != null && isActiveSurvivor(round, channeller)) {
-                return channeller;
-            }
         }
         return nearestSurvivorToAnyHunter(round, store);
     }

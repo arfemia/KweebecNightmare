@@ -173,7 +173,7 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         RoundService.getInstance().startup();
 
         // Matchmaking lobby: the fill-window + countdown queue the guide dialogue and
-        // /kweebec start feed (its launcher closes over RoundService.startChase).
+        // /kweebec start feed (its launcher closes over RoundService.startRound).
         KweebecLobby.init();
 
         // Inventory-restore crash/disconnect net: re-apply a leftover inventory snapshot for a player

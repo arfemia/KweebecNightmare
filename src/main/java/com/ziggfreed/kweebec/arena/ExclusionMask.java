@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * The ONE shared radial keep-clear mask the cycle-3 plan calls for (Track B "B3").
@@ -115,25 +114,6 @@ public final class ExclusionMask {
             }
         }
         return true;
-    }
-
-    /**
-     * Pick the FIRST candidate from {@code candidates} whose footprint {@link #isClear}; returns
-     * {@code null} when none clear. Order-preserving, so the caller controls priority (e.g. a
-     * seed-shuffled list yields a seed-stable first clear pick).
-     *
-     * @param candidates ordered placement candidates
-     * @param footprintRadius the conservative footprint to keep clear
-     */
-    @Nullable
-    public StructureCatalog.Placement firstClear(@Nonnull List<StructureCatalog.Placement> candidates,
-                                                 double footprintRadius) {
-        for (StructureCatalog.Placement p : candidates) {
-            if (isClear(p.x(), p.z(), footprintRadius)) {
-                return p;
-            }
-        }
-        return null;
     }
 
     /** Append a string of overlapping discs along the -z corridor from {@code nearZ} to {@code farZ}. */

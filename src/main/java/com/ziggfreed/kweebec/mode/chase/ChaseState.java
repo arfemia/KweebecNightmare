@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -51,7 +50,6 @@ public final class ChaseState {
     /** 0..1 corruption meter; ramps with time + per shrine, drives hunter speed / dark / heartbeat. */
     private volatile double corruption;
     private volatile boolean gateOpen;
-    private volatile boolean alertFired;
     /** Epoch ms when PREP ends and the ritual (and hunter) begins. */
     private volatile long prepEndsAtMs;
     /** How many mid-match Moonbloom respawn waves have already fired (indexes RuleSet.moonbloomRespawnAtSeconds). */
@@ -83,15 +81,6 @@ public final class ChaseState {
     @Nonnull
     public List<ShrineState> shrines() {
         return new ArrayList<>(discovered.values());
-    }
-
-    /**
-     * The shrine whose furnace is the block at {@code (x,y,z)}, or null if no shrine has been discovered
-     * there yet. World-thread only.
-     */
-    @Nullable
-    public ShrineState shrineAt(int x, int y, int z) {
-        return discovered.get(new Vector3i(x, y, z));
     }
 
     /**
@@ -165,16 +154,6 @@ public final class ChaseState {
         this.surfaceShrinePositions = new ArrayList<>(positions);
     }
 
-    /**
-     * Vestigial (the pre-0.4.0 channel-bar relight): the furnace interaction supersedes channelling, so
-     * there is never a channeller. Kept so {@code AiHunterController} still compiles; always null = the
-     * hunter's safe no-channeller fallback (nearest-survivor pursuit).
-     */
-    @Nullable
-    public UUID loudestChanneller() {
-        return null;
-    }
-
     @Nonnull
     public ChasePhase phase() {
         return phase;
@@ -202,14 +181,6 @@ public final class ChaseState {
 
     public void setGateOpen(boolean gateOpen) {
         this.gateOpen = gateOpen;
-    }
-
-    public boolean isAlertFired() {
-        return alertFired;
-    }
-
-    public void setAlertFired(boolean alertFired) {
-        this.alertFired = alertFired;
     }
 
     public long prepEndsAtMs() {

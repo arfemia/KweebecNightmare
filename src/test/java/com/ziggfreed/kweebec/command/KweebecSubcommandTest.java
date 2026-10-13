@@ -3,12 +3,15 @@ package com.ziggfreed.kweebec.command;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -43,6 +46,10 @@ class KweebecSubcommandTest {
 
     private static final List<String> PLAYER_NAMES = List.of(
             "start", "exit", "leave", "score", "leaderboard", "lb", "party");
+
+    /** The mod's one shipped lang file; the file name is the namespace the engine puts before every key. */
+    private static final Path LANG = Path.of("src", "main", "resources", "Server", "Languages", "en-US",
+            "kweebecnightmare.lang");
 
     @Test
     void everyAdminNameRefusesAPlayerWithoutTheAdminPermission() {
@@ -102,20 +109,53 @@ class KweebecSubcommandTest {
         assertEquals(ruled, answered, "a new subcommand or alias is ruled admin or player here, never left out");
     }
 
+    /**
+     * The command registers one engine subcommand per value, described by {@code descKey}, with a usage
+     * variant whose argument {@code argDescKey} describes: the engine's help prints each as a lang key, so a
+     * key with no en-US line shows raw. This mod ships en-US only.
+     */
     @Test
-    void anAliasRunsAsItsSubcommand() {
-        assertSame(KweebecSubcommand.END_ALL, sub("end"));
-        assertSame(KweebecSubcommand.CLASH_HOST, sub("host"));
-        assertSame(KweebecSubcommand.DOMINATION, sub("dom"));
-        assertSame(KweebecSubcommand.EXIT, sub("leave"));
-        assertSame(KweebecSubcommand.LEADERBOARD, sub("lb"));
-        assertNull(KweebecSubcommand.byName("spawnguide"), "a name the command no longer answers to calls nothing");
+    void everySubcommandDescriptionAndArgumentIsAShippedLangKey() throws IOException {
+        Set<String> keys = enUsKeys();
+
+        for (KweebecSubcommand sub : KweebecSubcommand.values()) {
+            String name = sub.names().get(0);
+            assertTrue(keys.contains(sub.descKey()), () -> "/kweebec " + name + "'s description " + sub.descKey()
+                    + " has an en-US line");
+            if (sub.argName() != null) {
+                String argDescKey = sub.argDescKey();
+                assertNotNull(argDescKey, () -> "/kweebec " + name + "'s argument " + sub.argName() + " is described");
+                assertTrue(keys.contains(argDescKey), () -> "/kweebec " + name + "'s argument description " + argDescKey
+                        + " has an en-US line");
+            }
+        }
     }
 
+    /** Every key the en-US lang file defines, with the namespace its file name gives it. */
+    private static Set<String> enUsKeys() throws IOException {
+        Set<String> keys = new HashSet<>();
+        for (String line : Files.readAllLines(LANG, StandardCharsets.UTF_8)) {
+            String trimmed = line.trim();
+            int eq = trimmed.indexOf('=');
+            if (trimmed.isEmpty() || trimmed.startsWith("#") || eq <= 0) {
+                continue;
+            }
+            keys.add("kweebecnightmare." + trimmed.substring(0, eq).trim());
+        }
+        assertFalse(keys.isEmpty(), () -> "no keys read from " + LANG.toAbsolutePath());
+        return keys;
+    }
+
+    /** The subcommand that answers to {@code name}, its own name or an alias. */
     private static KweebecSubcommand sub(String name) {
-        KweebecSubcommand sub = KweebecSubcommand.byName(name);
-        assertNotNull(sub, () -> "/kweebec answers to " + name);
-        return sub;
+        KweebecSubcommand found = null;
+        for (KweebecSubcommand sub : KweebecSubcommand.values()) {
+            if (sub.names().contains(name)) {
+                found = sub;
+            }
+        }
+        assertNotNull(found, () -> "/kweebec answers to " + name);
+        return found;
     }
 
     /** A sender holding {@code nodes}: one it holds says yes, and the root node says yes to every node. */

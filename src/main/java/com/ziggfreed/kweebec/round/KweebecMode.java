@@ -1,7 +1,6 @@
 package com.ziggfreed.kweebec.round;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * The two Kweebec Nightmare gameplay modes. Each is its own pack-authored
@@ -46,18 +45,5 @@ public enum KweebecMode {
     @Nonnull
     public String nameKey() {
         return "kweebecnightmare.mode." + id + ".name";
-    }
-
-    @Nullable
-    public static KweebecMode fromId(@Nullable String id) {
-        if (id == null) {
-            return null;
-        }
-        for (KweebecMode m : values()) {
-            if (m.id.equalsIgnoreCase(id)) {
-                return m;
-            }
-        }
-        return null;
     }
 }

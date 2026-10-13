@@ -14,11 +14,11 @@ import com.ziggfreed.kweebec.score.ScoringConfig;
  * The configurable stakes of a round - the replayability pillar. Every knob the
  * design calls out (rescue style, lives, bleed-out, hunter count + speed, shrine
  * count, round length, corruption ramp) lives here as an immutable value built
- * once per round from a {@link RoundPreset}. An installed MMO Skill Tree can
+ * once per round from a preset ({@code PresetConfig.resolve}). An installed MMO Skill Tree can
  * select a preset or scale these numbers via the public API.
  *
- * <p>Build via {@link #builder(String)}; presets are the canonical sources
- * ({@link RoundPreset#ruleSet()}).
+ * <p>Build via {@link #builder(String)}; presets are the canonical sources (the pack-authored
+ * {@code Server/KweebecNightmare/Presets/*.json}, decoded by {@code RoundPresetAsset}).
  */
 public final class RuleSet {
 

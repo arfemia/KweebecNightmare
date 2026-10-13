@@ -3,7 +3,6 @@
 # final key is e.g. kweebecnightmare.hud.timer (the form Lang.java references).
 # Prefixing here would double it (kweebecnightmare.kweebecnightmare.hud.timer) and
 # every lookup would fall through to the raw key. See I18nModule.getPrefix.
-lobby.name = Kweebec Nightmare
 mode.chase.name = Relight and Escape
 mode.survival.name = Last Light Till Dawn
 preset.amateur.name = Amateur
@@ -83,15 +82,10 @@ toast.shrine_submit = The shrine drinks your Moonbloom ({0}/{1})
 toast.shrine_dormant = The shrine sleeps until the hunt begins
 toast.moonbloom_respawn = The grove stirs. Fresh Moonbloom has grown.
 
-toast.shrine_lit = A shrine flares to life
-toast.shrine_progress = Keep channelling the shrine
-toast.shrine_channel = You channel the shrine. It hears you.
-toast.shrine_flare = The shrine flares - it turns toward you
 toast.cocooned = Roots drag you under. Wait for a teammate.
 toast.rescued = You are free. Run.
 toast.teammate_down = A teammate has been cocooned
 toast.hunter_locked = It has your scent
-toast.time_low = The night is almost over
 toast.hunters_drawn = The light draws more of them in
 toast.extraction_hold = The platform hums. Hold it together until the grove releases you.
 
@@ -131,6 +125,19 @@ cmd.score_none = No recorded score yet. Survive a round first.
 cmd.kweebec.desc = Start, leave, or check on a Kweebec Nightmare round
 cmd.arg.sub = start | exit | score | leaderboard | party
 cmd.arg.preset = amateur | nightmare | hardcore
+cmd.arg.clash_preset = clash_1v1 | clash_2v2
+cmd.arg.domination_preset = domination_koth
+cmd.arg.count = How many Moonbloom to give
+cmd.kweebec.start.desc = Queue for a round on the preset you name, or Nightmare if you name none
+cmd.kweebec.exit.desc = Leave the queue or your round
+cmd.kweebec.score.desc = Show your best scores
+cmd.kweebec.leaderboard.desc = Open the leaderboard
+cmd.kweebec.party.desc = Open your party and invites
+cmd.kweebec.clash.desc = Admin: start a team test match with everyone in your world
+cmd.kweebec.domination.desc = Admin: start a hold-the-point test match with everyone in your world
+cmd.kweebec.endall.desc = Admin: end every round on the server
+cmd.kweebec.give.desc = Admin: give yourself Moonbloom
+cmd.kweebec.clashhost.desc = Admin: place the Duelmaster in your world
 
 # Dialogue page chrome (resolved by the shared ziggfreed-common dialogue engine).
 dialogue.kweebec.farewell = Step away
@@ -166,7 +173,6 @@ npc.guide.hint = Press [{key}] to speak with the Grove Keeper
 # parsed CLIENT-side, per-locale (same mechanism as vanilla items.*.description). A
 # translator keeps the markup in their own line. Option labels are TextButtons (no
 # TextSpans), so they take no markup - colour-coded by their DialogueOptionStyle.
-dialogue.nightmares_intro.npc = The Grove Keeper
 dialogue.nightmares_intro.greet.text = Oh good, you're still breathing. Not many are, this far in. I've lived this same nightmare more times than I can count - the grove goes black, my own kin start wearing my face and chasing me through it, and I never make it out. But I've seen it enough to know where it gets you. Stay a minute, I'll tell you the parts that get people killed.
 dialogue.nightmares_intro.greet.opt.0 = How does this nightmare go?
 dialogue.nightmares_intro.greet.opt.1 = Enough talk, send me in.
@@ -370,7 +376,6 @@ preset.domination_koth.name = Domination
 # Clash Host NPC + the clash_intro dialogue (the PvP entry).
 npc.clashhost.name = The Duelmaster
 npc.clashhost.hint = Press [{key}] to enter the arena
-dialogue.clash_intro.npc = The Duelmaster
 dialogue.clash_intro.greet.text = So. You would rather test your roots against another warm-blood than run from the dark. I respect that. The grove makes a fine arena when the only nightmare in it is each other. Stay sharp - I have buried better fighters than you, and I was not even trying.
 dialogue.clash_intro.greet.opt.0 = How does the arena work?
 dialogue.clash_intro.greet.opt.1 = I am ready to fight.

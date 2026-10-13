@@ -33,7 +33,7 @@ import com.ziggfreed.kweebec.util.SafeLog;
  * queue. It owns ONE {@link LobbyService} and, per preset, builds the
  * {@link LobbyConfig} (min/max party from the resolved {@link RuleSet}, plus
  * kweebec's wait/countdown/solo policy), the {@link RoundLauncher} (a closure over
- * {@code startChase} capturing the preset), the {@code alreadyEngaged} guard
+ * {@code startRound} capturing the preset and its mode), the {@code alreadyEngaged} guard
  * ({@code registry::isInRound}), and the {@link QueueMessages} (localized Lang
  * Messages). The queue stays preset-id-string-typed; everything kweebec-specific
  * lives here, nothing leaks into common.

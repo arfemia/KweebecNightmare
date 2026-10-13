@@ -11,7 +11,7 @@ The Void has crept into the Emerald Grove, and the gentle Kweebec now hunt throu
 3. Get caught and you're cocooned in roots until a friend cuts you free.
 4. Light every shrine and the Heartwood Gate opens. Gather on the platform beyond it and hold it together until everyone gets out. If the group breaks up, the hold starts over.
 
-A round runs on Nightmare. For an easier night type `/kweebec --preset=amateur`, and for the hardest, `/kweebec --preset=hardcore`.
+A round runs on Nightmare. For an easier night type `/kweebec start amateur`, and for the hardest, `/kweebec start hardcore`. `/kweebec leaderboard` shows the best runs, and `/kweebec exit` takes you out of the queue or the round.
 
 ## Features
 

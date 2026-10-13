@@ -85,17 +85,6 @@ public final class RoundService {
     // --- start ---
 
     /**
-     * Start a CHASE round for a party (the co-op compatibility shim; delegates to
-     * {@link #startRound(UUID, List, String, KweebecMode)}).
-     */
-    @Nonnull
-    public CompletableFuture<String> startChase(@Nonnull UUID initiator,
-                                                @Nonnull List<UUID> party,
-                                                @Nullable String presetId) {
-        return startRound(initiator, party, presetId, KweebecMode.CHASE);
-    }
-
-    /**
      * Start a round of any {@code mode} for a party (the initiator is included). Spawns a fresh instance
      * (the {@link ArenaResolver} picks the instance world) and teleports each member in. Returns the round
      * id, or a failed future on a validation error.

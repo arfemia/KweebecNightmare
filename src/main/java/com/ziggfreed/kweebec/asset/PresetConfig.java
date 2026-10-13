@@ -1,6 +1,5 @@
 package com.ziggfreed.kweebec.asset;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -172,11 +171,5 @@ public final class PresetConfig {
     @Nonnull
     public List<String> list() {
         return presets.keySet().stream().sorted().toList();
-    }
-
-    /** All effective presets by id (unmodifiable). */
-    @Nonnull
-    public Map<String, RuleSet> getPresets() {
-        return Collections.unmodifiableMap(presets);
     }
 }

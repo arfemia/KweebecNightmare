@@ -1,5 +1,5 @@
 {
-  "$Comment": "PvP queue policy for the clash_2v2 preset. Public fills both teams with strangers (2v2); Party queues a premade that stays on one team. Solo card disabled. Team size + win condition live on the gameplay RoundPreset (clash_2v2).",
+  "$Comment": "PvP queue policy for the clash_2v2 preset. Public fills both teams with strangers (2v2); Party queues a premade that stays on one team. Solo card disabled. Team size and win condition come from the round preset with the id clash_2v2 (its TeamSize and WinCondition), which a pack may author under KweebecNightmare/Presets; with none loaded, the match runs on the nightmare preset's values.",
   "Name": "Clash_2v2",
   "Enabled": true,
   "NameKey": "kweebecnightmare.preset.clash_2v2.name",

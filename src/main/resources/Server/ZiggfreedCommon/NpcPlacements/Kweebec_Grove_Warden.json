@@ -24,9 +24,10 @@
     "health write, and an entry NPC that can be killed takes every player's way into a round with",
     "them.",
     "",
-    "There is no Interact block here on purpose: the KweebecNightmare_Guide role opens the conversation",
-    "itself, so pressing F behaves the same whether this placement stood the Keeper up or an admin",
-    "spawned one by hand. To change what the Keeper opens, edit that role.",
+    "Interact names the conversation the Keeper offers, Nightmares_Intro, so the startup checks know",
+    "who opens it. The KweebecNightmare_Guide role opens that same conversation itself, so pressing F",
+    "behaves the same whether this placement stood the Keeper up or an admin spawned one by hand. To",
+    "change what the Keeper opens, edit the role's ZigOpenDialogue and this Interact line together.",
     "",
     "To move the Keeper, edit Anchor. To stop them appearing, set Enabled false here, or leave this",
     "file untouched and switch it off in mods/ziggfreedcommon/npc-placements.json."
@@ -46,5 +47,6 @@
       { "Factor": "hytale:mod_installed", "Param": "Ziggfreed:MMOSkillTree", "Max": 0 }
     ]
   },
-  "Lifecycle": { "KeepAlive": true, "Respawn": true, "Fortify": true }
+  "Lifecycle": { "KeepAlive": true, "Respawn": true, "Fortify": true },
+  "Interact": { "Dialogue": "Nightmares_Intro" }
 }

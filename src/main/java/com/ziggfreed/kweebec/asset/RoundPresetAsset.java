@@ -29,8 +29,8 @@ import com.ziggfreed.kweebec.score.ScoringConfig;
 /**
  * A pack-authorable round preset, loaded from a pack's
  * {@code Server/KweebecNightmare/Presets/*.json}. The data source for the
- * difficulty {@link RuleSet} an installed MMO can override at runtime; replaces the
- * old hardcoded {@code RoundPreset} enum as the schema authority.
+ * difficulty {@link RuleSet} an installed MMO can override at runtime, and the schema
+ * authority for a preset.
  *
  * <p><b>Pattern A - full structured asset</b> (mirrors hyMMO's {@code QuestGiverAsset}).
  * A preset is a flat, self-contained record with no template DSL, so the engine

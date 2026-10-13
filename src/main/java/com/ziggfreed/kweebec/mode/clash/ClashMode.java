@@ -18,6 +18,7 @@ import com.ziggfreed.common.instance.match.MatchRules;
 import com.ziggfreed.common.instance.match.MatchSnapshot;
 import com.ziggfreed.common.instance.match.MatchVerdict;
 import com.ziggfreed.common.instance.match.WinConditionResolver;
+import com.ziggfreed.common.ui.name.PlayerDisplayNames;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
 import com.ziggfreed.kweebec.feedback.ClashHud;
 import com.ziggfreed.kweebec.feedback.ClashHudSnapshot;
@@ -199,10 +200,9 @@ public final class ClashMode {
         UUID killer = cs.lastAttacker(uuid);
         if (killer != null && !killer.equals(uuid) && round.teamOf(killer) != round.teamOf(uuid)) {
             cs.recordKill(killer);
-            PlayerRef victimRef = Universe.get().getPlayer(uuid);
             PlayerRef killerRef = Universe.get().getPlayer(killer);
             if (killerRef != null) {
-                String victimName = victimRef != null ? victimRef.getUsername() : "?";
+                String victimName = PlayerDisplayNames.plainName(uuid, null);
                 RoundFeedback.infoToast(killerRef, Lang.msg(Lang.CLASH_TOAST_KO).param("0", victimName));
             }
         }

@@ -2,31 +2,30 @@ package com.ziggfreed.kweebec.command;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+import java.util.TreeSet;
 import java.util.UUID;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
-import com.hypixel.hytale.server.core.command.system.arguments.system.OptionalArg;
+import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.entities.player.pages.InteractiveCustomUIPage;
-import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
+import com.hypixel.hytale.server.core.permissions.provider.HytalePermissionsProvider;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import com.ziggfreed.common.instance.leaderboard.Leaderboard;
 import com.ziggfreed.common.instance.leaderboard.LeaderboardEntry;
 import com.ziggfreed.common.instance.leaderboard.LeaderboardPage;
 import com.ziggfreed.common.instance.play.PlayModePage;
 import com.ziggfreed.common.inventory.InventoryUtil;
-import com.ziggfreed.common.lobby.JoinResult;
 import com.ziggfreed.common.party.page.PartyInvitePage;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.asset.PresetConfig;
@@ -38,57 +37,126 @@ import com.ziggfreed.kweebec.round.KweebecMode;
 import com.ziggfreed.kweebec.round.RoundService;
 
 /**
- * {@code /kweebec [start|exit|score|leaderboard|party] [preset]} - the round entry point.
+ * {@code /kweebec} - the round entry point. A bare {@code /kweebec} queues for a round on the default
+ * preset, as {@code /kweebec start} does. Every {@link KweebecSubcommand} is a real engine subcommand, so a
+ * player types {@code /kweebec leaderboard} or {@code /kweebec start hardcore}, never a {@code --name=} flag.
  *
  * <ul>
- *   <li>{@code start [preset]} - start a Chase round; the party is the caller plus
- *       every other player in the caller's current world (so the lobby co-ops in
- *       together). Preset = amateur | nightmare | hardcore (default nightmare).</li>
- *   <li>{@code exit} - leave your current round.</li>
- *   <li>{@code endall} - force-end every live round (admin/testing).</li>
+ *   <li>{@code start [preset]} - queue for a Chase round on the preset (default nightmare).</li>
+ *   <li>{@code exit} - leave the queue, else the current round.</li>
+ *   <li>{@code score}, {@code leaderboard}, {@code party} - the caller's bests, the board, the party screen.</li>
+ *   <li>{@code clash [preset]}, {@code domination [preset]}, {@code endall}, {@code give [count]} and
+ *       {@code clashhost} - admin-only: {@link KweebecSubcommand} holds every name the command answers to
+ *       and who may run it.</li>
  * </ul>
  *
- * <p>{@code give}, {@code endall}, {@code clashhost}, {@code clash} and {@code domination} are admin-only:
- * {@link KweebecSubcommand} holds every name the command answers to and who may run it.
+ * <p>An optional positional argument is an engine usage variant: the subcommand itself takes no argument,
+ * and its variant, which takes one required argument, answers when one is typed. A word after
+ * {@code /kweebec} that names no subcommand reaches the root's own one-argument variant, which answers with
+ * the usage line.
  *
- * <p>The diegetic triggers (void-rift pad, shrine block, guide NPC) route through
- * the same {@link RoundService#startChase} entry; the command is the first one.
+ * <p>The diegetic triggers (the guide's dialogue, the Play screen) queue through the same
+ * {@link KweebecLobby}; the command is one entry among them.
  */
 public final class KweebecCommand extends CommandBase {
-
-    private final OptionalArg<String> subArg;
-    private final OptionalArg<String> presetArg;
 
     public KweebecCommand() {
         // The engine resolves the command + arg descriptions as localization keys.
         super("kweebec", Lang.CMD_DESC);
         this.addAliases("kn");
-        // The non-deprecated equivalent of the old setPermissionGroup(GameMode.Adventure).
-        this.setPermissionGroups("hytale:Adventurer");
-        this.subArg = withOptionalArg("sub", Lang.ARG_SUB_DESC, ArgTypes.STRING);
-        this.presetArg = withOptionalArg("preset", Lang.ARG_PRESET_DESC, ArgTypes.STRING);
+        // The non-deprecated equivalent of the old setPermissionGroup(GameMode.Adventure). A player
+        // subcommand declares no group of its own, so it inherits this one and stays open to every player;
+        // an admin subcommand declares the admin group and requires the admin node (Sub).
+        this.setPermissionGroups(HytalePermissionsProvider.GROUP_ADVENTURER);
+        for (KweebecSubcommand sub : KweebecSubcommand.values()) {
+            this.addSubCommand(new Sub(sub));
+        }
+        this.addUsageVariant(new UnknownSub());
     }
 
     @Override
     protected void executeSync(@Nonnull CommandContext ctx) {
-        String name = ctx.provided(subArg) ? subArg.get(ctx).toLowerCase(Locale.ROOT) : "start";
-        KweebecSubcommand sub = KweebecSubcommand.byName(name);
-        if (sub == null) {
-            ctx.sendMessage(Lang.msg(Lang.CMD_USAGE));
-            return;
+        run(KweebecSubcommand.START, ctx, null);
+    }
+
+    /** One {@code /kweebec} subcommand: its first name, the rest as aliases, and its positional variant. */
+    private static final class Sub extends CommandBase {
+
+        private final KweebecSubcommand sub;
+
+        Sub(@Nonnull KweebecSubcommand sub) {
+            super(sub.names().get(0), sub.descKey());
+            this.sub = sub;
+            if (sub.admin()) {
+                // A group of its own keeps the root's Adventurer group off this subcommand, so the engine
+                // neither runs nor lists it for a player without the admin node (an operator holds every
+                // node). Its variant inherits the node. mayRun stays as the second guard.
+                this.setPermissionGroups(HytalePermissionsProvider.GROUP_ADMIN);
+                this.requirePermission(KweebecSubcommand.ADMIN_PERMISSION);
+            }
+            List<String> names = sub.names();
+            if (names.size() > 1) {
+                this.addAliases(names.subList(1, names.size()).toArray(new String[0]));
+            }
+            String argName = sub.argName();
+            String argDescKey = sub.argDescKey();
+            if (argName != null && argDescKey != null) {
+                this.addUsageVariant(new WithArg(sub, argName, argDescKey));
+            }
         }
+
+        @Override
+        protected void executeSync(@Nonnull CommandContext ctx) {
+            run(sub, ctx, null);
+        }
+    }
+
+    /** A subcommand typed with its one positional argument ({@code /kweebec start hardcore}). */
+    private static final class WithArg extends CommandBase {
+
+        private final KweebecSubcommand sub;
+        private final RequiredArg<String> arg;
+
+        WithArg(@Nonnull KweebecSubcommand sub, @Nonnull String argName, @Nonnull String argDescKey) {
+            super(sub.descKey());
+            this.sub = sub;
+            this.arg = withRequiredArg(argName, argDescKey, ArgTypes.STRING);
+        }
+
+        @Override
+        protected void executeSync(@Nonnull CommandContext ctx) {
+            run(sub, ctx, arg.get(ctx));
+        }
+    }
+
+    /** {@code /kweebec <word>} where the word names no subcommand: the usage line. */
+    private static final class UnknownSub extends CommandBase {
+
+        UnknownSub() {
+            super(Lang.CMD_DESC);
+            withRequiredArg("sub", Lang.ARG_SUB_DESC, ArgTypes.STRING);
+        }
+
+        @Override
+        protected void executeSync(@Nonnull CommandContext ctx) {
+            ctx.sendMessage(Lang.msg(Lang.CMD_USAGE));
+        }
+    }
+
+    /** Run {@code sub} with its positional argument, or null when none was typed. */
+    private static void run(@Nonnull KweebecSubcommand sub, @Nonnull CommandContext ctx, @Nullable String arg) {
         // The command is open to every player, so an admin subcommand refuses here, before anything runs.
         if (!sub.mayRun(ctx.sender())) {
             ctx.sendMessage(Lang.msg(Lang.CMD_NO_PERMISSION));
             return;
         }
         switch (sub) {
-            case START -> start(ctx);
-            case CLASH -> startMode(ctx, KweebecMode.CLASH, "clash_1v1");
-            case DOMINATION -> startMode(ctx, KweebecMode.DOMINATION, "domination_koth");
+            case START -> start(ctx, arg);
+            case CLASH -> startMode(ctx, KweebecMode.CLASH, arg != null ? arg : "clash_1v1");
+            case DOMINATION -> startMode(ctx, KweebecMode.DOMINATION, arg != null ? arg : "domination_koth");
             case EXIT -> exit(ctx);
             case END_ALL -> endAll(ctx);
-            case GIVE -> give(ctx);
+            case GIVE -> give(ctx, arg);
             case SCORE -> score(ctx);
             case LEADERBOARD -> leaderboard(ctx);
             case PARTY -> party(ctx);
@@ -96,7 +164,8 @@ public final class KweebecCommand extends CommandBase {
         }
     }
 
-    private void start(@Nonnull CommandContext ctx) {
+    /** {@code start [preset]} - queue for a Chase round on {@code requested}, or the default preset. */
+    private static void start(@Nonnull CommandContext ctx, @Nullable String requested) {
         if (!(ctx.sender() instanceof PlayerRef player)) {
             ctx.sendMessage(Lang.msg(Lang.CMD_PLAYERS_ONLY));
             return;
@@ -108,8 +177,7 @@ public final class KweebecCommand extends CommandBase {
         }
 
         String presetId = PresetConfig.DEFAULT;
-        if (ctx.provided(presetArg)) {
-            String requested = presetArg.get(ctx);
+        if (requested != null) {
             if (PresetConfig.getInstance().byId(requested) == null) {
                 ctx.sendMessage(Lang.msg(Lang.CMD_UNKNOWN_PRESET));
                 return;
@@ -118,7 +186,7 @@ public final class KweebecCommand extends CommandBase {
         }
 
         // Queue for the preset: the lobby gathers a party over a short fill window, then
-        // launches via startChase. The queue itself toasts join + countdown feedback.
+        // launches the round. The queue itself toasts join + countdown feedback.
         switch (KweebecLobby.join(initiator, presetId)) {
             case JOINED -> {
                 ctx.sendMessage(Lang.msg(Lang.CMD_QUEUED));
@@ -136,7 +204,7 @@ public final class KweebecCommand extends CommandBase {
      * eligible player in the caller's current world into one match and start it immediately (no queue). The
      * teams are split from that roster. The diegetic queue/NPC entry routes through the lobby instead.
      */
-    private void startMode(@Nonnull CommandContext ctx, @Nonnull KweebecMode mode, @Nonnull String defaultPreset) {
+    private static void startMode(@Nonnull CommandContext ctx, @Nonnull KweebecMode mode, @Nonnull String presetId) {
         if (!(ctx.sender() instanceof PlayerRef player)) {
             ctx.sendMessage(Lang.msg(Lang.CMD_PLAYERS_ONLY));
             return;
@@ -146,7 +214,6 @@ public final class KweebecCommand extends CommandBase {
             ctx.sendMessage(Lang.msg(Lang.CMD_ALREADY_IN_ROUND));
             return;
         }
-        String presetId = ctx.provided(presetArg) ? presetArg.get(ctx) : defaultPreset;
         World world = Universe.get().getWorld(player.getWorldUuid());
         if (world == null) {
             ctx.sendMessage(Lang.msg(Lang.CMD_START_FAILED));
@@ -170,7 +237,7 @@ public final class KweebecCommand extends CommandBase {
     }
 
     /** {@code party} - open the party + invite screen. */
-    private void party(@Nonnull CommandContext ctx) {
+    private static void party(@Nonnull CommandContext ctx) {
         if (!(ctx.sender() instanceof PlayerRef player)) {
             ctx.sendMessage(Lang.msg(Lang.CMD_PLAYERS_ONLY));
             return;
@@ -180,7 +247,7 @@ public final class KweebecCommand extends CommandBase {
     }
 
     /** Open a custom page for {@code player} on its world thread (resolving ref/store there). */
-    private void openPage(@Nonnull PlayerRef player, @Nonnull InteractiveCustomUIPage<?> page) {
+    private static void openPage(@Nonnull PlayerRef player, @Nonnull InteractiveCustomUIPage<?> page) {
         World world = Universe.get().getWorld(player.getWorldUuid());
         if (world == null) {
             return;
@@ -202,7 +269,7 @@ public final class KweebecCommand extends CommandBase {
         });
     }
 
-    private void exit(@Nonnull CommandContext ctx) {
+    private static void exit(@Nonnull CommandContext ctx) {
         if (!(ctx.sender() instanceof PlayerRef player)) {
             ctx.sendMessage(Lang.msg(Lang.CMD_PLAYERS_ONLY));
             return;
@@ -223,7 +290,7 @@ public final class KweebecCommand extends CommandBase {
     }
 
     /** {@code clashhost} - ensure the PvP Clash Host NPC exists in the caller's world (debug placement). */
-    private void spawnClashHost(@Nonnull CommandContext ctx) {
+    private static void spawnClashHost(@Nonnull CommandContext ctx) {
         if (!(ctx.sender() instanceof PlayerRef player)) {
             ctx.sendMessage(Lang.msg(Lang.CMD_PLAYERS_ONLY));
             return;
@@ -237,7 +304,7 @@ public final class KweebecCommand extends CommandBase {
         world.execute(() -> KweebecNightmarePlugin.debugSpawnClashHost(world));
     }
 
-    private void endAll(@Nonnull CommandContext ctx) {
+    private static void endAll(@Nonnull CommandContext ctx) {
         int n = RoundService.getInstance().endAll();
         if (n == 0) {
             ctx.sendMessage(Lang.msg(Lang.CMD_NO_ACTIVE_ROUNDS));
@@ -246,16 +313,16 @@ public final class KweebecCommand extends CommandBase {
         }
     }
 
-    /** {@code give [n]} - grant the caller n Moonbloom charges (testing aid; default 5). */
-    private void give(@Nonnull CommandContext ctx) {
+    /** {@code give [count]} - grant the caller count Moonbloom charges (testing aid; default 5). */
+    private static void give(@Nonnull CommandContext ctx, @Nullable String requested) {
         if (!(ctx.sender() instanceof PlayerRef player)) {
             ctx.sendMessage(Lang.msg(Lang.CMD_PLAYERS_ONLY));
             return;
         }
         int n = 5;
-        if (ctx.provided(presetArg)) {
+        if (requested != null) {
             try {
-                n = Math.max(1, Integer.parseInt(presetArg.get(ctx).trim()));
+                n = Math.max(1, Integer.parseInt(requested.trim()));
             } catch (NumberFormatException ignored) {
                 // keep the default
             }
@@ -277,7 +344,7 @@ public final class KweebecCommand extends CommandBase {
     }
 
     /** {@code score} - report the caller's own best leaderboard entry in each party-size bucket. */
-    private void score(@Nonnull CommandContext ctx) {
+    private static void score(@Nonnull CommandContext ctx) {
         if (!(ctx.sender() instanceof PlayerRef player)) {
             ctx.sendMessage(Lang.msg(Lang.CMD_PLAYERS_ONLY));
             return;
@@ -285,7 +352,7 @@ public final class KweebecCommand extends CommandBase {
         UUID uuid = player.getUuid();
         boolean any = false;
         // Buckets are now "<difficulty>_<partySize>"; scan every recorded bucket the caller appears in.
-        for (String bucket : new java.util.TreeSet<>(KweebecExperience.board().bucketKeys())) {
+        for (String bucket : new TreeSet<>(KweebecExperience.board().bucketKeys())) {
             LeaderboardEntry e = KweebecExperience.board().forBucket(bucket).get(uuid);
             if (e != null) {
                 if (!any) {
@@ -301,7 +368,7 @@ public final class KweebecCommand extends CommandBase {
     }
 
     /** {@code leaderboard} - open the in-game leaderboard page (the shared instance-experience board). */
-    private void leaderboard(@Nonnull CommandContext ctx) {
+    private static void leaderboard(@Nonnull CommandContext ctx) {
         if (!(ctx.sender() instanceof PlayerRef player)) {
             ctx.sendMessage(Lang.msg(Lang.CMD_PLAYERS_ONLY));
             return;

@@ -58,8 +58,4 @@ public final class RoundRegistry {
     public Collection<RoundInstance> all() {
         return Collections.unmodifiableCollection(byId.values());
     }
-
-    public int activeRoundCount() {
-        return byId.size();
-    }
 }

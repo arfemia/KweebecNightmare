@@ -55,36 +55,11 @@ public final class RoundEvents {
     }
 
     /**
-     * Legacy fire path with no difficulty score. Delegates to the score-carrying
-     * overload with {@code difficultyScore = 0} so existing callers keep working.
-     */
-    public static void fireRoundCompleted(@Nonnull String roundId, @Nonnull String mode,
-                                          @Nonnull RoundCompletedEvent.Outcome outcome,
-                                          @Nonnull List<UUID> participants,
-                                          int durationSeconds, int objectiveProgress) {
-        fireRoundCompleted(roundId, mode, outcome, participants, durationSeconds, objectiveProgress, 0);
-    }
-
-    /**
-     * Fire {@code RoundCompletedEvent} carrying the round's difficulty score (compute
-     * it with {@code DifficultyScore.compute(round.ruleSet())}). An installed MMO
-     * Skill Tree reads the score off the event to scale rewards. Same dispatch
-     * semantics as every other fire: resolve the dispatcher, guard on
-     * {@code hasListener()}, dispatch on the calling (world) thread, whole body
-     * try-guarded.
-     */
-    public static void fireRoundCompleted(@Nonnull String roundId, @Nonnull String mode,
-                                          @Nonnull RoundCompletedEvent.Outcome outcome,
-                                          @Nonnull List<UUID> participants,
-                                          int durationSeconds, int objectiveProgress,
-                                          int difficultyScore) {
-        fireRoundCompleted(roundId, mode, outcome, participants, durationSeconds, objectiveProgress,
-                difficultyScore, null);
-    }
-
-    /**
-     * Fire {@code RoundCompletedEvent} also carrying the PvP winning team ({@code winnerTeamId}, 0-based,
-     * or {@code null} for a co-op outcome / draw). Same dispatch semantics as the other overloads.
+     * Fire {@code RoundCompletedEvent} carrying the round's difficulty score (the mode's
+     * {@code difficultyScore(ruleSet)}; an installed MMO Skill Tree reads it off the event to scale
+     * rewards) and the PvP winning team ({@code winnerTeamId}, 0-based, or {@code null} for a co-op
+     * outcome / draw). Same dispatch semantics as every other fire: resolve the dispatcher, guard on
+     * {@code hasListener()}, dispatch on the calling (world) thread, whole body try-guarded.
      */
     public static void fireRoundCompleted(@Nonnull String roundId, @Nonnull String mode,
                                           @Nonnull RoundCompletedEvent.Outcome outcome,

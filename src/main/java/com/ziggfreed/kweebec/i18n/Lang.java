@@ -65,15 +65,10 @@ public final class Lang {
     public static final String TOAST_MOONBLOOM_RESPAWN = "kweebecnightmare.toast.moonbloom_respawn";
 
     // Danger / status toasts.
-    public static final String TOAST_SHRINE_LIT = "kweebecnightmare.toast.shrine_lit";
-    public static final String TOAST_SHRINE_PROGRESS = "kweebecnightmare.toast.shrine_progress";
-    public static final String TOAST_SHRINE_CHANNEL = "kweebecnightmare.toast.shrine_channel";
-    public static final String TOAST_SHRINE_FLARE = "kweebecnightmare.toast.shrine_flare";
     public static final String TOAST_COCOONED = "kweebecnightmare.toast.cocooned";
     public static final String TOAST_RESCUED = "kweebecnightmare.toast.rescued";
     public static final String TOAST_TEAMMATE_DOWN = "kweebecnightmare.toast.teammate_down";
     public static final String TOAST_HUNTER_LOCKED = "kweebecnightmare.toast.hunter_locked";
-    public static final String TOAST_TIME_LOW = "kweebecnightmare.toast.time_low";
     /** Cue when the whole required group first assembles on the extraction platform and the hold begins. */
     public static final String TOAST_EXTRACTION_HOLD = "kweebecnightmare.toast.extraction_hold";
     /** Shown when an asset-driven spawn rule pulls extra hunters in near the party. */
@@ -186,12 +181,20 @@ public final class Lang {
     public static final String CMD_DESC = "kweebecnightmare.cmd.kweebec.desc";
     public static final String ARG_SUB_DESC = "kweebecnightmare.cmd.arg.sub";
     public static final String ARG_PRESET_DESC = "kweebecnightmare.cmd.arg.preset";
-
-    // The guide NPC's dialogue header name (the "nightmares_intro" backstory + preset launcher).
-    public static final String DIALOGUE_NIGHTMARES_NPC = "kweebecnightmare.dialogue.nightmares_intro.npc";
-
-    // The Duelmaster (clash host) dialogue header name (the "clash_intro" PvP entry).
-    public static final String DIALOGUE_CLASH_NPC = "kweebecnightmare.dialogue.clash_intro.npc";
+    public static final String ARG_CLASH_PRESET_DESC = "kweebecnightmare.cmd.arg.clash_preset";
+    public static final String ARG_DOMINATION_PRESET_DESC = "kweebecnightmare.cmd.arg.domination_preset";
+    public static final String ARG_COUNT_DESC = "kweebecnightmare.cmd.arg.count";
+    // One description per /kweebec subcommand (the engine's help lists each under the command).
+    public static final String CMD_START_DESC = "kweebecnightmare.cmd.kweebec.start.desc";
+    public static final String CMD_CLASH_DESC = "kweebecnightmare.cmd.kweebec.clash.desc";
+    public static final String CMD_DOMINATION_DESC = "kweebecnightmare.cmd.kweebec.domination.desc";
+    public static final String CMD_EXIT_DESC = "kweebecnightmare.cmd.kweebec.exit.desc";
+    public static final String CMD_END_ALL_DESC = "kweebecnightmare.cmd.kweebec.endall.desc";
+    public static final String CMD_GIVE_DESC = "kweebecnightmare.cmd.kweebec.give.desc";
+    public static final String CMD_SCORE_DESC = "kweebecnightmare.cmd.kweebec.score.desc";
+    public static final String CMD_LEADERBOARD_DESC = "kweebecnightmare.cmd.kweebec.leaderboard.desc";
+    public static final String CMD_PARTY_DESC = "kweebecnightmare.cmd.kweebec.party.desc";
+    public static final String CMD_CLASH_HOST_DESC = "kweebecnightmare.cmd.kweebec.clashhost.desc";
 
     // Leaderboard page (launched by the guide's "Open: leaderboard" dialogue option). The option
     // LABEL is by-convention (dialogue.nightmares_intro.greet.opt.3) and lives only in the .lang.

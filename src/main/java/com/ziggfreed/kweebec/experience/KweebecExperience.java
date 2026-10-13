@@ -209,7 +209,7 @@ public final class KweebecExperience {
      * Trim a leaderboard layout's PRIMARY (difficulty / PvP-mode) tabs to presets whose co-keyed
      * {@link InstancePreset} is present AND enabled, hiding disabled or unconfigured difficulties from
      * the board - e.g. the dormant Endless / Swarm / Pitch / Blitz presets, which ship a gameplay
-     * {@code RoundPreset} but no {@code ZiggfreedCommon/Instances/} {@link InstancePreset}, so
+     * round preset ({@code KweebecNightmare/Presets/}) but no {@code ZiggfreedCommon/Instances/} {@link InstancePreset}, so
      * {@link InstancePresetConfig#resolve} returns {@code null} and they are treated as disabled.
      * A primary tab's bucket key IS the preset id (the layout contract), so it resolves directly.
      * Secondary (party-size) tabs are not presets and are passed through untouched by the caller.

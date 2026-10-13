@@ -307,17 +307,9 @@ public final class KweebecDamageSystem extends DamageEventSystem {
     }
 
     /**
-     * Clear a victim's proximity stack (called when a shrine is lit - the party catches its breath). The
-     * stack and its window anchor reset so the next hit starts fresh at tier 1. Thread-safe; safe to call
-     * for a player with no live stack.
+     * Clear every victim's proximity stack (a shrine light relieves the whole party): each stack and its
+     * window anchor reset so the next hit starts fresh at tier 1. Thread-safe.
      */
-    public static void clearProximityStack(@Nonnull UUID victimId) {
-        proximityStack.remove(victimId);
-        lastHitMs.remove(victimId);
-        lastSlowAppliedMs.remove(victimId);
-    }
-
-    /** Clear every victim's proximity stack (a shrine light relieves the whole party). Thread-safe. */
     public static void clearAllProximityStacks() {
         proximityStack.clear();
         lastHitMs.clear();

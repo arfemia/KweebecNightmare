@@ -1,6 +1,5 @@
 package com.ziggfreed.kweebec.asset;
 
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -117,11 +116,5 @@ public final class MutatorConfig {
     @Nonnull
     public List<String> list() {
         return mutators.keySet().stream().sorted().toList();
-    }
-
-    /** All effective mutators by id (unmodifiable). */
-    @Nonnull
-    public Map<String, MutatorAsset> getMutators() {
-        return Collections.unmodifiableMap(mutators);
     }
 }
