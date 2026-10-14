@@ -16,6 +16,7 @@ Co-op horror minigame mod (Relight & Escape chase, one instance world per round)
 ## Scope
 
 - Clash and Domination are in the build but unadvertised and not live-playtested; Survival is reserved. Never describe them in shipped voice.
+- Its seven unreferenced prefabs (KN16) and Clash's never-wired sudden-death, pickup and team HUD keys (KN4) stay (R381).
 
 ## Gotchas
 
