@@ -27,4 +27,6 @@ A round runs on Nightmare. For an easier night type `/kweebec start amateur`, an
 
 Place the jar in your server's `Mods/` folder with [Ziggfreed's CommonLib](https://www.curseforge.com/hytale/mods/ziggfreeds-commonlib) (2.3.0 or newer) and [Perfect Utils](https://www.curseforge.com/hytale/mods/perfect-utils). It needs a Hytale Update 7 server. On Update 6, use 1.2.1.
 
+Every player can use the `/kweebec` commands by default. If you grant permissions by hand, grant `ziggfreed.kweebecnightmare.command.kweebec.*`. The admin commands need `kweebecnightmare.admin`, which operators have.
+
 Patch notes for every version are on [GitHub](https://github.com/arfemia/KweebecNightmare/tree/main/patch-notes).
