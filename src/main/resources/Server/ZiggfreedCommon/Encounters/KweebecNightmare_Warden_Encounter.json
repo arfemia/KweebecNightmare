@@ -26,6 +26,10 @@
     "The Warden pays no loot of its own: the round pays its score-tiered spoils at the end, and the",
     "fight already counts towards quests and achievements through the encounter kinds. Add a Loot",
     "block by overriding this file by id if your server wants the Warden itself to drop something.",
+    "Spoils is off for the same reason: the library's chest that a won fight leaves where its boss fell",
+    "never stands here, so the round's own rewards screen stays the one place a player collects. A",
+    "server that adds a Loot block can turn it on with Spoils.Enabled true, and its Claims then wait",
+    "in that chest as well as under Claims.",
     "",
     "Switch the fight off with Enabled false, or from mods/ziggfreedcommon/encounters.json under the",
     "key kweebecnightmare_warden, and the round opens the gate without a boss."
@@ -51,5 +55,8 @@
   },
   "Discovery": {
     "MapMarker": false
+  },
+  "Spoils": {
+    "Enabled": false
   }
 }
