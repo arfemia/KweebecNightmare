@@ -21,6 +21,7 @@ A round runs on Nightmare. For an easier night type `/kweebec start amateur`, an
 - Two achievements with titles. Win on Hardcore for No Light to Follow and "the Unbroken", or help bring down the Blight Warden for The Warden Falls and "Wardenbane". Both are in your achievement book under Kweebec Nightmare.
 - Perpetual midnight, thickening fog, a heartbeat that quickens as the hunter closes in, and whispers in the trees.
 - Collect your spoils when a round ends. Win well and you earn better loot.
+- Plays in nine languages: English, German, Spanish, French, Hungarian, Italian, Brazilian Portuguese, Russian and Turkish.
 - With [MMO Skill Tree](https://www.curseforge.com/hytale/mods/mmo-skill-tree) installed, thrown blooms train Artillery.
 
 ## Install
