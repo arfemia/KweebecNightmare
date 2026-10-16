@@ -1,0 +1,409 @@
+# Keys here are NOT prefixed with "kweebecnightmare." - the engine derives that
+# namespace from this file's name (kweebecnightmare.lang) and prepends it, so the
+# final key is e.g. kweebecnightmare.hud.timer (the form Lang.java references).
+# Prefixing here would double it (kweebecnightmare.kweebecnightmare.hud.timer) and
+# every lookup would fall through to the raw key. See I18nModule.getPrefix.
+mode.chase.name = Tekrar Yak ve Kaç
+mode.survival.name = Şafağa Kadar Son Işık
+preset.amateur.name = Acemi
+preset.nightmare.name = Kâbus
+preset.hardcore.name = Tek Can
+preset.endless.name = Bitmeyen Gece
+preset.swarm.name = Sürü
+preset.pitch.name = Kapkaranlık
+preset.blitz.name = Yıldırım Baskını
+
+mutator.swarm.name = Sürü
+mutator.relentless.name = Amansız
+mutator.caverns.name = Mağaralar
+mutator.decay.name = Sinsi Çürüme
+mutator.blitz.name = Yıldırım Baskını
+
+instance.chase.title = Çürümüş Koru
+instance.chase.subtitle = Ay Gülü topla ve türbeleri yeniden yak. Seni yakalamasına izin verme.
+
+npc.blight.name = Çürümüş Kweebec
+npc.lunger.name = Atılan Çürüme
+npc.spitter.name = Tüküren Çürüme
+npc.ambusher.name = Işınlanan Çürüme
+npc.warden.name = Çürüme Bekçisi
+encounter.hunters.name = Çürümüş Av
+
+title.hunt_begins = Av Başlıyor
+title.hunt_begins.sub = Ay Gülü topla ve koru türbelerini yeniden yak
+title.gate_open = Öz Ağaç Kapısı Açılıyor
+title.gate_open.sub = Platformda toplanın ve birlikte durun
+title.you_survived = Kaçtın
+title.you_survived.sub = Koru seni bırakıyor
+title.caught = Koru Seni Aldı
+title.caught.sub = Hayatta kalan herkes kozaya sarıldı
+title.night_falls = Gece Kazandı
+title.night_falls.sub = Şafak hiç gelmedi
+title.jumpscare = SENİ YAKALADI
+title.jumpscare.sub = Kurtul ve koş
+
+# Item names + tooltip descriptions for the grove blooms and the shrine. A description renders as
+# rich text on the item tooltip's TextSpans (Hytale's native <i>/<b>/<color is="#hex">/\n markup,
+# parsed client-side per locale, exactly like vanilla items.*.description). Each highlight colour
+# matches the bloom's own glow. No balance numbers in the flavor, so a tuning change never forces a
+# localization edit. The _Plant clusters are the harvest source; the thrown blooms drop from them.
+item.moonbloom.name = Ay Gülü
+item.moonbloom.description = Koruyu arındırmak için çürümüş bir türbeye sun ya da patladığı yerde bir avcıyı <color is="#7affa0">sersemletmek</color> için fırlat.\n\n<i>Korunun son temiz ışığı. Boşluk'un boğmaya çalıştığı şarkıyı hâlâ hatırlıyor.</i>
+item.moonbloom_plant.name = Ay Gülü Öbeği
+item.moonbloom_plant.description = Türbelerin içtiği, avın korktuğu ışık olan <color is="#7affa0">Ay Gülü</color> toplamak için bu parlayan öbeği hasat et.\n\n<i>Çürümeyle boğulsa da korunun eski ışığından biraz hâlâ geri sürünüyor.</i>
+item.gustbloom.name = Esinti Gülü
+item.gustbloom.description = Keskin bir <color is="#5a9cff">esintiyle</color> patlayıp avcıyı geri savurur ve sana koşacak yer kazandırır.\n\n<i>Koru en son temiz nefes aldığından beri nefesini tutuyor. Hepsini bir anda bırakıyor.</i>
+item.gustbloom_plant.name = Esinti Gülü Öbeği
+item.gustbloom_plant.description = Avcıyı geri savuran çiçek olan <color is="#5a9cff">Esinti Gülü</color> toplamak için rüzgârlı bu öbeği hasat et.\n\n<i>Rüzgâr yokken de sallanıyor, ölü korunun artık kullanamadığı havayı soluyor.</i>
+item.mirebloom.name = Bataklık Gülü
+item.mirebloom.description = Dokunduğu her şeyi <color is="#7affa0">yavaşlatan</color> yapışkan sporlarla patlar. Avı emekler hâle getir.\n\n<i>Çürümenin en yoğun biriktiği batık köklerde çürüdü ve bataklık kıpırdayan her şeye yapışır.</i>
+item.mirebloom_plant.name = Bataklık Gülü Öbeği
+item.mirebloom_plant.description = Avı emekler hâle getiren çiçek olan <color is="#7affa0">Bataklık Gülü</color> toplamak için bu sırılsıklam öbeği hasat et.\n\n<i>Köklerin boğulduğu yerde yetişir, durgun çürümeyle semirir.</i>
+item.emberbloom.name = Kor Gülü
+item.emberbloom.description = Çürümeyi yakan, diğer hayatta kalanları esirgeyen kavurucu <color is="#ff8a3c">korlarla</color> patlar.\n\n<i>Bekçi'nin kendi kabuğundan kopmuş. Ateş, Boşluk'un bürünmeyi öğrenemediği tek biçim.</i>
+item.emberbloom_plant.name = Kor Gülü Öbeği
+item.emberbloom_plant.description = Çürümeyi yakıp yok eden çiçek olan <color is="#ff8a3c">Kor Gülü</color> toplamak için bu közlenen öbeği hasat et.\n\n<i>Yalnızca Bekçi'nin yürüdüğü yerde kök salar ve dokununca hep sıcaktır.</i>
+item.shrine.name = Çürümüş Türbe
+item.shrine.description = Çürümeyi arındırmak için buraya <color is="#7affa0">Ay Gülü</color> sun. Yeniden yanan türbe yeşil ateşle yanar ve av ışığa döner.\n\n<i>Bir zamanlar korunun şarkısını taşırdı. Şimdi onu uyandıracak sıcak birini soğuk soğuk bekliyor.</i>
+item.warden_spawner.name = Bekçi Tüneği
+item.blight_spawner.name = Çürüme Yuvası
+
+# Status effect names, shown when a player hovers the effect's icon. The effect JSON names the full
+# key (kweebecnightmare.effect...), because the client reads an effect's Name exactly as written.
+# The four tiers of the hunter's slow share one name.
+effect.hunter_slow.name = Avcının Pençesi
+effect.mire_slow.name = Batmış
+
+interaction.shrine.hint = Ay Gülü sunmak için [{key}] tuşuna bas
+
+toast.cleanse_done = Türbe Ay Gülü ışığını içiyor
+toast.cleanse_need = Bu türbeyi arındırmak için {0} Ay Gülü daha topla
+toast.shrine_submit = Türbe Ay Gülü'nü içiyor ({0}/{1})
+toast.shrine_dormant = Türbe av başlayana kadar uyuyor
+toast.moonbloom_respawn = Koru kıpırdıyor. Taze Ay Gülü yetişti.
+
+toast.cocooned = Kökler seni aşağı çekiyor. Bir takım arkadaşını bekle.
+toast.rescued = Özgürsün. Koş.
+toast.teammate_down = Bir takım arkadaşı kozaya sarıldı
+toast.hunter_locked = Kokunu aldı
+toast.hunters_drawn = Işık onlardan daha fazlasını çekiyor
+toast.extraction_hold = Platform uğulduyor. Koru seni bırakana kadar birlikte durun.
+
+hud.timer = Süre {0}
+hud.shrines = Türbe {0}/{1}
+hud.alive = Hayatta {0}
+hud.corruption = Bozulma {0}%
+hud.objective.ritual = Koru türbelerini yeniden yak
+hud.objective.escape = Öz Ağaç platformunda toplan
+# Co-op extraction line (ESCAPE phase). {0}=survivors on the platform, {1}=required, {2}=hold seconds left.
+hud.extraction.hold = Çıkış {0}/{1}  {2}sn
+hud.extraction.wait = Çıkış {0}/{1}  platformda toplan
+
+marker.exit = Çıkış
+marker.shrine = Türbe
+
+# The Warden fight's notices, named by the KweebecNightmare_Warden_* FeedbackMoment assets (the bar
+# itself shows npc.warden.name).
+boss.title.awakens = Bekçi Uyanıyor
+boss.title.awakens.sub = Kapıyı kapatmak için yükseldi
+boss.toast.phase = Bekçi kabuğunu döküp atılıyor
+boss.toast.defeated = Bekçi düştü. Kapı senin.
+boss.toast.wiped = Bekçi kapıyı koruyor.
+
+cmd.players_only = Bunu yalnızca oyuncular çalıştırabilir.
+cmd.already_in_round = Zaten bir turdasın.
+cmd.starting = Çürümüş Koru'ya iniliyor...
+cmd.start_failed = Tur başlatılamadı. Tekrar dene.
+cmd.leaving = Koru'dan ayrılınıyor...
+cmd.unknown_preset = Bilinmeyen ön ayar. amateur, nightmare ya da hardcore dene.
+cmd.no_active_rounds = Etkin tur yok.
+cmd.ended = Tüm etkin turlar bitirildi.
+cmd.usage = Kullanım: /kweebec [start|exit|score|leaderboard|party] [preset]
+cmd.give_done = Sana {0} Ay Gülü verildi.
+cmd.score_header = Kweebec Nightmare rekorların:
+cmd.score_none = Henüz kayıtlı skor yok. Önce bir turda hayatta kal.
+cmd.kweebec.desc = Bir Kweebec Nightmare turunu başlat, bırak ya da durumuna bak
+cmd.arg.sub = start | exit | score | leaderboard | party
+cmd.arg.preset = amateur | nightmare | hardcore
+cmd.arg.clash_preset = clash_1v1 | clash_2v2
+cmd.arg.domination_preset = domination_koth
+cmd.arg.count = Kaç Ay Gülü verilecek
+cmd.kweebec.start.desc = Adını verdiğin ön ayarda bir tur için sıraya gir, adını vermezsen Kâbus
+cmd.kweebec.exit.desc = Sıradan ya da turundan ayrıl
+cmd.kweebec.score.desc = En iyi skorlarını göster
+cmd.kweebec.leaderboard.desc = Sıralamayı aç
+cmd.kweebec.party.desc = Grubunu ve davetleri aç
+cmd.kweebec.clash.desc = Yönetici: dünyandaki herkesle takım deneme maçı başlat
+cmd.kweebec.domination.desc = Yönetici: dünyandaki herkesle nokta tutma deneme maçı başlat
+cmd.kweebec.endall.desc = Yönetici: sunucudaki her turu bitir
+cmd.kweebec.give.desc = Yönetici: kendine Ay Gülü ver
+cmd.kweebec.clashhost.desc = Yönetici: Düello Ustası'nı dünyana yerleştir
+
+# Dialogue page chrome (resolved by the shared ziggfreed-common dialogue engine).
+dialogue.kweebec.farewell = Uzaklaş
+dialogue.kweebec.missing = Ses uzaklaşıyor. Başka bir şey gelmiyor.
+
+# Matchmaking queue feedback. Toasts (Notify) are coloured by their NotificationStyle
+# (success/warning/danger); the countdown banner (EventTitles) renders PLAIN text only -
+# it is NOT a TextSpans Label, so it cannot do <color>/<b>/<i> markup (the dialogue node
+# text below CAN, because the page sets it on TextSpans). {0} = size, {1} = max party.
+queue.joined = Toplanmaya katıldın. {1} kişiden {0} kişi çağrıya karşılık verdi.
+queue.left = Karanlığa geri süzüldün. Toplanmadan ayrıldın.
+queue.countdown = Koru seni içine çekiyor... {0}
+queue.countdown.sub = Yakın dur. Sessiz kal.
+queue.launching = Çürümüş Koru seni alıyor...
+queue.cancelled = Toplanma dağılıyor. Yeterince kişi kalmadı.
+queue.failed = Koru seni reddediyor. Tekrar dene.
+
+# Queue + Clash Host command feedback.
+cmd.queued = Toplanmaya katıldın. Korunun seni içine çekmesini bekle.
+cmd.already_queued = Zaten toplanmada bekliyorsun.
+cmd.not_queued_or_in_round = Ne bir sıradasın ne de bir turda.
+cmd.left_queue = Toplanmadan ayrılıyorsun.
+cmd.clash_host_spawned = Düello Ustası çağrına karşılık veriyor.
+cmd.clash_host_failed = Düello Ustası burada duramaz.
+
+# The Grove Keeper guide NPC (role KweebecNightmare_Guide). The interaction hint uses
+# the native [{key}] placeholder - the client substitutes the bound interact key (e.g. F).
+npc.guide.name = Koru Gözcüsü
+npc.guide.hint = Koru Gözcüsü ile konuşmak için [{key}] tuşuna bas
+
+# Guide dialogue: the Grove Keeper (id "nightmares_intro"). NODE TEXT renders on the
+# Label's TextSpans, so Hytale's native inline markup - <color is="#hex">/<b>/<i> - is
+# parsed CLIENT-side, per-locale (same mechanism as vanilla items.*.description). A
+# translator keeps the markup in their own line. Option labels are TextButtons (no
+# TextSpans), so they take no markup - colour-coded by their DialogueOptionStyle.
+dialogue.nightmares_intro.greet.text = Ah güzel, hâlâ nefes alıyorsun. Bu kadar derinde pek azı alır. Bu kâbusu saymakla bitmeyecek kadar yaşadım: koru kararır, kendi soyum yüzümü takıp beni kovalar ve ben hiç çıkamam. Ama yeterince gördüm, seni nerede yakaladığını bilirim. Bir dakika kal, insanları öldüren yerleri anlatayım.
+dialogue.nightmares_intro.greet.opt.0 = Bu kâbus nasıl işliyor?
+dialogue.nightmares_intro.greet.opt.1 = Yeter konuşma, beni içeri gönder.
+dialogue.nightmares_intro.greet.opt.2 = Zaten içinde olduğum av hakkında...
+dialogue.nightmares_intro.greet.opt.3 = En uzun kim dayandı?
+dialogue.nightmares_intro.lore.text = Her seferinde aynı gider. Koru ölü ve karanlık, onu uyandıran tek şey türbeler: yeşil yanana kadar içlerine <color is="#7affa0">Ay Gülü</color> dökersin. Sorun şu ki bu gürültülü ve dışarıdaki her ne ise her şeyi duyar. Başladığım an bildiğine yemin ederim. Hepsini yak, <b>Öz Ağaç Kapısı</b> sonunda açılır, ama o da gürültülü ve en yakında duran genelde ilk kaybolur.
+dialogue.nightmares_intro.lore.opt.0 = Yeterince dinledim. Beni içeri gönder.
+dialogue.nightmares_intro.lore.opt.1 = Peki gerçekten nasıl hayatta kalırım?
+dialogue.nightmares_intro.tips.text = Demek çıkmak istiyorsun. Bol şans. Üzerinde çiçek taşı: yüzüne atılan bir <color is="#7affa0">Ay Gülü</color> onları sersemletir, bir <color is="#5a9cff">Esinti Gülü</color> savurup uçurur, bir <color is="#7affa0">Bataklık Gülü</color> çamura batırır, bir <color is="#ff8a3c">Kor Gülü</color> ise yakar. Kor Gülü kime çarptığına bakmaz, dostlarına dikkat et. Kökler seni yakalarsa orada yatma: biri seni çekip çıkarabilir, o yüzden yetişebilecekleri yerde kal. Çıkış yolu da aynı: ancak hepiniz platformda <b>birlikte</b> olursanız açılır. Oyalanma da. Bu ne kadar uzarsa o şey o kadar hızlanır ve gaddarlaşır.
+dialogue.nightmares_intro.tips.opt.0 = Tamam, hazırım.
+dialogue.nightmares_intro.tips.opt.1 = Geri dön.
+dialogue.nightmares_intro.preset_pick.text = Ne kadar ağır istiyorsun? Hafif al, o şey peşinden sadece sürünür: işin nasıl yürüdüğünü öğrenmek için iyi. Zorla, seni koşarak yakalar ve karanlık, daha fazla yapamadan ışığını yer. Karar senin. Ben yolun dışında bir yerde olacağım.
+dialogue.nightmares_intro.preset_pick.opt.0 = Acemi - koruyu öğreneyim.
+dialogue.nightmares_intro.preset_pick.opt.1 = Kâbus - gerçek av.
+dialogue.nightmares_intro.preset_pick.opt.2 = Tek Can - bir hayat, ikinci şans yok.
+dialogue.nightmares_intro.preset_pick.opt.3 = Henüz değil. Geri çekil.
+dialogue.nightmares_intro.already_engaged.text = Teker teker, sıcak olan. Zaten bir avdasın, önce o toplanmadan çık, seni sonrakine seve seve bırakırım.
+dialogue.nightmares_intro.already_engaged.opt.0 = Anladım.
+
+# Leaderboard page (the Grove Keeper's "Who has survived the most?" option, greet.opt.3).
+# Plain labels shown on Label .Text (no inline markup); column colours come from the .ui styles.
+leaderboard.title = Korunun Hayatta Kalanları
+leaderboard.tab.solo = Tek
+leaderboard.tab.duo = İkili
+leaderboard.tab.trio = Üçlü
+leaderboard.tab.squad = Ekip
+leaderboard.col.rank = Sıra
+leaderboard.col.player = Hayatta Kalan
+leaderboard.col.score = En İyi Skor
+leaderboard.col.total = Toplam
+leaderboard.col.time = En İyi Süre
+leaderboard.col.plays = Tur
+leaderboard.empty = Bu kategoride henüz kayıtlı hayatta kalan yok. İlk sen ol.
+leaderboard.your_rank = En iyin: #{0}  ({1})
+leaderboard.your_rank_none = Bu kategoride henüz sıralı bir turun yok.
+# Leading filter-row labels.
+leaderboard.axis.difficulty = Zorluk
+leaderboard.axis.players = Oyuncular
+leaderboard.axis.sort = Sırala
+leaderboard.axis.view = Görünüm
+# The synthesized "All" tab (lifetime roll-up across an axis: All+All = full lifetime totals).
+leaderboard.filter.all = Hepsi
+# Sort toggle + Rankings/Stats view toggle buttons.
+leaderboard.sort.score = En İyi Skor
+leaderboard.sort.total = Toplam Puan
+leaderboard.sort.time = En Hızlı
+leaderboard.view.rankings = Sıralama
+leaderboard.view.stats = İstatistik
+# Lifetime stat columns (Stats view). Click a column header to sort by it.
+leaderboard.stat.stunned = Sersemletilen
+leaderboard.stat.moonbloom = Ay Gülü
+leaderboard.stat.shrines = Yakılan Türbe
+leaderboard.stat.wins = Zafer
+
+# End-of-game results screen (the shared instance-experience ResultsPage).
+results.win = Hayatta Kaldın
+results.loss = Koru Seni Aldı
+results.draw = Sönük Bir Gece
+results.abort = Ritüel Bozuldu
+results.duration = Toplam süre: {0}
+results.breakdown = Turun
+results.rewards = Korunun Ganimeti
+results.no_rewards = Bu gece ganimet yok.
+results.pending = Bazı ganimetler envanterde yer ister, kalanı Oyna menüsünden al.
+results.btn.leaderboard = Sıralamayı Gör
+results.btn.again = Tekrar Oyna
+results.btn.close = Ayrıl
+results.team_total = Koru toplamı: {0}
+results.col.base = Temel skor
+results.col.time = Hız bonusu
+results.col.damage = Kaçınılan hasar
+results.col.stun = Sersemletme bonusu
+results.col.shrine = Türbe bonusu
+results.col.duration = Hayatta kalınan süre
+# Run-stats section - raw per-run activity, shown below the point breakdown.
+results.stats = Tur istatistikleri
+results.stat.damage_taken = Alınan hasar
+results.stat.stunned = Sersemletilen avcılar
+results.stat.moonbloom = Toplanan Ay Gülü
+# In-instance preview note where the spoils chips would be (you claim them once back in the overworld).
+results.spoils_pending = Koru'dan kaçınca ganimetini al.
+# Manual claim: the results-screen Claim button + the post-claim confirmation note.
+results.btn.claim = Ganimeti Al
+results.claimed = Ganimet alındı.
+
+# Play screen - live roster / ready chrome (the shared PlayModePage, queued state). The
+# countdown line ticks down live on screen. The player stays here after queueing.
+queue.screen.count = {0}/{1} hayatta kalan
+queue.screen.waiting = Daha fazla kişinin çağrıya karşılık vermesi bekleniyor...
+queue.screen.countdown = Koru seni içine çekiyor... {0}
+queue.screen.launching = Çürümüş Koru seni alıyor...
+queue.screen.wait = en fazla ~{0}sn
+queue.screen.leave = Toplanmadan Ayrıl
+queue.screen.not_queued = Bir toplanmada değilsin.
+queue.screen.toast_queued = Toplanmaya katıldın ({0}/{1}).
+
+# Play screen - "Claim Spoils" button (chooser) for spoils missed earlier (closed the results
+# screen, or a full inventory) + the toast shown after claiming.
+play.btn.claim = Ganimeti Al
+play.toast.claimed = Ganimet alındı.
+
+# Play screen - the mode chooser (the shared PlayModePage, not-queued state): how to enter.
+play.title = Kâbusa Gir
+play.difficulty = Zorluk: {0}
+play.mode.public = Herkese Açık
+play.mode.public.desc = Çağrıya kim karşılık verirse onunla koruya göğüs ger.
+play.mode.party = Grup
+play.mode.party.desc = Önce kendi hayatta kalanlarını topla.
+play.mode.solo = Yalnız
+play.mode.solo.desc = Karanlığa tek başına, hemen gir.
+
+# Party + invite screen (the shared PartyInvitePage).
+party.title = Grubun
+party.tab.party = Grup
+party.tab.invite = Davet
+party.empty.invite = Davet edilecek başka kimse çevrimiçi değil.
+party.empty.party = Grubun yok. Koruya birlikte göğüs germek için hayatta kalanları davet et.
+party.btn.invite = Davet Et
+party.btn.kick = Çıkar
+party.btn.leave = Gruptan Ayrıl
+party.btn.disband = Dağıt
+party.btn.queue = Grubu Sıraya Sok
+party.btn.accept = Kabul Et
+party.btn.decline = Reddet
+party.owner_badge = Lider
+party.count = {0}/{1}
+party.privacy.public = Açık Grup
+party.privacy.private = Mühürlü Grup
+party.toast.invite_failed = O hayatta kalan grubuna katılamaz.
+
+# Party feedback toasts + the invite banner.
+party.msg.invited = {0} seni grubuna davet ediyor ({1}/{2}).
+party.msg.banner = {0} seni davet ediyor
+party.msg.banner.sub = Kabul etmek için grubunu aç.
+party.msg.sent = {0} adlı oyuncuya davet gönderildi.
+party.msg.declined = {0} davetini reddetti.
+party.msg.expired = Davet karanlığa karıştı.
+party.msg.joined = {0} gruba katıldı ({1}/{2}).
+party.msg.left = {0} gruptan ayrıldı.
+party.msg.kicked = Gruptan çıkarıldın.
+party.msg.kicked_member = {0} gruptan çıkarıldı.
+party.msg.disbanded = Grup dağılıyor.
+party.msg.owner = {0} artık grubu yönetiyor.
+
+# Command feedback.
+cmd.party_opened = Grubun açılıyor...
+
+# --- Clash / Domination (PvP). {0} is a team name (Red / Blue) where present. ---
+clash.team.red = Kırmızı
+clash.team.blue = Mavi
+clash.title.start = Çatışma Başlıyor
+clash.title.start.sub = Ayakta kalan son takım kazanır.
+clash.title.victory = Zafer
+clash.title.victory.sub = Takımın koruyu aldı.
+clash.title.defeat = Yenilgi
+clash.title.defeat.sub = Diğer takım sahayı tuttu.
+clash.title.draw = Beraberlik
+clash.title.draw.sub = İki takım da diğerini yıkamadı.
+clash.title.sudden_death = Ani Ölüm
+clash.title.sudden_death.sub = İlk kan bitirir.
+clash.toast.eliminated = Elendin. Tur bitene kadar izliyorsun.
+clash.toast.respawn = Savaşa dönülüyor...
+clash.toast.ko = {0} oyuncusunu yere serdin!
+clash.toast.teammate_down = Bir takım arkadaşı düştü.
+clash.toast.pickup = Bir {0} aldın.
+clash.toast.point_captured = Takımın bir noktayı ele geçirdi!
+clash.toast.point_lost = Bir nokta kaybedildi.
+clash.hud.timer = Süre {0}
+clash.hud.score = {0} - {1}
+clash.hud.team = Takım
+clash.hud.tally.hits = Vuruş {0}
+clash.hud.tally.kills = Öldürme {0}
+clash.hud.alive = Hayatta {0}/{1}
+clash.hud.capture = Ele geçir {0}
+domination.marker.point = Ele Geçirme Noktası
+
+# Clash instance discovery banner.
+instance.clash.title = Koru Çatışması
+instance.clash.subtitle = İki takım girer. Biri çıkar.
+
+# Domination instance discovery banner.
+instance.domination.title = Koru Hâkimiyeti
+instance.domination.subtitle = Zemini tut. Onlardan uzun dayan.
+
+# Coloured team-score HUD line (TextSpans); ordering flips so the viewer's team is first.
+clash.hud.score.red = <color is="#ff5a5a">{0}</color> - <color is="#5a9cff">{1}</color>
+clash.hud.score.blue = <color is="#5a9cff">{0}</color> - <color is="#ff5a5a">{1}</color>
+# PvP results + leaderboard + preset display names.
+results.clash.breakdown = Dövüş
+results.clash.kos = Yere Serilme
+results.clash.preview = Maç bitti. Sonuçların lobide seni bekliyor.
+leaderboard.clash.title = Arena Sıralaması
+leaderboard.clash.axis.mode = Mod
+leaderboard.clash.stat.hits = Vuruş
+leaderboard.clash.stat.kills = Öldürme
+leaderboard.clash.stat.kos = Yenilme
+preset.clash_1v1.name = Çatışma 1v1
+preset.clash_2v2.name = Çatışma 2v2
+preset.domination_koth.name = Hâkimiyet
+
+# Clash Host NPC + the clash_intro dialogue (the PvP entry).
+npc.clashhost.name = Düello Ustası
+npc.clashhost.hint = Arenaya girmek için [{key}] tuşuna bas
+dialogue.clash_intro.greet.text = Demek öyle. Karanlıktan kaçmak yerine köklerini başka bir sıcak kanlıya karşı denemeyi seçtin. Saygı duyarım. İçindeki tek kâbus birbirinizsiniz diye koru güzel bir arena olur. Keskin kal: senden iyi dövüşçüleri gömdüm, üstelik denemiyordum bile.
+dialogue.clash_intro.greet.opt.0 = Arena nasıl işliyor?
+dialogue.clash_intro.greet.opt.1 = Dövüşmeye hazırım.
+dialogue.clash_intro.greet.opt.2 = Zaten içinde olduğum maç hakkında...
+dialogue.clash_intro.lore.text = İki takım, bir koru ve topraktan fışkıran mantarlar: bir budalayı kenardan uçurmak için <color is="#5a9cff">geri savurma</color>, sen vururken ağzı açık bırakmak için <color is="#7affa0">sersemletme</color>. Karşı taraftan önce kap: toplayanlar genelde çıkıp gidenler olur. Ayakta kalan son takım alır; süre biterse en çok vuruşu yapan kazanır, o yüzden dans etme, bir şeye vur. Hâkimiyette bunların hepsini unut, zemini onlardan uzun tut yeter.
+dialogue.clash_intro.lore.opt.0 = Yeter. Dövüşeyim.
+dialogue.clash_intro.lore.opt.1 = Düşündüm de, geri dön.
+dialogue.clash_intro.mode_pick.text = Müsabakanı söyle, sıcak kanlı. Kanını dökmek istediğin zemine kapıyı açarım.
+dialogue.clash_intro.mode_pick.opt.0 = Çatışma 1v1 - sadece ikimiz.
+dialogue.clash_intro.mode_pick.opt.1 = Çatışma 2v2 - birlikte kaybedeceğin bir dost getir.
+dialogue.clash_intro.mode_pick.opt.2 = Hâkimiyet - zemini tut.
+dialogue.clash_intro.mode_pick.opt.3 = Henüz değil. Geri çekil.
+dialogue.clash_intro.already_engaged.text = Her seferinde tek dövüş, sıcak kanlı. İçinde olduğun müsabakayı bitir, sonra gel yine benim için kan dök.
+dialogue.clash_intro.already_engaged.opt.0 = Anladım.
+
+# Achievements and titles (ziggfreed-common's achievement book and title picker): the book's
+# category, the two achievements and their steps, and the titles they pay on unlock. A title's
+# .display places it around a player's name, {0} being the name.
+achievement.category.kweebec_nightmare = Kweebec Nightmare
+achievement.kweebec_hardcore_escape.title = Takip Edecek Işık Yok
+achievement.kweebec_hardcore_escape.desc = Tek Can'da bir Tekrar Yak ve Kaç turundan kaç.
+objective.kweebec.hardcore_escape = Tek Can'da bir turdan kaç
+achievement.kweebec_warden_falls.title = Bekçi Düşer
+achievement.kweebec_warden_falls.desc = Çürüme Bekçisi'ni yenmeye yardım et.
+objective.kweebec.warden_falls = Çürüme Bekçisi'ni yenmeye yardım et
+title.kweebec_unbroken.name = Yılmayan
+title.kweebec_unbroken.flavor = Tek Can'da bir Tekrar Yak ve Kaç turundan kaçtı.
+title.kweebec_unbroken.display = {0} Yılmayan
+title.kweebec_wardenbane.name = Bekçi Belası
+title.kweebec_wardenbane.flavor = Çürüme Bekçisi'ni yenmeye yardım etti.
+title.kweebec_wardenbane.display = {0}, Bekçi Belası

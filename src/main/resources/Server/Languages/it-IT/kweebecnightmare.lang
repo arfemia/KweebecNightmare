@@ -1,0 +1,409 @@
+# Keys here are NOT prefixed with "kweebecnightmare." - the engine derives that
+# namespace from this file's name (kweebecnightmare.lang) and prepends it, so the
+# final key is e.g. kweebecnightmare.hud.timer (the form Lang.java references).
+# Prefixing here would double it (kweebecnightmare.kweebecnightmare.hud.timer) and
+# every lookup would fall through to the raw key. See I18nModule.getPrefix.
+mode.chase.name = Riaccendi e Fuggi
+mode.survival.name = L'Ultima Luce fino all'Alba
+preset.amateur.name = Dilettante
+preset.nightmare.name = Incubo
+preset.hardcore.name = Hardcore
+preset.endless.name = Notte Infinita
+preset.swarm.name = Lo Sciame
+preset.pitch.name = Buio Pesto
+preset.blitz.name = Blitz
+
+mutator.swarm.name = Sciame
+mutator.relentless.name = Implacabile
+mutator.caverns.name = Caverne
+mutator.decay.name = Decomposizione Strisciante
+mutator.blitz.name = Blitz
+
+instance.chase.title = Il Bosco Appestato
+instance.chase.subtitle = Raccogli i fiori di luna e riaccendi i santuari. Non farti prendere.
+
+npc.blight.name = Kweebec Appestato
+npc.lunger.name = Peste Balzante
+npc.spitter.name = Peste Sputante
+npc.ambusher.name = Peste Lampeggiante
+npc.warden.name = Il Guardiano della Peste
+encounter.hunters.name = La Caccia Appestata
+
+title.hunt_begins = La Caccia Comincia
+title.hunt_begins.sub = Raccogli i fiori di luna e riaccendi i santuari del bosco
+title.gate_open = Il Cancello di Cuorelegno si Apre
+title.gate_open.sub = Radunatevi sulla piattaforma e resistete insieme
+title.you_survived = Sei Fuggito
+title.you_survived.sub = Il bosco ti lascia andare
+title.caught = Il Bosco ti Reclama
+title.caught.sub = Tutti i sopravvissuti sono stati intrappolati nei bozzoli
+title.night_falls = Vince la Notte
+title.night_falls.sub = L'alba non è mai arrivata
+title.jumpscare = TI HA PRESO
+title.jumpscare.sub = Liberati e corri
+
+# Item names + tooltip descriptions for the grove blooms and the shrine. A description renders as
+# rich text on the item tooltip's TextSpans (Hytale's native <i>/<b>/<color is="#hex">/\n markup,
+# parsed client-side per locale, exactly like vanilla items.*.description). Each highlight colour
+# matches the bloom's own glow. No balance numbers in the flavor, so a tuning change never forces a
+# localization edit. The _Plant clusters are the harvest source; the thrown blooms drop from them.
+item.moonbloom.name = Fiore di Luna
+item.moonbloom.description = Offrilo a un santuario appestato per purificare il bosco, oppure scaglialo per <color is="#7affa0">stordire</color> un cacciatore dove esplode.\n\n<i>L'ultima luce pulita del bosco. Ricorda ancora il canto che il Vuoto tentò di soffocare.</i>
+item.moonbloom_plant.name = Ciuffo di Fiori di Luna
+item.moonbloom_plant.description = Raccogli questo ciuffo luminoso per ottenere il <color is="#7affa0">Fiore di Luna</color>, la luce che i santuari bevono e la caccia teme.\n\n<i>Anche soffocata dalla peste, un po' dell'antica luce del bosco continua a farsi strada.</i>
+item.gustbloom.name = Fiore di Vento
+item.gustbloom.description = Esplode in una <color is="#5a9cff">raffica</color> secca che scaglia indietro un cacciatore e ti dà spazio per correre.\n\n<i>Trattiene il respiro da quando il bosco ha respirato aria pulita per l'ultima volta. Lo lascia andare tutto insieme.</i>
+item.gustbloom_plant.name = Ciuffo di Fiori di Vento
+item.gustbloom_plant.description = Raccogli questo ciuffo sferzato dal vento per ottenere il <color is="#5a9cff">Fiore di Vento</color>, il fiore che respinge un cacciatore.\n\n<i>Ondeggia anche senza vento, respirando un'aria che il bosco morto non sa più usare.</i>
+item.mirebloom.name = Fiore di Palude
+item.mirebloom.description = Esplode in spore appiccicose che <color is="#7affa0">rallentano</color> tutto ciò che toccano. Riduci la caccia a un passo di lumaca.\n\n<i>È marcito nelle radici annegate, dove la peste ristagna più fitta, e la palude si aggrappa a tutto ciò che si muove.</i>
+item.mirebloom_plant.name = Ciuffo di Fiori di Palude
+item.mirebloom_plant.description = Raccogli questo ciuffo fradicio per ottenere il <color is="#7affa0">Fiore di Palude</color>, il fiore che riduce la caccia a un passo di lumaca.\n\n<i>Prospera dove le radici sono annegate, ingrassando sul marciume stagnante.</i>
+item.emberbloom.name = Fiore di Brace
+item.emberbloom.description = Esplode in <color is="#ff8a3c">braci</color> roventi che bruciano la peste e risparmiano i tuoi compagni sopravvissuti.\n\n<i>Staccato dalla corteccia stessa del Guardiano. Il fuoco è l'unica forma che il Vuoto non ha mai imparato a indossare.</i>
+item.emberbloom_plant.name = Ciuffo di Fiori di Brace
+item.emberbloom_plant.description = Raccogli questo ciuffo fumante per ottenere il <color is="#ff8a3c">Fiore di Brace</color>, il fiore che brucia via la peste.\n\n<i>Mette radici solo dove è passato il Guardiano, ed è sempre caldo al tatto.</i>
+item.shrine.name = Santuario Appestato
+item.shrine.description = Offri qui il <color is="#7affa0">Fiore di Luna</color> per purificare la peste. Un santuario riacceso arde di fuoco verde, e la caccia si volge verso la luce.\n\n<i>Un tempo portava il canto del bosco. Ora attende, freddo, che qualcuno di caldo lo svegli.</i>
+item.warden_spawner.name = Nido del Guardiano
+item.blight_spawner.name = Nido della Peste
+
+# Status effect names, shown when a player hovers the effect's icon. The effect JSON names the full
+# key (kweebecnightmare.effect...), because the client reads an effect's Name exactly as written.
+# The four tiers of the hunter's slow share one name.
+effect.hunter_slow.name = Morsa del Cacciatore
+effect.mire_slow.name = Impantanato
+
+interaction.shrine.hint = Premi [{key}] per offrire il Fiore di Luna
+
+toast.cleanse_done = Il santuario beve la luce del Fiore di Luna
+toast.cleanse_need = Raccogli ancora {0} Fiori di Luna per purificare questo santuario
+toast.shrine_submit = Il santuario beve il tuo Fiore di Luna ({0}/{1})
+toast.shrine_dormant = Il santuario dorme finché la caccia non comincia
+toast.moonbloom_respawn = Il bosco si agita. Sono spuntati nuovi Fiori di Luna.
+
+toast.cocooned = Le radici ti trascinano sotto. Aspetta un compagno.
+toast.rescued = Sei libero. Corri.
+toast.teammate_down = Un compagno è stato intrappolato nel bozzolo
+toast.hunter_locked = Ha il tuo odore
+toast.hunters_drawn = La luce ne attira altri
+toast.extraction_hold = La piattaforma vibra. Resistete insieme finché il bosco non vi lascia andare.
+
+hud.timer = Tempo {0}
+hud.shrines = Santuari {0}/{1}
+hud.alive = Vivi {0}
+hud.corruption = Corruzione {0}%
+hud.objective.ritual = Riaccendi i santuari del bosco
+hud.objective.escape = Radunatevi sulla piattaforma di Cuorelegno
+# Co-op extraction line (ESCAPE phase). {0}=survivors on the platform, {1}=required, {2}=hold seconds left.
+hud.extraction.hold = Evacuazione {0}/{1}  {2}s
+hud.extraction.wait = Evacuazione {0}/{1}  radunatevi sulla piattaforma
+
+marker.exit = Uscita
+marker.shrine = Santuario
+
+# The Warden fight's notices, named by the KweebecNightmare_Warden_* FeedbackMoment assets (the bar
+# itself shows npc.warden.name).
+boss.title.awakens = Il Guardiano si Desta
+boss.title.awakens.sub = Si è alzato per sbarrare il cancello
+boss.toast.phase = Il Guardiano si scrolla di dosso la corteccia e si lancia all'assalto
+boss.toast.defeated = Il Guardiano cade. Il cancello è tuo.
+boss.toast.wiped = Il Guardiano tiene il cancello.
+
+cmd.players_only = Solo i giocatori possono eseguirlo.
+cmd.already_in_round = Sei già in una partita.
+cmd.starting = Discesa nel Bosco Appestato...
+cmd.start_failed = Impossibile avviare la partita. Riprova.
+cmd.leaving = Lasci il bosco...
+cmd.unknown_preset = Preset sconosciuto. Prova amateur, nightmare o hardcore.
+cmd.no_active_rounds = Nessuna partita attiva.
+cmd.ended = Tutte le partite attive sono terminate.
+cmd.usage = Uso: /kweebec [start|exit|score|leaderboard|party] [preset]
+cmd.give_done = Ti ho dato {0} Fiori di Luna.
+cmd.score_header = I tuoi migliori risultati a Kweebec Nightmare:
+cmd.score_none = Ancora nessun punteggio registrato. Sopravvivi prima a una partita.
+cmd.kweebec.desc = Avvia, lascia o controlla una partita di Kweebec Nightmare
+cmd.arg.sub = start | exit | score | leaderboard | party
+cmd.arg.preset = amateur | nightmare | hardcore
+cmd.arg.clash_preset = clash_1v1 | clash_2v2
+cmd.arg.domination_preset = domination_koth
+cmd.arg.count = Quanti Fiori di Luna dare
+cmd.kweebec.start.desc = Mettiti in coda per una partita con il preset indicato, o Incubo se non ne indichi nessuno
+cmd.kweebec.exit.desc = Lascia la coda o la partita
+cmd.kweebec.score.desc = Mostra i tuoi migliori punteggi
+cmd.kweebec.leaderboard.desc = Apri la classifica
+cmd.kweebec.party.desc = Apri il tuo gruppo e gli inviti
+cmd.kweebec.clash.desc = Admin: avvia una partita di prova a squadre con tutti nel tuo mondo
+cmd.kweebec.domination.desc = Admin: avvia una partita di prova a tenere il punto con tutti nel tuo mondo
+cmd.kweebec.endall.desc = Admin: termina ogni partita sul server
+cmd.kweebec.give.desc = Admin: dai a te stesso dei Fiori di Luna
+cmd.kweebec.clashhost.desc = Admin: posiziona il Maestro dei Duelli nel tuo mondo
+
+# Dialogue page chrome (resolved by the shared ziggfreed-common dialogue engine).
+dialogue.kweebec.farewell = Allontanati
+dialogue.kweebec.missing = La voce svanisce. Non arriva altro.
+
+# Matchmaking queue feedback. Toasts (Notify) are coloured by their NotificationStyle
+# (success/warning/danger); the countdown banner (EventTitles) renders PLAIN text only -
+# it is NOT a TextSpans Label, so it cannot do <color>/<b>/<i> markup (the dialogue node
+# text below CAN, because the page sets it on TextSpans). {0} = size, {1} = max party.
+queue.joined = Entri nel raduno. {0} su {1} hanno risposto al richiamo.
+queue.left = Scivoli di nuovo nel buio. Hai lasciato il raduno.
+queue.countdown = Il bosco ti attira dentro... {0}
+queue.countdown.sub = Resta vicino. Resta in silenzio.
+queue.launching = Il Bosco Appestato ti prende...
+queue.cancelled = Il raduno si disperde. Non ne restano abbastanza.
+queue.failed = Il bosco ti rifiuta. Riprova.
+
+# Queue + Clash Host command feedback.
+cmd.queued = Entri nel raduno. Aspetta che il bosco ti attiri dentro.
+cmd.already_queued = Stai già aspettando nel raduno.
+cmd.not_queued_or_in_round = Non sei in coda né in una partita.
+cmd.left_queue = Lasci il raduno.
+cmd.clash_host_spawned = Il Maestro dei Duelli risponde al tuo richiamo.
+cmd.clash_host_failed = Il Maestro dei Duelli non può stare qui.
+
+# The Grove Keeper guide NPC (role KweebecNightmare_Guide). The interaction hint uses
+# the native [{key}] placeholder - the client substitutes the bound interact key (e.g. F).
+npc.guide.name = Il Custode del Bosco
+npc.guide.hint = Premi [{key}] per parlare con il Custode del Bosco
+
+# Guide dialogue: the Grove Keeper (id "nightmares_intro"). NODE TEXT renders on the
+# Label's TextSpans, so Hytale's native inline markup - <color is="#hex">/<b>/<i> - is
+# parsed CLIENT-side, per-locale (same mechanism as vanilla items.*.description). A
+# translator keeps the markup in their own line. Option labels are TextButtons (no
+# TextSpans), so they take no markup - colour-coded by their DialogueOptionStyle.
+dialogue.nightmares_intro.greet.text = Ah, bene, respiri ancora. Pochi lo fanno, così in fondo. Ho vissuto questo stesso incubo più volte di quante riesca a contarne: il bosco diventa nero, i miei stessi simili cominciano a portare la mia faccia e mi inseguono, e io non ne esco mai. Ma l'ho visto abbastanza da sapere dove ti frega. Fermati un momento, ti dico le parti che fanno morire la gente.
+dialogue.nightmares_intro.greet.opt.0 = Come va questo incubo?
+dialogue.nightmares_intro.greet.opt.1 = Basta parlare, mandami dentro.
+dialogue.nightmares_intro.greet.opt.2 = Sulla caccia in cui sono già...
+dialogue.nightmares_intro.greet.opt.3 = Chi è durato di più?
+dialogue.nightmares_intro.lore.text = Va sempre allo stesso modo. Il bosco è morto e buio, e l'unica cosa che lo risveglia sono i santuari: ci versi dentro il <color is="#7affa0">Fiore di Luna</color> finché non ardono di verde. Il problema è che fa rumore, e qualunque cosa ci sia là fuori sente tutto. Giuro che sa il momento esatto in cui comincio. Accendili tutti e il <b>Cancello di Cuorelegno</b> finalmente si apre, ma anche quello fa rumore, e chi è più vicino tende a sparire per primo.
+dialogue.nightmares_intro.lore.opt.0 = Ne ho sentito abbastanza. Mandami dentro.
+dialogue.nightmares_intro.lore.opt.1 = Allora come faccio a sopravvivere?
+dialogue.nightmares_intro.tips.text = Quindi vuoi uscirne. Buona fortuna. Tieni dei fiori con te: un <color is="#7affa0">Fiore di Luna</color> in faccia li stordisce, un <color is="#5a9cff">Fiore di Vento</color> li manda a volare, un <color is="#7affa0">Fiore di Palude</color> li impantana e un <color is="#ff8a3c">Fiore di Brace</color> li brucia. Il Fiore di Brace non guarda chi colpisce, quindi attento agli amici. Se le radici ti afferrano, non startene lì: qualcuno può tirarti fuori, quindi resta dove ti possono raggiungere. L'uscita è la stessa per tutti: si apre solo se siete tutti sulla piattaforma <b>insieme</b>. E non perdere tempo. Più questa storia si trascina, più quella cosa diventa veloce e cattiva.
+dialogue.nightmares_intro.tips.opt.0 = Va bene, sono pronto.
+dialogue.nightmares_intro.tips.opt.1 = Indietro.
+dialogue.nightmares_intro.preset_pick.text = Quanto lo vuoi duro? Se la prendi piano, quella cosa ti segue strascicando i piedi: va bene per imparare come funziona. Se spingi, ti raggiunge di corsa, e il buio si mangia la tua luce prima che tu ne faccia altra. Decidi tu. Io starò da qualche parte, fuori mano.
+dialogue.nightmares_intro.preset_pick.opt.0 = Dilettante - fammi imparare il bosco.
+dialogue.nightmares_intro.preset_pick.opt.1 = Incubo - la vera caccia.
+dialogue.nightmares_intro.preset_pick.opt.2 = Hardcore - una vita, niente seconde possibilità.
+dialogue.nightmares_intro.preset_pick.opt.3 = Non ancora. Fai un passo indietro.
+dialogue.nightmares_intro.already_engaged.text = Una alla volta, anima calda. Sei già in una caccia: esci prima da quel raduno, e ti lascio cadere volentieri nella prossima.
+dialogue.nightmares_intro.already_engaged.opt.0 = Capito.
+
+# Leaderboard page (the Grove Keeper's "Who has survived the most?" option, greet.opt.3).
+# Plain labels shown on Label .Text (no inline markup); column colours come from the .ui styles.
+leaderboard.title = Sopravvissuti del Bosco
+leaderboard.tab.solo = Solo
+leaderboard.tab.duo = Duo
+leaderboard.tab.trio = Trio
+leaderboard.tab.squad = Squadra
+leaderboard.col.rank = Posizione
+leaderboard.col.player = Sopravvissuto
+leaderboard.col.score = Miglior Punteggio
+leaderboard.col.total = Totale
+leaderboard.col.time = Miglior Tempo
+leaderboard.col.plays = Partite
+leaderboard.empty = Nessun sopravvissuto è ancora registrato in questa fascia. Sii il primo.
+leaderboard.your_rank = Il tuo migliore: #{0}  ({1})
+leaderboard.your_rank_none = Non hai ancora una partita in classifica in questa fascia.
+# Leading filter-row labels.
+leaderboard.axis.difficulty = Difficoltà
+leaderboard.axis.players = Giocatori
+leaderboard.axis.sort = Ordina
+leaderboard.axis.view = Vista
+# The synthesized "All" tab (lifetime roll-up across an axis: All+All = full lifetime totals).
+leaderboard.filter.all = Tutti
+# Sort toggle + Rankings/Stats view toggle buttons.
+leaderboard.sort.score = Miglior Punteggio
+leaderboard.sort.total = Punti Totali
+leaderboard.sort.time = Più Veloce
+leaderboard.view.rankings = Classifica
+leaderboard.view.stats = Statistiche
+# Lifetime stat columns (Stats view). Click a column header to sort by it.
+leaderboard.stat.stunned = Storditi
+leaderboard.stat.moonbloom = Fiore di Luna
+leaderboard.stat.shrines = Santuari Accesi
+leaderboard.stat.wins = Vittorie
+
+# End-of-game results screen (the shared instance-experience ResultsPage).
+results.win = Sei Sopravvissuto
+results.loss = Il Bosco ti ha Preso
+results.draw = Una Notte Vuota
+results.abort = Il Rituale si è Spezzato
+results.duration = Tempo totale: {0}
+results.breakdown = La tua partita
+results.rewards = Bottino del Bosco
+results.no_rewards = Nessun bottino questa notte.
+results.pending = Parte del bottino richiede spazio nell'inventario: riscatta il resto dal menu Gioca.
+results.btn.leaderboard = Vedi Classifica
+results.btn.again = Gioca Ancora
+results.btn.close = Esci
+results.team_total = Totale del bosco: {0}
+results.col.base = Punteggio base
+results.col.time = Bonus velocità
+results.col.damage = Danni evitati
+results.col.stun = Bonus stordimento
+results.col.shrine = Bonus santuari
+results.col.duration = Tempo sopravvissuto
+# Run-stats section - raw per-run activity, shown below the point breakdown.
+results.stats = Statistiche partita
+results.stat.damage_taken = Danni subiti
+results.stat.stunned = Cacciatori storditi
+results.stat.moonbloom = Fiori di Luna raccolti
+# In-instance preview note where the spoils chips would be (you claim them once back in the overworld).
+results.spoils_pending = Riscatta il bottino una volta fuggito dal Bosco.
+# Manual claim: the results-screen Claim button + the post-claim confirmation note.
+results.btn.claim = Ritira Bottino
+results.claimed = Bottino riscattato.
+
+# Play screen - live roster / ready chrome (the shared PlayModePage, queued state). The
+# countdown line ticks down live on screen. The player stays here after queueing.
+queue.screen.count = {0}/{1} sopravvissuti
+queue.screen.waiting = In attesa che altri rispondano al richiamo...
+queue.screen.countdown = Il bosco ti attira dentro... {0}
+queue.screen.launching = Il Bosco Appestato ti prende...
+queue.screen.wait = fino a ~{0}s
+queue.screen.leave = Lascia il Raduno
+queue.screen.not_queued = Non sei in un raduno.
+queue.screen.toast_queued = Ti unisci al raduno ({0}/{1}).
+
+# Play screen - "Claim Spoils" button (chooser) for spoils missed earlier (closed the results
+# screen, or a full inventory) + the toast shown after claiming.
+play.btn.claim = Ritira Bottino
+play.toast.claimed = Bottino riscattato.
+
+# Play screen - the mode chooser (the shared PlayModePage, not-queued state): how to enter.
+play.title = Entra nell'Incubo
+play.difficulty = Difficoltà: {0}
+play.mode.public = Pubblica
+play.mode.public.desc = Sfida il bosco con chiunque risponda al richiamo.
+play.mode.party = Gruppo
+play.mode.party.desc = Raduna prima i tuoi sopravvissuti.
+play.mode.solo = Da solo
+play.mode.solo.desc = Entra nel buio da solo, subito.
+
+# Party + invite screen (the shared PartyInvitePage).
+party.title = Il Tuo Gruppo
+party.tab.party = Gruppo
+party.tab.invite = Invita
+party.empty.invite = Nessun altro è online da invitare.
+party.empty.party = Non hai un gruppo. Invita dei sopravvissuti a sfidare il bosco insieme.
+party.btn.invite = Invita
+party.btn.kick = Rimuovi
+party.btn.leave = Lascia Gruppo
+party.btn.disband = Sciogli
+party.btn.queue = Metti il Gruppo in Coda
+party.btn.accept = Accetta
+party.btn.decline = Rifiuta
+party.owner_badge = Capo
+party.count = {0}/{1}
+party.privacy.public = Gruppo Aperto
+party.privacy.private = Gruppo Sigillato
+party.toast.invite_failed = Quel sopravvissuto non può unirsi al tuo gruppo.
+
+# Party feedback toasts + the invite banner.
+party.msg.invited = {0} ti invita nel suo gruppo ({1}/{2}).
+party.msg.banner = {0} ti invita
+party.msg.banner.sub = Apri il tuo gruppo per accettare.
+party.msg.sent = Invito inviato a {0}.
+party.msg.declined = {0} ha rifiutato il tuo invito.
+party.msg.expired = L'invito è svanito nel buio.
+party.msg.joined = {0} si unisce al gruppo ({1}/{2}).
+party.msg.left = {0} ha lasciato il gruppo.
+party.msg.kicked = Sei stato rimosso dal gruppo.
+party.msg.kicked_member = {0} è stato rimosso dal gruppo.
+party.msg.disbanded = Il gruppo si disperde.
+party.msg.owner = {0} ora guida il gruppo.
+
+# Command feedback.
+cmd.party_opened = Apertura del tuo gruppo...
+
+# --- Clash / Domination (PvP). {0} is a team name (Red / Blue) where present. ---
+clash.team.red = Rossa
+clash.team.blue = Blu
+clash.title.start = Lo Scontro Comincia
+clash.title.start.sub = Vince l'ultima squadra in piedi.
+clash.title.victory = Vittoria
+clash.title.victory.sub = La tua squadra ha conquistato il bosco.
+clash.title.defeat = Sconfitta
+clash.title.defeat.sub = L'altra squadra ha tenuto il campo.
+clash.title.draw = Pareggio
+clash.title.draw.sub = Nessuna squadra è riuscita a spezzare l'altra.
+clash.title.sudden_death = Morte Improvvisa
+clash.title.sudden_death.sub = Il primo sangue chiude la partita.
+clash.toast.eliminated = Sei eliminato. Resti a guardare finché il round non finisce.
+clash.toast.respawn = Ritorno nello scontro...
+clash.toast.ko = Hai abbattuto {0}!
+clash.toast.teammate_down = Un compagno è caduto.
+clash.toast.pickup = Hai preso: {0}.
+clash.toast.point_captured = La tua squadra ha conquistato un punto!
+clash.toast.point_lost = Un punto è andato perso.
+clash.hud.timer = Tempo {0}
+clash.hud.score = {0} - {1}
+clash.hud.team = Squadra
+clash.hud.tally.hits = Colpi {0}
+clash.hud.tally.kills = Uccisioni {0}
+clash.hud.alive = Vivi {0}/{1}
+clash.hud.capture = Cattura {0}
+domination.marker.point = Punto di Cattura
+
+# Clash instance discovery banner.
+instance.clash.title = Scontro nel Bosco
+instance.clash.subtitle = Entrano due squadre. Ne esce una.
+
+# Domination instance discovery banner.
+instance.domination.title = Dominio del Bosco
+instance.domination.subtitle = Tieni il terreno. Resisti più di loro.
+
+# Coloured team-score HUD line (TextSpans); ordering flips so the viewer's team is first.
+clash.hud.score.red = <color is="#ff5a5a">{0}</color> - <color is="#5a9cff">{1}</color>
+clash.hud.score.blue = <color is="#5a9cff">{0}</color> - <color is="#ff5a5a">{1}</color>
+# PvP results + leaderboard + preset display names.
+results.clash.breakdown = Combattimento
+results.clash.kos = Volte Abbattuto
+results.clash.preview = Partita conclusa. I tuoi risultati ti aspettano alla lobby.
+leaderboard.clash.title = Classifica dell'Arena
+leaderboard.clash.axis.mode = Modalità
+leaderboard.clash.stat.hits = Colpi
+leaderboard.clash.stat.kills = Uccisioni
+leaderboard.clash.stat.kos = Abbattimenti
+preset.clash_1v1.name = Scontro 1v1
+preset.clash_2v2.name = Scontro 2v2
+preset.domination_koth.name = Dominio
+
+# Clash Host NPC + the clash_intro dialogue (the PvP entry).
+npc.clashhost.name = Il Maestro dei Duelli
+npc.clashhost.hint = Premi [{key}] per entrare nell'arena
+dialogue.clash_intro.greet.text = Dunque. Preferisci mettere alla prova le tue radici contro un altro sangue caldo piuttosto che fuggire dal buio. Lo rispetto. Il bosco fa un'ottima arena quando l'unico incubo al suo interno siete voi. Sta' all'erta: ho seppellito combattenti migliori di te, e non mi stavo nemmeno impegnando.
+dialogue.clash_intro.greet.opt.0 = Come funziona l'arena?
+dialogue.clash_intro.greet.opt.1 = Sono pronto a combattere.
+dialogue.clash_intro.greet.opt.2 = Sullo scontro in cui sono già...
+dialogue.clash_intro.lore.text = Due squadre, un bosco, e funghi che spuntano dal terreno: <color is="#5a9cff">contraccolpo</color> per far volare uno sciocco giù dal bordo, <color is="#7affa0">stordimento</color> per lasciarlo a bocca aperta mentre tu colpisci. Prendili prima che lo faccia l'altra parte: chi raccoglie di solito è chi esce vivo. Vince l'ultima squadra in piedi; se il tempo finisce, vince chi ha messo a segno più colpi, quindi non limitarti a ballare, colpisci qualcosa. Nel Dominio dimentica tutto questo e tieni il terreno più a lungo di loro.
+dialogue.clash_intro.lore.opt.0 = Basta. Fammi combattere.
+dialogue.clash_intro.lore.opt.1 = Ripensandoci, torna indietro.
+dialogue.clash_intro.mode_pick.text = Scegli la tua sfida, sangue caldo. Aprirò il cancello sul terreno che preferisci per sanguinare.
+dialogue.clash_intro.mode_pick.opt.0 = Scontro 1v1 - solo noi due.
+dialogue.clash_intro.mode_pick.opt.1 = Scontro 2v2 - porta un amico con cui perdere.
+dialogue.clash_intro.mode_pick.opt.2 = Dominio - tieni il terreno.
+dialogue.clash_intro.mode_pick.opt.3 = Non ancora. Fai un passo indietro.
+dialogue.clash_intro.already_engaged.text = Un combattimento alla volta, sangue caldo. Finisci la sfida in cui sei, poi torna a sanguinare per me.
+dialogue.clash_intro.already_engaged.opt.0 = Capito.
+
+# Achievements and titles (ziggfreed-common's achievement book and title picker): the book's
+# category, the two achievements and their steps, and the titles they pay on unlock. A title's
+# .display places it around a player's name, {0} being the name.
+achievement.category.kweebec_nightmare = Kweebec Nightmare
+achievement.kweebec_hardcore_escape.title = Nessuna Luce da Seguire
+achievement.kweebec_hardcore_escape.desc = Fuggi da una partita Riaccendi e Fuggi in Hardcore.
+objective.kweebec.hardcore_escape = Fuggi da una partita in Hardcore
+achievement.kweebec_warden_falls.title = Il Guardiano Cade
+achievement.kweebec_warden_falls.desc = Aiuta ad abbattere il Guardiano della Peste.
+objective.kweebec.warden_falls = Aiuta ad abbattere il Guardiano della Peste
+title.kweebec_unbroken.name = L'Indomito
+title.kweebec_unbroken.flavor = Fuggito da una partita Riaccendi e Fuggi in Hardcore.
+title.kweebec_unbroken.display = {0} l'Indomito
+title.kweebec_wardenbane.name = Flagello del Guardiano
+title.kweebec_wardenbane.flavor = Ha aiutato ad abbattere il Guardiano della Peste.
+title.kweebec_wardenbane.display = {0}, Flagello del Guardiano

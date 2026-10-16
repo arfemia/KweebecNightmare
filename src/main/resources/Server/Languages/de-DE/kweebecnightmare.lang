@@ -1,0 +1,409 @@
+# Keys here are NOT prefixed with "kweebecnightmare." - the engine derives that
+# namespace from this file's name (kweebecnightmare.lang) and prepends it, so the
+# final key is e.g. kweebecnightmare.hud.timer (the form Lang.java references).
+# Prefixing here would double it (kweebecnightmare.kweebecnightmare.hud.timer) and
+# every lookup would fall through to the raw key. See I18nModule.getPrefix.
+mode.chase.name = Entzünden und Fliehen
+mode.survival.name = Letztes Licht bis zum Morgengrauen
+preset.amateur.name = Anfänger
+preset.nightmare.name = Albtraum
+preset.hardcore.name = Hardcore
+preset.endless.name = Endlose Nacht
+preset.swarm.name = Der Schwarm
+preset.pitch.name = Pechschwarz
+preset.blitz.name = Blitz
+
+mutator.swarm.name = Schwarm
+mutator.relentless.name = Unerbittlich
+mutator.caverns.name = Höhlen
+mutator.decay.name = Schleichender Verfall
+mutator.blitz.name = Blitz
+
+instance.chase.title = Der verdorbene Hain
+instance.chase.subtitle = Sammle Mondblüten und entzünde die Schreine. Lass dich nicht erwischen.
+
+npc.blight.name = Verdorbener Kweebec
+npc.lunger.name = Springende Fäulnis
+npc.spitter.name = Spuckende Fäulnis
+npc.ambusher.name = Blinzelnde Fäulnis
+npc.warden.name = Der Fäulniswärter
+encounter.hunters.name = Die Jagd der Fäulnis
+
+title.hunt_begins = Die Jagd beginnt
+title.hunt_begins.sub = Sammle Mondblüten und entzünde die Schreine des Hains
+title.gate_open = Das Kernholztor öffnet sich
+title.gate_open.sub = Sammelt euch auf der Plattform und haltet zusammen
+title.you_survived = Du bist entkommen
+title.you_survived.sub = Der Hain lässt dich ziehen
+title.caught = Der Hain fordert dich
+title.caught.sub = Alle Überlebenden wurden eingesponnen
+title.night_falls = Die Nacht siegt
+title.night_falls.sub = Der Morgen kam nie
+title.jumpscare = ES HAT DICH
+title.jumpscare.sub = Reiß dich los und lauf
+
+# Item names + tooltip descriptions for the grove blooms and the shrine. A description renders as
+# rich text on the item tooltip's TextSpans (Hytale's native <i>/<b>/<color is="#hex">/\n markup,
+# parsed client-side per locale, exactly like vanilla items.*.description). Each highlight colour
+# matches the bloom's own glow. No balance numbers in the flavor, so a tuning change never forces a
+# localization edit. The _Plant clusters are the harvest source; the thrown blooms drop from them.
+item.moonbloom.name = Mondblüte
+item.moonbloom.description = Opfere sie an einem verdorbenen Schrein, um den Hain zu reinigen, oder wirf sie, um einen Jäger dort, wo sie platzt, zu <color is="#7affa0">betäuben</color>.\n\n<i>Das letzte reine Licht des Hains. Sie erinnert sich noch an das Lied, das die Leere ertränken wollte.</i>
+item.moonbloom_plant.name = Mondblütenbüschel
+item.moonbloom_plant.description = Ernte dieses leuchtende Büschel, um <color is="#7affa0">Mondblüten</color> zu sammeln, das Licht, das die Schreine trinken und vor dem sich die Jagd fürchtet.\n\n<i>Selbst von der Fäulnis erstickt, kriecht ein wenig vom alten Licht des Hains immer wieder zurück.</i>
+item.gustbloom.name = Böenblüte
+item.gustbloom.description = Platzt in einer scharfen <color is="#5a9cff">Böe</color>, die einen Jäger zurückschleudert und dir Raum zum Fliehen verschafft.\n\n<i>Sie hält den Atem an, seit der Hain zuletzt rein geatmet hat. Dann lässt sie alles auf einmal los.</i>
+item.gustbloom_plant.name = Böenblütenbüschel
+item.gustbloom_plant.description = Ernte dieses windzerzauste Büschel, um <color is="#5a9cff">Böenblüten</color> zu sammeln, die Blüte, die einen Jäger zurückwirft.\n\n<i>Sie wiegt sich ohne Wind und atmet Luft, die der tote Hain nicht mehr braucht.</i>
+item.mirebloom.name = Morastblüte
+item.mirebloom.description = Platzt in klebrige Sporen, die alles <color is="#7affa0">verlangsamen</color>, was sie berühren. Zwinge die Jagd in die Knie.\n\n<i>Sie ist in den ertrunkenen Wurzeln gewuchert, wo sich die Fäulnis am dichtesten staut, und der Morast haftet an allem, was sich bewegt.</i>
+item.mirebloom_plant.name = Morastblütenbüschel
+item.mirebloom_plant.description = Ernte dieses durchnässte Büschel, um <color is="#7affa0">Morastblüten</color> zu sammeln, die Blüte, die die Jagd in die Knie zwingt.\n\n<i>Sie gedeiht, wo die Wurzeln ertrunken sind, und wird fett am stehenden Moder.</i>
+item.emberbloom.name = Glutblüte
+item.emberbloom.description = Platzt in sengende <color is="#ff8a3c">Glut</color>, die die Fäulnis verbrennt und deine Mitüberlebenden verschont.\n\n<i>Aus der Rinde des Wärters selbst gesprungen. Feuer ist die eine Gestalt, die die Leere nie zu tragen lernte.</i>
+item.emberbloom_plant.name = Glutblütenbüschel
+item.emberbloom_plant.description = Ernte dieses glimmende Büschel, um <color is="#ff8a3c">Glutblüten</color> zu sammeln, die Blüte, die die Fäulnis wegbrennt.\n\n<i>Sie schlägt nur dort Wurzeln, wo der Wärter gegangen ist, und fühlt sich immer warm an.</i>
+item.shrine.name = Verdorbener Schrein
+item.shrine.description = Opfere hier <color is="#7affa0">Mondblüten</color>, um die Fäulnis zu reinigen. Ein neu entzündeter Schrein brennt mit grünem Feuer, und die Jagd wendet sich dem Licht zu.\n\n<i>Einst trug er das Lied des Hains. Nun wartet er kalt auf jemand Warmen, der ihn weckt.</i>
+item.warden_spawner.name = Wärterhorst
+item.blight_spawner.name = Fäulnisnest
+
+# Status effect names, shown when a player hovers the effect's icon. The effect JSON names the full
+# key (kweebecnightmare.effect...), because the client reads an effect's Name exactly as written.
+# The four tiers of the hunter's slow share one name.
+effect.hunter_slow.name = Griff des Jägers
+effect.mire_slow.name = Festgesogen
+
+interaction.shrine.hint = Drücke [{key}], um Mondblüten zu opfern
+
+toast.cleanse_done = Der Schrein trinkt das Mondblütenlicht
+toast.cleanse_need = Sammle {0} weitere Mondblüten, um diesen Schrein zu reinigen
+toast.shrine_submit = Der Schrein trinkt deine Mondblüten ({0}/{1})
+toast.shrine_dormant = Der Schrein schläft, bis die Jagd beginnt
+toast.moonbloom_respawn = Der Hain regt sich. Frische Mondblüten sind gewachsen.
+
+toast.cocooned = Wurzeln ziehen dich hinab. Warte auf einen Mitstreiter.
+toast.rescued = Du bist frei. Lauf.
+toast.teammate_down = Ein Mitstreiter wurde eingesponnen
+toast.hunter_locked = Es hat deine Witterung
+toast.hunters_drawn = Das Licht zieht mehr von ihnen an
+toast.extraction_hold = Die Plattform summt. Haltet zusammen, bis der Hain euch freigibt.
+
+hud.timer = Zeit {0}
+hud.shrines = Schreine {0}/{1}
+hud.alive = Am Leben {0}
+hud.corruption = Verderbnis {0}%
+hud.objective.ritual = Entzünde die Schreine des Hains
+hud.objective.escape = Sammelt euch auf der Kernholzplattform
+# Co-op extraction line (ESCAPE phase). {0}=survivors on the platform, {1}=required, {2}=hold seconds left.
+hud.extraction.hold = Flucht {0}/{1}  {2}s
+hud.extraction.wait = Flucht {0}/{1}  sammelt euch auf der Plattform
+
+marker.exit = Ausgang
+marker.shrine = Schrein
+
+# The Warden fight's notices, named by the KweebecNightmare_Warden_* FeedbackMoment assets (the bar
+# itself shows npc.warden.name).
+boss.title.awakens = Der Wärter erwacht
+boss.title.awakens.sub = Er erhob sich, um das Tor zu versperren
+boss.toast.phase = Der Wärter wirft seine Rinde ab und bricht los
+boss.toast.defeated = Der Wärter fällt. Das Tor gehört dir.
+boss.toast.wiped = Der Wärter behält das Tor.
+
+cmd.players_only = Das können nur Spieler ausführen.
+cmd.already_in_round = Du bist bereits in einer Runde.
+cmd.starting = Abstieg in den verdorbenen Hain...
+cmd.start_failed = Die Runde konnte nicht gestartet werden. Versuche es erneut.
+cmd.leaving = Du verlässt den Hain...
+cmd.unknown_preset = Unbekannte Voreinstellung. Versuche amateur, nightmare oder hardcore.
+cmd.no_active_rounds = Keine aktiven Runden.
+cmd.ended = Alle aktiven Runden beendet.
+cmd.usage = Verwendung: /kweebec [start|exit|score|leaderboard|party] [preset]
+cmd.give_done = Du hast {0} Mondblüten erhalten.
+cmd.score_header = Deine Bestwerte in Kweebec Nightmare:
+cmd.score_none = Noch kein Ergebnis gespeichert. Überlebe zuerst eine Runde.
+cmd.kweebec.desc = Starte, verlasse oder prüfe eine Runde Kweebec Nightmare
+cmd.arg.sub = start | exit | score | leaderboard | party
+cmd.arg.preset = amateur | nightmare | hardcore
+cmd.arg.clash_preset = clash_1v1 | clash_2v2
+cmd.arg.domination_preset = domination_koth
+cmd.arg.count = Wie viele Mondblüten gegeben werden
+cmd.kweebec.start.desc = Reihe dich für eine Runde mit der genannten Voreinstellung ein, oder Albtraum, wenn du keine nennst
+cmd.kweebec.exit.desc = Verlasse die Warteschlange oder deine Runde
+cmd.kweebec.score.desc = Zeige deine besten Ergebnisse
+cmd.kweebec.leaderboard.desc = Öffne die Bestenliste
+cmd.kweebec.party.desc = Öffne deine Gruppe und die Einladungen
+cmd.kweebec.clash.desc = Admin: Starte ein Team-Testmatch mit allen in deiner Welt
+cmd.kweebec.domination.desc = Admin: Starte ein Testmatch ums Halten eines Punktes mit allen in deiner Welt
+cmd.kweebec.endall.desc = Admin: Beende jede Runde auf dem Server
+cmd.kweebec.give.desc = Admin: Gib dir selbst Mondblüten
+cmd.kweebec.clashhost.desc = Admin: Platziere den Duellmeister in deiner Welt
+
+# Dialogue page chrome (resolved by the shared ziggfreed-common dialogue engine).
+dialogue.kweebec.farewell = Zurücktreten
+dialogue.kweebec.missing = Die Stimme verklingt. Es kommt nichts mehr.
+
+# Matchmaking queue feedback. Toasts (Notify) are coloured by their NotificationStyle
+# (success/warning/danger); the countdown banner (EventTitles) renders PLAIN text only -
+# it is NOT a TextSpans Label, so it cannot do <color>/<b>/<i> markup (the dialogue node
+# text below CAN, because the page sets it on TextSpans). {0} = size, {1} = max party.
+queue.joined = Du trittst in die Versammlung. {0} von {1} sind dem Ruf gefolgt.
+queue.left = Du gleitest zurück ins Dunkel. Du hast die Versammlung verlassen.
+queue.countdown = Der Hain zieht dich hinein... {0}
+queue.countdown.sub = Bleib nah. Bleib leise.
+queue.launching = Der verdorbene Hain nimmt dich auf...
+queue.cancelled = Die Versammlung zerstreut sich. Es sind zu wenige übrig.
+queue.failed = Der Hain weist dich ab. Versuche es erneut.
+
+# Queue + Clash Host command feedback.
+cmd.queued = Du trittst in die Versammlung. Warte, bis der Hain dich hineinzieht.
+cmd.already_queued = Du wartest bereits in der Versammlung.
+cmd.not_queued_or_in_round = Du bist weder in einer Warteschlange noch in einer Runde.
+cmd.left_queue = Du verlässt die Versammlung.
+cmd.clash_host_spawned = Der Duellmeister folgt deinem Ruf.
+cmd.clash_host_failed = Der Duellmeister kann hier nicht stehen.
+
+# The Grove Keeper guide NPC (role KweebecNightmare_Guide). The interaction hint uses
+# the native [{key}] placeholder - the client substitutes the bound interact key (e.g. F).
+npc.guide.name = Der Hainhüter
+npc.guide.hint = Drücke [{key}], um mit dem Hainhüter zu sprechen
+
+# Guide dialogue: the Grove Keeper (id "nightmares_intro"). NODE TEXT renders on the
+# Label's TextSpans, so Hytale's native inline markup - <color is="#hex">/<b>/<i> - is
+# parsed CLIENT-side, per-locale (same mechanism as vanilla items.*.description). A
+# translator keeps the markup in their own line. Option labels are TextButtons (no
+# TextSpans), so they take no markup - colour-coded by their DialogueOptionStyle.
+dialogue.nightmares_intro.greet.text = Oh gut, du atmest noch. Nicht viele tun das, so tief drin. Ich habe diesen Albtraum öfter durchlebt, als ich zählen kann - der Hain wird schwarz, meine eigene Sippe trägt mein Gesicht und jagt mich hindurch, und ich komme nie heraus. Aber ich habe es oft genug gesehen, um zu wissen, wo es dich erwischt. Bleib einen Moment, ich sage dir, woran die Leute sterben.
+dialogue.nightmares_intro.greet.opt.0 = Wie verläuft dieser Albtraum?
+dialogue.nightmares_intro.greet.opt.1 = Genug geredet, schick mich hinein.
+dialogue.nightmares_intro.greet.opt.2 = Zur Jagd, in der ich schon bin...
+dialogue.nightmares_intro.greet.opt.3 = Wer hat am längsten durchgehalten?
+dialogue.nightmares_intro.lore.text = Es läuft jedes Mal gleich. Der Hain ist tot und dunkel, und das Einzige, was ihn weckt, sind die Schreine - du gießt <color is="#7affa0">Mondblüten</color> hinein, bis sie grün brennen. Das Problem: Das ist laut, und was da draußen ist, hört alles. Ich schwöre, es weiß es in der Sekunde, in der ich anfange. Entzünde sie alle, und das <b>Kernholztor</b> öffnet sich endlich, aber das ist auch laut, und wer am nächsten steht, verschwindet meist zuerst.
+dialogue.nightmares_intro.lore.opt.0 = Ich habe genug gehört. Schick mich hinein.
+dialogue.nightmares_intro.lore.opt.1 = Wie überlebe ich es denn?
+dialogue.nightmares_intro.tips.text = Du willst also hier raus. Viel Glück damit. Trag Blüten bei dir - eine <color is="#7affa0">Mondblüte</color> ins Gesicht betäubt sie, eine <color is="#5a9cff">Böenblüte</color> schleudert sie davon, eine <color is="#7affa0">Morastblüte</color> bremst sie aus, und eine <color is="#ff8a3c">Glutblüte</color> verbrennt sie. Die Glutblüte schert sich nicht darum, wen sie trifft, also achte auf deine Freunde. Wenn dich die Wurzeln packen, lieg nicht einfach da - jemand kann dich herausziehen, also bleib in Reichweite. Der Ausweg ist derselbe: Er öffnet sich nur, wenn ihr alle <b>zusammen</b> auf der Plattform steht. Und trödle nicht. Je länger das hier dauert, desto schneller und bösartiger wird dieses Ding.
+dialogue.nightmares_intro.tips.opt.0 = Gut, ich bin bereit.
+dialogue.nightmares_intro.tips.opt.1 = Zurück.
+dialogue.nightmares_intro.preset_pick.text = Wie sehr willst du es? Nimm es sanft, und das Ding schlurft nur hinter dir her - gut, um zu lernen, wie das alles funktioniert. Fordere es heraus, und es hetzt dich zu Tode, und die Dunkelheit frisst dein Licht, bevor du neues machen kannst. Deine Entscheidung. Ich bin irgendwo aus dem Weg.
+dialogue.nightmares_intro.preset_pick.opt.0 = Anfänger - lass mich den Hain kennenlernen.
+dialogue.nightmares_intro.preset_pick.opt.1 = Albtraum - die echte Jagd.
+dialogue.nightmares_intro.preset_pick.opt.2 = Hardcore - ein Leben, keine zweite Chance.
+dialogue.nightmares_intro.preset_pick.opt.3 = Noch nicht. Tritt zurück.
+dialogue.nightmares_intro.already_engaged.text = Eins nach dem anderen, Warmer. Du bist schon in einer Jagd - verlass erst diese Versammlung, dann setze ich dich gern in die nächste.
+dialogue.nightmares_intro.already_engaged.opt.0 = Verstanden.
+
+# Leaderboard page (the Grove Keeper's "Who has survived the most?" option, greet.opt.3).
+# Plain labels shown on Label .Text (no inline markup); column colours come from the .ui styles.
+leaderboard.title = Überlebende des Hains
+leaderboard.tab.solo = Solo
+leaderboard.tab.duo = Duo
+leaderboard.tab.trio = Trio
+leaderboard.tab.squad = Trupp
+leaderboard.col.rank = Rang
+leaderboard.col.player = Überlebender
+leaderboard.col.score = Bestwert
+leaderboard.col.total = Gesamt
+leaderboard.col.time = Bestzeit
+leaderboard.col.plays = Läufe
+leaderboard.empty = In dieser Klasse wurde noch kein Überlebender erfasst. Sei der Erste.
+leaderboard.your_rank = Dein Bestes: #{0}  ({1})
+leaderboard.your_rank_none = Du hast in dieser Klasse noch keinen gewerteten Lauf.
+# Leading filter-row labels.
+leaderboard.axis.difficulty = Schwierigkeit
+leaderboard.axis.players = Spieler
+leaderboard.axis.sort = Sortierung
+leaderboard.axis.view = Ansicht
+# The synthesized "All" tab (lifetime roll-up across an axis: All+All = full lifetime totals).
+leaderboard.filter.all = Alle
+# Sort toggle + Rankings/Stats view toggle buttons.
+leaderboard.sort.score = Bestwert
+leaderboard.sort.total = Gesamtpunkte
+leaderboard.sort.time = Schnellste
+leaderboard.view.rankings = Rangliste
+leaderboard.view.stats = Statistik
+# Lifetime stat columns (Stats view). Click a column header to sort by it.
+leaderboard.stat.stunned = Betäubt
+leaderboard.stat.moonbloom = Mondblüten
+leaderboard.stat.shrines = Schreine entzündet
+leaderboard.stat.wins = Siege
+
+# End-of-game results screen (the shared instance-experience ResultsPage).
+results.win = Du hast überlebt
+results.loss = Der Hain hat dich geholt
+results.draw = Eine hohle Nacht
+results.abort = Das Ritual brach ab
+results.duration = Gesamtzeit: {0}
+results.breakdown = Dein Lauf
+results.rewards = Beute des Hains
+results.no_rewards = Keine Beute in dieser Nacht.
+results.pending = Für einen Teil der Beute fehlt Platz im Inventar - hole den Rest im Spielmenü ab.
+results.btn.leaderboard = Bestenliste ansehen
+results.btn.again = Nochmal spielen
+results.btn.close = Verlassen
+results.team_total = Hain-Gesamt: {0}
+results.col.base = Grundpunkte
+results.col.time = Tempobonus
+results.col.damage = Vermiedener Schaden
+results.col.stun = Betäubungsbonus
+results.col.shrine = Schreinbonus
+results.col.duration = Überlebte Zeit
+# Run-stats section - raw per-run activity, shown below the point breakdown.
+results.stats = Lauf-Statistik
+results.stat.damage_taken = Erlittener Schaden
+results.stat.stunned = Jäger betäubt
+results.stat.moonbloom = Mondblüten gesammelt
+# In-instance preview note where the spoils chips would be (you claim them once back in the overworld).
+results.spoils_pending = Hole deine Beute ab, sobald du dem Hain entkommen bist.
+# Manual claim: the results-screen Claim button + the post-claim confirmation note.
+results.btn.claim = Beute abholen
+results.claimed = Beute abgeholt.
+
+# Play screen - live roster / ready chrome (the shared PlayModePage, queued state). The
+# countdown line ticks down live on screen. The player stays here after queueing.
+queue.screen.count = {0}/{1} Überlebende
+queue.screen.waiting = Warten auf weitere, die dem Ruf folgen...
+queue.screen.countdown = Der Hain zieht dich hinein... {0}
+queue.screen.launching = Der verdorbene Hain nimmt dich auf...
+queue.screen.wait = bis zu ~{0}s
+queue.screen.leave = Versammlung verlassen
+queue.screen.not_queued = Du bist in keiner Versammlung.
+queue.screen.toast_queued = Du trittst der Versammlung bei ({0}/{1}).
+
+# Play screen - "Claim Spoils" button (chooser) for spoils missed earlier (closed the results
+# screen, or a full inventory) + the toast shown after claiming.
+play.btn.claim = Beute abholen
+play.toast.claimed = Beute abgeholt.
+
+# Play screen - the mode chooser (the shared PlayModePage, not-queued state): how to enter.
+play.title = Den Albtraum betreten
+play.difficulty = Schwierigkeit: {0}
+play.mode.public = Öffentlich
+play.mode.public.desc = Trotze dem Hain mit jedem, der dem Ruf folgt.
+play.mode.party = Gruppe
+play.mode.party.desc = Sammle zuerst deine eigenen Überlebenden.
+play.mode.solo = Allein
+play.mode.solo.desc = Tritt jetzt sofort allein ins Dunkel.
+
+# Party + invite screen (the shared PartyInvitePage).
+party.title = Deine Gruppe
+party.tab.party = Gruppe
+party.tab.invite = Einladen
+party.empty.invite = Niemand sonst ist online, den du einladen könntest.
+party.empty.party = Du hast keine Gruppe. Lade Überlebende ein, um dem Hain gemeinsam zu trotzen.
+party.btn.invite = Einladen
+party.btn.kick = Entfernen
+party.btn.leave = Gruppe verlassen
+party.btn.disband = Auflösen
+party.btn.queue = Gruppe einreihen
+party.btn.accept = Annehmen
+party.btn.decline = Ablehnen
+party.owner_badge = Anführer
+party.count = {0}/{1}
+party.privacy.public = Offene Gruppe
+party.privacy.private = Verschlossene Gruppe
+party.toast.invite_failed = Dieser Überlebende kann deiner Gruppe nicht beitreten.
+
+# Party feedback toasts + the invite banner.
+party.msg.invited = {0} lädt dich in die Gruppe ein ({1}/{2}).
+party.msg.banner = {0} lädt dich ein
+party.msg.banner.sub = Öffne deine Gruppe, um anzunehmen.
+party.msg.sent = Einladung an {0} gesendet.
+party.msg.declined = {0} hat deine Einladung abgelehnt.
+party.msg.expired = Die Einladung verblasste im Dunkel.
+party.msg.joined = {0} tritt der Gruppe bei ({1}/{2}).
+party.msg.left = {0} hat die Gruppe verlassen.
+party.msg.kicked = Du wurdest aus der Gruppe entfernt.
+party.msg.kicked_member = {0} wurde aus der Gruppe entfernt.
+party.msg.disbanded = Die Gruppe zerstreut sich.
+party.msg.owner = {0} führt die Gruppe nun an.
+
+# Command feedback.
+cmd.party_opened = Deine Gruppe wird geöffnet...
+
+# --- Clash / Domination (PvP). {0} is a team name (Red / Blue) where present. ---
+clash.team.red = Rot
+clash.team.blue = Blau
+clash.title.start = Der Clash beginnt
+clash.title.start.sub = Das letzte Team auf den Beinen gewinnt.
+clash.title.victory = Sieg
+clash.title.victory.sub = Dein Team hat den Hain erobert.
+clash.title.defeat = Niederlage
+clash.title.defeat.sub = Das andere Team hielt das Feld.
+clash.title.draw = Unentschieden
+clash.title.draw.sub = Keines der Teams konnte das andere brechen.
+clash.title.sudden_death = Sudden Death
+clash.title.sudden_death.sub = Der erste Treffer entscheidet.
+clash.toast.eliminated = Du bist ausgeschieden. Du siehst zu, bis die Runde endet.
+clash.toast.respawn = Zurück in den Kampf...
+clash.toast.ko = Du hast {0} niedergestreckt!
+clash.toast.teammate_down = Ein Mitstreiter ist gefallen.
+clash.toast.pickup = Du hast {0} geschnappt.
+clash.toast.point_captured = Dein Team hat einen Punkt erobert!
+clash.toast.point_lost = Ein Punkt ging verloren.
+clash.hud.timer = Zeit {0}
+clash.hud.score = {0} - {1}
+clash.hud.team = Team
+clash.hud.tally.hits = Treffer {0}
+clash.hud.tally.kills = Kills {0}
+clash.hud.alive = Am Leben {0}/{1}
+clash.hud.capture = Einnahme {0}
+domination.marker.point = Kontrollpunkt
+
+# Clash instance discovery banner.
+instance.clash.title = Hain-Clash
+instance.clash.subtitle = Zwei Teams treten ein. Eines geht.
+
+# Domination instance discovery banner.
+instance.domination.title = Hain-Domination
+instance.domination.subtitle = Halte den Boden. Überdauere sie.
+
+# Coloured team-score HUD line (TextSpans); ordering flips so the viewer's team is first.
+clash.hud.score.red = <color is="#ff5a5a">{0}</color> - <color is="#5a9cff">{1}</color>
+clash.hud.score.blue = <color is="#5a9cff">{0}</color> - <color is="#ff5a5a">{1}</color>
+# PvP results + leaderboard + preset display names.
+results.clash.breakdown = Kampf
+results.clash.kos = Niedergestreckt
+results.clash.preview = Match beendet. Deine Ergebnisse warten in der Lobby auf dich.
+leaderboard.clash.title = Arena-Bestenliste
+leaderboard.clash.axis.mode = Modus
+leaderboard.clash.stat.hits = Treffer
+leaderboard.clash.stat.kills = Kills
+leaderboard.clash.stat.kos = Niederlagen
+preset.clash_1v1.name = Clash 1v1
+preset.clash_2v2.name = Clash 2v2
+preset.domination_koth.name = Domination
+
+# Clash Host NPC + the clash_intro dialogue (the PvP entry).
+npc.clashhost.name = Der Duellmeister
+npc.clashhost.hint = Drücke [{key}], um die Arena zu betreten
+dialogue.clash_intro.greet.text = Also. Du misst deine Wurzeln lieber an einem anderen Warmblüter, als vor der Dunkelheit zu fliehen. Das respektiere ich. Der Hain gibt eine feine Arena ab, wenn der einzige Albtraum darin ihr selbst seid. Bleib wachsam - ich habe bessere Kämpfer als dich begraben, und ich habe mich nicht einmal angestrengt.
+dialogue.clash_intro.greet.opt.0 = Wie funktioniert die Arena?
+dialogue.clash_intro.greet.opt.1 = Ich bin bereit zu kämpfen.
+dialogue.clash_intro.greet.opt.2 = Zum Match, in dem ich schon bin...
+dialogue.clash_intro.lore.text = Zwei Teams, ein Hain, und Pilze, die aus dem Boden sprießen: <color is="#5a9cff">Rückstoß</color>, um einen Narren über den Rand zu schleudern, <color is="#7affa0">Betäubung</color>, damit er glotzt, während du zuschlägst. Schnapp sie dir, bevor es die andere Seite tut - wer sammelt, geht meist auch wieder hinaus. Das letzte Team auf den Beinen gewinnt; läuft die Zeit ab, siegt, wer die meisten Schläge gelandet hat, also tanz nicht nur herum, triff etwas. In Domination vergiss all das und halte einfach den Boden länger als sie.
+dialogue.clash_intro.lore.opt.0 = Genug. Lass mich kämpfen.
+dialogue.clash_intro.lore.opt.1 = Ich überlege es mir anders, zurück.
+dialogue.clash_intro.mode_pick.text = Nenne deinen Wettstreit, Warmblüter. Ich öffne das Tor zu dem Boden, auf dem du am liebsten bluten willst.
+dialogue.clash_intro.mode_pick.opt.0 = Clash 1v1 - nur wir beide.
+dialogue.clash_intro.mode_pick.opt.1 = Clash 2v2 - bring einen Freund zum Verlieren mit.
+dialogue.clash_intro.mode_pick.opt.2 = Domination - halte den Boden.
+dialogue.clash_intro.mode_pick.opt.3 = Noch nicht. Tritt zurück.
+dialogue.clash_intro.already_engaged.text = Ein Kampf nach dem anderen, Warmblüter. Beende den Wettstreit, in dem du steckst, dann komm wieder und blute für mich.
+dialogue.clash_intro.already_engaged.opt.0 = Verstanden.
+
+# Achievements and titles (ziggfreed-common's achievement book and title picker): the book's
+# category, the two achievements and their steps, and the titles they pay on unlock. A title's
+# .display places it around a player's name, {0} being the name.
+achievement.category.kweebec_nightmare = Kweebec Nightmare
+achievement.kweebec_hardcore_escape.title = Kein Licht zum Folgen
+achievement.kweebec_hardcore_escape.desc = Entkomme in einer Runde Entzünden und Fliehen auf Hardcore.
+objective.kweebec.hardcore_escape = Entkomme in einer Runde auf Hardcore
+achievement.kweebec_warden_falls.title = Der Wärter fällt
+achievement.kweebec_warden_falls.desc = Hilf mit, den Fäulniswärter zu besiegen.
+objective.kweebec.warden_falls = Hilf mit, den Fäulniswärter zu besiegen
+title.kweebec_unbroken.name = Der Ungebrochene
+title.kweebec_unbroken.flavor = In einer Runde Entzünden und Fliehen auf Hardcore entkommen.
+title.kweebec_unbroken.display = {0} der Ungebrochene
+title.kweebec_wardenbane.name = Wärterbann
+title.kweebec_wardenbane.flavor = Hat mitgeholfen, den Fäulniswärter zu besiegen.
+title.kweebec_wardenbane.display = {0}, Wärterbann

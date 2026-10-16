@@ -1,0 +1,409 @@
+# Keys here are NOT prefixed with "kweebecnightmare." - the engine derives that
+# namespace from this file's name (kweebecnightmare.lang) and prepends it, so the
+# final key is e.g. kweebecnightmare.hud.timer (the form Lang.java references).
+# Prefixing here would double it (kweebecnightmare.kweebecnightmare.hud.timer) and
+# every lookup would fall through to the raw key. See I18nModule.getPrefix.
+mode.chase.name = Зажги и беги
+mode.survival.name = Последний свет до рассвета
+preset.amateur.name = Любитель
+preset.nightmare.name = Кошмар
+preset.hardcore.name = Хардкор
+preset.endless.name = Бесконечная ночь
+preset.swarm.name = Рой
+preset.pitch.name = Кромешная тьма
+preset.blitz.name = Блиц
+
+mutator.swarm.name = Рой
+mutator.relentless.name = Неумолимость
+mutator.caverns.name = Пещеры
+mutator.decay.name = Ползучее гниение
+mutator.blitz.name = Блиц
+
+instance.chase.title = Заражённая роща
+instance.chase.subtitle = Соберите лунноцвет и зажгите святилища. Не дайте ему вас поймать.
+
+npc.blight.name = Квибек, тронутый порчей
+npc.lunger.name = Прыгучая порча
+npc.spitter.name = Плюющаяся порча
+npc.ambusher.name = Мерцающая порча
+npc.warden.name = Страж порчи
+encounter.hunters.name = Охота порчи
+
+title.hunt_begins = Охота началась
+title.hunt_begins.sub = Собирайте лунноцвет и зажигайте святилища рощи
+title.gate_open = Врата Сердцевины открыты
+title.gate_open.sub = Соберитесь на платформе и держитесь вместе
+title.you_survived = Вы сбежали
+title.you_survived.sub = Роща отпускает вас
+title.caught = Роща забирает вас
+title.caught.sub = Все выжившие в коконах
+title.night_falls = Ночь побеждает
+title.night_falls.sub = Рассвет так и не наступил
+title.jumpscare = ОНО ВАС СХВАТИЛО
+title.jumpscare.sub = Вырвитесь и бегите
+
+# Item names + tooltip descriptions for the grove blooms and the shrine. A description renders as
+# rich text on the item tooltip's TextSpans (Hytale's native <i>/<b>/<color is="#hex">/\n markup,
+# parsed client-side per locale, exactly like vanilla items.*.description). Each highlight colour
+# matches the bloom's own glow. No balance numbers in the flavor, so a tuning change never forces a
+# localization edit. The _Plant clusters are the harvest source; the thrown blooms drop from them.
+item.moonbloom.name = Лунноцвет
+item.moonbloom.description = Принесите его к заражённому святилищу, чтобы очистить рощу, или бросьте, чтобы <color is="#7affa0">оглушить</color> охотника там, где он лопнет.\n\n<i>Последний чистый свет рощи. Он всё ещё помнит песню, которую Пустота хотела заглушить.</i>
+item.moonbloom_plant.name = Заросли лунноцвета
+item.moonbloom_plant.description = Соберите эти светящиеся заросли, чтобы получить <color is="#7affa0">лунноцвет</color>, свет, который пьют святилища и которого боится охота.\n\n<i>Даже задушенная порчей, роща понемногу возвращает свой прежний свет.</i>
+item.gustbloom.name = Ветроцвет
+item.gustbloom.description = Лопается резким <color is="#5a9cff">порывом</color>, отбрасывает охотника и даёт вам место для бега.\n\n<i>Он задерживал дыхание с тех пор, как роща в последний раз дышала чистым воздухом. Теперь выдыхает разом.</i>
+item.gustbloom_plant.name = Заросли ветроцвета
+item.gustbloom_plant.description = Соберите эти продуваемые заросли, чтобы получить <color is="#5a9cff">ветроцвет</color>, цветок, который отбрасывает охотника.\n\n<i>Он качается, даже когда нет ветра, и дышит воздухом, который мёртвая роща уже не может использовать.</i>
+item.mirebloom.name = Трясиноцвет
+item.mirebloom.description = Лопается липкими спорами, которые <color is="#7affa0">замедляют</color> всё, чего коснутся. Сведите охоту к ползанию.\n\n<i>Он гнил в затопленных корнях, где порча гуще всего, и топь цепляется за всё живое.</i>
+item.mirebloom_plant.name = Заросли трясиноцвета
+item.mirebloom_plant.description = Соберите эти набухшие заросли, чтобы получить <color is="#7affa0">трясиноцвет</color>, цветок, который сводит охоту к ползанию.\n\n<i>Он процветает там, где корни утонули, и жиреет на стоячей гнили.</i>
+item.emberbloom.name = Углецвет
+item.emberbloom.description = Лопается жгучими <color is="#ff8a3c">углями</color>, которые жгут порчу и щадят других выживших.\n\n<i>Отколот от коры самого Стража. Огонь - единственный облик, который Пустота так и не научилась носить.</i>
+item.emberbloom_plant.name = Заросли углецвета
+item.emberbloom_plant.description = Соберите эти тлеющие заросли, чтобы получить <color is="#ff8a3c">углецвет</color>, цветок, который выжигает порчу.\n\n<i>Он пускает корни лишь там, где прошёл Страж, и всегда тёплый на ощупь.</i>
+item.shrine.name = Заражённое святилище
+item.shrine.description = Принесите сюда <color is="#7affa0">лунноцвет</color>, чтобы очистить порчу. Зажжённое святилище горит зелёным огнём, и охота поворачивает к свету.\n\n<i>Когда-то оно несло песню рощи. Теперь ждёт в холоде, пока кто-то тёплый его разбудит.</i>
+item.warden_spawner.name = Насест Стража
+item.blight_spawner.name = Гнездо порчи
+
+# Status effect names, shown when a player hovers the effect's icon. The effect JSON names the full
+# key (kweebecnightmare.effect...), because the client reads an effect's Name exactly as written.
+# The four tiers of the hunter's slow share one name.
+effect.hunter_slow.name = Хватка охотника
+effect.mire_slow.name = Увязший
+
+interaction.shrine.hint = Нажмите [{key}], чтобы принести лунноцвет
+
+toast.cleanse_done = Святилище пьёт свет лунноцвета
+toast.cleanse_need = Чтобы очистить это святилище, соберите ещё лунноцвета: {0}
+toast.shrine_submit = Святилище пьёт ваш лунноцвет ({0}/{1})
+toast.shrine_dormant = Святилище спит, пока не начнётся охота
+toast.moonbloom_respawn = Роща шевелится. Вырос свежий лунноцвет.
+
+toast.cocooned = Корни тянут вас вниз. Ждите товарища.
+toast.rescued = Вы свободны. Бегите.
+toast.teammate_down = Товарищ замурован в кокон
+toast.hunter_locked = Оно взяло ваш след
+toast.hunters_drawn = Свет приманивает их ещё больше
+toast.extraction_hold = Платформа гудит. Держитесь вместе, пока роща не отпустит вас.
+
+hud.timer = Время {0}
+hud.shrines = Святилища {0}/{1}
+hud.alive = Живы {0}
+hud.corruption = Порча {0}%
+hud.objective.ritual = Зажгите святилища рощи
+hud.objective.escape = Соберитесь на платформе Сердцевины
+# Co-op extraction line (ESCAPE phase). {0}=survivors on the platform, {1}=required, {2}=hold seconds left.
+hud.extraction.hold = Эвакуация {0}/{1}  {2} с
+hud.extraction.wait = Эвакуация {0}/{1}  соберитесь на платформе
+
+marker.exit = Выход
+marker.shrine = Святилище
+
+# The Warden fight's notices, named by the KweebecNightmare_Warden_* FeedbackMoment assets (the bar
+# itself shows npc.warden.name).
+boss.title.awakens = Страж пробуждается
+boss.title.awakens.sub = Он встал, чтобы преградить врата
+boss.toast.phase = Страж сбрасывает кору и бросается вперёд
+boss.toast.defeated = Страж пал. Врата ваши.
+boss.toast.wiped = Страж удерживает врата.
+
+cmd.players_only = Только игроки могут это выполнить.
+cmd.already_in_round = Вы уже в раунде.
+cmd.starting = Спуск в заражённую рощу...
+cmd.start_failed = Не удалось начать раунд. Попробуйте ещё раз.
+cmd.leaving = Уход из рощи...
+cmd.unknown_preset = Неизвестный пресет. Попробуйте amateur, nightmare или hardcore.
+cmd.no_active_rounds = Нет активных раундов.
+cmd.ended = Все активные раунды завершены.
+cmd.usage = Использование: /kweebec [start|exit|score|leaderboard|party] [пресет]
+cmd.give_done = Вам выдано лунноцвета: {0}.
+cmd.score_header = Ваши лучшие результаты в Кошмаре квибеков:
+cmd.score_none = Результатов пока нет. Сначала переживите раунд.
+cmd.kweebec.desc = Начать раунд Кошмара квибеков, выйти из него или узнать о нём
+cmd.arg.sub = start | exit | score | leaderboard | party
+cmd.arg.preset = amateur | nightmare | hardcore
+cmd.arg.clash_preset = clash_1v1 | clash_2v2
+cmd.arg.domination_preset = domination_koth
+cmd.arg.count = Сколько лунноцвета выдать
+cmd.kweebec.start.desc = Встать в очередь на раунд с названным пресетом или с пресетом Кошмар, если пресет не назван
+cmd.kweebec.exit.desc = Покинуть очередь или раунд
+cmd.kweebec.score.desc = Показать ваши лучшие результаты
+cmd.kweebec.leaderboard.desc = Открыть таблицу лидеров
+cmd.kweebec.party.desc = Открыть вашу группу и приглашения
+cmd.kweebec.clash.desc = Админ: начать тестовый командный матч со всеми в вашем мире
+cmd.kweebec.domination.desc = Админ: начать тестовый матч на удержание точки со всеми в вашем мире
+cmd.kweebec.endall.desc = Админ: завершить все раунды на сервере
+cmd.kweebec.give.desc = Админ: выдать себе лунноцвет
+cmd.kweebec.clashhost.desc = Админ: поставить Мастера дуэлей в вашем мире
+
+# Dialogue page chrome (resolved by the shared ziggfreed-common dialogue engine).
+dialogue.kweebec.farewell = Отойти
+dialogue.kweebec.missing = Голос затихает. Больше ничего не слышно.
+
+# Matchmaking queue feedback. Toasts (Notify) are coloured by their NotificationStyle
+# (success/warning/danger); the countdown banner (EventTitles) renders PLAIN text only -
+# it is NOT a TextSpans Label, so it cannot do <color>/<b>/<i> markup (the dialogue node
+# text below CAN, because the page sets it on TextSpans). {0} = size, {1} = max party.
+queue.joined = Вы входите в сбор. Откликнулись: {0} из {1}.
+queue.left = Вы уходите обратно во тьму. Вы покинули сбор.
+queue.countdown = Роща затягивает вас... {0}
+queue.countdown.sub = Держитесь рядом. Тише.
+queue.launching = Заражённая роща забирает вас...
+queue.cancelled = Сбор распадается. Осталось слишком мало.
+queue.failed = Роща вас отвергает. Попробуйте ещё раз.
+
+# Queue + Clash Host command feedback.
+cmd.queued = Вы входите в сбор. Ждите, пока роща вас затянет.
+cmd.already_queued = Вы уже ждёте в сборе.
+cmd.not_queued_or_in_round = Вы не в очереди и не в раунде.
+cmd.left_queue = Вы покидаете сбор.
+cmd.clash_host_spawned = Мастер дуэлей отвечает на ваш зов.
+cmd.clash_host_failed = Мастер дуэлей не может стоять здесь.
+
+# The Grove Keeper guide NPC (role KweebecNightmare_Guide). The interaction hint uses
+# the native [{key}] placeholder - the client substitutes the bound interact key (e.g. F).
+npc.guide.name = Хранитель рощи
+npc.guide.hint = Нажмите [{key}], чтобы поговорить с Хранителем рощи
+
+# Guide dialogue: the Grove Keeper (id "nightmares_intro"). NODE TEXT renders on the
+# Label's TextSpans, so Hytale's native inline markup - <color is="#hex">/<b>/<i> - is
+# parsed CLIENT-side, per-locale (same mechanism as vanilla items.*.description). A
+# translator keeps the markup in their own line. Option labels are TextButtons (no
+# TextSpans), so they take no markup - colour-coded by their DialogueOptionStyle.
+dialogue.nightmares_intro.greet.text = О, ты ещё дышишь. Здесь, так глубоко, таких немного. Я проживал этот кошмар столько раз, что не сосчитать: роща чернеет, мои же сородичи надевают мой облик и гонятся за мной, и мне ни разу не выбраться. Но я видел это достаточно, чтобы знать, где оно тебя подкараулит. Задержись на минуту, расскажу о том, что убивает людей.
+dialogue.nightmares_intro.greet.opt.0 = Как проходит этот кошмар?
+dialogue.nightmares_intro.greet.opt.1 = Хватит болтать, отправляй меня.
+dialogue.nightmares_intro.greet.opt.2 = Про охоту, в которой я уже участвую...
+dialogue.nightmares_intro.greet.opt.3 = Кто продержался дольше всех?
+dialogue.nightmares_intro.lore.text = Каждый раз одно и то же. Роща мертва и темна, и пробуждают её только святилища: ты льёшь в них <color is="#7affa0">лунноцвет</color>, пока они не загорятся зелёным. Беда в том, что это шумно, а то, что там бродит, слышит всё. Клянусь, оно знает, в ту секунду, как я начинаю. Зажжёшь все, и <b>Врата Сердцевины</b> наконец откроются, но это тоже шумно, и тот, кто стоит ближе всех, обычно исчезает первым.
+dialogue.nightmares_intro.lore.opt.0 = Я услышал достаточно. Отправляй.
+dialogue.nightmares_intro.lore.opt.1 = Так как же мне пережить это?
+dialogue.nightmares_intro.tips.text = Значит, хочешь выбраться. Удачи с этим. Держи цветы при себе: <color is="#7affa0">лунноцвет</color> в лицо оглушает их, <color is="#5a9cff">ветроцвет</color> отшвыривает, <color is="#7affa0">трясиноцвет</color> вязнет в них, как в трясине, а <color is="#ff8a3c">углецвет</color> жжёт. Углецвету всё равно, в кого попасть, так что берегите друзей. Если корни схватят тебя, не лежи просто так: кто-нибудь вытащит тебя, так что оставайся там, где тебя достанут. Выход один для всех: он открывается, только если вы все на платформе <b>вместе</b>. И не мешкай. Чем дольше это тянется, тем быстрее и злее становится эта тварь.
+dialogue.nightmares_intro.tips.opt.0 = Ладно, я готов.
+dialogue.nightmares_intro.tips.opt.1 = Назад.
+dialogue.nightmares_intro.preset_pick.text = Насколько тебе это нужно? Будь мягок, и тварь просто поплетётся за тобой: хорошо, чтобы разобраться, как всё устроено. Дави сильнее, и она загонит тебя, а тьма съест твой свет раньше, чем ты сделаешь новый. Тебе решать. Я буду где-нибудь в стороне.
+dialogue.nightmares_intro.preset_pick.opt.0 = Любитель: дай мне освоить рощу.
+dialogue.nightmares_intro.preset_pick.opt.1 = Кошмар: настоящая охота.
+dialogue.nightmares_intro.preset_pick.opt.2 = Хардкор: одна жизнь, второго шанса нет.
+dialogue.nightmares_intro.preset_pick.opt.3 = Пока нет. Отойти.
+dialogue.nightmares_intro.already_engaged.text = По одному, тёплый. Ты уже в охоте: сначала выйди из того сбора, и я с радостью отправлю тебя в следующий.
+dialogue.nightmares_intro.already_engaged.opt.0 = Понятно.
+
+# Leaderboard page (the Grove Keeper's "Who has survived the most?" option, greet.opt.3).
+# Plain labels shown on Label .Text (no inline markup); column colours come from the .ui styles.
+leaderboard.title = Выжившие в роще
+leaderboard.tab.solo = Соло
+leaderboard.tab.duo = Дуэт
+leaderboard.tab.trio = Трио
+leaderboard.tab.squad = Отряд
+leaderboard.col.rank = Место
+leaderboard.col.player = Выживший
+leaderboard.col.score = Лучший счёт
+leaderboard.col.total = Всего
+leaderboard.col.time = Лучшее время
+leaderboard.col.plays = Забеги
+leaderboard.empty = В этой категории пока нет выживших. Будьте первым.
+leaderboard.your_rank = Ваш лучший результат: #{0}  ({1})
+leaderboard.your_rank_none = В этой категории у вас пока нет ранговых забегов.
+# Leading filter-row labels.
+leaderboard.axis.difficulty = Сложность
+leaderboard.axis.players = Игроки
+leaderboard.axis.sort = Порядок
+leaderboard.axis.view = Вид
+# The synthesized "All" tab (lifetime roll-up across an axis: All+All = full lifetime totals).
+leaderboard.filter.all = Все
+# Sort toggle + Rankings/Stats view toggle buttons.
+leaderboard.sort.score = Лучший счёт
+leaderboard.sort.total = Сумма очков
+leaderboard.sort.time = Быстрейшие
+leaderboard.view.rankings = Рейтинг
+leaderboard.view.stats = Статистика
+# Lifetime stat columns (Stats view). Click a column header to sort by it.
+leaderboard.stat.stunned = Оглушено
+leaderboard.stat.moonbloom = Лунноцвет
+leaderboard.stat.shrines = Зажжено святилищ
+leaderboard.stat.wins = Победы
+
+# End-of-game results screen (the shared instance-experience ResultsPage).
+results.win = Вы выжили
+results.loss = Роща забрала вас
+results.draw = Пустая ночь
+results.abort = Ритуал сорван
+results.duration = Общее время: {0}
+results.breakdown = Ваш забег
+results.rewards = Добыча рощи
+results.no_rewards = В эту ночь добычи нет.
+results.pending = Для части добычи нужно место в инвентаре: заберите остальное в меню игры.
+results.btn.leaderboard = Таблица лидеров
+results.btn.again = Играть снова
+results.btn.close = Уйти
+results.team_total = Итог рощи: {0}
+results.col.base = Базовый счёт
+results.col.time = Бонус за скорость
+results.col.damage = Избегнутый урон
+results.col.stun = Бонус за оглушение
+results.col.shrine = Бонус за святилища
+results.col.duration = Время выживания
+# Run-stats section - raw per-run activity, shown below the point breakdown.
+results.stats = Статистика забега
+results.stat.damage_taken = Полученный урон
+results.stat.stunned = Оглушено охотников
+results.stat.moonbloom = Собрано лунноцвета
+# In-instance preview note where the spoils chips would be (you claim them once back in the overworld).
+results.spoils_pending = Заберите добычу, когда выберетесь из рощи.
+# Manual claim: the results-screen Claim button + the post-claim confirmation note.
+results.btn.claim = Забрать добычу
+results.claimed = Добыча получена.
+
+# Play screen - live roster / ready chrome (the shared PlayModePage, queued state). The
+# countdown line ticks down live on screen. The player stays here after queueing.
+queue.screen.count = Выживших: {0}/{1}
+queue.screen.waiting = Ждём, пока откликнутся ещё...
+queue.screen.countdown = Роща затягивает вас... {0}
+queue.screen.launching = Заражённая роща забирает вас...
+queue.screen.wait = до ~{0} с
+queue.screen.leave = Покинуть сбор
+queue.screen.not_queued = Вы не в сборе.
+queue.screen.toast_queued = Вы присоединились к сбору ({0}/{1}).
+
+# Play screen - "Claim Spoils" button (chooser) for spoils missed earlier (closed the results
+# screen, or a full inventory) + the toast shown after claiming.
+play.btn.claim = Забрать добычу
+play.toast.claimed = Добыча получена.
+
+# Play screen - the mode chooser (the shared PlayModePage, not-queued state): how to enter.
+play.title = Войти в Кошмар
+play.difficulty = Сложность: {0}
+play.mode.public = Открытый
+play.mode.public.desc = Бросьте вызов роще с теми, кто откликнется.
+play.mode.party = Группа
+play.mode.party.desc = Сначала соберите своих выживших.
+play.mode.solo = В одиночку
+play.mode.solo.desc = Шагните во тьму сами, прямо сейчас.
+
+# Party + invite screen (the shared PartyInvitePage).
+party.title = Ваша группа
+party.tab.party = Группа
+party.tab.invite = Приглашения
+party.empty.invite = Больше никого нет в сети, чтобы пригласить.
+party.empty.party = У вас нет группы. Пригласите выживших, чтобы бросить вызов роще вместе.
+party.btn.invite = Пригласить
+party.btn.kick = Исключить
+party.btn.leave = Покинуть группу
+party.btn.disband = Распустить
+party.btn.queue = В очередь группой
+party.btn.accept = Принять
+party.btn.decline = Отклонить
+party.owner_badge = Лидер
+party.count = {0}/{1}
+party.privacy.public = Открытая группа
+party.privacy.private = Закрытая группа
+party.toast.invite_failed = Этот выживший не может присоединиться к вашей группе.
+
+# Party feedback toasts + the invite banner.
+party.msg.invited = {0} приглашает вас в свою группу ({1}/{2}).
+party.msg.banner = {0} приглашает вас
+party.msg.banner.sub = Откройте группу, чтобы принять.
+party.msg.sent = Приглашение отправлено: {0}.
+party.msg.declined = Приглашение отклонено: {0}.
+party.msg.expired = Приглашение растворилось во тьме.
+party.msg.joined = {0} присоединяется к группе ({1}/{2}).
+party.msg.left = Группу покидает: {0}.
+party.msg.kicked = Вас исключили из группы.
+party.msg.kicked_member = Из группы исключён: {0}.
+party.msg.disbanded = Группа рассеивается.
+party.msg.owner = Теперь группу ведёт: {0}.
+
+# Command feedback.
+cmd.party_opened = Открываю вашу группу...
+
+# --- Clash / Domination (PvP). {0} is a team name (Red / Blue) where present. ---
+clash.team.red = Красные
+clash.team.blue = Синие
+clash.title.start = Схватка начинается
+clash.title.start.sub = Побеждает последняя уцелевшая команда.
+clash.title.victory = Победа
+clash.title.victory.sub = Ваша команда взяла рощу.
+clash.title.defeat = Поражение
+clash.title.defeat.sub = Другая команда удержала поле.
+clash.title.draw = Ничья
+clash.title.draw.sub = Ни одна команда не смогла сломить другую.
+clash.title.sudden_death = Внезапная смерть
+clash.title.sudden_death.sub = Первая кровь решает всё.
+clash.toast.eliminated = Вы выбыли. Наблюдаете до конца раунда.
+clash.toast.respawn = Возвращаетесь в бой...
+clash.toast.ko = Вы повалили игрока: {0}!
+clash.toast.teammate_down = Товарищ упал.
+clash.toast.pickup = Вы подобрали: {0}.
+clash.toast.point_captured = Ваша команда захватила точку!
+clash.toast.point_lost = Точка потеряна.
+clash.hud.timer = Время {0}
+clash.hud.score = {0} - {1}
+clash.hud.team = Команда
+clash.hud.tally.hits = Удары {0}
+clash.hud.tally.kills = Убийства {0}
+clash.hud.alive = Живы {0}/{1}
+clash.hud.capture = Захват {0}
+domination.marker.point = Точка захвата
+
+# Clash instance discovery banner.
+instance.clash.title = Схватка в роще
+instance.clash.subtitle = Заходят две команды. Выходит одна.
+
+# Domination instance discovery banner.
+instance.domination.title = Господство в роще
+instance.domination.subtitle = Удержите землю. Переживите их.
+
+# Coloured team-score HUD line (TextSpans); ordering flips so the viewer's team is first.
+clash.hud.score.red = <color is="#ff5a5a">{0}</color> - <color is="#5a9cff">{1}</color>
+clash.hud.score.blue = <color is="#5a9cff">{0}</color> - <color is="#ff5a5a">{1}</color>
+# PvP results + leaderboard + preset display names.
+results.clash.breakdown = Бой
+results.clash.kos = Раз повалили
+results.clash.preview = Матч окончен. Ваши результаты ждут в лобби.
+leaderboard.clash.title = Таблица лидеров арены
+leaderboard.clash.axis.mode = Режим
+leaderboard.clash.stat.hits = Удары
+leaderboard.clash.stat.kills = Убийства
+leaderboard.clash.stat.kos = Падения
+preset.clash_1v1.name = Схватка 1 на 1
+preset.clash_2v2.name = Схватка 2 на 2
+preset.domination_koth.name = Господство
+
+# Clash Host NPC + the clash_intro dialogue (the PvP entry).
+npc.clashhost.name = Мастер дуэлей
+npc.clashhost.hint = Нажмите [{key}], чтобы войти на арену
+dialogue.clash_intro.greet.text = Значит, ты предпочитаешь испытать свои корни на другом теплокровном, а не бежать от тьмы. Уважаю. Роща отличная арена, когда единственный кошмар в ней друг для друга. Будь начеку: я хоронил бойцов получше тебя, и даже не старался.
+dialogue.clash_intro.greet.opt.0 = Как устроена арена?
+dialogue.clash_intro.greet.opt.1 = Я готов драться.
+dialogue.clash_intro.greet.opt.2 = Про матч, в котором я уже участвую...
+dialogue.clash_intro.lore.text = Две команды, одна роща и грибы, растущие из земли: <color is="#5a9cff">отбрасывание</color>, чтобы швырнуть глупца за край, <color is="#7affa0">оглушение</color>, чтобы он стоял разинув рот, пока ты бьёшь. Хватай их раньше, чем другая сторона: те, кто собирает, обычно и уходят живыми. Побеждает последняя уцелевшая команда; если время выйдет, выигрывает тот, кто нанёс больше ударов, так что не пляши, а бей. В Господстве забудь всё это и просто держи землю дольше, чем они смогут.
+dialogue.clash_intro.lore.opt.0 = Хватит. Дай мне драться.
+dialogue.clash_intro.lore.opt.1 = Подумав, отойду назад.
+dialogue.clash_intro.mode_pick.text = Назови свой поединок, теплокровный. Я открою врата на ту землю, на которой тебе по душе истекать кровью.
+dialogue.clash_intro.mode_pick.opt.0 = Схватка 1 на 1: только мы двое.
+dialogue.clash_intro.mode_pick.opt.1 = Схватка 2 на 2: приведи друга, с кем проиграть.
+dialogue.clash_intro.mode_pick.opt.2 = Господство: держать землю.
+dialogue.clash_intro.mode_pick.opt.3 = Пока нет. Отойти.
+dialogue.clash_intro.already_engaged.text = Один бой за раз, теплокровный. Закончи поединок, в котором ты уже есть, и приходи снова истекать кровью для меня.
+dialogue.clash_intro.already_engaged.opt.0 = Понятно.
+
+# Achievements and titles (ziggfreed-common's achievement book and title picker): the book's
+# category, the two achievements and their steps, and the titles they pay on unlock. A title's
+# .display places it around a player's name, {0} being the name.
+achievement.category.kweebec_nightmare = Кошмар квибеков
+achievement.kweebec_hardcore_escape.title = Без света впереди
+achievement.kweebec_hardcore_escape.desc = Сбегите из раунда «Зажги и беги» на уровне Хардкор.
+objective.kweebec.hardcore_escape = Сбежать из раунда на уровне Хардкор
+achievement.kweebec_warden_falls.title = Страж пал
+achievement.kweebec_warden_falls.desc = Помогите победить Стража порчи.
+objective.kweebec.warden_falls = Помочь победить Стража порчи
+title.kweebec_unbroken.name = Несломленный
+title.kweebec_unbroken.flavor = Сбежал из раунда «Зажги и беги» на уровне Хардкор.
+title.kweebec_unbroken.display = {0} Несломленный
+title.kweebec_wardenbane.name = Погибель Стража
+title.kweebec_wardenbane.flavor = Помог победить Стража порчи.
+title.kweebec_wardenbane.display = {0}, Погибель Стража

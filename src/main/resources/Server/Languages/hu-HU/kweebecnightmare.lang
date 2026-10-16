@@ -1,0 +1,409 @@
+# Keys here are NOT prefixed with "kweebecnightmare." - the engine derives that
+# namespace from this file's name (kweebecnightmare.lang) and prepends it, so the
+# final key is e.g. kweebecnightmare.hud.timer (the form Lang.java references).
+# Prefixing here would double it (kweebecnightmare.kweebecnightmare.hud.timer) and
+# every lookup would fall through to the raw key. See I18nModule.getPrefix.
+mode.chase.name = Gyújtsd újra és menekülj
+mode.survival.name = Utolsó fény hajnalig
+preset.amateur.name = Amatőr
+preset.nightmare.name = Rémálom
+preset.hardcore.name = Hardcore
+preset.endless.name = Végtelen éjszaka
+preset.swarm.name = A Raj
+preset.pitch.name = Koromsötét
+preset.blitz.name = Blitz
+
+mutator.swarm.name = Raj
+mutator.relentless.name = Könyörtelen
+mutator.caverns.name = Barlangok
+mutator.decay.name = Kúszó pusztulás
+mutator.blitz.name = Blitz
+
+instance.chase.title = A Megrontott Liget
+instance.chase.subtitle = Gyűjts holdvirágot, és gyújtsd újra a szentélyeket. Ne hagyd, hogy elkapjon.
+
+npc.blight.name = Megrontott Kweebec
+npc.lunger.name = Ugró Rontás
+npc.spitter.name = Köpködő Rontás
+npc.ambusher.name = Villanó Rontás
+npc.warden.name = A Rontás Őrzője
+encounter.hunters.name = A Megrontott Hajsza
+
+title.hunt_begins = Kezdődik a hajsza
+title.hunt_begins.sub = Gyűjts holdvirágot, és gyújtsd újra a liget szentélyeit
+title.gate_open = Kinyílik a Szívfa Kapu
+title.gate_open.sub = Gyűljetek össze a peronon, és tartsatok ki együtt
+title.you_survived = Megmenekültél
+title.you_survived.sub = A liget elenged
+title.caught = A Liget magáévá tesz
+title.caught.sub = Minden túlélő bebábozódott
+title.night_falls = Az éj győz
+title.night_falls.sub = A hajnal nem jött el
+title.jumpscare = ELKAPOTT
+title.jumpscare.sub = Szakadj ki, és fuss
+
+# Item names + tooltip descriptions for the grove blooms and the shrine. A description renders as
+# rich text on the item tooltip's TextSpans (Hytale's native <i>/<b>/<color is="#hex">/\n markup,
+# parsed client-side per locale, exactly like vanilla items.*.description). Each highlight colour
+# matches the bloom's own glow. No balance numbers in the flavor, so a tuning change never forces a
+# localization edit. The _Plant clusters are the harvest source; the thrown blooms drop from them.
+item.moonbloom.name = Holdvirág
+item.moonbloom.description = Ajánld fel egy megrontott szentélyben a liget megtisztításához, vagy hajítsd el, hogy <color is="#7affa0">elkábítsd</color> a vadászt, ahol szétpukkad.\n\n<i>A liget utolsó tiszta fénye. Még emlékszik a dalra, amelyet az Űr el akart fojtani.</i>
+item.moonbloom_plant.name = Holdvirág-csokor
+item.moonbloom_plant.description = Szüreteld le ezt a ragyogó csokrot, hogy <color is="#7affa0">Holdvirágot</color> gyűjts, azt a fényt, amelyet a szentélyek isznak, és a hajsza retteg.\n\n<i>A rontástól fojtogatva is visszasurran egy kevés a liget régi fényéből.</i>
+item.gustbloom.name = Szélvirág
+item.gustbloom.description = Éles <color is="#5a9cff">széllökéssel</color> pukkan szét, amely hátralöki a vadászt, és helyet ad a futáshoz.\n\n<i>Azóta tartja vissza a lélegzetét, hogy a liget utoljára tisztán lélegzett. Egyszerre ereszti ki.</i>
+item.gustbloom_plant.name = Szélvirág-csokor
+item.gustbloom_plant.description = Szüreteld le ezt a szélfútta csokrot, hogy <color is="#5a9cff">Szélvirágot</color> gyűjts, azt a virágot, amely hátralöki a vadászt.\n\n<i>Ringatózik, amikor nincs szél, és olyan levegőt lélegzik, amelyet a halott liget már nem tud használni.</i>
+item.mirebloom.name = Mocsárvirág
+item.mirebloom.description = Tapadós spórákká pukkan szét, amelyek <color is="#7affa0">lelassítanak</color> mindent, amihez hozzáérnek. Kényszerítsd csigatempóra a hajszát.\n\n<i>A vízbe fúlt gyökerek közt rothadt meg, ahol a rontás a legsűrűbben gyűlik, és a sár mindenbe belekapaszkodik, ami mozog.</i>
+item.mirebloom_plant.name = Mocsárvirág-csokor
+item.mirebloom_plant.description = Szüreteld le ezt az átázott csokrot, hogy <color is="#7affa0">Mocsárvirágot</color> gyűjts, azt a virágot, amely csigatempóra lassítja a hajszát.\n\n<i>Ott él, ahol a gyökerek megfulladtak, és az álló rothadáson hízik.</i>
+item.emberbloom.name = Parázsvirág
+item.emberbloom.description = Perzselő <color is="#ff8a3c">parázzsá</color> pukkan szét, amely égeti a rontást, és megkíméli a társaidat.\n\n<i>Az Őrző saját kérgéből repedt le. A tűz az egyetlen alak, amelyet az Űr sosem tanult meg ölteni.</i>
+item.emberbloom_plant.name = Parázsvirág-csokor
+item.emberbloom_plant.description = Szüreteld le ezt a parázsló csokrot, hogy <color is="#ff8a3c">Parázsvirágot</color> gyűjts, azt a virágot, amely elégeti a rontást.\n\n<i>Csak ott ver gyökeret, ahol az Őrző járt, és mindig meleg tapintású.</i>
+item.shrine.name = Megrontott Szentély
+item.shrine.description = Ajánlj fel itt <color is="#7affa0">Holdvirágot</color> a rontás megtisztításához. Az újra meggyújtott szentély zöld lánggal ég, és a hajsza a fény felé fordul.\n\n<i>Valaha a liget dalát hordozta. Most hidegen vár valakire, aki meleg, hogy felébressze.</i>
+item.warden_spawner.name = Őrzői Ülőrúd
+item.blight_spawner.name = Rontásfészek
+
+# Status effect names, shown when a player hovers the effect's icon. The effect JSON names the full
+# key (kweebecnightmare.effect...), because the client reads an effect's Name exactly as written.
+# The four tiers of the hunter's slow share one name.
+effect.hunter_slow.name = A Vadász Szorítása
+effect.mire_slow.name = Elsüppedve
+
+interaction.shrine.hint = Nyomd meg a [{key}] gombot a Holdvirág felajánlásához
+
+toast.cleanse_done = A szentély issza a Holdvirág fényét
+toast.cleanse_need = Gyűjts még {0} Holdvirágot a szentély megtisztításához
+toast.shrine_submit = A szentély issza a Holdvirágodat ({0}/{1})
+toast.shrine_dormant = A szentély a hajsza kezdetéig alszik
+toast.moonbloom_respawn = A liget megmozdul. Friss Holdvirág nőtt.
+
+toast.cocooned = Gyökerek rántanak le. Várj egy csapattársra.
+toast.rescued = Szabad vagy. Fuss.
+toast.teammate_down = Egy csapattárs bebábozódott
+toast.hunter_locked = Megérezte a szagodat
+toast.hunters_drawn = A fény még többet csal ide belőlük
+toast.extraction_hold = A peron zúg. Tartsatok ki együtt, amíg a liget el nem enged.
+
+hud.timer = Idő {0}
+hud.shrines = Szentélyek {0}/{1}
+hud.alive = Élve {0}
+hud.corruption = Romlás {0}%
+hud.objective.ritual = Gyújtsd újra a liget szentélyeit
+hud.objective.escape = Gyűljetek össze a Szívfa peronon
+# Co-op extraction line (ESCAPE phase). {0}=survivors on the platform, {1}=required, {2}=hold seconds left.
+hud.extraction.hold = Kimenekítés {0}/{1}  {2}s
+hud.extraction.wait = Kimenekítés {0}/{1}  gyűljetek a peronra
+
+marker.exit = Kijárat
+marker.shrine = Szentély
+
+# The Warden fight's notices, named by the KweebecNightmare_Warden_* FeedbackMoment assets (the bar
+# itself shows npc.warden.name).
+boss.title.awakens = Az Őrző felébred
+boss.title.awakens.sub = Azért kelt fel, hogy elzárja a kaput
+boss.toast.phase = Az Őrző levedli a kérgét, és megrohan
+boss.toast.defeated = Az Őrző elesik. A kapu a tiéd.
+boss.toast.wiped = Az Őrző megtartja a kaput.
+
+cmd.players_only = Ezt csak játékos futtathatja.
+cmd.already_in_round = Már egy körben vagy.
+cmd.starting = Leszállás a Megrontott Ligetbe...
+cmd.start_failed = Nem sikerült elindítani a kört. Próbáld újra.
+cmd.leaving = Kilépés a ligetből...
+cmd.unknown_preset = Ismeretlen előbeállítás. Próbáld az amateur, nightmare vagy hardcore értéket.
+cmd.no_active_rounds = Nincs aktív kör.
+cmd.ended = Minden aktív kör véget ért.
+cmd.usage = Használat: /kweebec [start|exit|score|leaderboard|party] [preset]
+cmd.give_done = Kaptál {0} Holdvirágot.
+cmd.score_header = A legjobb Kweebec Nightmare eredményeid:
+cmd.score_none = Még nincs rögzített eredmény. Élj túl előbb egy kört.
+cmd.kweebec.desc = Indíts, hagyj el vagy nézz meg egy Kweebec Nightmare kört
+cmd.arg.sub = start | exit | score | leaderboard | party
+cmd.arg.preset = amateur | nightmare | hardcore
+cmd.arg.clash_preset = clash_1v1 | clash_2v2
+cmd.arg.domination_preset = domination_koth
+cmd.arg.count = Hány Holdvirágot adjon
+cmd.kweebec.start.desc = Sorba állás a megnevezett előbeállítású körre, vagy Rémálomra, ha nem nevezel meg egyet
+cmd.kweebec.exit.desc = Kilépés a sorból vagy a körből
+cmd.kweebec.score.desc = A legjobb eredményeid mutatása
+cmd.kweebec.leaderboard.desc = A ranglista megnyitása
+cmd.kweebec.party.desc = A csapatod és a meghívók megnyitása
+cmd.kweebec.clash.desc = Admin: csapatos tesztmeccs indítása a világod minden játékosával
+cmd.kweebec.domination.desc = Admin: pontbirtoklási tesztmeccs indítása a világod minden játékosával
+cmd.kweebec.endall.desc = Admin: a szerver minden körének befejezése
+cmd.kweebec.give.desc = Admin: Holdvirág adása magadnak
+cmd.kweebec.clashhost.desc = Admin: a Párbajmester elhelyezése a világodban
+
+# Dialogue page chrome (resolved by the shared ziggfreed-common dialogue engine).
+dialogue.kweebec.farewell = Lépj hátrébb
+dialogue.kweebec.missing = A hang elhalkul. Több nem jön.
+
+# Matchmaking queue feedback. Toasts (Notify) are coloured by their NotificationStyle
+# (success/warning/danger); the countdown banner (EventTitles) renders PLAIN text only -
+# it is NOT a TextSpans Label, so it cannot do <color>/<b>/<i> markup (the dialogue node
+# text below CAN, because the page sets it on TextSpans). {0} = size, {1} = max party.
+queue.joined = Belépsz a gyülekezőbe. {1} főből {0} válaszolt a hívásra.
+queue.left = Visszacsúszol a sötétbe. Elhagytad a gyülekezőt.
+queue.countdown = A liget behúz... {0}
+queue.countdown.sub = Maradj közel. Maradj csendben.
+queue.launching = A Megrontott Liget elnyel...
+queue.cancelled = A gyülekező szétszóródik. Nem maradt elég ember.
+queue.failed = A liget elutasít. Próbáld újra.
+
+# Queue + Clash Host command feedback.
+cmd.queued = Belépsz a gyülekezőbe. Várd meg, amíg a liget behúz.
+cmd.already_queued = Már a gyülekezőben vársz.
+cmd.not_queued_or_in_round = Nem állsz sorban, és nem vagy körben.
+cmd.left_queue = Elhagyod a gyülekezőt.
+cmd.clash_host_spawned = A Párbajmester válaszol a hívásodra.
+cmd.clash_host_failed = A Párbajmester nem tud itt megállni.
+
+# The Grove Keeper guide NPC (role KweebecNightmare_Guide). The interaction hint uses
+# the native [{key}] placeholder - the client substitutes the bound interact key (e.g. F).
+npc.guide.name = A Liget Őre
+npc.guide.hint = Nyomd meg a [{key}] gombot, hogy beszélj a Liget Őrével
+
+# Guide dialogue: the Grove Keeper (id "nightmares_intro"). NODE TEXT renders on the
+# Label's TextSpans, so Hytale's native inline markup - <color is="#hex">/<b>/<i> - is
+# parsed CLIENT-side, per-locale (same mechanism as vanilla items.*.description). A
+# translator keeps the markup in their own line. Option labels are TextButtons (no
+# TextSpans), so they take no markup - colour-coded by their DialogueOptionStyle.
+dialogue.nightmares_intro.greet.text = Á, jó, még lélegzel. Nem sokan teszik, ilyen mélyen. Megszámlálhatatlanszor éltem át ugyanezt a rémálmot - a liget elfeketedik, a saját fajtám az én arcomat felvéve üldöz benne, és sosem jutok ki. De eleget láttam ahhoz, hogy tudjam, hol kaplak el. Maradj egy percet, elmondom, melyek azok a részek, amelyek megölik az embert.
+dialogue.nightmares_intro.greet.opt.0 = Hogyan zajlik ez a rémálom?
+dialogue.nightmares_intro.greet.opt.1 = Elég a beszédből, küldj be.
+dialogue.nightmares_intro.greet.opt.2 = A hajszáról, amelyben már benne vagyok...
+dialogue.nightmares_intro.greet.opt.3 = Ki bírta a legtovább?
+dialogue.nightmares_intro.lore.text = Mindig ugyanúgy megy. A liget halott és sötét, és az egyetlen, ami felébreszti, a szentélyek - <color is="#7affa0">Holdvirágot</color> öntesz beléjük, amíg zölden nem égnek. A baj az, hogy ez hangos, és ami odakint van, mindent meghall. Esküszöm, tudja, abban a pillanatban, hogy elkezdem. Gyújtsd meg mindet, és a <b>Szívfa Kapu</b> végre kinyílik, de az is hangos, és aki a legközelebb áll, az szokott elsőnek eltűnni.
+dialogue.nightmares_intro.lore.opt.0 = Eleget hallottam. Küldj be.
+dialogue.nightmares_intro.lore.opt.1 = Akkor hogyan élem túl valójában?
+dialogue.nightmares_intro.tips.text = Szóval ki akarsz jutni. Sok szerencsét hozzá. Tarts magadnál virágokat - a <color is="#7affa0">Holdvirág</color> az arcába kábítja őket, a <color is="#5a9cff">Szélvirág</color> elrepíti őket, a <color is="#7affa0">Mocsárvirág</color> lelassítja őket, a <color is="#ff8a3c">Parázsvirág</color> pedig megégeti őket. A Parázsvirágnak mindegy, kit talál el, ezért vigyázz a barátaidra. Ha a gyökerek megragadnak, ne feküdj ott csak úgy - valaki kihúzhat, ezért maradj a közelükben. A kiút ugyanez: csak akkor nyílik meg, ha mind a peronon álltok, <b>együtt</b>. És ne vacakolj. Minél tovább húzódik ez, annál gyorsabb és gonoszabb lesz az a dög.
+dialogue.nightmares_intro.tips.opt.0 = Rendben, kész vagyok.
+dialogue.nightmares_intro.tips.opt.1 = Vissza.
+dialogue.nightmares_intro.preset_pick.text = Szóval mennyire akarod keményen? Ha szelíden veszed, a dög csak csoszog utánad - jó arra, hogy megtanuld, hogyan megy ez az egész. Ha ráerősítesz, levadász, és a sötét felfalja a fényedet, mielőtt újat csinálhatnál. Rajtad áll. Én valahol félrehúzódom.
+dialogue.nightmares_intro.preset_pick.opt.0 = Amatőr - hadd ismerjem meg a ligetet.
+dialogue.nightmares_intro.preset_pick.opt.1 = Rémálom - az igazi hajsza.
+dialogue.nightmares_intro.preset_pick.opt.2 = Hardcore - egy élet, nincs második esély.
+dialogue.nightmares_intro.preset_pick.opt.3 = Még nem. Lépj hátrébb.
+dialogue.nightmares_intro.already_engaged.text = Egyszerre egyet, melegvérű. Már hajszában vagy - előbb lépj ki abból a gyülekezőből, és szívesen beteszlek a következőbe.
+dialogue.nightmares_intro.already_engaged.opt.0 = Értem.
+
+# Leaderboard page (the Grove Keeper's "Who has survived the most?" option, greet.opt.3).
+# Plain labels shown on Label .Text (no inline markup); column colours come from the .ui styles.
+leaderboard.title = A Liget Túlélői
+leaderboard.tab.solo = Egyedül
+leaderboard.tab.duo = Duó
+leaderboard.tab.trio = Trió
+leaderboard.tab.squad = Osztag
+leaderboard.col.rank = Hely
+leaderboard.col.player = Túlélő
+leaderboard.col.score = Legjobb pontszám
+leaderboard.col.total = Összesen
+leaderboard.col.time = Legjobb idő
+leaderboard.col.plays = Futamok
+leaderboard.empty = Ebben a kategóriában még nincs rögzített túlélő. Légy te az első.
+leaderboard.your_rank = A legjobbad: #{0}  ({1})
+leaderboard.your_rank_none = Ebben a kategóriában még nincs rangsorolt futamod.
+# Leading filter-row labels.
+leaderboard.axis.difficulty = Nehézség
+leaderboard.axis.players = Játékosok
+leaderboard.axis.sort = Rendezés
+leaderboard.axis.view = Nézet
+# The synthesized "All" tab (lifetime roll-up across an axis: All+All = full lifetime totals).
+leaderboard.filter.all = Mind
+# Sort toggle + Rankings/Stats view toggle buttons.
+leaderboard.sort.score = Legjobb pontszám
+leaderboard.sort.total = Összpontszám
+leaderboard.sort.time = Leggyorsabb
+leaderboard.view.rankings = Ranglista
+leaderboard.view.stats = Statisztika
+# Lifetime stat columns (Stats view). Click a column header to sort by it.
+leaderboard.stat.stunned = Elkábítva
+leaderboard.stat.moonbloom = Holdvirág
+leaderboard.stat.shrines = Meggyújtott szentélyek
+leaderboard.stat.wins = Győzelmek
+
+# End-of-game results screen (the shared instance-experience ResultsPage).
+results.win = Túléltél
+results.loss = A Liget elvitt
+results.draw = Üres éjszaka
+results.abort = A szertartás megtört
+results.duration = Teljes idő: {0}
+results.breakdown = A futamod
+results.rewards = A Liget zsákmánya
+results.no_rewards = Ma éjjel nincs zsákmány.
+results.pending = Néhány zsákmányhoz hely kell a készletben - a többit a Játék menüből vedd át.
+results.btn.leaderboard = Ranglista megtekintése
+results.btn.again = Újra
+results.btn.close = Kilépés
+results.team_total = Liget összesen: {0}
+results.col.base = Alappont
+results.col.time = Gyorsasági bónusz
+results.col.damage = Elkerült sebzés
+results.col.stun = Kábítási bónusz
+results.col.shrine = Szentély-bónusz
+results.col.duration = Túlélt idő
+# Run-stats section - raw per-run activity, shown below the point breakdown.
+results.stats = Futam statisztika
+results.stat.damage_taken = Elszenvedett sebzés
+results.stat.stunned = Elkábított vadászok
+results.stat.moonbloom = Gyűjtött Holdvirág
+# In-instance preview note where the spoils chips would be (you claim them once back in the overworld).
+results.spoils_pending = Vedd át a zsákmányodat, ha kijutottál a Ligetből.
+# Manual claim: the results-screen Claim button + the post-claim confirmation note.
+results.btn.claim = Zsákmány átvétele
+results.claimed = Zsákmány átvéve.
+
+# Play screen - live roster / ready chrome (the shared PlayModePage, queued state). The
+# countdown line ticks down live on screen. The player stays here after queueing.
+queue.screen.count = {0}/{1} túlélő
+queue.screen.waiting = Várakozás, hogy többen válaszoljanak a hívásra...
+queue.screen.countdown = A liget behúz... {0}
+queue.screen.launching = A Megrontott Liget elnyel...
+queue.screen.wait = legfeljebb ~{0} mp
+queue.screen.leave = Kilépés a gyülekezőből
+queue.screen.not_queued = Nem vagy gyülekezőben.
+queue.screen.toast_queued = Csatlakozol a gyülekezőhöz ({0}/{1}).
+
+# Play screen - "Claim Spoils" button (chooser) for spoils missed earlier (closed the results
+# screen, or a full inventory) + the toast shown after claiming.
+play.btn.claim = Zsákmány átvétele
+play.toast.claimed = Zsákmány átvéve.
+
+# Play screen - the mode chooser (the shared PlayModePage, not-queued state): how to enter.
+play.title = Lépj be a Rémálomba
+play.difficulty = Nehézség: {0}
+play.mode.public = Nyilvános
+play.mode.public.desc = Szállj szembe a ligettel azzal, aki válaszol a hívásra.
+play.mode.party = Csapat
+play.mode.party.desc = Előbb gyűjtsd össze a saját túlélőidet.
+play.mode.solo = Egyedül
+play.mode.solo.desc = Lépj a sötétbe egyedül, most rögtön.
+
+# Party + invite screen (the shared PartyInvitePage).
+party.title = A Csapatod
+party.tab.party = Csapat
+party.tab.invite = Meghívás
+party.empty.invite = Nincs más online, akit meghívhatnál.
+party.empty.party = Nincs csapatod. Hívj meg túlélőket, hogy együtt szálljatok szembe a ligettel.
+party.btn.invite = Meghívás
+party.btn.kick = Eltávolítás
+party.btn.leave = Csapat elhagyása
+party.btn.disband = Feloszlatás
+party.btn.queue = Csapat sorba állítása
+party.btn.accept = Elfogadás
+party.btn.decline = Elutasítás
+party.owner_badge = Vezető
+party.count = {0}/{1}
+party.privacy.public = Nyitott csapat
+party.privacy.private = Zárt csapat
+party.toast.invite_failed = Az a túlélő nem csatlakozhat a csapatodhoz.
+
+# Party feedback toasts + the invite banner.
+party.msg.invited = {0} meghív a csapatába ({1}/{2}).
+party.msg.banner = {0} meghív
+party.msg.banner.sub = Nyisd meg a csapatodat az elfogadáshoz.
+party.msg.sent = Meghívó elküldve neki: {0}.
+party.msg.declined = {0} elutasította a meghívásodat.
+party.msg.expired = A meghívó elhalványult a sötétben.
+party.msg.joined = {0} csatlakozott a csapathoz ({1}/{2}).
+party.msg.left = {0} elhagyta a csapatot.
+party.msg.kicked = Eltávolítottak a csapatból.
+party.msg.kicked_member = {0} el lett távolítva a csapatból.
+party.msg.disbanded = A csapat szétszóródik.
+party.msg.owner = {0} vezeti mostantól a csapatot.
+
+# Command feedback.
+cmd.party_opened = A csapatod megnyitása...
+
+# --- Clash / Domination (PvP). {0} is a team name (Red / Blue) where present. ---
+clash.team.red = Piros
+clash.team.blue = Kék
+clash.title.start = Kezdődik az összecsapás
+clash.title.start.sub = Az nyer, aki utolsónak áll.
+clash.title.victory = Győzelem
+clash.title.victory.sub = A csapatod megnyerte a ligetet.
+clash.title.defeat = Vereség
+clash.title.defeat.sub = A másik csapat megtartotta a terepet.
+clash.title.draw = Döntetlen
+clash.title.draw.sub = Egyik csapat sem tudta megtörni a másikat.
+clash.title.sudden_death = Hirtelen halál
+clash.title.sudden_death.sub = Az első vér eldönti.
+clash.toast.eliminated = Kiestél. Nézőként maradsz a kör végéig.
+clash.toast.respawn = Visszatérés a harcba...
+clash.toast.ko = Legyőzted: {0}!
+clash.toast.teammate_down = Egy csapattárs elesett.
+clash.toast.pickup = Felkaptál egy ilyet: {0}.
+clash.toast.point_captured = A csapatod elfoglalt egy pontot!
+clash.toast.point_lost = Egy pont elveszett.
+clash.hud.timer = Idő {0}
+clash.hud.score = {0} - {1}
+clash.hud.team = Csapat
+clash.hud.tally.hits = Találat {0}
+clash.hud.tally.kills = Kiütés {0}
+clash.hud.alive = Élve {0}/{1}
+clash.hud.capture = Elfoglalás {0}
+domination.marker.point = Elfoglalási pont
+
+# Clash instance discovery banner.
+instance.clash.title = Ligeti Összecsapás
+instance.clash.subtitle = Két csapat lép be. Egy távozik.
+
+# Domination instance discovery banner.
+instance.domination.title = Ligeti Uralom
+instance.domination.subtitle = Tartsd a terepet. Éld túl őket.
+
+# Coloured team-score HUD line (TextSpans); ordering flips so the viewer's team is first.
+clash.hud.score.red = <color is="#ff5a5a">{0}</color> - <color is="#5a9cff">{1}</color>
+clash.hud.score.blue = <color is="#5a9cff">{0}</color> - <color is="#ff5a5a">{1}</color>
+# PvP results + leaderboard + preset display names.
+results.clash.breakdown = Harc
+results.clash.kos = Leütések száma
+results.clash.preview = A meccs véget ért. Az eredményeid a váróban várnak.
+leaderboard.clash.title = Aréna ranglista
+leaderboard.clash.axis.mode = Mód
+leaderboard.clash.stat.hits = Találat
+leaderboard.clash.stat.kills = Kiütés
+leaderboard.clash.stat.kos = Leütés
+preset.clash_1v1.name = Összecsapás 1v1
+preset.clash_2v2.name = Összecsapás 2v2
+preset.domination_koth.name = Uralom
+
+# Clash Host NPC + the clash_intro dialogue (the PvP entry).
+npc.clashhost.name = A Párbajmester
+npc.clashhost.hint = Nyomd meg a [{key}] gombot az arénába lépéshez
+dialogue.clash_intro.greet.text = Szóval. Inkább egy másik melegvérűvel méred össze a gyökereidet, mint hogy elfuss a sötét elől. Ezt tisztelem. A liget remek aréna, ha az egyetlen rémálom benne egymás vagytok. Légy éber - nálad különb harcosokat temettem el, és meg sem próbáltam.
+dialogue.clash_intro.greet.opt.0 = Hogyan működik az aréna?
+dialogue.clash_intro.greet.opt.1 = Készen állok a harcra.
+dialogue.clash_intro.greet.opt.2 = A meccsről, amelyben már benne vagyok...
+dialogue.clash_intro.lore.text = Két csapat, egy liget, és gombák törnek elő a földből: <color is="#5a9cff">hátralökés</color>, hogy egy bolondot lerepítsen a szélről, <color is="#7affa0">kábítás</color>, hogy tátott szájjal álljon, amíg te csapsz. Kapd fel őket, mielőtt a másik oldal teszi - aki gyűjtöget, az szokott kisétálni. Az nyer, aki utolsónak áll; ha lejár az idő, az győz, aki a legtöbb ütést vitte be, ezért ne csak táncolj, üss meg valamit. Az Uralomban felejts el mindent, és tartsd a terepet tovább, mint ők.
+dialogue.clash_intro.lore.opt.0 = Elég. Hadd harcoljak.
+dialogue.clash_intro.lore.opt.1 = Meggondoltam magam, vissza.
+dialogue.clash_intro.mode_pick.text = Nevezd meg a viadalod, melegvérű. Kinyitom a kaput arra a földre, amelyen szívesen vérzel el.
+dialogue.clash_intro.mode_pick.opt.0 = Összecsapás 1v1 - csak mi ketten.
+dialogue.clash_intro.mode_pick.opt.1 = Összecsapás 2v2 - hozz egy barátot, akivel veszíthetsz.
+dialogue.clash_intro.mode_pick.opt.2 = Uralom - tartsd a terepet.
+dialogue.clash_intro.mode_pick.opt.3 = Még nem. Lépj hátrébb.
+dialogue.clash_intro.already_engaged.text = Egyszerre egy harc, melegvérű. Fejezd be a viadalt, amelyben vagy, aztán gyere, és vérezz értem újra.
+dialogue.clash_intro.already_engaged.opt.0 = Értem.
+
+# Achievements and titles (ziggfreed-common's achievement book and title picker): the book's
+# category, the two achievements and their steps, and the titles they pay on unlock. A title's
+# .display places it around a player's name, {0} being the name.
+achievement.category.kweebec_nightmare = Kweebec Nightmare
+achievement.kweebec_hardcore_escape.title = Nincs fény, amit követhetnél
+achievement.kweebec_hardcore_escape.desc = Menekülj meg egy Gyújtsd újra és menekülj körből Hardcore nehézségen.
+objective.kweebec.hardcore_escape = Menekülj meg egy körből Hardcore nehézségen
+achievement.kweebec_warden_falls.title = Az Őrző elesik
+achievement.kweebec_warden_falls.desc = Segíts legyőzni a Rontás Őrzőjét.
+objective.kweebec.warden_falls = Segíts legyőzni a Rontás Őrzőjét
+title.kweebec_unbroken.name = A Megtörhetetlen
+title.kweebec_unbroken.flavor = Megmenekült egy Gyújtsd újra és menekülj körből Hardcore nehézségen.
+title.kweebec_unbroken.display = {0}, a Megtörhetetlen
+title.kweebec_wardenbane.name = Őrzőölő
+title.kweebec_wardenbane.flavor = Segített legyőzni a Rontás Őrzőjét.
+title.kweebec_wardenbane.display = {0}, Őrzőölő

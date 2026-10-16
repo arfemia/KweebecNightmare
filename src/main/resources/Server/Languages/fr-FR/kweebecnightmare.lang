@@ -1,0 +1,409 @@
+# Keys here are NOT prefixed with "kweebecnightmare." - the engine derives that
+# namespace from this file's name (kweebecnightmare.lang) and prepends it, so the
+# final key is e.g. kweebecnightmare.hud.timer (the form Lang.java references).
+# Prefixing here would double it (kweebecnightmare.kweebecnightmare.hud.timer) and
+# every lookup would fall through to the raw key. See I18nModule.getPrefix.
+mode.chase.name = Rallumer et fuir
+mode.survival.name = Dernière lueur avant l'aube
+preset.amateur.name = Amateur
+preset.nightmare.name = Cauchemar
+preset.hardcore.name = Hardcore
+preset.endless.name = Nuit sans fin
+preset.swarm.name = L'Essaim
+preset.pitch.name = Noir complet
+preset.blitz.name = Blitz
+
+mutator.swarm.name = Essaim
+mutator.relentless.name = Implacable
+mutator.caverns.name = Cavernes
+mutator.decay.name = Pourriture rampante
+mutator.blitz.name = Blitz
+
+instance.chase.title = Le Bosquet flétri
+instance.chase.subtitle = Récoltez de la lunefleur et rallumez les autels. Ne le laissez pas vous attraper.
+
+npc.blight.name = Kweebec flétri
+npc.lunger.name = Flétrissure bondissante
+npc.spitter.name = Flétrissure cracheuse
+npc.ambusher.name = Flétrissure clignotante
+npc.warden.name = Le Gardien de la Flétrissure
+encounter.hunters.name = La Chasse flétrie
+
+title.hunt_begins = La chasse commence
+title.hunt_begins.sub = Récoltez de la lunefleur et rallumez les autels du bosquet
+title.gate_open = La Porte du Cœur-de-bois s'ouvre
+title.gate_open.sub = Rejoignez la plateforme et tenez-y ensemble
+title.you_survived = Vous avez fui
+title.you_survived.sub = Le bosquet vous laisse partir
+title.caught = Le Bosquet vous réclame
+title.caught.sub = Tous les survivants sont pris dans des cocons
+title.night_falls = La Nuit l'emporte
+title.night_falls.sub = L'aube n'est jamais venue
+title.jumpscare = IL VOUS TIENT
+title.jumpscare.sub = Arrachez-vous à lui et courez
+
+# Item names + tooltip descriptions for the grove blooms and the shrine. A description renders as
+# rich text on the item tooltip's TextSpans (Hytale's native <i>/<b>/<color is="#hex">/\n markup,
+# parsed client-side per locale, exactly like vanilla items.*.description). Each highlight colour
+# matches the bloom's own glow. No balance numbers in the flavor, so a tuning change never forces a
+# localization edit. The _Plant clusters are the harvest source; the thrown blooms drop from them.
+item.moonbloom.name = Lunefleur
+item.moonbloom.description = Offrez-la à un autel flétri pour purifier le bosquet, ou lancez-la pour <color is="#7affa0">étourdir</color> un chasseur là où elle éclate.\n\n<i>La dernière lumière pure du bosquet. Elle se souvient encore du chant que le Néant a voulu noyer.</i>
+item.moonbloom_plant.name = Touffe de lunefleur
+item.moonbloom_plant.description = Récoltez cette touffe luisante pour obtenir de la <color is="#7affa0">lunefleur</color>, la lumière que les autels boivent et que la chasse craint.\n\n<i>Même étouffé par la flétrissure, un peu de l'ancienne lumière du bosquet revient en rampant.</i>
+item.gustbloom.name = Bourrasquefleur
+item.gustbloom.description = Éclate en une <color is="#5a9cff">bourrasque</color> sèche qui repousse un chasseur et vous laisse de la place pour courir.\n\n<i>Elle retient son souffle depuis que le bosquet a respiré pur pour la dernière fois. Elle lâche tout d'un coup.</i>
+item.gustbloom_plant.name = Touffe de bourrasquefleur
+item.gustbloom_plant.description = Récoltez cette touffe battue par le vent pour obtenir de la <color is="#5a9cff">bourrasquefleur</color>, la fleur qui rejette un chasseur en arrière.\n\n<i>Elle ondule sans vent, respirant un air que le bosquet mort ne peut plus utiliser.</i>
+item.mirebloom.name = Bourbefleur
+item.mirebloom.description = Éclate en spores collantes qui <color is="#7affa0">ralentissent</color> tout ce qu'elles touchent. Réduisez la chasse à une lente reptation.\n\n<i>Elle a macéré dans les racines noyées où la flétrissure s'amasse le plus, et la fange colle à tout ce qui bouge.</i>
+item.mirebloom_plant.name = Touffe de bourbefleur
+item.mirebloom_plant.description = Récoltez cette touffe détrempée pour obtenir de la <color is="#7affa0">bourbefleur</color>, la fleur qui réduit la chasse à une lente reptation.\n\n<i>Elle prospère là où les racines se sont noyées, et s'engraisse de la pourriture stagnante.</i>
+item.emberbloom.name = Braisefleur
+item.emberbloom.description = Éclate en <color is="#ff8a3c">braises</color> brûlantes qui consument la flétrissure et épargnent les autres survivants.\n\n<i>Fendue dans l'écorce même du Gardien. Le feu est la seule forme que le Néant n'a jamais appris à revêtir.</i>
+item.emberbloom_plant.name = Touffe de braisefleur
+item.emberbloom_plant.description = Récoltez cette touffe qui couve pour obtenir de la <color is="#ff8a3c">braisefleur</color>, la fleur qui consume la flétrissure.\n\n<i>Elle ne prend racine que là où le Gardien a marché, et elle est toujours tiède au toucher.</i>
+item.shrine.name = Autel flétri
+item.shrine.description = Offrez ici de la <color is="#7affa0">lunefleur</color> pour purifier la flétrissure. Un autel rallumé brûle d'un feu vert, et la chasse se tourne vers la lumière.\n\n<i>Il portait jadis le chant du bosquet. Maintenant il attend, froid, que quelqu'un de chaud le réveille.</i>
+item.warden_spawner.name = Perchoir du Gardien
+item.blight_spawner.name = Nid de flétrissure
+
+# Status effect names, shown when a player hovers the effect's icon. The effect JSON names the full
+# key (kweebecnightmare.effect...), because the client reads an effect's Name exactly as written.
+# The four tiers of the hunter's slow share one name.
+effect.hunter_slow.name = Emprise du chasseur
+effect.mire_slow.name = Embourbé
+
+interaction.shrine.hint = Appuyez sur [{key}] pour offrir de la lunefleur
+
+toast.cleanse_done = L'autel boit la lumière de la lunefleur
+toast.cleanse_need = Rassemblez {0} lunefleur de plus pour purifier cet autel
+toast.shrine_submit = L'autel boit votre lunefleur ({0}/{1})
+toast.shrine_dormant = L'autel dort jusqu'au début de la chasse
+toast.moonbloom_respawn = Le bosquet s'agite. De la lunefleur fraîche a poussé.
+
+toast.cocooned = Des racines vous entraînent sous terre. Attendez un équipier.
+toast.rescued = Vous êtes libre. Courez.
+toast.teammate_down = Un équipier a été pris dans un cocon
+toast.hunter_locked = Il a votre odeur
+toast.hunters_drawn = La lumière en attire d'autres
+toast.extraction_hold = La plateforme vibre. Tenez-y ensemble jusqu'à ce que le bosquet vous libère.
+
+hud.timer = Temps {0}
+hud.shrines = Autels {0}/{1}
+hud.alive = En vie {0}
+hud.corruption = Corruption {0}%
+hud.objective.ritual = Rallumez les autels du bosquet
+hud.objective.escape = Rejoignez la plateforme du Cœur-de-bois
+# Co-op extraction line (ESCAPE phase). {0}=survivors on the platform, {1}=required, {2}=hold seconds left.
+hud.extraction.hold = Extraction {0}/{1}  {2}s
+hud.extraction.wait = Extraction {0}/{1}  rejoignez la plateforme
+
+marker.exit = Sortie
+marker.shrine = Autel
+
+# The Warden fight's notices, named by the KweebecNightmare_Warden_* FeedbackMoment assets (the bar
+# itself shows npc.warden.name).
+boss.title.awakens = Le Gardien s'éveille
+boss.title.awakens.sub = Il s'est levé pour barrer la porte
+boss.toast.phase = Le Gardien perd son écorce et se déchaîne
+boss.toast.defeated = Le Gardien tombe. La porte est à vous.
+boss.toast.wiped = Le Gardien garde la porte.
+
+cmd.players_only = Seuls les joueurs peuvent l'exécuter.
+cmd.already_in_round = Vous êtes déjà dans une manche.
+cmd.starting = Descente dans le Bosquet flétri...
+cmd.start_failed = Impossible de lancer la manche. Réessayez.
+cmd.leaving = Départ du bosquet...
+cmd.unknown_preset = Préréglage inconnu. Essayez amateur, nightmare ou hardcore.
+cmd.no_active_rounds = Aucune manche active.
+cmd.ended = Toutes les manches actives sont terminées.
+cmd.usage = Usage : /kweebec [start|exit|score|leaderboard|party] [préréglage]
+cmd.give_done = Vous avez reçu {0} lunefleur.
+cmd.score_header = Vos meilleurs scores à Kweebec Nightmare :
+cmd.score_none = Aucun score enregistré. Survivez d'abord à une manche.
+cmd.kweebec.desc = Lancer, quitter ou consulter une manche de Kweebec Nightmare
+cmd.arg.sub = start | exit | score | leaderboard | party
+cmd.arg.preset = amateur | nightmare | hardcore
+cmd.arg.clash_preset = clash_1v1 | clash_2v2
+cmd.arg.domination_preset = domination_koth
+cmd.arg.count = Combien de lunefleur donner
+cmd.kweebec.start.desc = Se mettre en file pour une manche avec le préréglage nommé, ou Cauchemar si aucun
+cmd.kweebec.exit.desc = Quitter la file ou votre manche
+cmd.kweebec.score.desc = Afficher vos meilleurs scores
+cmd.kweebec.leaderboard.desc = Ouvrir le classement
+cmd.kweebec.party.desc = Ouvrir votre groupe et les invitations
+cmd.kweebec.clash.desc = Admin : lancer un match test par équipes avec tout le monde dans votre monde
+cmd.kweebec.domination.desc = Admin : lancer un match test de tenue de point avec tout le monde dans votre monde
+cmd.kweebec.endall.desc = Admin : terminer toutes les manches du serveur
+cmd.kweebec.give.desc = Admin : vous donner de la lunefleur
+cmd.kweebec.clashhost.desc = Admin : placer le Maître des duels dans votre monde
+
+# Dialogue page chrome (resolved by the shared ziggfreed-common dialogue engine).
+dialogue.kweebec.farewell = S'éloigner
+dialogue.kweebec.missing = La voix s'éteint. Rien d'autre ne vient.
+
+# Matchmaking queue feedback. Toasts (Notify) are coloured by their NotificationStyle
+# (success/warning/danger); the countdown banner (EventTitles) renders PLAIN text only -
+# it is NOT a TextSpans Label, so it cannot do <color>/<b>/<i> markup (the dialogue node
+# text below CAN, because the page sets it on TextSpans). {0} = size, {1} = max party.
+queue.joined = Vous entrez dans le rassemblement. {0} sur {1} ont répondu à l'appel.
+queue.left = Vous retournez dans le noir. Vous avez quitté le rassemblement.
+queue.countdown = Le bosquet vous attire... {0}
+queue.countdown.sub = Restez près. Restez silencieux.
+queue.launching = Le Bosquet flétri vous emporte...
+queue.cancelled = Le rassemblement se disperse. Ils ne sont pas assez nombreux.
+queue.failed = Le bosquet vous rejette. Réessayez.
+
+# Queue + Clash Host command feedback.
+cmd.queued = Vous entrez dans le rassemblement. Attendez que le bosquet vous attire.
+cmd.already_queued = Vous attendez déjà dans le rassemblement.
+cmd.not_queued_or_in_round = Vous n'êtes ni en file ni dans une manche.
+cmd.left_queue = Vous quittez le rassemblement.
+cmd.clash_host_spawned = Le Maître des duels répond à votre appel.
+cmd.clash_host_failed = Le Maître des duels ne peut pas se tenir ici.
+
+# The Grove Keeper guide NPC (role KweebecNightmare_Guide). The interaction hint uses
+# the native [{key}] placeholder - the client substitutes the bound interact key (e.g. F).
+npc.guide.name = Le Gardien du bosquet
+npc.guide.hint = Appuyez sur [{key}] pour parler au Gardien du bosquet
+
+# Guide dialogue: the Grove Keeper (id "nightmares_intro"). NODE TEXT renders on the
+# Label's TextSpans, so Hytale's native inline markup - <color is="#hex">/<b>/<i> - is
+# parsed CLIENT-side, per-locale (same mechanism as vanilla items.*.description). A
+# translator keeps the markup in their own line. Option labels are TextButtons (no
+# TextSpans), so they take no markup - colour-coded by their DialogueOptionStyle.
+dialogue.nightmares_intro.greet.text = Ah, bien, tu respires encore. Peu de gens y arrivent, aussi loin. J'ai vécu ce même cauchemar plus de fois que je sais les compter : le bosquet noircit, les miens se mettent à porter mon visage et à me pourchasser, et je n'en sors jamais. Mais je l'ai assez vu pour savoir où il te mène. Reste un instant, je te dirai ce qui tue les gens.
+dialogue.nightmares_intro.greet.opt.0 = Comment se passe ce cauchemar ?
+dialogue.nightmares_intro.greet.opt.1 = Assez parlé, envoie-moi.
+dialogue.nightmares_intro.greet.opt.2 = À propos de la chasse où je suis déjà...
+dialogue.nightmares_intro.greet.opt.3 = Qui a tenu le plus longtemps ?
+dialogue.nightmares_intro.lore.text = Ça se passe pareil à chaque fois. Le bosquet est mort et sombre, et seuls les autels le réveillent : tu y verses de la <color is="#7affa0">lunefleur</color> jusqu'à ce qu'ils brûlent en vert. Le problème, c'est que ça fait du bruit, et ce qui rôde entend tout. Je jure qu'il sait à la seconde où je commence. Allume-les tous et la <b>Porte du Cœur-de-bois</b> s'ouvre enfin, mais ça aussi, ça fait du bruit, et celui qui se tient le plus près disparaît souvent le premier.
+dialogue.nightmares_intro.lore.opt.0 = J'en ai assez entendu. Envoie-moi.
+dialogue.nightmares_intro.lore.opt.1 = Alors, comment y survivre ?
+dialogue.nightmares_intro.tips.text = Tu veux t'en sortir, donc. Bonne chance. Garde des fleurs sur toi : une <color is="#7affa0">lunefleur</color> en pleine face les étourdit, une <color is="#5a9cff">bourrasquefleur</color> les envoie voler, une <color is="#7affa0">bourbefleur</color> les enlise, et une <color is="#ff8a3c">braisefleur</color> les brûle. La braisefleur se moque de qui elle touche, alors gare à tes amis. Si les racines t'attrapent, ne reste pas allongé là : quelqu'un peut te tirer de là, alors reste à sa portée. La sortie, c'est pareil : elle ne s'ouvre que si vous êtes tous sur la plateforme <b>ensemble</b>. Et ne traîne pas. Plus ça dure, plus cette chose devient rapide et méchante.
+dialogue.nightmares_intro.tips.opt.0 = Bien, je suis prêt.
+dialogue.nightmares_intro.tips.opt.1 = Retour.
+dialogue.nightmares_intro.preset_pick.text = Alors, à quel point tu le veux ? Vas-y doucement et la chose se traîne derrière toi : parfait pour apprendre comment tout ça marche. Pousse plus loin et elle te rattrape, et le noir mange ta lumière avant que tu en refasses. À toi de voir. Je serai quelque part, à l'écart.
+dialogue.nightmares_intro.preset_pick.opt.0 = Amateur : que j'apprenne le bosquet.
+dialogue.nightmares_intro.preset_pick.opt.1 = Cauchemar : la vraie chasse.
+dialogue.nightmares_intro.preset_pick.opt.2 = Hardcore : une vie, pas de seconde chance.
+dialogue.nightmares_intro.preset_pick.opt.3 = Pas encore. Recule.
+dialogue.nightmares_intro.already_engaged.text = Un à la fois, toi qui es chaud. Tu es déjà dans une chasse : sors d'abord de ce rassemblement, et je te jetterai avec plaisir dans le suivant.
+dialogue.nightmares_intro.already_engaged.opt.0 = Compris.
+
+# Leaderboard page (the Grove Keeper's "Who has survived the most?" option, greet.opt.3).
+# Plain labels shown on Label .Text (no inline markup); column colours come from the .ui styles.
+leaderboard.title = Survivants du bosquet
+leaderboard.tab.solo = Solo
+leaderboard.tab.duo = Duo
+leaderboard.tab.trio = Trio
+leaderboard.tab.squad = Escouade
+leaderboard.col.rank = Rang
+leaderboard.col.player = Survivant
+leaderboard.col.score = Meilleur score
+leaderboard.col.total = Total
+leaderboard.col.time = Meilleur temps
+leaderboard.col.plays = Parties
+leaderboard.empty = Aucun survivant n'a encore été enregistré dans cette catégorie. Soyez le premier.
+leaderboard.your_rank = Votre meilleur : #{0}  ({1})
+leaderboard.your_rank_none = Vous n'avez encore aucune partie classée dans cette catégorie.
+# Leading filter-row labels.
+leaderboard.axis.difficulty = Difficulté
+leaderboard.axis.players = Joueurs
+leaderboard.axis.sort = Tri
+leaderboard.axis.view = Vue
+# The synthesized "All" tab (lifetime roll-up across an axis: All+All = full lifetime totals).
+leaderboard.filter.all = Tout
+# Sort toggle + Rankings/Stats view toggle buttons.
+leaderboard.sort.score = Meilleur score
+leaderboard.sort.total = Total des points
+leaderboard.sort.time = Plus rapide
+leaderboard.view.rankings = Classement
+leaderboard.view.stats = Stats
+# Lifetime stat columns (Stats view). Click a column header to sort by it.
+leaderboard.stat.stunned = Étourdis
+leaderboard.stat.moonbloom = Lunefleur
+leaderboard.stat.shrines = Autels allumés
+leaderboard.stat.wins = Victoires
+
+# End-of-game results screen (the shared instance-experience ResultsPage).
+results.win = Vous avez survécu
+results.loss = Le Bosquet vous a pris
+results.draw = Une nuit creuse
+results.abort = Le rituel s'est brisé
+results.duration = Temps total : {0}
+results.breakdown = Votre partie
+results.rewards = Butin du bosquet
+results.no_rewards = Aucun butin cette nuit.
+results.pending = Une partie du butin demande de la place dans l'inventaire : récupérez le reste depuis le menu Jouer.
+results.btn.leaderboard = Voir le classement
+results.btn.again = Rejouer
+results.btn.close = Partir
+results.team_total = Total du bosquet : {0}
+results.col.base = Score de base
+results.col.time = Bonus de vitesse
+results.col.damage = Dégâts évités
+results.col.stun = Bonus d'étourdissement
+results.col.shrine = Bonus d'autel
+results.col.duration = Temps de survie
+# Run-stats section - raw per-run activity, shown below the point breakdown.
+results.stats = Stats de la partie
+results.stat.damage_taken = Dégâts subis
+results.stat.stunned = Chasseurs étourdis
+results.stat.moonbloom = Lunefleur récoltée
+# In-instance preview note where the spoils chips would be (you claim them once back in the overworld).
+results.spoils_pending = Récupérez votre butin une fois sorti du bosquet.
+# Manual claim: the results-screen Claim button + the post-claim confirmation note.
+results.btn.claim = Récupérer le butin
+results.claimed = Butin récupéré.
+
+# Play screen - live roster / ready chrome (the shared PlayModePage, queued state). The
+# countdown line ticks down live on screen. The player stays here after queueing.
+queue.screen.count = {0}/{1} survivants
+queue.screen.waiting = En attente d'autres réponses à l'appel...
+queue.screen.countdown = Le bosquet vous attire... {0}
+queue.screen.launching = Le Bosquet flétri vous emporte...
+queue.screen.wait = jusqu'à ~{0}s
+queue.screen.leave = Quitter le rassemblement
+queue.screen.not_queued = Vous n'êtes pas dans un rassemblement.
+queue.screen.toast_queued = Vous rejoignez le rassemblement ({0}/{1}).
+
+# Play screen - "Claim Spoils" button (chooser) for spoils missed earlier (closed the results
+# screen, or a full inventory) + the toast shown after claiming.
+play.btn.claim = Récupérer le butin
+play.toast.claimed = Butin récupéré.
+
+# Play screen - the mode chooser (the shared PlayModePage, not-queued state): how to enter.
+play.title = Entrer dans le cauchemar
+play.difficulty = Difficulté : {0}
+play.mode.public = Public
+play.mode.public.desc = Bravez le bosquet avec ceux qui répondent à l'appel.
+play.mode.party = Groupe
+play.mode.party.desc = Rassemblez d'abord vos propres survivants.
+play.mode.solo = Seul
+play.mode.solo.desc = Entrez seul dans le noir, tout de suite.
+
+# Party + invite screen (the shared PartyInvitePage).
+party.title = Votre groupe
+party.tab.party = Groupe
+party.tab.invite = Inviter
+party.empty.invite = Personne d'autre n'est en ligne à inviter.
+party.empty.party = Vous n'avez pas de groupe. Invitez des survivants à braver le bosquet ensemble.
+party.btn.invite = Inviter
+party.btn.kick = Retirer
+party.btn.leave = Quitter le groupe
+party.btn.disband = Dissoudre
+party.btn.queue = Mettre le groupe en file
+party.btn.accept = Accepter
+party.btn.decline = Refuser
+party.owner_badge = Chef
+party.count = {0}/{1}
+party.privacy.public = Groupe ouvert
+party.privacy.private = Groupe scellé
+party.toast.invite_failed = Ce survivant ne peut pas rejoindre votre groupe.
+
+# Party feedback toasts + the invite banner.
+party.msg.invited = {0} vous invite dans son groupe ({1}/{2}).
+party.msg.banner = {0} vous invite
+party.msg.banner.sub = Ouvrez votre groupe pour accepter.
+party.msg.sent = Invitation envoyée à {0}.
+party.msg.declined = {0} a refusé votre invitation.
+party.msg.expired = L'invitation s'est évanouie dans le noir.
+party.msg.joined = {0} rejoint le groupe ({1}/{2}).
+party.msg.left = {0} a quitté le groupe.
+party.msg.kicked = Vous avez été retiré du groupe.
+party.msg.kicked_member = {0} a été retiré du groupe.
+party.msg.disbanded = Le groupe se disperse.
+party.msg.owner = {0} dirige maintenant le groupe.
+
+# Command feedback.
+cmd.party_opened = Ouverture de votre groupe...
+
+# --- Clash / Domination (PvP). {0} is a team name (Red / Blue) where present. ---
+clash.team.red = Rouge
+clash.team.blue = Bleue
+clash.title.start = Le Clash commence
+clash.title.start.sub = La dernière équipe debout gagne.
+clash.title.victory = Victoire
+clash.title.victory.sub = Votre équipe a emporté le bosquet.
+clash.title.defeat = Défaite
+clash.title.defeat.sub = L'autre équipe a tenu le terrain.
+clash.title.draw = Égalité
+clash.title.draw.sub = Aucune équipe n'a pu briser l'autre.
+clash.title.sudden_death = Mort subite
+clash.title.sudden_death.sub = Le premier sang y met fin.
+clash.toast.eliminated = Vous êtes éliminé. Vous observez jusqu'à la fin de la manche.
+clash.toast.respawn = Retour au combat...
+clash.toast.ko = Vous avez terrassé {0} !
+clash.toast.teammate_down = Un équipier est tombé.
+clash.toast.pickup = Vous avez ramassé : {0}.
+clash.toast.point_captured = Votre équipe a capturé un point !
+clash.toast.point_lost = Un point a été perdu.
+clash.hud.timer = Temps {0}
+clash.hud.score = {0} - {1}
+clash.hud.team = Équipe
+clash.hud.tally.hits = Coups {0}
+clash.hud.tally.kills = Éliminations {0}
+clash.hud.alive = En vie {0}/{1}
+clash.hud.capture = Capture {0}
+domination.marker.point = Point de capture
+
+# Clash instance discovery banner.
+instance.clash.title = Clash du bosquet
+instance.clash.subtitle = Deux équipes entrent. Une seule sort.
+
+# Domination instance discovery banner.
+instance.domination.title = Domination du bosquet
+instance.domination.subtitle = Tenez le terrain. Durez plus qu'eux.
+
+# Coloured team-score HUD line (TextSpans); ordering flips so the viewer's team is first.
+clash.hud.score.red = <color is="#ff5a5a">{0}</color> - <color is="#5a9cff">{1}</color>
+clash.hud.score.blue = <color is="#5a9cff">{0}</color> - <color is="#ff5a5a">{1}</color>
+# PvP results + leaderboard + preset display names.
+results.clash.breakdown = Combat
+results.clash.kos = Fois à terre
+results.clash.preview = Match terminé. Vos résultats vous attendent au hall.
+leaderboard.clash.title = Classement de l'arène
+leaderboard.clash.axis.mode = Mode
+leaderboard.clash.stat.hits = Coups
+leaderboard.clash.stat.kills = Éliminations
+leaderboard.clash.stat.kos = À terre
+preset.clash_1v1.name = Clash 1v1
+preset.clash_2v2.name = Clash 2v2
+preset.domination_koth.name = Domination
+
+# Clash Host NPC + the clash_intro dialogue (the PvP entry).
+npc.clashhost.name = Le Maître des duels
+npc.clashhost.hint = Appuyez sur [{key}] pour entrer dans l'arène
+dialogue.clash_intro.greet.text = Alors. Tu préfères mesurer tes racines à un autre sang chaud plutôt que de fuir le noir. Je respecte ça. Le bosquet fait une belle arène quand le seul cauchemar qu'il contient, ce sont ceux qui s'y battent. Reste vif : j'ai enterré de meilleurs combattants que toi, et je n'essayais même pas.
+dialogue.clash_intro.greet.opt.0 = Comment marche l'arène ?
+dialogue.clash_intro.greet.opt.1 = Je suis prêt à me battre.
+dialogue.clash_intro.greet.opt.2 = À propos du match où je suis déjà...
+dialogue.clash_intro.lore.text = Deux équipes, un bosquet, et des champignons qui jaillissent du sol : le <color is="#5a9cff">recul</color> pour envoyer un imprudent voler par-dessus le bord, l'<color is="#7affa0">étourdissement</color> pour le laisser bouche bée pendant que tu frappes. Prends-les avant l'autre camp : ceux qui fouillent sont souvent ceux qui repartent. La dernière équipe debout l'emporte ; si le temps s'épuise, celui qui a porté le plus de coups gagne, alors ne te contente pas de danser, frappe quelque chose. En Domination, oublie tout ça et tiens simplement le terrain plus longtemps qu'eux.
+dialogue.clash_intro.lore.opt.0 = Assez. Laisse-moi me battre.
+dialogue.clash_intro.lore.opt.1 = Réflexion faite, retour.
+dialogue.clash_intro.mode_pick.text = Nomme ton épreuve, sang chaud. J'ouvrirai la porte sur le terrain où tu veux saigner.
+dialogue.clash_intro.mode_pick.opt.0 = Clash 1v1 : rien que nous deux.
+dialogue.clash_intro.mode_pick.opt.1 = Clash 2v2 : amène un ami pour perdre avec toi.
+dialogue.clash_intro.mode_pick.opt.2 = Domination : tenir le terrain.
+dialogue.clash_intro.mode_pick.opt.3 = Pas encore. Recule.
+dialogue.clash_intro.already_engaged.text = Un combat à la fois, sang chaud. Finis l'épreuve où tu es, puis reviens saigner pour moi.
+dialogue.clash_intro.already_engaged.opt.0 = Compris.
+
+# Achievements and titles (ziggfreed-common's achievement book and title picker): the book's
+# category, the two achievements and their steps, and the titles they pay on unlock. A title's
+# .display places it around a player's name, {0} being the name.
+achievement.category.kweebec_nightmare = Kweebec Nightmare
+achievement.kweebec_hardcore_escape.title = Aucune lumière à suivre
+achievement.kweebec_hardcore_escape.desc = Fuyez une manche Rallumer et fuir en Hardcore.
+objective.kweebec.hardcore_escape = Fuir une manche en Hardcore
+achievement.kweebec_warden_falls.title = La chute du Gardien
+achievement.kweebec_warden_falls.desc = Aidez à abattre le Gardien de la Flétrissure.
+objective.kweebec.warden_falls = Aider à abattre le Gardien de la Flétrissure
+title.kweebec_unbroken.name = L'Indomptable
+title.kweebec_unbroken.flavor = A fui une manche Rallumer et fuir en Hardcore.
+title.kweebec_unbroken.display = {0} l'Indomptable
+title.kweebec_wardenbane.name = Fléau du Gardien
+title.kweebec_wardenbane.flavor = A aidé à abattre le Gardien de la Flétrissure.
+title.kweebec_wardenbane.display = {0}, Fléau du Gardien
