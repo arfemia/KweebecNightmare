@@ -32,7 +32,7 @@ public interface HunterController {
     /**
      * Per-tick update: drive the hunter toward the chosen survivor (the gate-alert lock, else
      * the loudest shrine channeller, else the nearest active survivor) and apply the
-     * corruption-scaled speed ramp. The AI implementation lures via Perfect Utils' aggro API.
+     * corruption-scaled speed ramp. The AI implementation lures via ziggfreed-common's aggro control.
      */
     void tick(@Nonnull RoundInstance round, @Nonnull World world, @Nonnull Store<EntityStore> store);
 

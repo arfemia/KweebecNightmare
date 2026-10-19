@@ -28,7 +28,7 @@ import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.npc.NPCPlugin;
-import com.narwhals.perfectutils.api.AggroAPI;
+import com.ziggfreed.common.effect.control.AggroControl;
 import com.ziggfreed.common.instance.effect.EntityEffectService;
 import com.ziggfreed.common.sound.Sound3D;
 import com.ziggfreed.common.world.BlockTypeLists;
@@ -68,15 +68,13 @@ import com.ziggfreed.kweebec.util.SafeLog;
  * {@link HunterUnit} carrying its ref + its archetype + its own applied speed band, so every
  * archetype paces on its OWN {@code SpeedBands}/{@code BandEffectIds} ladder.
  *
- * <p><b>Aggro override (Perfect Utils, a hard dependency, kept for criteria-based aggro switching).</b>
- * On top of the natural chase we use {@code AggroAPI.taunt} ONLY to FORCE a target the natural AI would
+ * <p><b>Aggro override (ziggfreed-common's {@link AggroControl}, kept for criteria-based aggro switching).</b>
+ * On top of the natural chase we use {@code AggroControl.taunt} ONLY to FORCE a target the natural AI would
  * not pick on its own: the gate-alert hard-lock. {@code chooseTarget} ranks gate-alert &gt; nearest; if the choice
- * equals the natural nearest (always true in solo play) we issue NO taunt, so no {@code AggroComponent}
- * lands on the lone survivor - which is what crashed teardown (Perfect Utils removing the component from
- * a just-killed player's changed archetype) and ejected them dead. When an override IS needed, the taunt
- * puts an {@code AggroComponent} on that survivor and Perfect Utils' {@code redirectAggro} re-points the
- * hunter to them; {@link #clearTaunt} releases it (guarded by {@code isTaunting} so we never remove a
- * component the archetype has already lost).
+ * equals the natural nearest (always true in solo play) we issue NO taunt. When an override IS needed, the taunt
+ * opens a short window around that survivor in which the library re-points every hunter in reach at them each
+ * tick (target slot, target memory and a hostile attitude); {@link #clearTaunt} ends it. The window lives in the
+ * world's store, never on the survivor, so a survivor who dies mid-window takes nothing down with them.
  *
  * <p><b>Corruption-scaled SPEED is now PER-HUNTER.</b> Each tick {@code applySpeed} snaps
  * {@code ChaseState.hunterSpeed(ruleSet)} to a band on EACH hunter's OWN archetype ladder and swaps the
@@ -139,7 +137,7 @@ public final class AiHunterController implements HunterController {
 
     /**
      * Taunt burst length. We taunt ONLY when the target changes, never on a stable target - so
-     * Perfect Utils' {@code redirectAggro} (which re-points the NPC every engine tick while a taunt is
+     * the library's taunt sweep (which re-points the NPC every engine tick while a taunt is
      * live) runs as a short ~2.5s burst to hand the target to the role's combat AI, then EXPIRES, and
      * the role's own Hostile sensors carry the pursuit. That is the opposite of the old "set the target
      * every tick" behavior. (If a long stable chase ever drops the target we can add a low-frequency
@@ -196,8 +194,6 @@ public final class AiHunterController implements HunterController {
     private UUID currentTaunt;
     @Nullable
     private volatile UUID alertTarget;
-    /** Logged once if Perfect Utils is unavailable, so we do not spam the degrade notice. */
-    private boolean warnedNoAggro;
 
     /**
      * Fallback speed ladder when an archetype authored none (mirrors the historical hardcoded ladder).
@@ -521,38 +517,26 @@ public final class AiHunterController implements HunterController {
             return;
         }
 
-        AggroAPI api = AggroAPI.get();
-        if (api == null) {
-            if (!warnedNoAggro) {
-                warnedNoAggro = true;
-                KweebecNightmarePlugin.LOGGER.atWarning().log(
-                        "[Kweebec] Perfect Utils AggroAPI unavailable; hunter relies on its role's natural sensors.");
-            }
-            return;
-        }
-
         // OVERRIDE-ONLY aggro. The role's natural Hostile AI (huge sight/alerted/hearing range) already
-        // pursues the nearest survivor relentlessly, so we call Perfect Utils ONLY to FORCE a target the
-        // natural AI would NOT pick on its own - the gate-alert lock, or the loudest shrine channeller
-        // when that is not already the nearest survivor. Two wins: (1) no per-tick redirect churn on the
-        // common case, and (2) in solo play the only survivor IS the natural target, so no AggroComponent
-        // is ever placed on them - which is what made a caught player crash teardown (Perfect Utils
-        // removing the component from the dying player's changed archetype) and eject them dead.
+        // pursues the nearest survivor relentlessly, so we taunt ONLY to FORCE a target the natural AI
+        // would NOT pick on its own - the gate-alert lock, or the loudest shrine channeller when that is
+        // not already the nearest survivor - so the common case has no per-tick redirect churn, and in
+        // solo play (the only survivor IS the natural target) no taunt is ever opened.
         UUID natural = nearestSurvivorToAnyHunter(round, store);
         UUID desired = chooseTarget(round, store);
         UUID override = (desired != null && !desired.equals(natural)) ? desired : null;
         if (override != null) {
             Ref<EntityStore> overrideRef = survivorRef(override);
             if (overrideRef != null && overrideRef.isValid() && !override.equals(currentTaunt)) {
-                clearTaunt(api, store);
-                api.taunt(store, overrideRef, TAUNT_MS, TAUNT_RADIUS);
+                clearTaunt(store);
+                AggroControl.taunt(store, overrideRef, TAUNT_MS / 1000f, TAUNT_RADIUS);
                 currentTaunt = override;
                 KweebecNightmarePlugin.LOGGER.atFine().log(
                         "[Kweebec] hunter aggro override -> " + override.toString().substring(0, 8));
             }
         } else {
             // No override needed: release the hunter back to its natural nearest-survivor pursuit.
-            clearTaunt(api, store);
+            clearTaunt(store);
         }
     }
 
@@ -722,17 +706,16 @@ public final class AiHunterController implements HunterController {
     }
 
     /**
-     * Release the current aggro override, if any. Guarded by {@code isTaunting} so we never ask
-     * Perfect Utils to remove an {@code AggroComponent} from a survivor whose archetype no longer has
-     * it (e.g. one who just died) - the {@code removeComponent} that crashed teardown.
+     * Release the current aggro override, if any. The taunt lives in the world's own store (ziggfreed-common's
+     * {@link AggroControl}), never on the survivor, so a survivor who died or left simply has none to end.
      */
-    private void clearTaunt(@Nonnull AggroAPI api, @Nonnull Store<EntityStore> store) {
+    private void clearTaunt(@Nonnull Store<EntityStore> store) {
         if (currentTaunt == null) {
             return;
         }
         Ref<EntityStore> prev = survivorRef(currentTaunt);
-        if (prev != null && prev.isValid() && api.isTaunting(store, prev)) {
-            api.clear(store, prev);
+        if (prev != null && prev.isValid() && AggroControl.isTaunting(store, prev)) {
+            AggroControl.clear(store, prev);
         }
         currentTaunt = null;
     }
@@ -748,13 +731,10 @@ public final class AiHunterController implements HunterController {
 
     @Override
     public void despawnAll(@Nonnull World world, @Nonnull Store<EntityStore> store) {
-        AggroAPI api = AggroAPI.get();
-        if (api != null) {
-            try {
-                clearTaunt(api, store);
-            } catch (Throwable ignored) {
-                // best effort
-            }
+        try {
+            clearTaunt(store);
+        } catch (Throwable ignored) {
+            // best effort
         }
         for (HunterUnit u : hunters) {
             if (u.ref != null && u.ref.isValid()) {

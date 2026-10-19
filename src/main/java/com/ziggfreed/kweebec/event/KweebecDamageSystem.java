@@ -15,17 +15,15 @@ import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.component.SystemGroup;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.protocol.SoundCategory;
-import com.hypixel.hytale.server.core.asset.type.entityeffect.config.EntityEffect;
 import com.hypixel.hytale.server.core.asset.type.entityeffect.config.OverlapBehavior;
-import com.hypixel.hytale.server.core.entity.effect.EffectControllerComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageEventSystem;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageModule;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import com.narwhals.perfectutils.api.StunMobAPI;
 import com.ziggfreed.common.damage.HitTags;
+import com.ziggfreed.common.effect.control.StunControl;
 import com.ziggfreed.common.instance.effect.EntityEffectService;
 import com.ziggfreed.common.sound.Sound3D;
 import com.ziggfreed.common.util.EntityIdentifierUtil;
@@ -51,7 +49,7 @@ import com.ziggfreed.kweebec.util.SafeLog;
  *       hit is identified by its tag ALONE - independent of its damage type (a plain Physical
  *       hit), the damage source and the world. When such damage lands on a
  *       NON-player entity ANYWHERE (base world OR a round), it freezes that mob via
- *       Perfect Utils {@code StunMobAPI} + the vanilla {@code Stun} visual. Only a
+ *       ziggfreed-common's {@link StunControl}, whose effect wears the vanilla {@code Stun} look. Only a
  *       Moonbloom stuns (a melee/other hit on the hunter does nothing); players caught in
  *       the splash are skipped (no teammate friendly-stun). The thrower (the burst
  *       damage's owning entity) is credited {@code mobsStunned} when they are in a round.
@@ -60,14 +58,11 @@ import com.ziggfreed.kweebec.util.SafeLog;
  *       onto their {@link PlayerRoundState} (a friendly Moonbloom splash is not counted).</li>
  * </ol>
  *
- * <p>Runs on the world thread; the {@link PlayerRoundState} mutations honor the
- * world-thread contract and the {@code StunMobAPI} enqueue is its own thread-safe queue.
- * Whole body is try-guarded.
+ * <p>Runs on the world thread; the {@link PlayerRoundState} mutations and the stun (through this
+ * system's command buffer) honor the world-thread contract. Whole body is try-guarded.
  */
 public final class KweebecDamageSystem extends DamageEventSystem {
 
-    /** Vanilla entity effect carrying the "stunned" particle + tint (the Perfect Utils freeze is particle-less). */
-    private static final String STUN_VISUAL_EFFECT = "Stun";
     /** Stun length for a Moonbloom hit thrown OUTSIDE a round (no rule-set to read). */
     private static final long DEFAULT_STUN_MS = 2500L;
 
@@ -130,7 +125,7 @@ public final class KweebecDamageSystem extends DamageEventSystem {
                 }
                 // Only a thrown Moonbloom additionally STUNS the mob (a melee / other hit does not).
                 if (isMoonbloom) {
-                    stunMob(store, targetRef, commandBuffer, round, thrower);
+                    stunMob(targetRef, commandBuffer, round, thrower);
                 }
                 return;
             }
@@ -387,30 +382,23 @@ public final class KweebecDamageSystem extends DamageEventSystem {
         }
         // A Moonbloom hit on an enemy player STUNS them; it is a utility, not a damage source here.
         if (isMoonbloomHit(damage)) {
-            stunPlayer(store, victimRef, cb, round, attacker);
+            stunPlayer(victimRef, cb, round, attacker);
             damage.setAmount(0f);
         }
     }
 
-    /** Stun an enemy PLAYER via Perfect Utils (the pipeline is entity-agnostic) + the vanilla Stun visual. */
-    private void stunPlayer(@Nonnull Store<EntityStore> store, @Nonnull Ref<EntityStore> targetRef,
-                            @Nonnull CommandBuffer<EntityStore> cb, @Nonnull RoundInstance round,
-                            @Nullable UUID attacker) {
-        StunMobAPI api = StunMobAPI.get();
-        if (api == null) {
+    /**
+     * Stun an enemy PLAYER through ziggfreed-common's {@link StunControl}, which stuns any entity: its effect
+     * carries the vanilla Stun look, and on a player the hold is applied by their own game.
+     */
+    private void stunPlayer(@Nonnull Ref<EntityStore> targetRef, @Nonnull CommandBuffer<EntityStore> cb,
+                            @Nonnull RoundInstance round, @Nullable UUID attacker) {
+        if (StunControl.isStunned(cb, targetRef)) {
             return;
-        }
-        try {
-            if (api.isStunned(store, targetRef)) {
-                return;
-            }
-        } catch (Throwable ignored) {
-            // best effort
         }
         long stunMs = round.ruleSet().stunDurationMs();
         Ref<EntityStore> attackerRef = attacker != null ? playerRef(attacker) : null;
-        api.stunEntity(store, targetRef, stunMs, attackerRef);
-        applyStunVisual(targetRef, cb, stunMs);
+        StunControl.stun(cb, targetRef, stunMs / 1000f, attackerRef);
     }
 
     /** The player who threw the Moonbloom: the burst damage's owning entity (the source). {@code null} if not a player. */
@@ -427,43 +415,23 @@ public final class KweebecDamageSystem extends DamageEventSystem {
         return pr == null ? null : pr.getUuid();
     }
 
-    /** Freeze a mob once via Perfect Utils + the vanilla Stun visual; credit the thrower if they are in a round. */
-    private void stunMob(@Nonnull Store<EntityStore> store, @Nonnull Ref<EntityStore> mobRef,
-                         @Nonnull CommandBuffer<EntityStore> cb, @Nullable RoundInstance round,
-                         @Nullable UUID thrower) {
-        StunMobAPI api = StunMobAPI.get();
-        if (api != null && api.isStunned(store, mobRef)) {
-            return; // already stunned - do not re-apply, re-visual, or re-credit
+    /**
+     * Freeze a mob once through ziggfreed-common's {@link StunControl} (its effect carries the vanilla Stun look,
+     * and the mob's attack is cut off and held); credit the thrower if they are in a round and the stun landed.
+     */
+    private void stunMob(@Nonnull Ref<EntityStore> mobRef, @Nonnull CommandBuffer<EntityStore> cb,
+                         @Nullable RoundInstance round, @Nullable UUID thrower) {
+        if (StunControl.isStunned(cb, mobRef)) {
+            return; // already stunned - do not re-apply or re-credit
         }
         long stunMs = round != null ? round.ruleSet().stunDurationMs() : DEFAULT_STUN_MS;
         Ref<EntityStore> sourceRef = thrower != null ? playerRef(thrower) : null;
-        if (api != null) {
-            api.applyStun(store, mobRef, stunMs, sourceRef);
-        }
-        applyStunVisual(mobRef, cb, stunMs);
-        if (round != null && thrower != null) {
+        boolean landed = StunControl.stun(cb, mobRef, stunMs / 1000f, sourceRef);
+        if (landed && round != null && thrower != null) {
             PlayerRoundState st = round.playerState(thrower);
             if (st != null) {
                 st.incrementMobsStunned();
             }
-        }
-    }
-
-    /** Apply the vanilla Stun entity effect (the Stunned stars + tint) so the freeze is visible. */
-    private void applyStunVisual(@Nonnull Ref<EntityStore> mobRef, @Nonnull CommandBuffer<EntityStore> cb,
-                                 long stunMs) {
-        try {
-            int idx = EntityEffect.getAssetMap().getIndex(STUN_VISUAL_EFFECT);
-            if (idx == Integer.MIN_VALUE) {
-                return;
-            }
-            EntityEffect fx = EntityEffect.getAssetMap().getAsset(idx);
-            EffectControllerComponent ctrl = cb.getComponent(mobRef, EffectControllerComponent.getComponentType());
-            if (fx != null && ctrl != null) {
-                ctrl.addEffect(mobRef, fx, Math.max(0.5f, stunMs / 1000f), OverlapBehavior.OVERWRITE, cb);
-            }
-        } catch (Throwable t) {
-            SafeLog.fine("[Kweebec] stun visual failed: " + t.getMessage());
         }
     }
 

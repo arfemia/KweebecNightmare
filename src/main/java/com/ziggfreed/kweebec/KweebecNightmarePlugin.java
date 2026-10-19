@@ -16,8 +16,6 @@ import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import com.narwhals.perfectutils.api.AggroAPI;
-import com.narwhals.perfectutils.api.StunMobAPI;
 import com.ziggfreed.common.npc.NpcActions;
 import com.ziggfreed.common.npc.NpcAutoSpawn;
 import com.ziggfreed.kweebec.asset.KweebecAssetRegistrar;
@@ -199,23 +197,6 @@ public class KweebecNightmarePlugin extends JavaPlugin {
         // The PvP Clash Host is NOT auto-spawned; place it deliberately via /kweebec clashhost
         // (debugSpawnClashHost). The auto-spawn-on-player-ready hook was removed by request so the
         // overworld stays NPC-free unless an admin explicitly drops the arena host.
-
-        // Perfect Utils is a hard dependency (loads first); confirm the aggro API resolved so a
-        // missing/older jar is obvious in the log rather than a silent fall-back to natural sensors.
-        if (AggroAPI.get() != null) {
-            LOGGER.atInfo().log("[Kweebec] Perfect Utils AggroAPI present; hunter will use dynamic aggro.");
-        } else {
-            LOGGER.atWarning().log(
-                    "[Kweebec] Perfect Utils AggroAPI NOT present at setup; hunter will fall back to natural sensors.");
-        }
-        // StunMobAPI backs the thrown-Moonbloom hunter freeze; a missing/older jar means
-        // throws still register a hit (counter + score) but the hunter will not freeze.
-        if (StunMobAPI.get() != null) {
-            LOGGER.atInfo().log("[Kweebec] Perfect Utils StunMobAPI present; thrown Moonbloom will stun hunters.");
-        } else {
-            LOGGER.atWarning().log(
-                    "[Kweebec] Perfect Utils StunMobAPI NOT present at setup; thrown Moonbloom will not freeze hunters.");
-        }
 
         LOGGER.atInfo().log("KweebecNightmare setup complete (Chase MVP, in dev).");
     }

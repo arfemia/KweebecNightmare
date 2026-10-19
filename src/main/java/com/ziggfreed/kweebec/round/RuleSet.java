@@ -346,7 +346,7 @@ public final class RuleSet {
         return cleanseCost;
     }
 
-    /** How long (ms) a thrown Moonbloom freezes a hunter via the Perfect Utils stun on impact. */
+    /** How long (ms) a thrown Moonbloom freezes a hunter via ziggfreed-common's stun on impact. */
     public long stunDurationMs() {
         return stunDurationMs;
     }
