@@ -1,0 +1,21 @@
+{
+  "$Comment": "The Moonbloom's stun: a thrown Moonbloom's burst puts it on the hunter or enemy player it catches, through CommonLib's StunControl, which holds them exactly as a CommonLib stun does (what they were doing stops, a creature's attacks pause until it wakes). It is built on the game's own Stun, as CommonLib's Zig_Stunned is, but sits in no effect family, so nothing that reads stuns by family reaches it: a player's control resistance never cuts it short, and the round's stun length is the same on every server. HorizontalSpeedMultiplier 0 holds a creature in place; MovementEffects and AbilityEffects are what a stunned player's own game reads. The round's rule set sets its length, so this file's Duration only counts for a plain ApplyEffect. Its ZigWeakSpot tag makes every hit on a stunned target a weak spot while it lasts. Restyle it by shipping a file with this same id.",
+  "Parent": "Stun",
+  "Duration": 2.5,
+  "OverlapBehavior": "Overwrite",
+  "Debuff": true,
+  "Tags": { "ZigWeakSpot": ["Anyone"] },
+  "ApplicationEffects": {
+    "HorizontalSpeedMultiplier": 0.0,
+    "MovementEffects": { "DisableAll": true, "SpeedMultiplier": 0.0 },
+    "AbilityEffects": {
+      "Disabled": [
+        "Primary",
+        "Secondary",
+        "Ability1",
+        "Ability2",
+        "Ability3"
+      ]
+    }
+  }
+}
