@@ -11,7 +11,7 @@ Co-op horror minigame mod (Relight & Escape chase, one instance world per round)
 
 ## Ids other mods key on
 
-- The MMO and mob-scaling key on kweebec ids; renaming any silently breaks the other mod: `InstanceRoundCompletedEvent` (mod id `kweebec`, mode and preset ids), the bloom bursts' hit tags (`"Tags": {"Hit": [...]}`, each the thrown item's id; the MMO pays Artillery XP through `tag:<item id>`, and the blooms deal Hytale's own damage types, never a custom one), the `Chase_*` lootable ids (MMO `ContributesTo`), and the `KweebecNightmare_*` instance names (MMO and mob-scaling world rules).
+- The MMO and mob-scaling key on kweebec ids; renaming any silently breaks the other mod: `InstanceRoundCompletedEvent` (mod id `kweebec`, mode and preset ids), the bloom bursts' hit tags (`"Tags": {"Hit": [...]}`, each the thrown item's id; this mod's own MMO-gated `Server/ZiggfreedCommon/TrackSources/KweebecNightmare/Mmo_KweebecNightmare_Artillery_Xp.json` pays Artillery XP through `tag:<item id>`, and the blooms deal Hytale's own damage types, never a custom one), the `Chase_*` lootable ids (MMO `ContributesTo`), and the `KweebecNightmare_*` instance names (MMO and mob-scaling world rules).
 
 ## Scope
 

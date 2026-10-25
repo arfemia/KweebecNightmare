@@ -1,0 +1,27 @@
+{
+  "$Comment": [
+    "Artillery XP for the three bloom bombs, on a server running MMO Skill Tree: one row a bloom on the",
+    "Artillery track's own table, beside the rows MMO Skill Tree ships for it. Requires takes this file",
+    "out on a server without MMO Skill Tree, where there is no Artillery track to pay; always write it",
+    "with Min 1.",
+    "",
+    "A thrown bloom bursts after it leaves the hand, so by the time it lands the thrower may hold",
+    "something else. A tag: row ties the hit to the Hit tag each burst carries (the thrown item's own",
+    "id) instead of to whatever is in hand, so every hit the burst lands trains Artillery and takes",
+    "Artillery's damage bonuses. A tag: row is checked before cause: rows, so the Emberbloom's Fire",
+    "and the Gustbloom's Wind pay Artillery and never a school's row. The value is the XP each hit",
+    "pays. Each row names its burst's Hit tag, so keep the two spelled alike."
+  ],
+  "Requires": {
+    "Factors": [
+      { "Factor": "hytale:mod_installed", "Param": "Ziggfreed:MMOSkillTree", "Min": 1 }
+    ]
+  },
+  "Track": "Artillery",
+  "When": { "Kind": "Mmo_Skill_Xp" },
+  "Rows": {
+    "tag:KweebecNightmare_Emberbloom": 12,
+    "tag:KweebecNightmare_Gustbloom": 12,
+    "tag:KweebecNightmare_Moonbloom": 12
+  }
+}
