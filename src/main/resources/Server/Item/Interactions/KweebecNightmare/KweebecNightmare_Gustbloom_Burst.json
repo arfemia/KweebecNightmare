@@ -29,7 +29,7 @@
         },
         "DamageEffects": {
           "Knockback": {
-            "Type": "Point",
+            "Type": "Radial",
             "Force": 36,
             "VelocityY": 11,
             "VelocityType": "Set",
