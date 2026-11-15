@@ -13,7 +13,6 @@ import javax.annotation.Nullable;
 
 import org.joml.Vector3i;
 
-import com.hypixel.hytale.server.core.HytaleServer;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.asset.type.blocktype.config.Rotation;
 import com.hypixel.hytale.server.core.prefab.PrefabStore;
@@ -22,6 +21,7 @@ import com.hypixel.hytale.server.core.prefab.selection.buffer.impl.IPrefabBuffer
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.ziggfreed.common.world.BlockTypeLists;
+import com.ziggfreed.common.util.ZigScheduler;
 import com.ziggfreed.common.world.SurfaceProbe;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.asset.GroveThrowableAsset;
@@ -160,7 +160,7 @@ public final class ArenaBuilder {
         // before their chunks finish; the later foliage already survives). Pastes are idempotent
         // (fixed anchors + seeded RNG), so a re-paste is a safe no-op once the prefab has stuck.
         for (long delay : OBJECTIVE_REPASTE_DELAYS_SEC) {
-            HytaleServer.SCHEDULED_EXECUTOR.schedule(() -> {
+            ZigScheduler.schedule(() -> {
                 if (round.isResolved()) {
                     return;
                 }

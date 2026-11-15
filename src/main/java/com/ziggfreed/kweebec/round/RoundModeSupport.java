@@ -13,7 +13,6 @@ import org.joml.Vector3d;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.vector.Transform;
-import com.hypixel.hytale.server.core.HytaleServer;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.DeathComponent;
 import com.hypixel.hytale.server.core.modules.entity.teleport.Teleport;
@@ -22,6 +21,7 @@ import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.ziggfreed.common.instance.arena.ArenaDefinitionAsset;
+import com.ziggfreed.common.util.ZigScheduler;
 import com.ziggfreed.kweebec.util.SafeLog;
 
 /**
@@ -118,12 +118,12 @@ public final class RoundModeSupport {
         }
         try {
             DeathComponent.respawn(store, ref).whenComplete((v, e) ->
-                    HytaleServer.SCHEDULED_EXECUTOR.schedule(() -> world.execute(() -> {
+                    ZigScheduler.schedule(() -> {
                         Ref<EntityStore> r2 = presentRef(uuid, worldUuid);
                         if (r2 != null && r2.isValid()) {
                             teleportToTeamSpawn(round, r2, world.getEntityStore().getStore(), uuid);
                         }
-                    }), RESPAWN_SETTLE_MS, TimeUnit.MILLISECONDS));
+                    }, RESPAWN_SETTLE_MS, TimeUnit.MILLISECONDS, world));
         } catch (Throwable t) {
             SafeLog.warn("[Kweebec] respawn-at-team-spawn failed: " + t.getMessage());
         }
