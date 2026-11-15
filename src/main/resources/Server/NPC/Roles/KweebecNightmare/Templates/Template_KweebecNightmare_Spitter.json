@@ -122,7 +122,7 @@
   "CombatConfig": {
     "EntityEffects": ["Immunity_Environmental"]
   },
-  "$Comment": "Devastating-attack override (Spitter tier, the ranged kiter - lightest melee, it prefers distance): the spear attack Replaces Melee_Damage with a flat Absolute Physical 7 + a light shove (Knockback Force 2 / VelocityY 3). Sound/particle impact fx inherited from NPC_Attack_Melee_Damage.",
+  "$Comment": "Devastating-attack override (Spitter tier, the ranged kiter - lightest melee, it prefers distance): the spear attack Replaces Melee_Damage with a flat Absolute Physical 7 + a light lift (Knockback VelocityY 3, with no push back). Sound/particle impact fx inherited from NPC_Attack_Melee_Damage.",
   "InteractionVars": {
     "Melee_Damage": {
       "Interactions": [
@@ -137,7 +137,7 @@
           "DamageEffects": {
             "Knockback": {
               "Type": "Angled",
-              "Force": 2,
+              "Force": 0,
               "VelocityY": 3,
               "VelocityType": "Set"
             }

@@ -1,5 +1,5 @@
 {
-  "$Comment": "The Blight Warden's role template, the base of the three phase Variants (KweebecNightmare_Warden, _Phase2, _Phase3), which differ by MaxHealth, MaxSpeed and Burn only. The Warden fights through the Razorleaf instruction tree below (Target_Adjusted_Attack_Melee plus Intelligent_Chase), a hostile Kweebec spear fighter with huge sight, alerted and hearing ranges and no leash, so it hunts the party across the whole grove. Do not add a CombatActionEvaluator (UseCombatActionEvaluator or a _CombatConfig field) to this template: the Kweebec Razorleaf role builder does not read those keys, rejects the whole template on them, and every Variant that references it then fails to spawn. Burn is a PARAMETER rather than a top-level attribute: the Burn instruction block reads it through Enabled:{Compute:Burn}, so a Variant sets Burn true to wreathe itself in fire. The InteractionVars Melee_Damage entry is the heavy boss spear hit: it replaces NPC_Attack_Melee_Damage's calculator and knockback with Absolute Physical damage, so the Warden is dangerous whatever armor a survivor wears, and a strong launch that keeps the party honest. Which phase runs when is the Warden encounter script's business (Server/EncounterManager/KweebecNightmare_Warden_Encounter.json), which changes the role in place on the boss's health.",
+  "$Comment": "The Blight Warden's role template, the base of the three phase Variants (KweebecNightmare_Warden, _Phase2, _Phase3), which differ by MaxHealth, MaxSpeed and Burn only. The Warden fights through the Razorleaf instruction tree below (Target_Adjusted_Attack_Melee plus Intelligent_Chase), a hostile Kweebec spear fighter with huge sight, alerted and hearing ranges and no leash, so it hunts the party across the whole grove. Do not add a CombatActionEvaluator (UseCombatActionEvaluator or a _CombatConfig field) to this template: the Kweebec Razorleaf role builder does not read those keys, rejects the whole template on them, and every Variant that references it then fails to spawn. Burn is a PARAMETER rather than a top-level attribute: the Burn instruction block reads it through Enabled:{Compute:Burn}, so a Variant sets Burn true to wreathe itself in fire. The InteractionVars Melee_Damage entry is the heavy boss spear hit: it replaces NPC_Attack_Melee_Damage's calculator and knockback with Absolute Physical damage, so the Warden is dangerous whatever armor a survivor wears, and a strong lift (VelocityY 5, with no push back) that keeps the party honest. Which phase runs when is the Warden encounter script's business (Server/EncounterManager/KweebecNightmare_Warden_Encounter.json), which changes the role in place on the boss's health.",
   "Type": "Abstract",
   "StartState": "Idle",
   "Parameters": {
@@ -133,7 +133,7 @@
           "DamageEffects": {
             "Knockback": {
               "Type": "Angled",
-              "Force": 5,
+              "Force": 0,
               "VelocityY": 5,
               "VelocityType": "Set"
             }
