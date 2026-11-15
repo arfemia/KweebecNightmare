@@ -258,83 +258,109 @@
     {
       "Skip": false,
       "Runtime": 2,
-      "$Comment": "TREE COLLISION FIX (Runtime 2): trees run in the LAST prop runtime, AFTER every structure (big shrines at Runtime 0, small shrines at Runtime 1). PropStage copies the previous runtime's material output as this runtime's input (PropStage.run:180), so a Runtime-2 tree READS all placed crypts/dungeons/houses/ruins; its Floor pattern (Soil_Grass_Dry under Empty) then FAILS on a structure footprint (now rock/brick) and the tree skips it, instead of growing through the building. Trees still place normally on open grass. 1C: ambient blight trees scattered by WORLDGEN (replaces the runtime ArenaBuilder foliage ring, per the design's 'trees from worldgen, not manual paste'). A sparse Mesh2D grid of weighted native dead/poisoned tree prefabs (FULL ATMOSPHERIC PASS: ash/poisoned/petrified/burnt-dead stages plus rare Ash_twisted Large/Giant canopy landmarks; density unchanged, only the variety widened - all paths verified to resolve to native prefab folders), floor-snapped to the rolling surface by the ColumnLinear scanner; BlockMask.DontReplace keeps trunks from gouging the soil. A malformed Prefab prop fails the WHOLE biome decode (= all air), so this mirrors the proven vanilla Example_Prop 'Hills' Prefab-prop shape exactly. Validate in-game (the biome JSON is not gradle-compiled).",
-      "Positions": {
-        "Type": "Mesh2D",
+      "$Comment": "TREE COLLISION FIX (Runtime 2): trees run in the LAST prop runtime, AFTER every structure (big shrines at Runtime 0, small shrines at Runtime 1). PropStage copies the previous runtime's material output as this runtime's input, so a Runtime-2 tree READS all placed crypts/dungeons/houses/ruins; its Floor pattern (Soil_Grass_Dry under Empty) then FAILS on a structure footprint (now rock/brick) and the tree skips it, instead of growing through the building. Trees still place normally on open grass. 1C: ambient blight trees scattered by WORLDGEN (replaces the runtime ArenaBuilder foliage ring, per the design's 'trees from worldgen, not manual paste'). A sparse jittered SquareGrid2d (Scaler 16, Jitter2d Magnitude 0.5 of a cell) of weighted native dead/poisoned tree prefabs (FULL ATMOSPHERIC PASS: ash/poisoned/petrified/burnt-dead stages plus rare Ash_twisted Large/Giant canopy landmarks; density unchanged, only the variety widened - all paths verified to resolve to native prefab folders), floor-snapped to the rolling surface by the Locator's Linear scanner (Base -20 to +40, top down, first match) and turned a random quarter-turn by the RandomRotator. A malformed Prefab prop fails the WHOLE biome decode (= all air), so this follows the vanilla Example_Prop 'Hills' shape (Assigned over Positions, then Locator, RandomRotator, Prefab). Validate in-game (the biome JSON is not gradle-compiled).",
+      "PropDistribution": {
+        "Type": "Assigned",
         "Skip": false,
-        "PointsY": 0,
-        "PointGenerator": {
-          "Type": "Mesh",
-          "Jitter": 0.5,
-          "ScaleX": 16,
-          "ScaleY": 16,
-          "ScaleZ": 16,
-          "Seed": "KN_Trees"
-        }
-      },
-      "Assignments": {
-        "Type": "Weighted",
-        "SkipChance": 0.42,
-        "Seed": "KN_TreesW",
-        "WeightedAssignments": [
-          {
-            "Weight": 1,
-            "Assignments": {
-              "Type": "Constant",
-              "Prop": {
-                "Type": "Prefab",
+        "OverrideAllProps": false,
+        "PropDistribution": {
+          "Type": "Positions",
+          "Skip": false,
+          "Positions": {
+            "Type": "BaseHeight",
+            "Skip": false,
+            "BedName": "Base",
+            "Positions": {
+              "Type": "Scaler",
+              "Skip": false,
+              "Scale": {
+                "X": 16,
+                "Y": 16,
+                "Z": 16
+              },
+              "Positions": {
+                "Type": "Jitter2d",
                 "Skip": false,
-                "WeightedPrefabPaths": [
-                  {
-                    "Path": "Trees/Ash_twisted",
-                    "Weight": 3
+                "Magnitude": 0.5,
+                "Seed": "KN_Trees",
+                "Positions": {
+                  "Type": "SquareGrid2d",
+                  "Skip": false
+                }
+              }
+            }
+          }
+        },
+        "Assignments": {
+          "Type": "Weighted",
+          "SkipChance": 0.42,
+          "Seed": "KN_TreesW",
+          "WeightedAssignments": [
+            {
+              "Weight": 1,
+              "Assignments": {
+                "Type": "Constant",
+                "Prop": {
+                  "Type": "Locator",
+                  "Skip": false,
+                  "PlacementCap": 1,
+                  "Prop": {
+                    "Type": "RandomRotator",
+                    "Skip": false,
+                    "HorizontalRotations": true,
+                    "Rotations": [],
+                    "Seed": "KN_TreeRot",
+                    "Prop": {
+                      "Type": "Prefab",
+                      "Skip": false,
+                      "WeightedPrefabPaths": [
+                        {
+                          "Path": "Trees/Ash_twisted",
+                          "Weight": 3
+                        },
+                        {
+                          "Path": "Trees/Poisoned/Stage_1",
+                          "Weight": 2
+                        },
+                        {
+                          "Path": "Trees/Petrified_Dead/Stage_1",
+                          "Weight": 2
+                        },
+                        {
+                          "Path": "Trees/Petrified_Dead/Stage_2",
+                          "Weight": 2
+                        },
+                        {
+                          "Path": "Trees/Dry_Dead",
+                          "Weight": 2
+                        },
+                        {
+                          "Path": "Trees/Ash_Dead/Stage_2",
+                          "Weight": 2
+                        },
+                        {
+                          "Path": "Trees/Ash_Dead/Stage_3",
+                          "Weight": 2
+                        },
+                        {
+                          "Path": "Trees/Burnt_dead/Stage_2",
+                          "Weight": 2
+                        },
+                        {
+                          "Path": "Trees/Burnt_dead/Stage_3",
+                          "Weight": 1
+                        },
+                        {
+                          "Path": "Trees/Ash_twisted_Large",
+                          "Weight": 1
+                        },
+                        {
+                          "Path": "Trees/Ash_twisted_Giant",
+                          "Weight": 1
+                        }
+                      ]
+                    }
                   },
-                  {
-                    "Path": "Trees/Poisoned/Stage_1",
-                    "Weight": 2
-                  },
-                  {
-                    "Path": "Trees/Petrified_Dead/Stage_1",
-                    "Weight": 2
-                  },
-                  {
-                    "Path": "Trees/Petrified_Dead/Stage_2",
-                    "Weight": 2
-                  },
-                  {
-                    "Path": "Trees/Dry_Dead",
-                    "Weight": 2
-                  },
-                  {
-                    "Path": "Trees/Ash_Dead/Stage_2",
-                    "Weight": 2
-                  },
-                  {
-                    "Path": "Trees/Ash_Dead/Stage_3",
-                    "Weight": 2
-                  },
-                  {
-                    "Path": "Trees/Burnt_dead/Stage_2",
-                    "Weight": 2
-                  },
-                  {
-                    "Path": "Trees/Burnt_dead/Stage_3",
-                    "Weight": 1
-                  },
-                  {
-                    "Path": "Trees/Ash_twisted_Large",
-                    "Weight": 1
-                  },
-                  {
-                    "Path": "Trees/Ash_twisted_Giant",
-                    "Weight": 1
-                  }
-                ],
-                "LegacyPath": false,
-                "LoadEntities": true,
-                "Directionality": {
-                  "Type": "Random",
-                  "Seed": "KN_TreeRot",
                   "Pattern": {
                     "Type": "And",
                     "Skip": false,
@@ -389,187 +415,242 @@
                         }
                       }
                     ]
-                  }
-                },
-                "Scanner": {
-                  "Type": "ColumnLinear",
-                  "Skip": false,
-                  "MaxY": 40,
-                  "MinY": -20,
-                  "RelativeToPosition": false,
-                  "BaseHeightName": "Base",
-                  "TopDownOrder": true,
-                  "ResultCap": 1
-                },
-                "MoldingDirection": "None",
-                "MoldingChildren": false
-              }
-            }
-          }
-        ]
-      }
-    },
-    {
-      "Skip": false,
-      "Runtime": 2,
-      "$Comment": "TRACK A (cycle 3): SPARSE corrupted-structure ruins scattered gen-time among the dead trees. CLONED from Props[0] (the Type:Prefab tree-scatter prop) and repointed at the committed KweebecNightmare/Corrupted_* structures, so it mirrors the proven Prefab-prop shape exactly (a malformed Prefab prop fails the WHOLE biome decode = all air; validate in-game, this JSON is not gradle-compiled). MUCH sparser than the trees: Mesh ScaleX/Y/Z 48 (vs the trees' 16) plus SkipChance 0.85 means only a handful of ruins land, biased to the outer grove since the structures are big (the small Lamppost / House / Bridge are weighted highest, the large Shop / GuardTower / Well rarest). LoadEntities:false so the native NPC_Spawn_Marker / NPC_Path_Marker entities baked into the source villages never spawn (the Corrupted_* files already zero entities; this is belt-and-suspenders at the scatter layer too). DontReplace placement guard: the ColumnLinear scanner floor-snaps onto the rolling surface and the Floor pattern only accepts a column standing on Soil_Grass_Dry under Empty, so a ruin never gouges existing soil or floats in the air; we DROP the trees' +8 air-offset headroom check because these structures are tall and do not need clear sky at exactly +8 blocks. Random directionality rotates each ruin. Jitter 0.5 (the <=0.5 BiomeAsset cap). IN-GAME GATE: pack-authored Corrupted_* prefab-folder resolution during worldgen scatter is unverified here; confirm the keys resolve and the footprints do not bury/float badly on rolling terrain.",
-      "Positions": {
-        "Type": "Mesh2D",
-        "Skip": false,
-        "PointsY": 0,
-        "PointGenerator": {
-          "Type": "Mesh",
-          "Jitter": 0.5,
-          "ScaleX": 48,
-          "ScaleY": 48,
-          "ScaleZ": 48,
-          "Seed": "KN_Ruins"
-        }
-      },
-      "Assignments": {
-        "Type": "Weighted",
-        "SkipChance": 0.74,
-        "Seed": "KN_RuinsW",
-        "WeightedAssignments": [
-          {
-            "Weight": 1,
-            "Assignments": {
-              "Type": "Constant",
-              "Prop": {
-                "Type": "Prefab",
-                "Skip": false,
-                "WeightedPrefabPaths": [
-                  {
-                    "Path": "KweebecNightmare/Corrupted_Lamppost",
-                    "Weight": 5
                   },
-                  {
-                    "Path": "KweebecNightmare/Corrupted_House_Small",
-                    "Weight": 4
-                  },
-                  {
-                    "Path": "KweebecNightmare/Corrupted_Bridge",
-                    "Weight": 3
-                  },
-                  {
-                    "Path": "KweebecNightmare/Corrupted_Shop",
-                    "Weight": 2
-                  },
-                  {
-                    "Path": "KweebecNightmare/Corrupted_GuardTower",
-                    "Weight": 2
-                  },
-                  {
-                    "Path": "KweebecNightmare/Corrupted_Well",
-                    "Weight": 1
-                  }
-                ],
-                "LegacyPath": false,
-                "LoadEntities": false,
-                "Directionality": {
-                  "Type": "Random",
-                  "Seed": "KN_RuinRot",
-                  "Pattern": {
-                    "Type": "Floor",
+                  "Scanner": {
+                    "Type": "Linear",
                     "Skip": false,
-                    "Origin": {
-                      "Type": "BlockSet",
-                      "Skip": false,
-                      "BlockSet": {
-                        "Inclusive": true,
-                        "Materials": [
-                          {
-                            "Solid": "Empty"
-                          }
-                        ]
-                      }
+                    "Axis": "Y",
+                    "AscendingOrder": false,
+                    "Range": {
+                      "MinInclusive": -20,
+                      "MaxExclusive": 40
                     },
-                    "Floor": {
-                      "Type": "BlockSet",
-                      "Skip": false,
-                      "BlockSet": {
-                        "Inclusive": true,
-                        "Materials": [
-                          {
-                            "Solid": "Soil_Grass_Dry"
-                          }
-                        ]
-                      }
+                    "Scanner": {
+                      "Type": "Origin",
+                      "Skip": false
                     }
                   }
-                },
-                "Scanner": {
-                  "Type": "ColumnLinear",
-                  "Skip": false,
-                  "MaxY": 40,
-                  "MinY": -20,
-                  "RelativeToPosition": false,
-                  "BaseHeightName": "Base",
-                  "TopDownOrder": true,
-                  "ResultCap": 1
-                },
-                "MoldingDirection": "None",
-                "MoldingChildren": false
+                }
               }
             }
-          }
-        ]
+          ]
+        }
       }
     },
     {
       "Skip": false,
       "Runtime": 2,
-      "Positions": {
-        "Type": "Mesh2D",
+      "$Comment": "TRACK A (cycle 3): SPARSE corrupted-structure ruins scattered gen-time among the dead trees. CLONED from Props[0] (the Type:Prefab tree-scatter prop) and repointed at the committed KweebecNightmare/Corrupted_* structures, so it mirrors the proven Prefab-prop shape exactly (a malformed Prefab prop fails the WHOLE biome decode = all air; validate in-game, this JSON is not gradle-compiled). MUCH sparser than the trees: grid Scale 48 (vs the trees' 16) plus SkipChance 0.85 means only a handful of ruins land, biased to the outer grove since the structures are big (the small Lamppost / House / Bridge are weighted highest, the large Shop / GuardTower / Well rarest). A Prefab prop places every entity baked into its prefab, so the Corrupted_* files must stay free of the source villages' NPC_Spawn_Marker / NPC_Path_Marker entities (they carry none). Placement guard: the Locator's Linear scanner floor-snaps onto the rolling surface and the Floor pattern only accepts a column standing on Soil_Grass_Dry under Empty, so a ruin never gouges existing soil or floats in the air; we DROP the trees' +8 air-offset headroom check because these structures are tall and do not need clear sky at exactly +8 blocks. RandomRotator turns each ruin. Jitter2d Magnitude 0.5 (half a cell). NOTE: each Path names a loose file without its .prefab.json extension, which loads nothing, so this prop places no ruins until the paths spell it (KweebecNightmare/Corrupted_Lamppost.prefab.json). IN-GAME GATE once they resolve: confirm the footprints do not bury/float badly on rolling terrain or cut into a shrine.",
+      "PropDistribution": {
+        "Type": "Assigned",
         "Skip": false,
-        "PointsY": 0,
-        "PointGenerator": {
-          "Type": "Mesh",
-          "Jitter": 0.5,
-          "ScaleX": 4,
-          "ScaleY": 4,
-          "ScaleZ": 4,
-          "Seed": "KN_Grass"
-        }
-      },
-      "Assignments": {
-        "Type": "FieldFunction",
-        "FieldFunction": {
-          "Type": "SimplexNoise2D",
+        "OverrideAllProps": false,
+        "PropDistribution": {
+          "Type": "Positions",
           "Skip": false,
-          "Lacunarity": 2,
-          "Persistence": 0.5,
-          "Octaves": 1,
-          "Scale": 30,
-          "Seed": "KN_GrassField"
+          "Positions": {
+            "Type": "BaseHeight",
+            "Skip": false,
+            "BedName": "Base",
+            "Positions": {
+              "Type": "Scaler",
+              "Skip": false,
+              "Scale": {
+                "X": 48,
+                "Y": 48,
+                "Z": 48
+              },
+              "Positions": {
+                "Type": "Jitter2d",
+                "Skip": false,
+                "Magnitude": 0.5,
+                "Seed": "KN_Ruins",
+                "Positions": {
+                  "Type": "SquareGrid2d",
+                  "Skip": false
+                }
+              }
+            }
+          }
         },
-        "Delimiters": [
-          {
-            "Min": 0.2,
-            "Max": 1,
-            "Assignments": {
-              "Type": "Weighted",
-              "SkipChance": 0.5,
-              "Seed": "KN_GrassW",
-              "WeightedAssignments": [
-                {
-                  "Weight": 60,
-                  "Assignments": {
-                    "Type": "Constant",
+        "Assignments": {
+          "Type": "Weighted",
+          "SkipChance": 0.74,
+          "Seed": "KN_RuinsW",
+          "WeightedAssignments": [
+            {
+              "Weight": 1,
+              "Assignments": {
+                "Type": "Constant",
+                "Prop": {
+                  "Type": "Locator",
+                  "Skip": false,
+                  "PlacementCap": 1,
+                  "Prop": {
+                    "Type": "RandomRotator",
+                    "Skip": false,
+                    "HorizontalRotations": true,
+                    "Rotations": [],
+                    "Seed": "KN_RuinRot",
                     "Prop": {
-                      "Type": "Column",
+                      "Type": "Prefab",
                       "Skip": false,
-                      "ColumnBlocks": [
+                      "WeightedPrefabPaths": [
                         {
-                          "Y": 0,
-                          "Material": {
-                            "Solid": "Plant_Grass_Dry"
-                          }
+                          "Path": "KweebecNightmare/Corrupted_Lamppost",
+                          "Weight": 5
+                        },
+                        {
+                          "Path": "KweebecNightmare/Corrupted_House_Small",
+                          "Weight": 4
+                        },
+                        {
+                          "Path": "KweebecNightmare/Corrupted_Bridge",
+                          "Weight": 3
+                        },
+                        {
+                          "Path": "KweebecNightmare/Corrupted_Shop",
+                          "Weight": 2
+                        },
+                        {
+                          "Path": "KweebecNightmare/Corrupted_GuardTower",
+                          "Weight": 2
+                        },
+                        {
+                          "Path": "KweebecNightmare/Corrupted_Well",
+                          "Weight": 1
                         }
-                      ],
-                      "Directionality": {
-                        "Type": "Static",
-                        "Rotation": 0,
+                      ]
+                    }
+                  },
+                  "Pattern": {
+                    "Type": "Floor",
+                    "Skip": false,
+                    "Origin": {
+                      "Type": "BlockSet",
+                      "Skip": false,
+                      "BlockSet": {
+                        "Inclusive": true,
+                        "Materials": [
+                          {
+                            "Solid": "Empty"
+                          }
+                        ]
+                      }
+                    },
+                    "Floor": {
+                      "Type": "BlockSet",
+                      "Skip": false,
+                      "BlockSet": {
+                        "Inclusive": true,
+                        "Materials": [
+                          {
+                            "Solid": "Soil_Grass_Dry"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "Scanner": {
+                    "Type": "Linear",
+                    "Skip": false,
+                    "Axis": "Y",
+                    "AscendingOrder": false,
+                    "Range": {
+                      "MinInclusive": -20,
+                      "MaxExclusive": 40
+                    },
+                    "Scanner": {
+                      "Type": "Origin",
+                      "Skip": false
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Skip": false,
+      "Runtime": 2,
+      "PropDistribution": {
+        "Type": "Assigned",
+        "Skip": false,
+        "OverrideAllProps": false,
+        "PropDistribution": {
+          "Type": "Positions",
+          "Skip": false,
+          "Positions": {
+            "Type": "BaseHeight",
+            "Skip": false,
+            "BedName": "Base",
+            "Positions": {
+              "Type": "Scaler",
+              "Skip": false,
+              "Scale": {
+                "X": 4,
+                "Y": 4,
+                "Z": 4
+              },
+              "Positions": {
+                "Type": "Jitter2d",
+                "Skip": false,
+                "Magnitude": 0.5,
+                "Seed": "KN_Grass",
+                "Positions": {
+                  "Type": "SquareGrid2d",
+                  "Skip": false
+                }
+              }
+            }
+          }
+        },
+        "Assignments": {
+          "Type": "FieldFunction",
+          "FieldFunction": {
+            "Type": "SimplexNoise2D",
+            "Skip": false,
+            "Lacunarity": 2,
+            "Persistence": 0.5,
+            "Octaves": 1,
+            "Scale": 30,
+            "Seed": "KN_GrassField"
+          },
+          "Delimiters": [
+            {
+              "Min": 0.2,
+              "Max": 1,
+              "Assignments": {
+                "Type": "Weighted",
+                "SkipChance": 0.5,
+                "Seed": "KN_GrassW",
+                "WeightedAssignments": [
+                  {
+                    "Weight": 60,
+                    "Assignments": {
+                      "Type": "Constant",
+                      "Prop": {
+                        "Type": "Locator",
+                        "Skip": false,
+                        "PlacementCap": 1,
+                        "Prop": {
+                          "Type": "Manual",
+                          "Skip": false,
+                          "Blocks": [
+                            {
+                              "Position": {
+                                "X": 0,
+                                "Y": 0,
+                                "Z": 0
+                              },
+                              "Material": {
+                                "Solid": "Plant_Grass_Dry"
+                              }
+                            }
+                          ]
+                        },
                         "Pattern": {
                           "Type": "Floor",
                           "Skip": false,
@@ -587,39 +668,48 @@
                               "Solid": "Soil_Grass_Dry"
                             }
                           }
-                        }
-                      },
-                      "Scanner": {
-                        "Type": "ColumnLinear",
-                        "Skip": false,
-                        "MaxY": 80,
-                        "MinY": -60,
-                        "RelativeToPosition": false,
-                        "BaseHeightName": "Base",
-                        "TopDownOrder": true,
-                        "ResultCap": 1
-                      }
-                    }
-                  }
-                },
-                {
-                  "Weight": 40,
-                  "Assignments": {
-                    "Type": "Constant",
-                    "Prop": {
-                      "Type": "Column",
-                      "Skip": false,
-                      "ColumnBlocks": [
-                        {
-                          "Y": 0,
-                          "Material": {
-                            "Solid": "Plant_Grass_Dry_Tall"
+                        },
+                        "Scanner": {
+                          "Type": "Linear",
+                          "Skip": false,
+                          "Axis": "Y",
+                          "AscendingOrder": false,
+                          "Range": {
+                            "MinInclusive": -60,
+                            "MaxExclusive": 80
+                          },
+                          "Scanner": {
+                            "Type": "Origin",
+                            "Skip": false
                           }
                         }
-                      ],
-                      "Directionality": {
-                        "Type": "Static",
-                        "Rotation": 0,
+                      }
+                    }
+                  },
+                  {
+                    "Weight": 40,
+                    "Assignments": {
+                      "Type": "Constant",
+                      "Prop": {
+                        "Type": "Locator",
+                        "Skip": false,
+                        "PlacementCap": 1,
+                        "Prop": {
+                          "Type": "Manual",
+                          "Skip": false,
+                          "Blocks": [
+                            {
+                              "Position": {
+                                "X": 0,
+                                "Y": 0,
+                                "Z": 0
+                              },
+                              "Material": {
+                                "Solid": "Plant_Grass_Dry_Tall"
+                              }
+                            }
+                          ]
+                        },
                         "Pattern": {
                           "Type": "Floor",
                           "Skip": false,
@@ -637,257 +727,334 @@
                               "Solid": "Soil_Grass_Dry"
                             }
                           }
+                        },
+                        "Scanner": {
+                          "Type": "Linear",
+                          "Skip": false,
+                          "Axis": "Y",
+                          "AscendingOrder": false,
+                          "Range": {
+                            "MinInclusive": -60,
+                            "MaxExclusive": 80
+                          },
+                          "Scanner": {
+                            "Type": "Origin",
+                            "Skip": false
+                          }
                         }
-                      },
-                      "Scanner": {
-                        "Type": "ColumnLinear",
-                        "Skip": false,
-                        "MaxY": 80,
-                        "MinY": -60,
-                        "RelativeToPosition": false,
-                        "BaseHeightName": "Base",
-                        "TopDownOrder": true,
-                        "ResultCap": 1
                       }
                     }
                   }
-                }
-              ]
+                ]
+              }
             }
-          }
-        ]
+          ]
+        }
       }
     },
     {
       "Skip": false,
       "Runtime": 2,
-      "Positions": {
-        "Type": "Mesh2D",
+      "PropDistribution": {
+        "Type": "Assigned",
         "Skip": false,
-        "PointsY": 0,
-        "PointGenerator": {
-          "Type": "Mesh",
-          "Jitter": 0.5,
-          "ScaleX": 11,
-          "ScaleY": 11,
-          "ScaleZ": 11,
-          "Seed": "KN_Brush"
-        }
-      },
-      "Assignments": {
-        "Type": "Weighted",
-        "SkipChance": 0.48,
-        "Seed": "KN_BrushW",
-        "WeightedAssignments": [
-          {
-            "Weight": 50,
-            "Assignments": {
-              "Type": "Constant",
-              "Prop": {
-                "Type": "Column",
+        "OverrideAllProps": false,
+        "PropDistribution": {
+          "Type": "Positions",
+          "Skip": false,
+          "Positions": {
+            "Type": "BaseHeight",
+            "Skip": false,
+            "BedName": "Base",
+            "Positions": {
+              "Type": "Scaler",
+              "Skip": false,
+              "Scale": {
+                "X": 11,
+                "Y": 11,
+                "Z": 11
+              },
+              "Positions": {
+                "Type": "Jitter2d",
                 "Skip": false,
-                "ColumnBlocks": [
-                  {
-                    "Y": 0,
-                    "Material": {
-                      "Solid": "Plant_Bush_Dead"
-                    }
-                  }
-                ],
-                "Directionality": {
-                  "Type": "Static",
-                  "Rotation": 0,
-                  "Pattern": {
-                    "Type": "Floor",
-                    "Skip": false,
-                    "Origin": {
-                      "Type": "BlockType",
-                      "Skip": false,
-                      "Material": {
-                        "Solid": "Empty"
-                      }
-                    },
-                    "Floor": {
-                      "Type": "BlockType",
-                      "Skip": false,
-                      "Material": {
-                        "Solid": "Soil_Grass_Dry"
-                      }
-                    }
-                  }
-                },
-                "Scanner": {
-                  "Type": "ColumnLinear",
-                  "Skip": false,
-                  "MaxY": 60,
-                  "MinY": -40,
-                  "RelativeToPosition": false,
-                  "BaseHeightName": "Base",
-                  "TopDownOrder": true,
-                  "ResultCap": 1
-                }
-              }
-            }
-          },
-          {
-            "Weight": 90,
-            "Assignments": {
-              "Type": "Constant",
-              "Prop": {
-                "Type": "Column",
-                "Skip": false,
-                "ColumnBlocks": [
-                  {
-                    "Y": 0,
-                    "Material": {
-                      "Solid": "Plant_Bramble_Dead_Lavathorn"
-                    }
-                  }
-                ],
-                "Directionality": {
-                  "Type": "Static",
-                  "Rotation": 0,
-                  "Pattern": {
-                    "Type": "Floor",
-                    "Skip": false,
-                    "Origin": {
-                      "Type": "BlockType",
-                      "Skip": false,
-                      "Material": {
-                        "Solid": "Empty"
-                      }
-                    },
-                    "Floor": {
-                      "Type": "BlockType",
-                      "Skip": false,
-                      "Material": {
-                        "Solid": "Soil_Grass_Dry"
-                      }
-                    }
-                  }
-                },
-                "Scanner": {
-                  "Type": "ColumnLinear",
-                  "Skip": false,
-                  "MaxY": 60,
-                  "MinY": -40,
-                  "RelativeToPosition": false,
-                  "BaseHeightName": "Base",
-                  "TopDownOrder": true,
-                  "ResultCap": 1
-                }
-              }
-            }
-          },
-          {
-            "Weight": 140,
-            "Assignments": {
-              "Type": "Constant",
-              "Prop": {
-                "Type": "Column",
-                "Skip": false,
-                "ColumnBlocks": [
-                  {
-                    "Y": 0,
-                    "Material": {
-                      "Solid": "KweebecNightmare_Moonbloom_Plant"
-                    }
-                  }
-                ],
-                "Directionality": {
-                  "Type": "Static",
-                  "Rotation": 0,
-                  "Pattern": {
-                    "Type": "Floor",
-                    "Skip": false,
-                    "Origin": {
-                      "Type": "BlockType",
-                      "Skip": false,
-                      "Material": {
-                        "Solid": "Empty"
-                      }
-                    },
-                    "Floor": {
-                      "Type": "BlockType",
-                      "Skip": false,
-                      "Material": {
-                        "Solid": "Soil_Grass_Dry"
-                      }
-                    }
-                  }
-                },
-                "Scanner": {
-                  "Type": "ColumnLinear",
-                  "Skip": false,
-                  "MaxY": 60,
-                  "MinY": -40,
-                  "RelativeToPosition": false,
-                  "BaseHeightName": "Base",
-                  "TopDownOrder": true,
-                  "ResultCap": 1
+                "Magnitude": 0.5,
+                "Seed": "KN_Brush",
+                "Positions": {
+                  "Type": "SquareGrid2d",
+                  "Skip": false
                 }
               }
             }
           }
-        ]
+        },
+        "Assignments": {
+          "Type": "Weighted",
+          "SkipChance": 0.48,
+          "Seed": "KN_BrushW",
+          "WeightedAssignments": [
+            {
+              "Weight": 50,
+              "Assignments": {
+                "Type": "Constant",
+                "Prop": {
+                  "Type": "Locator",
+                  "Skip": false,
+                  "PlacementCap": 1,
+                  "Prop": {
+                    "Type": "Manual",
+                    "Skip": false,
+                    "Blocks": [
+                      {
+                        "Position": {
+                          "X": 0,
+                          "Y": 0,
+                          "Z": 0
+                        },
+                        "Material": {
+                          "Solid": "Plant_Bush_Dead"
+                        }
+                      }
+                    ]
+                  },
+                  "Pattern": {
+                    "Type": "Floor",
+                    "Skip": false,
+                    "Origin": {
+                      "Type": "BlockType",
+                      "Skip": false,
+                      "Material": {
+                        "Solid": "Empty"
+                      }
+                    },
+                    "Floor": {
+                      "Type": "BlockType",
+                      "Skip": false,
+                      "Material": {
+                        "Solid": "Soil_Grass_Dry"
+                      }
+                    }
+                  },
+                  "Scanner": {
+                    "Type": "Linear",
+                    "Skip": false,
+                    "Axis": "Y",
+                    "AscendingOrder": false,
+                    "Range": {
+                      "MinInclusive": -40,
+                      "MaxExclusive": 60
+                    },
+                    "Scanner": {
+                      "Type": "Origin",
+                      "Skip": false
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "Weight": 90,
+              "Assignments": {
+                "Type": "Constant",
+                "Prop": {
+                  "Type": "Locator",
+                  "Skip": false,
+                  "PlacementCap": 1,
+                  "Prop": {
+                    "Type": "Manual",
+                    "Skip": false,
+                    "Blocks": [
+                      {
+                        "Position": {
+                          "X": 0,
+                          "Y": 0,
+                          "Z": 0
+                        },
+                        "Material": {
+                          "Solid": "Plant_Bramble_Dead_Lavathorn"
+                        }
+                      }
+                    ]
+                  },
+                  "Pattern": {
+                    "Type": "Floor",
+                    "Skip": false,
+                    "Origin": {
+                      "Type": "BlockType",
+                      "Skip": false,
+                      "Material": {
+                        "Solid": "Empty"
+                      }
+                    },
+                    "Floor": {
+                      "Type": "BlockType",
+                      "Skip": false,
+                      "Material": {
+                        "Solid": "Soil_Grass_Dry"
+                      }
+                    }
+                  },
+                  "Scanner": {
+                    "Type": "Linear",
+                    "Skip": false,
+                    "Axis": "Y",
+                    "AscendingOrder": false,
+                    "Range": {
+                      "MinInclusive": -40,
+                      "MaxExclusive": 60
+                    },
+                    "Scanner": {
+                      "Type": "Origin",
+                      "Skip": false
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "Weight": 140,
+              "Assignments": {
+                "Type": "Constant",
+                "Prop": {
+                  "Type": "Locator",
+                  "Skip": false,
+                  "PlacementCap": 1,
+                  "Prop": {
+                    "Type": "Manual",
+                    "Skip": false,
+                    "Blocks": [
+                      {
+                        "Position": {
+                          "X": 0,
+                          "Y": 0,
+                          "Z": 0
+                        },
+                        "Material": {
+                          "Solid": "KweebecNightmare_Moonbloom_Plant"
+                        }
+                      }
+                    ]
+                  },
+                  "Pattern": {
+                    "Type": "Floor",
+                    "Skip": false,
+                    "Origin": {
+                      "Type": "BlockType",
+                      "Skip": false,
+                      "Material": {
+                        "Solid": "Empty"
+                      }
+                    },
+                    "Floor": {
+                      "Type": "BlockType",
+                      "Skip": false,
+                      "Material": {
+                        "Solid": "Soil_Grass_Dry"
+                      }
+                    }
+                  },
+                  "Scanner": {
+                    "Type": "Linear",
+                    "Skip": false,
+                    "Axis": "Y",
+                    "AscendingOrder": false,
+                    "Range": {
+                      "MinInclusive": -40,
+                      "MaxExclusive": 60
+                    },
+                    "Scanner": {
+                      "Type": "Origin",
+                      "Skip": false
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
       }
     },
     {
       "Skip": false,
       "Runtime": 2,
-      "$Comment": "Runtime 2 (same as trees) so debris reads ALL placed structures (big shrines at Runtime 0, small shrines at Runtime 1) and its Floor pattern skips their footprints instead of landing logs on/through the crypts + houses. FULL ATMOSPHERIC PASS: forest-floor DEBRIS - fallen logs, stumps, petrified logs, mossy boulders strewn through the dead grove for cover + decay texture. CLONED from the Corrupted_* ruins prop (the proven Type:Prefab scatter shape; a malformed Prefab prop fails the WHOLE biome decode = all air), repointed at verified native prefab folders (each folder resolves to a random child variant). Sparser than trees (Mesh Scale 14 + SkipChance 0.7). LoadEntities:false; the Floor pattern + ColumnLinear scanner floor-snap each piece onto Soil_Grass_Dry under Empty so nothing gouges soil or floats; Random rotation. Validate in-game (this JSON is not gradle-compiled).",
-      "Positions": {
-        "Type": "Mesh2D",
+      "$Comment": "Runtime 2 (same as trees) so debris reads ALL placed structures (big shrines at Runtime 0, small shrines at Runtime 1) and its Floor pattern skips their footprints instead of landing logs on/through the crypts + houses. FULL ATMOSPHERIC PASS: forest-floor DEBRIS - fallen logs, stumps, petrified logs, mossy boulders strewn through the dead grove for cover + decay texture. CLONED from the Corrupted_* ruins prop (the proven Type:Prefab scatter shape; a malformed Prefab prop fails the WHOLE biome decode = all air), repointed at verified native prefab folders (each folder resolves to a random child variant). Sparser than trees (grid Scale 14 + SkipChance 0.7). The prefabs carry no entities; the Floor pattern + the Locator's Linear scanner floor-snap each piece onto Soil_Grass_Dry under Empty so nothing gouges soil or floats; RandomRotator turns each piece. Validate in-game (this JSON is not gradle-compiled).",
+      "PropDistribution": {
+        "Type": "Assigned",
         "Skip": false,
-        "PointsY": 0,
-        "PointGenerator": {
-          "Type": "Mesh",
-          "Jitter": 0.5,
-          "ScaleX": 14,
-          "ScaleY": 14,
-          "ScaleZ": 14,
-          "Seed": "KN_Debris"
-        }
-      },
-      "Assignments": {
-        "Type": "Weighted",
-        "SkipChance": 0.52,
-        "Seed": "KN_DebrisW",
-        "WeightedAssignments": [
-          {
-            "Weight": 1,
-            "Assignments": {
-              "Type": "Constant",
-              "Prop": {
-                "Type": "Prefab",
+        "OverrideAllProps": false,
+        "PropDistribution": {
+          "Type": "Positions",
+          "Skip": false,
+          "Positions": {
+            "Type": "BaseHeight",
+            "Skip": false,
+            "BedName": "Base",
+            "Positions": {
+              "Type": "Scaler",
+              "Skip": false,
+              "Scale": {
+                "X": 14,
+                "Y": 14,
+                "Z": 14
+              },
+              "Positions": {
+                "Type": "Jitter2d",
                 "Skip": false,
-                "WeightedPrefabPaths": [
-                  {
-                    "Path": "Trees/Cedar_Logs/Large",
-                    "Weight": 3
+                "Magnitude": 0.5,
+                "Seed": "KN_Debris",
+                "Positions": {
+                  "Type": "SquareGrid2d",
+                  "Skip": false
+                }
+              }
+            }
+          }
+        },
+        "Assignments": {
+          "Type": "Weighted",
+          "SkipChance": 0.52,
+          "Seed": "KN_DebrisW",
+          "WeightedAssignments": [
+            {
+              "Weight": 1,
+              "Assignments": {
+                "Type": "Constant",
+                "Prop": {
+                  "Type": "Locator",
+                  "Skip": false,
+                  "PlacementCap": 1,
+                  "Prop": {
+                    "Type": "RandomRotator",
+                    "Skip": false,
+                    "HorizontalRotations": true,
+                    "Rotations": [],
+                    "Seed": "KN_DebrisRot",
+                    "Prop": {
+                      "Type": "Prefab",
+                      "Skip": false,
+                      "WeightedPrefabPaths": [
+                        {
+                          "Path": "Trees/Cedar_Logs/Large",
+                          "Weight": 3
+                        },
+                        {
+                          "Path": "Trees/Cedar_Logs/Small",
+                          "Weight": 4
+                        },
+                        {
+                          "Path": "Trees/Fir_Logs/Small",
+                          "Weight": 3
+                        },
+                        {
+                          "Path": "Trees/Autumn_Stumps",
+                          "Weight": 3
+                        },
+                        {
+                          "Path": "Trees/Petrified_Logs",
+                          "Weight": 2
+                        }
+                      ]
+                    }
                   },
-                  {
-                    "Path": "Trees/Cedar_Logs/Small",
-                    "Weight": 4
-                  },
-                  {
-                    "Path": "Trees/Fir_Logs/Small",
-                    "Weight": 3
-                  },
-                  {
-                    "Path": "Trees/Autumn_Stumps",
-                    "Weight": 3
-                  },
-                  {
-                    "Path": "Trees/Petrified_Logs",
-                    "Weight": 2
-                  }
-                ],
-                "LegacyPath": false,
-                "LoadEntities": false,
-                "Directionality": {
-                  "Type": "Random",
-                  "Seed": "KN_DebrisRot",
                   "Pattern": {
                     "Type": "Floor",
                     "Skip": false,
@@ -915,70 +1082,98 @@
                         ]
                       }
                     }
+                  },
+                  "Scanner": {
+                    "Type": "Linear",
+                    "Skip": false,
+                    "Axis": "Y",
+                    "AscendingOrder": false,
+                    "Range": {
+                      "MinInclusive": -20,
+                      "MaxExclusive": 40
+                    },
+                    "Scanner": {
+                      "Type": "Origin",
+                      "Skip": false
+                    }
                   }
-                },
-                "Scanner": {
-                  "Type": "ColumnLinear",
-                  "Skip": false,
-                  "MaxY": 40,
-                  "MinY": -20,
-                  "RelativeToPosition": false,
-                  "BaseHeightName": "Base",
-                  "TopDownOrder": true,
-                  "ResultCap": 1
-                },
-                "MoldingDirection": "None",
-                "MoldingChildren": false
+                }
               }
             }
-          }
-        ]
+          ]
+        }
       }
     },
     {
       "Skip": false,
       "Runtime": 2,
-      "$Comment": "FULL ATMOSPHERIC PASS: rare GRAVES + RELICS - Cursed Crypt tombstones + a warning sign-post seeded sparsely as haunted set-dressing. The big Crypt_Entrance set-piece is deliberately NOT scattered here (it carves a deep pit; a random drop onto a shrine/spawn would break the chase) - that stays on the runtime, ExclusionMask-protected seam. CLONED from the ruins prop shape. Very sparse (Mesh Scale 40 + SkipChance 0.85). LoadEntities:false; Floor pattern + ColumnLinear floor-snap; Random rotation. Validate in-game.",
-      "Positions": {
-        "Type": "Mesh2D",
+      "$Comment": "FULL ATMOSPHERIC PASS: rare GRAVES + RELICS - Cursed Crypt tombstones + a warning sign-post seeded sparsely as haunted set-dressing. The big Crypt_Entrance set-piece is deliberately NOT scattered here (it carves a deep pit; a random drop onto a shrine/spawn would break the chase) - that stays on the runtime, ExclusionMask-protected seam. CLONED from the ruins prop shape. Very sparse (grid Scale 40 + SkipChance 0.85). The prefabs carry no entities; Floor pattern + Linear scanner floor-snap; RandomRotator turns each piece. Validate in-game.",
+      "PropDistribution": {
+        "Type": "Assigned",
         "Skip": false,
-        "PointsY": 0,
-        "PointGenerator": {
-          "Type": "Mesh",
-          "Jitter": 0.5,
-          "ScaleX": 40,
-          "ScaleY": 40,
-          "ScaleZ": 40,
-          "Seed": "KN_Graves"
-        }
-      },
-      "Assignments": {
-        "Type": "Weighted",
-        "SkipChance": 0.85,
-        "Seed": "KN_GravesW",
-        "WeightedAssignments": [
-          {
-            "Weight": 1,
-            "Assignments": {
-              "Type": "Constant",
-              "Prop": {
-                "Type": "Prefab",
+        "OverrideAllProps": false,
+        "PropDistribution": {
+          "Type": "Positions",
+          "Skip": false,
+          "Positions": {
+            "Type": "BaseHeight",
+            "Skip": false,
+            "BedName": "Base",
+            "Positions": {
+              "Type": "Scaler",
+              "Skip": false,
+              "Scale": {
+                "X": 40,
+                "Y": 40,
+                "Z": 40
+              },
+              "Positions": {
+                "Type": "Jitter2d",
                 "Skip": false,
-                "WeightedPrefabPaths": [
-                  {
-                    "Path": "Dungeon/Cursed_Crypt/Entrance/Parts/Tomb_Small",
-                    "Weight": 4
+                "Magnitude": 0.5,
+                "Seed": "KN_Graves",
+                "Positions": {
+                  "Type": "SquareGrid2d",
+                  "Skip": false
+                }
+              }
+            }
+          }
+        },
+        "Assignments": {
+          "Type": "Weighted",
+          "SkipChance": 0.85,
+          "Seed": "KN_GravesW",
+          "WeightedAssignments": [
+            {
+              "Weight": 1,
+              "Assignments": {
+                "Type": "Constant",
+                "Prop": {
+                  "Type": "Locator",
+                  "Skip": false,
+                  "PlacementCap": 1,
+                  "Prop": {
+                    "Type": "RandomRotator",
+                    "Skip": false,
+                    "HorizontalRotations": true,
+                    "Rotations": [],
+                    "Seed": "KN_GravesRot",
+                    "Prop": {
+                      "Type": "Prefab",
+                      "Skip": false,
+                      "WeightedPrefabPaths": [
+                        {
+                          "Path": "Dungeon/Cursed_Crypt/Entrance/Parts/Tomb_Small",
+                          "Weight": 4
+                        },
+                        {
+                          "Path": "Dungeon/Cursed_Crypt/Entrance/Parts/Sign_Post",
+                          "Weight": 1
+                        }
+                      ]
+                    }
                   },
-                  {
-                    "Path": "Dungeon/Cursed_Crypt/Entrance/Parts/Sign_Post",
-                    "Weight": 1
-                  }
-                ],
-                "LegacyPath": false,
-                "LoadEntities": false,
-                "Directionality": {
-                  "Type": "Random",
-                  "Seed": "KN_GravesRot",
                   "Pattern": {
                     "Type": "Floor",
                     "Skip": false,
@@ -1006,70 +1201,205 @@
                         ]
                       }
                     }
+                  },
+                  "Scanner": {
+                    "Type": "Linear",
+                    "Skip": false,
+                    "Axis": "Y",
+                    "AscendingOrder": false,
+                    "Range": {
+                      "MinInclusive": -20,
+                      "MaxExclusive": 40
+                    },
+                    "Scanner": {
+                      "Type": "Origin",
+                      "Skip": false
+                    }
                   }
-                },
-                "Scanner": {
-                  "Type": "ColumnLinear",
-                  "Skip": false,
-                  "MaxY": 40,
-                  "MinY": -20,
-                  "RelativeToPosition": false,
-                  "BaseHeightName": "Base",
-                  "TopDownOrder": true,
-                  "ResultCap": 1
-                },
-                "MoldingDirection": "None",
-                "MoldingChildren": false
+                }
               }
             }
-          }
-        ]
+          ]
+        }
       }
     },
     {
       "Skip": false,
       "Runtime": 2,
-      "$Comment": "ATMOSPHERE CLUSTERS (native prefab-stitching): composed multi-prefab set-dressing via Child_Prefabs / Prefab_Spawner_Block. Each cluster parent (KweebecNightmare/Cluster_Deadfall, Cluster_Rubble) embeds Prefab_Spawner_Block markers the worldgen PrefabProp path harvests + recursively pastes (decompile-verified: builtin.hytalegenerator.props.deprecated.prefab.PrefabProp harvests prefab.getChildPrefabs() at construction and pastes each child in place(); that branch is taken because this prop carries Scanner+Directionality). Children are confirmed-resolving native debris (Trees/Cedar_Logs, Fir_Logs, Petrified_Logs, Autumn_Stumps); each child carries FitHeightmap:true so it self-snaps to the rolling surface (no float/gouge). SPARSER than the lone-debris pass (Mesh 40 + SkipChance 0.8) so a handful of intentional rubble/deadfall piles read among the single debris. CLONED from the proven debris Prefab-prop shape; LoadEntities:false; Floor pattern + ColumnLinear floor-snaps the cluster anchor, Random rotation turns the whole cluster. IN-GAME GATE: (1) biome still generates (not all-air), (2) clusters appear as grouped debris, (3) the @Tech Prefab_Spawner_Block leaves NO visible marker on this V2 generator path (vanilla crypt/goblin use it cleanly on the V1 path; the V2 paste is unverified). This JSON is not gradle-compiled.",
-      "Positions": {
-        "Type": "Mesh2D",
+      "$Comment": "ATMOSPHERE CLUSTERS (composed multi-prefab set-dressing): each cluster is a Union of native debris prefabs at fixed offsets from the anchor, the same layout the KweebecNightmare/Cluster_Deadfall and Cluster_Rubble prefabs encode as Prefab_Spawner_Block children (Deadfall, weight 3: Cedar_Logs/Large at 0,0,0, Fir_Logs/Small at 2,0,1, Autumn_Stumps at -2,0,1; Rubble, weight 2: Petrified_Logs at 0,0,0, Cedar_Logs/Small at 2,0,-1, Autumn_Stumps at -1,0,2). The layout is spelled out here because this generator's Prefab prop resolves a child's PrefabPath as a folder path, and those prefabs write theirs in dot notation (Trees.Cedar_Logs.Large.*), which it cannot resolve, leaving the bare @Tech spawner blocks standing; change both places together. SPARSER than the lone-debris pass (grid Scale 40 + SkipChance 0.8) so a handful of intentional rubble/deadfall piles read among the single debris. The prefabs carry no entities; Floor pattern + the Locator's Linear scanner floor-snap the cluster anchor, RandomRotator turns the whole cluster, and the side pieces sit at the anchor's height, so on a slope one can float or sink a block. IN-GAME GATE: the biome still generates (not all-air) and the clusters appear as grouped debris. This JSON is not gradle-compiled.",
+      "PropDistribution": {
+        "Type": "Assigned",
         "Skip": false,
-        "PointsY": 0,
-        "PointGenerator": {
-          "Type": "Mesh",
-          "Jitter": 0.5,
-          "ScaleX": 40,
-          "ScaleY": 40,
-          "ScaleZ": 40,
-          "Seed": "KN_Clusters"
-        }
-      },
-      "Assignments": {
-        "Type": "Weighted",
-        "SkipChance": 0.8,
-        "Seed": "KN_ClustersW",
-        "WeightedAssignments": [
-          {
-            "Weight": 1,
-            "Assignments": {
-              "Type": "Constant",
-              "Prop": {
-                "Type": "Prefab",
+        "OverrideAllProps": false,
+        "PropDistribution": {
+          "Type": "Positions",
+          "Skip": false,
+          "Positions": {
+            "Type": "BaseHeight",
+            "Skip": false,
+            "BedName": "Base",
+            "Positions": {
+              "Type": "Scaler",
+              "Skip": false,
+              "Scale": {
+                "X": 40,
+                "Y": 40,
+                "Z": 40
+              },
+              "Positions": {
+                "Type": "Jitter2d",
                 "Skip": false,
-                "WeightedPrefabPaths": [
-                  {
-                    "Path": "KweebecNightmare/Cluster_Deadfall",
-                    "Weight": 3
+                "Magnitude": 0.5,
+                "Seed": "KN_Clusters",
+                "Positions": {
+                  "Type": "SquareGrid2d",
+                  "Skip": false
+                }
+              }
+            }
+          }
+        },
+        "Assignments": {
+          "Type": "Weighted",
+          "SkipChance": 0.8,
+          "Seed": "KN_ClustersW",
+          "WeightedAssignments": [
+            {
+              "Weight": 1,
+              "Assignments": {
+                "Type": "Constant",
+                "Prop": {
+                  "Type": "Locator",
+                  "Skip": false,
+                  "PlacementCap": 1,
+                  "Prop": {
+                    "Type": "RandomRotator",
+                    "Skip": false,
+                    "HorizontalRotations": true,
+                    "Rotations": [],
+                    "Seed": "KN_ClusterRot",
+                    "Prop": {
+                      "Type": "Weighted",
+                      "Skip": false,
+                      "Seed": "KN_ClusterPick",
+                      "Entries": [
+                        {
+                          "Weight": 3,
+                          "Prop": {
+                            "Type": "Union",
+                            "Skip": false,
+                            "Props": [
+                              {
+                                "Type": "Prefab",
+                                "Skip": false,
+                                "WeightedPrefabPaths": [
+                                  {
+                                    "Path": "Trees/Cedar_Logs/Large",
+                                    "Weight": 1
+                                  }
+                                ]
+                              },
+                              {
+                                "Type": "Offset",
+                                "Skip": false,
+                                "Offset": {
+                                  "X": 2,
+                                  "Y": 0,
+                                  "Z": 1
+                                },
+                                "Prop": {
+                                  "Type": "Prefab",
+                                  "Skip": false,
+                                  "WeightedPrefabPaths": [
+                                    {
+                                      "Path": "Trees/Fir_Logs/Small",
+                                      "Weight": 1
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "Type": "Offset",
+                                "Skip": false,
+                                "Offset": {
+                                  "X": -2,
+                                  "Y": 0,
+                                  "Z": 1
+                                },
+                                "Prop": {
+                                  "Type": "Prefab",
+                                  "Skip": false,
+                                  "WeightedPrefabPaths": [
+                                    {
+                                      "Path": "Trees/Autumn_Stumps",
+                                      "Weight": 1
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "Weight": 2,
+                          "Prop": {
+                            "Type": "Union",
+                            "Skip": false,
+                            "Props": [
+                              {
+                                "Type": "Prefab",
+                                "Skip": false,
+                                "WeightedPrefabPaths": [
+                                  {
+                                    "Path": "Trees/Petrified_Logs",
+                                    "Weight": 1
+                                  }
+                                ]
+                              },
+                              {
+                                "Type": "Offset",
+                                "Skip": false,
+                                "Offset": {
+                                  "X": 2,
+                                  "Y": 0,
+                                  "Z": -1
+                                },
+                                "Prop": {
+                                  "Type": "Prefab",
+                                  "Skip": false,
+                                  "WeightedPrefabPaths": [
+                                    {
+                                      "Path": "Trees/Cedar_Logs/Small",
+                                      "Weight": 1
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "Type": "Offset",
+                                "Skip": false,
+                                "Offset": {
+                                  "X": -1,
+                                  "Y": 0,
+                                  "Z": 2
+                                },
+                                "Prop": {
+                                  "Type": "Prefab",
+                                  "Skip": false,
+                                  "WeightedPrefabPaths": [
+                                    {
+                                      "Path": "Trees/Autumn_Stumps",
+                                      "Weight": 1
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
                   },
-                  {
-                    "Path": "KweebecNightmare/Cluster_Rubble",
-                    "Weight": 2
-                  }
-                ],
-                "LegacyPath": false,
-                "LoadEntities": false,
-                "Directionality": {
-                  "Type": "Random",
-                  "Seed": "KN_ClusterRot",
                   "Pattern": {
                     "Type": "Floor",
                     "Skip": false,
@@ -1097,70 +1427,98 @@
                         ]
                       }
                     }
+                  },
+                  "Scanner": {
+                    "Type": "Linear",
+                    "Skip": false,
+                    "Axis": "Y",
+                    "AscendingOrder": false,
+                    "Range": {
+                      "MinInclusive": -20,
+                      "MaxExclusive": 40
+                    },
+                    "Scanner": {
+                      "Type": "Origin",
+                      "Skip": false
+                    }
                   }
-                },
-                "Scanner": {
-                  "Type": "ColumnLinear",
-                  "Skip": false,
-                  "MaxY": 40,
-                  "MinY": -20,
-                  "RelativeToPosition": false,
-                  "BaseHeightName": "Base",
-                  "TopDownOrder": true,
-                  "ResultCap": 1
-                },
-                "MoldingDirection": "None",
-                "MoldingChildren": false
+                }
               }
             }
-          }
-        ]
+          ]
+        }
       }
     },
     {
       "Skip": false,
       "Runtime": 1,
-      "$Comment": "WORLDGEN SHRINE HOSTS - SMALL CRYPTS (scatter, Runtime 1): the furnace-baked copied-vanilla Tomb_Small crypts (Shrine_Crypt_01/02), scattered via the proven Mesh2D+Weighted shape (the trees/debris use this). SPAWN-ORDER: the big landmark hosts (the large crypt + the underground dungeon) place FIRST at Runtime 0; these small crypts run at Runtime 1 so they READ those placed footprints (now rock/brick) and their Floor pattern (Soil_Grass_Dry under Empty) SKIPS them, filling in AROUND the landmarks instead of crowding or overlapping them. Density slightly REDUCED (SkipChance 0.6, was 0.5) to leave room for the bigger hosts. Scatter is best-effort now (LoadEntities:true so each host spawns a baked hidden shrine MARKER entity): ShrinePlacement force-loads the play core, queries the markers to learn the real count + positions, and runtime-tops-up only the MISSING ones (spaced) to guarantee >=ArenaLayout.SURFACE_WORLDGEN_SHRINES; the furnace is discovered via its interaction. Furnace is a baked 4-cell multiblock (renders correct). IN-GAME GATE: confirm hosts generate, the marker is detected, the round is winnable, and the biome is not all-air (a malformed Prefab prop airs out the whole biome). Not gradle-compiled.",
-      "Positions": {
-        "Type": "Mesh2D",
+      "$Comment": "WORLDGEN SHRINE HOSTS - SMALL CRYPTS (scatter, Runtime 1): the furnace-baked copied-vanilla Tomb_Small crypts (Shrine_Crypt_01/02), scattered via the same jittered SquareGrid2d + Weighted shape the trees and debris use. SPAWN-ORDER: the big landmark hosts (the large crypt + the underground dungeon) place FIRST at Runtime 0; these small crypts run at Runtime 1 so they READ those placed footprints (now rock/brick) and their Floor pattern (Soil_Grass_Dry under Empty) SKIPS them, filling in AROUND the landmarks instead of crowding or overlapping them. Density slightly REDUCED (SkipChance 0.6, was 0.5) to leave room for the bigger hosts. Scatter is best-effort now (a Prefab prop places every baked entity, so each host spawns its baked hidden shrine MARKER entity): ShrinePlacement force-loads the play core, queries the markers to learn the real count + positions, and runtime-tops-up only the MISSING ones (spaced) to guarantee >=ArenaLayout.SURFACE_WORLDGEN_SHRINES; the furnace is discovered via its interaction. Furnace is a baked 4-cell multiblock (renders correct). IN-GAME GATE: confirm hosts generate, the marker is detected, the round is winnable, and the biome is not all-air (a malformed Prefab prop airs out the whole biome). Not gradle-compiled.",
+      "PropDistribution": {
+        "Type": "Assigned",
         "Skip": false,
-        "PointsY": 0,
-        "PointGenerator": {
-          "Type": "Mesh",
-          "Jitter": 0.5,
-          "ScaleX": 50,
-          "ScaleY": 50,
-          "ScaleZ": 50,
-          "Seed": "KN_ShrineHosts"
-        }
-      },
-      "Assignments": {
-        "Type": "Weighted",
-        "SkipChance": 0.6,
-        "Seed": "KN_ShrineHostsW",
-        "WeightedAssignments": [
-          {
-            "Weight": 1,
-            "Assignments": {
-              "Type": "Constant",
-              "Prop": {
-                "Type": "Prefab",
+        "OverrideAllProps": false,
+        "PropDistribution": {
+          "Type": "Positions",
+          "Skip": false,
+          "Positions": {
+            "Type": "BaseHeight",
+            "Skip": false,
+            "BedName": "Base",
+            "Positions": {
+              "Type": "Scaler",
+              "Skip": false,
+              "Scale": {
+                "X": 50,
+                "Y": 50,
+                "Z": 50
+              },
+              "Positions": {
+                "Type": "Jitter2d",
                 "Skip": false,
-                "WeightedPrefabPaths": [
-                  {
-                    "Path": "KweebecNightmare/Shrine_Crypt_01",
-                    "Weight": 1
+                "Magnitude": 0.5,
+                "Seed": "KN_ShrineHosts",
+                "Positions": {
+                  "Type": "SquareGrid2d",
+                  "Skip": false
+                }
+              }
+            }
+          }
+        },
+        "Assignments": {
+          "Type": "Weighted",
+          "SkipChance": 0.6,
+          "Seed": "KN_ShrineHostsW",
+          "WeightedAssignments": [
+            {
+              "Weight": 1,
+              "Assignments": {
+                "Type": "Constant",
+                "Prop": {
+                  "Type": "Locator",
+                  "Skip": false,
+                  "PlacementCap": 1,
+                  "Prop": {
+                    "Type": "RandomRotator",
+                    "Skip": false,
+                    "HorizontalRotations": true,
+                    "Rotations": [],
+                    "Seed": "KN_ShrineHostRot",
+                    "Prop": {
+                      "Type": "Prefab",
+                      "Skip": false,
+                      "WeightedPrefabPaths": [
+                        {
+                          "Path": "KweebecNightmare/Shrine_Crypt_01",
+                          "Weight": 1
+                        },
+                        {
+                          "Path": "KweebecNightmare/Shrine_Crypt_02",
+                          "Weight": 1
+                        }
+                      ]
+                    }
                   },
-                  {
-                    "Path": "KweebecNightmare/Shrine_Crypt_02",
-                    "Weight": 1
-                  }
-                ],
-                "LegacyPath": false,
-                "LoadEntities": true,
-                "Directionality": {
-                  "Type": "Random",
-                  "Seed": "KN_ShrineHostRot",
                   "Pattern": {
                     "Type": "Floor",
                     "Skip": false,
@@ -1188,66 +1546,94 @@
                         ]
                       }
                     }
+                  },
+                  "Scanner": {
+                    "Type": "Linear",
+                    "Skip": false,
+                    "Axis": "Y",
+                    "AscendingOrder": false,
+                    "Range": {
+                      "MinInclusive": -20,
+                      "MaxExclusive": 40
+                    },
+                    "Scanner": {
+                      "Type": "Origin",
+                      "Skip": false
+                    }
                   }
-                },
-                "Scanner": {
-                  "Type": "ColumnLinear",
-                  "Skip": false,
-                  "MaxY": 40,
-                  "MinY": -20,
-                  "RelativeToPosition": false,
-                  "BaseHeightName": "Base",
-                  "TopDownOrder": true,
-                  "ResultCap": 1
-                },
-                "MoldingDirection": "None",
-                "MoldingChildren": false
+                }
               }
             }
-          }
-        ]
+          ]
+        }
       }
     },
     {
       "Skip": false,
       "Runtime": 0,
-      "$Comment": "WORLDGEN SHRINE HOSTS - LARGE CRYPT (scatter, Runtime 0): the big furnace-baked Shrine_Crypt_Large, scattered (Scale 72 + SkipChance 0.72, ~2 per round) on its own prop. SPAWN-ORDER: runs at Runtime 0, BEFORE the small crypts (Runtime 1), so this big ~29x29 landmark claims its ground first and the frequent small crypts skip its footprint instead of crowding it. The dense grid and low SkipChance keep the landmark RELIABLY present on every map; raise Scale or SkipChance and it starts skipping whole maps. Same proven Prefab-prop shape; LoadEntities:true so the baked hidden shrine MARKER entity spawns (ShrinePlacement queries it to detect this host + top up any missing shrines); Floor pattern + ColumnLinear floor-snaps it onto Soil_Grass_Dry under Empty. A landmark shrine. IN-GAME GATE: confirm it floor-snaps without burying/floating on rolling terrain, and the marker is detected. Not gradle-compiled.",
-      "Positions": {
-        "Type": "Mesh2D",
+      "$Comment": "WORLDGEN SHRINE HOSTS - LARGE CRYPT (scatter, Runtime 0): the big furnace-baked Shrine_Crypt_Large, scattered (Scale 72 + SkipChance 0.72, ~2 per round) on its own prop. SPAWN-ORDER: runs at Runtime 0, BEFORE the small crypts (Runtime 1), so this big ~29x29 landmark claims its ground first and the frequent small crypts skip its footprint instead of crowding it. The dense grid and low SkipChance keep the landmark RELIABLY present on every map; raise Scale or SkipChance and it starts skipping whole maps. Same proven Prefab-prop shape; a Prefab prop places every baked entity, so the hidden shrine MARKER entity spawns with it (ShrinePlacement queries it to detect this host + top up any missing shrines); Floor pattern + the Locator's Linear scanner floor-snap it onto Soil_Grass_Dry under Empty. A landmark shrine. IN-GAME GATE: confirm it floor-snaps without burying/floating on rolling terrain, and the marker is detected. Not gradle-compiled.",
+      "PropDistribution": {
+        "Type": "Assigned",
         "Skip": false,
-        "PointsY": 0,
-        "PointGenerator": {
-          "Type": "Mesh",
-          "Jitter": 0.5,
-          "ScaleX": 72,
-          "ScaleY": 72,
-          "ScaleZ": 72,
-          "Seed": "KN_ShrineLarge"
-        }
-      },
-      "Assignments": {
-        "Type": "Weighted",
-        "SkipChance": 0.72,
-        "Seed": "KN_ShrineLargeW",
-        "WeightedAssignments": [
-          {
-            "Weight": 1,
-            "Assignments": {
-              "Type": "Constant",
-              "Prop": {
-                "Type": "Prefab",
+        "OverrideAllProps": false,
+        "PropDistribution": {
+          "Type": "Positions",
+          "Skip": false,
+          "Positions": {
+            "Type": "BaseHeight",
+            "Skip": false,
+            "BedName": "Base",
+            "Positions": {
+              "Type": "Scaler",
+              "Skip": false,
+              "Scale": {
+                "X": 72,
+                "Y": 72,
+                "Z": 72
+              },
+              "Positions": {
+                "Type": "Jitter2d",
                 "Skip": false,
-                "WeightedPrefabPaths": [
-                  {
-                    "Path": "KweebecNightmare/Shrine_Crypt_Large",
-                    "Weight": 1
-                  }
-                ],
-                "LegacyPath": false,
-                "LoadEntities": true,
-                "Directionality": {
-                  "Type": "Random",
-                  "Seed": "KN_ShrineLargeRot",
+                "Magnitude": 0.5,
+                "Seed": "KN_ShrineLarge",
+                "Positions": {
+                  "Type": "SquareGrid2d",
+                  "Skip": false
+                }
+              }
+            }
+          }
+        },
+        "Assignments": {
+          "Type": "Weighted",
+          "SkipChance": 0.72,
+          "Seed": "KN_ShrineLargeW",
+          "WeightedAssignments": [
+            {
+              "Weight": 1,
+              "Assignments": {
+                "Type": "Constant",
+                "Prop": {
+                  "Type": "Locator",
+                  "Skip": false,
+                  "PlacementCap": 1,
+                  "Prop": {
+                    "Type": "RandomRotator",
+                    "Skip": false,
+                    "HorizontalRotations": true,
+                    "Rotations": [],
+                    "Seed": "KN_ShrineLargeRot",
+                    "Prop": {
+                      "Type": "Prefab",
+                      "Skip": false,
+                      "WeightedPrefabPaths": [
+                        {
+                          "Path": "KweebecNightmare/Shrine_Crypt_Large",
+                          "Weight": 1
+                        }
+                      ]
+                    }
+                  },
                   "Pattern": {
                     "Type": "Floor",
                     "Skip": false,
@@ -1275,66 +1661,94 @@
                         ]
                       }
                     }
+                  },
+                  "Scanner": {
+                    "Type": "Linear",
+                    "Skip": false,
+                    "Axis": "Y",
+                    "AscendingOrder": false,
+                    "Range": {
+                      "MinInclusive": -20,
+                      "MaxExclusive": 40
+                    },
+                    "Scanner": {
+                      "Type": "Origin",
+                      "Skip": false
+                    }
                   }
-                },
-                "Scanner": {
-                  "Type": "ColumnLinear",
-                  "Skip": false,
-                  "MaxY": 40,
-                  "MinY": -20,
-                  "RelativeToPosition": false,
-                  "BaseHeightName": "Base",
-                  "TopDownOrder": true,
-                  "ResultCap": 1
-                },
-                "MoldingDirection": "None",
-                "MoldingChildren": false
+                }
               }
             }
-          }
-        ]
+          ]
+        }
       }
     },
     {
       "Skip": false,
       "Runtime": 0,
-      "$Comment": "WORLDGEN SHRINE HOST - UNDERGROUND DUNGEON (scatter + CARVE, Runtime 0): the furnace-baked multi-level descent Shrine_Dungeon_Underground_01, scattered (Scale 80 + SkipChance 0.78, ~1-2 per round - a denser grid + lower skip than a 90/0.7 pairing, which too often rolls zero) on its own prop because it is a big deep carve. SPAWN-ORDER: runs at Runtime 0 alongside the large crypt (BEFORE the small crypts at Runtime 1), a big landmark host placed first. UNLIKE the surface crypts this prefab DESCENDS: its anchor IS the surface ENTRANCE (anchorY 36) and the body extends DOWN ~36 blocks to the furnace chamber, the descent shaft authored as Empty cells. A Type:Prefab worldgen prop writes EVERY stored cell incl. Empty (decompile-verified: props.PrefabProp.place -> materialWriteSpace.set(material,pos) per cell, no air skip), so the Empty cells CARVE the descent straight out of the solid grove AT GENERATION TIME - the same carve the runtime cave-shaft seam did, now gen-time and reliable (no worldgen race, no force-paste). The Floor pattern + ColumnLinear scanner land the ENTRANCE flush on Soil_Grass_Dry under Empty; the body carves below into the dirt/rock (material runs to BottomY -80, far below the ~surface-36 chamber). LoadEntities:true spawns the baked hidden kn_shrine_marker entity (worldgen tags it FromWorldGen so ShrinePlacement detects it, tops up, and clusters surface Moonbloom at the entrance) and the dungeon self-bakes its own Moonbloom supply down the shaft. Furnace is a baked 4-cell multiblock, discovered via its interaction like every other host. Random directionality spins the footprint. IN-GAME GATE: confirm the entrance carves flush (not buried/floating) on rolling terrain, the descent is walkable to the furnace, the marker is detected, and the biome is not all-air (a malformed Prefab prop airs out the WHOLE biome). Not gradle-compiled.",
-      "Positions": {
-        "Type": "Mesh2D",
+      "$Comment": "WORLDGEN SHRINE HOST - UNDERGROUND DUNGEON (scatter + CARVE, Runtime 0): the furnace-baked multi-level descent Shrine_Dungeon_Underground_01, scattered (Scale 80 + SkipChance 0.78, ~1-2 per round - a denser grid + lower skip than a 90/0.7 pairing, which too often rolls zero) on its own prop because it is a big deep carve. SPAWN-ORDER: runs at Runtime 0 alongside the large crypt (BEFORE the small crypts at Runtime 1), a big landmark host placed first. UNLIKE the surface crypts this prefab DESCENDS: its anchor IS the surface ENTRANCE (anchorY 36) and the body extends DOWN ~36 blocks to the furnace chamber, the descent shaft authored as Empty cells. A Type:Prefab worldgen prop writes EVERY stored cell incl. Empty (source-verified: props.PrefabProp.generate -> materialWriteSpace.set(material, pos) per cell, no air skip), so the Empty cells CARVE the descent straight out of the solid grove AT GENERATION TIME - the same carve the runtime cave-shaft seam did, now gen-time and reliable (no worldgen race, no force-paste). The Floor pattern + the Locator's Linear scanner land the ENTRANCE flush on Soil_Grass_Dry under Empty; the body carves below into the dirt/rock (material runs to BottomY -80, far below the ~surface-36 chamber). The Prefab prop spawns every baked entity, so the hidden kn_shrine_marker entity spawns with it (worldgen tags it FromWorldGen so ShrinePlacement detects it, tops up, and clusters surface Moonbloom at the entrance) and the dungeon self-bakes its own Moonbloom supply down the shaft. Furnace is a baked 4-cell multiblock, discovered via its interaction like every other host. RandomRotator spins the footprint. IN-GAME GATE: confirm the entrance carves flush (not buried/floating) on rolling terrain, the descent is walkable to the furnace, the marker is detected, and the biome is not all-air (a malformed Prefab prop airs out the WHOLE biome). Not gradle-compiled.",
+      "PropDistribution": {
+        "Type": "Assigned",
         "Skip": false,
-        "PointsY": 0,
-        "PointGenerator": {
-          "Type": "Mesh",
-          "Jitter": 0.5,
-          "ScaleX": 80,
-          "ScaleY": 80,
-          "ScaleZ": 80,
-          "Seed": "KN_ShrineDungeon"
-        }
-      },
-      "Assignments": {
-        "Type": "Weighted",
-        "SkipChance": 0.78,
-        "Seed": "KN_ShrineDungeonW",
-        "WeightedAssignments": [
-          {
-            "Weight": 1,
-            "Assignments": {
-              "Type": "Constant",
-              "Prop": {
-                "Type": "Prefab",
+        "OverrideAllProps": false,
+        "PropDistribution": {
+          "Type": "Positions",
+          "Skip": false,
+          "Positions": {
+            "Type": "BaseHeight",
+            "Skip": false,
+            "BedName": "Base",
+            "Positions": {
+              "Type": "Scaler",
+              "Skip": false,
+              "Scale": {
+                "X": 80,
+                "Y": 80,
+                "Z": 80
+              },
+              "Positions": {
+                "Type": "Jitter2d",
                 "Skip": false,
-                "WeightedPrefabPaths": [
-                  {
-                    "Path": "KweebecNightmare/Shrine_Dungeon_Underground_01",
-                    "Weight": 1
-                  }
-                ],
-                "LegacyPath": false,
-                "LoadEntities": true,
-                "Directionality": {
-                  "Type": "Random",
-                  "Seed": "KN_ShrineDungeonRot",
+                "Magnitude": 0.5,
+                "Seed": "KN_ShrineDungeon",
+                "Positions": {
+                  "Type": "SquareGrid2d",
+                  "Skip": false
+                }
+              }
+            }
+          }
+        },
+        "Assignments": {
+          "Type": "Weighted",
+          "SkipChance": 0.78,
+          "Seed": "KN_ShrineDungeonW",
+          "WeightedAssignments": [
+            {
+              "Weight": 1,
+              "Assignments": {
+                "Type": "Constant",
+                "Prop": {
+                  "Type": "Locator",
+                  "Skip": false,
+                  "PlacementCap": 1,
+                  "Prop": {
+                    "Type": "RandomRotator",
+                    "Skip": false,
+                    "HorizontalRotations": true,
+                    "Rotations": [],
+                    "Seed": "KN_ShrineDungeonRot",
+                    "Prop": {
+                      "Type": "Prefab",
+                      "Skip": false,
+                      "WeightedPrefabPaths": [
+                        {
+                          "Path": "KweebecNightmare/Shrine_Dungeon_Underground_01",
+                          "Weight": 1
+                        }
+                      ]
+                    }
+                  },
                   "Pattern": {
                     "Type": "Floor",
                     "Skip": false,
@@ -1362,70 +1776,98 @@
                         ]
                       }
                     }
+                  },
+                  "Scanner": {
+                    "Type": "Linear",
+                    "Skip": false,
+                    "Axis": "Y",
+                    "AscendingOrder": false,
+                    "Range": {
+                      "MinInclusive": -20,
+                      "MaxExclusive": 40
+                    },
+                    "Scanner": {
+                      "Type": "Origin",
+                      "Skip": false
+                    }
                   }
-                },
-                "Scanner": {
-                  "Type": "ColumnLinear",
-                  "Skip": false,
-                  "MaxY": 40,
-                  "MinY": -20,
-                  "RelativeToPosition": false,
-                  "BaseHeightName": "Base",
-                  "TopDownOrder": true,
-                  "ResultCap": 1
-                },
-                "MoldingDirection": "None",
-                "MoldingChildren": false
+                }
               }
             }
-          }
-        ]
+          ]
+        }
       }
     },
     {
       "Skip": true,
       "Runtime": 0,
-      "$Comment": "DISABLED (Skip:true): the Kweebec houses were too big and the worldgen-spawned ambient corrupted Kweebecs (NPC_Spawn_Marker via LoadEntities:true) did not appear in-round, so the large crypt is the big landmark host instead. Kept here (skipped) for easy re-enable. WORLDGEN SHRINE HOSTS - CORRUPTED HOUSES (scatter, LoadEntities:true): the two furnace-baked copied-vanilla Kweebec medium houses (Shrine_House_01/02), scattered RARELY (Scale 80 + SkipChance 0.6) on their own prop so their tall ~25x33 footprint stays sparse. UNLIKE every other host prop this one sets LoadEntities:TRUE so the houses' baked NPC_Spawn_Marker entities spawn AMBIENT corrupted Kweebecs (their SpawnMarker ids were repointed to KweebecNightmare_Husk_Patrol -> KweebecNightmare_Blight) plus their patrol-path markers; the per-round instance is DeleteOnRemove so teardown cleans them. The baked Block_Spawner_Block (native Zone1_Kweebec_Tier1) randomizes a loot chest. IN-GAME GATE: confirm houses generate, corrupted Kweebecs spawn + despawn on teardown, and they do not swamp the controlled-hunter difficulty (tune weight / SkipChance / ExclusionRadius if so). Not gradle-compiled.",
-      "Positions": {
-        "Type": "Mesh2D",
+      "$Comment": "DISABLED (Skip:true): the Kweebec houses were too big and the worldgen-spawned ambient corrupted Kweebecs (the houses' baked NPC_Spawn_Marker entities) did not appear in-round, so the large crypt is the big landmark host instead. Kept here (skipped) for easy re-enable. WORLDGEN SHRINE HOSTS - CORRUPTED HOUSES (scatter): the two furnace-baked copied-vanilla Kweebec medium houses (Shrine_House_01/02), scattered RARELY (Scale 80 + SkipChance 0.6) on their own prop so their tall ~25x33 footprint stays sparse. This host exists for its baked entities (a Prefab prop places every baked entity): the houses' NPC_Spawn_Marker entities spawn AMBIENT corrupted Kweebecs (their SpawnMarker ids were repointed to KweebecNightmare_Husk_Patrol -> KweebecNightmare_Blight) plus their patrol-path markers; the per-round instance is DeleteOnRemove so teardown cleans them. The baked Block_Spawner_Block (native Zone1_Kweebec_Tier1) randomizes a loot chest. IN-GAME GATE: confirm houses generate, corrupted Kweebecs spawn + despawn on teardown, and they do not swamp the controlled-hunter difficulty (tune weight / SkipChance / ExclusionRadius if so). Not gradle-compiled.",
+      "PropDistribution": {
+        "Type": "Assigned",
         "Skip": false,
-        "PointsY": 0,
-        "PointGenerator": {
-          "Type": "Mesh",
-          "Jitter": 0.5,
-          "ScaleX": 80,
-          "ScaleY": 80,
-          "ScaleZ": 80,
-          "Seed": "KN_ShrineHouses"
-        }
-      },
-      "Assignments": {
-        "Type": "Weighted",
-        "SkipChance": 0.6,
-        "Seed": "KN_ShrineHousesW",
-        "WeightedAssignments": [
-          {
-            "Weight": 1,
-            "Assignments": {
-              "Type": "Constant",
-              "Prop": {
-                "Type": "Prefab",
+        "OverrideAllProps": false,
+        "PropDistribution": {
+          "Type": "Positions",
+          "Skip": false,
+          "Positions": {
+            "Type": "BaseHeight",
+            "Skip": false,
+            "BedName": "Base",
+            "Positions": {
+              "Type": "Scaler",
+              "Skip": false,
+              "Scale": {
+                "X": 80,
+                "Y": 80,
+                "Z": 80
+              },
+              "Positions": {
+                "Type": "Jitter2d",
                 "Skip": false,
-                "WeightedPrefabPaths": [
-                  {
-                    "Path": "KweebecNightmare/Shrine_House_01",
-                    "Weight": 1
+                "Magnitude": 0.5,
+                "Seed": "KN_ShrineHouses",
+                "Positions": {
+                  "Type": "SquareGrid2d",
+                  "Skip": false
+                }
+              }
+            }
+          }
+        },
+        "Assignments": {
+          "Type": "Weighted",
+          "SkipChance": 0.6,
+          "Seed": "KN_ShrineHousesW",
+          "WeightedAssignments": [
+            {
+              "Weight": 1,
+              "Assignments": {
+                "Type": "Constant",
+                "Prop": {
+                  "Type": "Locator",
+                  "Skip": false,
+                  "PlacementCap": 1,
+                  "Prop": {
+                    "Type": "RandomRotator",
+                    "Skip": false,
+                    "HorizontalRotations": true,
+                    "Rotations": [],
+                    "Seed": "KN_ShrineHouseRot",
+                    "Prop": {
+                      "Type": "Prefab",
+                      "Skip": false,
+                      "WeightedPrefabPaths": [
+                        {
+                          "Path": "KweebecNightmare/Shrine_House_01",
+                          "Weight": 1
+                        },
+                        {
+                          "Path": "KweebecNightmare/Shrine_House_02",
+                          "Weight": 1
+                        }
+                      ]
+                    }
                   },
-                  {
-                    "Path": "KweebecNightmare/Shrine_House_02",
-                    "Weight": 1
-                  }
-                ],
-                "LegacyPath": false,
-                "LoadEntities": true,
-                "Directionality": {
-                  "Type": "Random",
-                  "Seed": "KN_ShrineHouseRot",
                   "Pattern": {
                     "Type": "Floor",
                     "Skip": false,
@@ -1453,24 +1895,26 @@
                         ]
                       }
                     }
+                  },
+                  "Scanner": {
+                    "Type": "Linear",
+                    "Skip": false,
+                    "Axis": "Y",
+                    "AscendingOrder": false,
+                    "Range": {
+                      "MinInclusive": -20,
+                      "MaxExclusive": 40
+                    },
+                    "Scanner": {
+                      "Type": "Origin",
+                      "Skip": false
+                    }
                   }
-                },
-                "Scanner": {
-                  "Type": "ColumnLinear",
-                  "Skip": false,
-                  "MaxY": 40,
-                  "MinY": -20,
-                  "RelativeToPosition": false,
-                  "BaseHeightName": "Base",
-                  "TopDownOrder": true,
-                  "ResultCap": 1
-                },
-                "MoldingDirection": "None",
-                "MoldingChildren": false
+                }
               }
             }
-          }
-        ]
+          ]
+        }
       }
     }
   ],
@@ -1732,157 +2176,9 @@
           "$x": -2222,
           "$y": -1520
         }
-      },
-      "MeshPointGenerator-3febf7e0-b1ee-4b62-977e-e9c79e0abb31": {
-        "$Position": {
-          "$x": 728018,
-          "$y": 756748
-        }
-      },
-      "Mesh2DPositions-f56f80df-ab77-4136-bc9d-401df11f22d0": {
-        "$Position": {
-          "$x": 727339,
-          "$y": 756742
-        }
-      },
-      "Imported.Assignments-63490fe0-0bc9-4664-aa10-e01ae3ee47e7": {
-        "$Position": {
-          "$x": 727334,
-          "$y": 757112
-        }
-      },
-      "Runtime-c909f1a0-a339-4bd5-8302-d40de561261d": {
-        "$Position": {
-          "$x": 726772,
-          "$y": 756754
-        }
-      },
-      "MeshPointGenerator-4fbd217e-52b5-4b56-af42-a14a9ed80673": {
-        "$Position": {
-          "$x": 728015,
-          "$y": 757512
-        }
-      },
-      "Mesh2DPositions-41df7461-0b78-4707-8c86-f30555812e63": {
-        "$Position": {
-          "$x": 727336,
-          "$y": 757506
-        }
-      },
-      "Imported.Assignments-67a6a36b-bebb-4ac4-9bce-cc3b8a92ed2b": {
-        "$Position": {
-          "$x": 727331,
-          "$y": 757876
-        }
-      },
-      "Runtime-045a0a8b-320c-4e3a-bbe7-dd9ff4ebfb31": {
-        "$Position": {
-          "$x": 726769,
-          "$y": 757518
-        }
-      },
-      "MeshPointGenerator-b1c8bfb6-6e66-41ef-9cf5-f2f57cacded8": {
-        "$Position": {
-          "$x": 733285,
-          "$y": 746517
-        }
-      },
-      "Mesh2DPositions-ce41d799-c786-4ccd-8810-23d5dcd0d0f3": {
-        "$Position": {
-          "$x": 732606,
-          "$y": 746511
-        }
-      },
-      "Imported.Assignments-3d13854d-b2f0-4383-9890-3f8847e206cf": {
-        "$Position": {
-          "$x": 732601,
-          "$y": 746881
-        }
-      },
-      "Runtime-0b676b03-1bcf-49e0-9ac4-537ba997b943": {
-        "$Position": {
-          "$x": 732039,
-          "$y": 746523
-        }
       }
     },
-    "$FloatingNodes": [
-      {
-        "$NodeId": "MeshPointGenerator-3febf7e0-b1ee-4b62-977e-e9c79e0abb31",
-        "Type": "Mesh",
-        "Jitter": 0.001,
-        "ScaleX": 1,
-        "ScaleY": 1,
-        "ScaleZ": 1,
-        "Seed": "A"
-      },
-      {
-        "$NodeId": "Mesh2DPositions-f56f80df-ab77-4136-bc9d-401df11f22d0",
-        "Type": "Mesh2D",
-        "Skip": false,
-        "PointsY": 0
-      },
-      {
-        "$NodeId": "Imported.Assignments-63490fe0-0bc9-4664-aa10-e01ae3ee47e7",
-        "Type": "Imported",
-        "Name": "Desert1_Oasis_Grasses"
-      },
-      {
-        "$NodeId": "Runtime-c909f1a0-a339-4bd5-8302-d40de561261d",
-        "Skip": false,
-        "Runtime": 2
-      },
-      {
-        "$NodeId": "MeshPointGenerator-4fbd217e-52b5-4b56-af42-a14a9ed80673",
-        "Type": "Mesh",
-        "Jitter": 0.001,
-        "ScaleX": 1,
-        "ScaleY": 1,
-        "ScaleZ": 1,
-        "Seed": "A"
-      },
-      {
-        "$NodeId": "Mesh2DPositions-41df7461-0b78-4707-8c86-f30555812e63",
-        "Type": "Mesh2D",
-        "Skip": false,
-        "PointsY": 0
-      },
-      {
-        "$NodeId": "Imported.Assignments-67a6a36b-bebb-4ac4-9bce-cc3b8a92ed2b",
-        "Type": "Imported",
-        "Name": "Desert1_Oasis_Grasses"
-      },
-      {
-        "$NodeId": "Runtime-045a0a8b-320c-4e3a-bbe7-dd9ff4ebfb31",
-        "Skip": false,
-        "Runtime": 2
-      },
-      {
-        "$NodeId": "MeshPointGenerator-b1c8bfb6-6e66-41ef-9cf5-f2f57cacded8",
-        "Type": "Mesh",
-        "Jitter": 0.001,
-        "ScaleX": 1,
-        "ScaleY": 1,
-        "ScaleZ": 1,
-        "Seed": "A"
-      },
-      {
-        "$NodeId": "Mesh2DPositions-ce41d799-c786-4ccd-8810-23d5dcd0d0f3",
-        "Type": "Mesh2D",
-        "Skip": false,
-        "PointsY": 0
-      },
-      {
-        "$NodeId": "Imported.Assignments-3d13854d-b2f0-4383-9890-3f8847e206cf",
-        "Type": "Imported",
-        "Name": "Desert1_Oasis_Grasses"
-      },
-      {
-        "$NodeId": "Runtime-0b676b03-1bcf-49e0-9ac4-537ba997b943",
-        "Skip": false,
-        "Runtime": 2
-      }
-    ],
+    "$FloatingNodes": [],
     "$Links": {},
     "$Groups": [
       {
