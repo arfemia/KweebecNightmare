@@ -12,7 +12,6 @@ import javax.annotation.Nullable;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.vector.Transform;
-import com.hypixel.hytale.server.core.HytaleServer;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.DeathComponent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
@@ -21,6 +20,7 @@ import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.ziggfreed.common.health.HealthUtil;
 import com.ziggfreed.common.instance.result.ResultKind;
+import com.ziggfreed.common.util.ZigScheduler;
 import com.ziggfreed.kweebec.KweebecNightmarePlugin;
 import com.ziggfreed.kweebec.api.RoundCompletedEvent;
 import com.ziggfreed.kweebec.atmosphere.MusicBedService;
@@ -325,7 +325,7 @@ public final class RoundService {
             teardown(round, world);
         });
 
-        HytaleServer.SCHEDULED_EXECUTOR.schedule(
+        ZigScheduler.schedule(
                 () -> finalizeAndEject(round, world, win),
                 RESULT_HOLD_SECONDS, TimeUnit.SECONDS);
     }
@@ -463,7 +463,7 @@ public final class RoundService {
                             "[Kweebec] revive-before-exit respawn failed: " + err.getMessage());
                 }
                 if (wasDead) {
-                    HytaleServer.SCHEDULED_EXECUTOR.schedule(
+                    ZigScheduler.schedule(
                             () -> exitFromInstance(world, ref, playerId, fullHeal),
                             REVIVE_SETTLE_MS, TimeUnit.MILLISECONDS);
                 } else {
@@ -509,7 +509,7 @@ public final class RoundService {
         if (uuid == null) {
             return;
         }
-        HytaleServer.SCHEDULED_EXECUTOR.schedule(() -> {
+        ZigScheduler.schedule(() -> {
             try {
                 PlayerRef back = Universe.get().getPlayer(uuid);
                 if (back == null) {
