@@ -23,7 +23,7 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.ziggfreed.common.damage.HitTags;
-import com.ziggfreed.common.effect.NativeEffectUtil;
+import com.ziggfreed.common.effect.control.ControlLanding;
 import com.ziggfreed.common.effect.control.StunControl;
 import com.ziggfreed.common.instance.effect.EntityEffectService;
 import com.ziggfreed.common.sound.Sound3D;
@@ -49,15 +49,15 @@ import com.ziggfreed.kweebec.util.SafeLog;
  *       burst file's root, read back through ziggfreed-common's {@link HitTags}), so a Moonbloom
  *       hit is identified by its tag ALONE - independent of its damage type (a plain Physical
  *       hit), the damage source and the world. When such damage lands on a
- *       NON-player entity ANYWHERE (base world OR a round), it freezes that mob via
- *       ziggfreed-common's {@link StunControl} under the Moonbloom's own stun effect
- *       ({@value #MOONBLOOM_STUN_EFFECT}, the vanilla {@code Stun} look, in no effect family, so no
- *       control resistance cuts it short). Only a
+ *       NON-player entity ANYWHERE (base world OR a round), it freezes that mob through
+ *       ziggfreed-common's one control landing ({@link ControlLanding}) under the Moonbloom's own stun
+ *       effect ({@value #MOONBLOOM_STUN_EFFECT}, the vanilla {@code Stun} look, in the Stunned family and
+ *       a fixed control, so no control resistance, added time or immunity ramp changes its length). Only a
  *       Moonbloom stuns (a melee/other hit on the hunter does nothing); players caught in
  *       the splash are skipped (no teammate friendly-stun). The thrower (the burst
  *       damage's owning entity) is credited {@code mobsStunned} when they are in a round.
- *       A guard on that effect, and on CommonLib's own stun and stagger, makes it fire ONCE per
- *       stun window and never cut a longer stun short.</li>
+ *       A guard on any stun of the Stunned family ({@link StunControl#isStunned}, the Moonbloom's own
+ *       included) makes it fire ONCE per stun window and never cut a longer stun short.</li>
  *   <li><b>Damage-taken scoring.</b> Real damage to an in-round survivor is accumulated
  *       onto their {@link PlayerRoundState} (a friendly Moonbloom splash is not counted).</li>
  * </ol>
@@ -71,8 +71,9 @@ public final class KweebecDamageSystem extends DamageEventSystem {
     private static final long DEFAULT_STUN_MS = 2500L;
 
     /**
-     * The Moonbloom's own stun effect (built on the game's Stun, as CommonLib's stun is, and in no effect family), so
-     * no reader of stuns by family, a player's control resistance among them, ever changes its length.
+     * The Moonbloom's own stun effect (built on the game's Stun, as CommonLib's stun is): tagged into the Stunned family,
+     * so every reader of a stun sees it, and a fixed control ({@code "ZigControl": ["Fixed"]}), so no control resistance,
+     * added time or immunity ramp ever changes its length.
      */
     static final String MOONBLOOM_STUN_EFFECT = "KweebecNightmare_Moonbloom_Stun";
 
@@ -398,20 +399,13 @@ public final class KweebecDamageSystem extends DamageEventSystem {
     }
 
     /**
-     * Stun an enemy PLAYER through ziggfreed-common's {@link StunControl}, which stuns any entity, under the
-     * Moonbloom's own stun effect ({@value #MOONBLOOM_STUN_EFFECT}, the vanilla Stun look): on a player the hold is
-     * applied by their own game, and it lasts the round's stun length whatever resistance the player carries. One
-     * already stunned (the Moonbloom's own, or CommonLib's stun or stagger from anything else) is left as it is, so a
-     * longer hold is never cut short.
+     * Stun an enemy PLAYER with the Moonbloom's stun ({@link #landMoonbloomStun}): on a player the hold is applied by
+     * their own game, and it lasts the round's stun length whatever resistance the player carries.
      */
     private void stunPlayer(@Nonnull Ref<EntityStore> targetRef, @Nonnull CommandBuffer<EntityStore> cb,
                             @Nonnull RoundInstance round, @Nullable UUID attacker) {
-        if (alreadyStunned(cb, targetRef)) {
-            return;
-        }
-        long stunMs = round.ruleSet().stunDurationMs();
         Ref<EntityStore> attackerRef = attacker != null ? playerRef(attacker) : null;
-        StunControl.stun(cb, targetRef, stunMs / 1000f, attackerRef, MOONBLOOM_STUN_EFFECT);
+        landMoonbloomStun(cb, targetRef, round.ruleSet().stunDurationMs(), attackerRef);
     }
 
     /** The player who threw the Moonbloom: the burst damage's owning entity (the source). {@code null} if not a player. */
@@ -429,19 +423,14 @@ public final class KweebecDamageSystem extends DamageEventSystem {
     }
 
     /**
-     * Freeze a mob once through ziggfreed-common's {@link StunControl}, under the Moonbloom's own stun effect
-     * ({@value #MOONBLOOM_STUN_EFFECT}, the vanilla Stun look; the mob's attack is cut off and held); credit the thrower
-     * if they are in a round and the stun landed. A mob already stunned (the Moonbloom's own, or CommonLib's stun or
-     * stagger from anything else) is left as it is and credits no one, so a longer hold is never cut short.
+     * Freeze a mob once with the Moonbloom's stun ({@link #landMoonbloomStun}; the mob's attack is cut off and held);
+     * credit the thrower if they are in a round and the stun landed. A mob already stunned credits no one.
      */
     private void stunMob(@Nonnull Ref<EntityStore> mobRef, @Nonnull CommandBuffer<EntityStore> cb,
                          @Nullable RoundInstance round, @Nullable UUID thrower) {
-        if (alreadyStunned(cb, mobRef)) {
-            return; // already stunned - do not re-apply, shorten or re-credit
-        }
         long stunMs = round != null ? round.ruleSet().stunDurationMs() : DEFAULT_STUN_MS;
         Ref<EntityStore> sourceRef = thrower != null ? playerRef(thrower) : null;
-        boolean landed = StunControl.stun(cb, mobRef, stunMs / 1000f, sourceRef, MOONBLOOM_STUN_EFFECT);
+        boolean landed = landMoonbloomStun(cb, mobRef, stunMs, sourceRef);
         if (landed && round != null && thrower != null) {
             PlayerRoundState st = round.playerState(thrower);
             if (st != null) {
@@ -450,9 +439,22 @@ public final class KweebecDamageSystem extends DamageEventSystem {
         }
     }
 
-    /** Is {@code ref} stunned already: the Moonbloom's own stun, or CommonLib's stun or stagger? */
-    private static boolean alreadyStunned(@Nonnull CommandBuffer<EntityStore> cb, @Nonnull Ref<EntityStore> ref) {
-        return NativeEffectUtil.has(cb, ref, MOONBLOOM_STUN_EFFECT) || StunControl.isStunned(cb, ref);
+    /**
+     * Land the Moonbloom's stun on {@code target} for {@code stunMs}, attributed to {@code source}, through
+     * ziggfreed-common's one control landing under {@value #MOONBLOOM_STUN_EFFECT}. That effect is a fixed control, so
+     * it lasts exactly {@code stunMs} on every server (no immunity, resistance, added time or ramp). A target already
+     * wearing any stun of the Stunned family (the Moonbloom's own, CommonLib's stun or stagger, the game's) is left as
+     * it is, so a longer hold is never cut short and nothing is re-applied.
+     *
+     * @return true when the stun landed
+     */
+    private static boolean landMoonbloomStun(@Nonnull CommandBuffer<EntityStore> cb, @Nonnull Ref<EntityStore> target,
+                                             long stunMs, @Nullable Ref<EntityStore> source) {
+        if (StunControl.isStunned(cb, target)) {
+            return false;
+        }
+        return ControlLanding.land(cb, target, ControlLanding.Landing.stun(ControlLanding.Amount.of(stunMs / 1000.0))
+                .under(MOONBLOOM_STUN_EFFECT).by(source));
     }
 
     @Nullable
